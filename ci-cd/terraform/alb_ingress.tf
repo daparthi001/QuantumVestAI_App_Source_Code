@@ -1,5 +1,3 @@
-}
-
   spec {
     rule {
       host = "quantumvestai.com"
