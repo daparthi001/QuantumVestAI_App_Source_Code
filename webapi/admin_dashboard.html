@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>QuantumVestAI Admin Dashboard</title>
+  <style>
+    table { border-collapse: collapse; width: 60%%; margin: 20px auto; }
+    th, td { border: 1px solid #aaa; padding: 10px; text-align: center; }
+  </style>
+</head>
+<body>
+<h2 style="text-align:center;">Admin Dashboard</h2>
+<table>
+  <tr><th>Ticker</th><th>Model</th><th>Last Retrained</th></tr>
+  {% for ticker, info in models.items() %}
+  <tr>
+    <td>{{ ticker }}</td>
+    <td>{{ info.model }}</td>
+    <td>{{ info.last_updated }}</td>
+  </tr>
+  {% endfor %}
+</table>
+<div style="text-align:center;">
+  <a href="/">Back to Home</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,12 @@
+<h1>Welcome to QuantumVestAI</h1>
+<p><a href="/login">Login</a> | <a href="/register">Register</a> | <a href="/logout">Logout</a></p>
+<form method="get" action="/forecast">
+  Ticker: <input name="ticker" required>
+  Days: <input name="days" value="7">
+  <select name="model">
+    <option value="ensemble">Ensemble</option>
+    <option value="prophet">Prophet</option>
+    <option value="xgboost">XGBoost</option>
+  </select>
+  <button type="submit">Forecast</button>
+</form>
