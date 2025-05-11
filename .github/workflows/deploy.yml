@@ -34,7 +34,7 @@ jobs:
       working-directory: ci-cd/terraform
       run: |
         terraform init
-        terraform apply -auto-approve
+        terraform plan
 
     - name: Log in to Amazon ECR
       id: login-ecr
