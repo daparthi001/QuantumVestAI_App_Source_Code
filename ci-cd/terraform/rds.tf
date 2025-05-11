@@ -1,4 +1,3 @@
-
 resource "aws_db_subnet_group" "main" {
   name       = "quantumvestai-db-subnet-group"
   subnet_ids = aws_subnet.private[*].id
