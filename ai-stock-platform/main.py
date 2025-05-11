@@ -1,13 +1,8 @@
 from fastapi import FastAPI
-from ai_models import pipeline
+from webapi import sentiment, admin, whitepaper_analysis
 
 app = FastAPI()
 
-@app.get("/")
-def read_root():
-    return {"message": "QuantumVestAI is running"}
-
-@app.get("/predict")
-def predict():
-    # Placeholder for actual prediction pipeline
-    return {"prediction": "This is a mock prediction"}
+app.include_router(sentiment.router)
+app.include_router(admin.router)
+app.include_router(whitepaper_analysis.router)

@@ -1,1 +1,12 @@
-# Placeholder for service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: quantumvestai-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: quantumvestai
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000

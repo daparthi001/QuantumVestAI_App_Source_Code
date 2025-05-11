@@ -1,1 +1,15 @@
-# Placeholder for retrain-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: quantumvestai-retrain
+spec:
+  schedule: "0 3 * * *"  # Every day at 3 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: retrain
+            image: <your-ecr-repo>/quantumvestai:latest
+            command: ["python", "retrain.py"]
+          restartPolicy: OnFailure
