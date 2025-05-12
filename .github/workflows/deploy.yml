@@ -42,13 +42,13 @@ jobs:
       with:
         terraform_version: 1.5.7
 
-    - name: Terraform Init, Plan, and Apply (S3 Backend)
+    - name: Terraform Init, Validate, Plan, and Apply
       working-directory: ci-cd/terraform
       run: |
         terraform init
-        terraform plan -out=tfplan
-        #terraform import 'module.eks.module.kms.aws_kms_alias.this["cluster"]' arn:aws:kms:us-east-1:921930869047:alias/eks/quantumvestai-eks
-        terraform apply -auto-approve tfplan
+        terraform validate
+        terraform plan -lock-timeout=300s -out=tfplan
+        terraform apply -lock-timeout=300s -auto-approve tfplan
 
     - name: Log in to Amazon ECR
       id: login-ecr
@@ -64,6 +64,10 @@ jobs:
     - name: Update kubeconfig
       run: |
         aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+
+    - name: Validate EKS Connection
+      run: |
+        kubectl get nodes
 
     - name: Deploy to EKS (Kubernetes)
       working-directory: ci-cd/k8s
@@ -100,4 +104,4 @@ jobs:
       working-directory: ci-cd/terraform
       run: |
         terraform init
-        terraform destroy -auto-approve
+        terraform destroy -lock-timeout=300s -auto-approve
