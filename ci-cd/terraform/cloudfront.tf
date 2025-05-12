@@ -27,7 +27,6 @@ resource "aws_cloudfront_distribution" "api_cdn" {
     cookies {
       forward = "none"
     }
-      query_string = false
       headers      = ["*"]
     }
 
