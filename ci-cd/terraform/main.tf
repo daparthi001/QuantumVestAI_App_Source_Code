@@ -36,37 +36,21 @@ module "eks" {
     }
   }
 
-  manage_aws_auth_configmap = true
+  create_aws_auth_configmap = true
 
-  aws_auth_additional_user_mapping = [
+  aws_auth_users = [
     {
-      userarn  = "arn:aws:iam::921930869047:user/admin-role" # ### REPLACE with your actual IAM USER ARN ###
+      userarn  = "arn:aws:iam::921930869047:user/admin-role"
       username = "admin"
       groups   = ["system:masters"]
     }
   ]
 
-  aws_auth_additional_role_mapping = [
+  aws_auth_roles = [
     {
-      rolearn  = "arn:aws:iam::921930869047:role/quantumai" # ### CRITICAL: REPLACE with your actual IAM ROLE ARN ###
+      rolearn  = "arn:aws:iam::921930869047:role/quantumai"
       username = "eks-admin-role"
       groups   = ["system:masters"]
     }
   ]
-  aws_auth_configmap_data = {
-    mapRoles = yamlencode([
-      {
-        rolearn  = "arn:aws:iam::921930869047:role/quantumai" # CRITICAL: Replace with your actual IAM role ARN
-        username = "eks-admin-role"
-        groups   = ["system:masters"]
-      }
-    ])
-    mapUsers = yamlencode([
-      {
-        userarn  = "arn:aws:iam::921930869047:user/admin-role"
-        username = "admin"
-        groups   = ["system:masters"]
-      }
-    ])
-  }
 }
