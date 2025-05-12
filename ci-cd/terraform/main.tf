@@ -53,10 +53,6 @@ module "eks" {
       groups   = ["system:masters"]
     }
   ]
-
-
-  # And for the mappings themselves, sometimes structured like this:
-  /*
   aws_auth_configmap_data = {
     mapRoles = yamlencode([
       {
