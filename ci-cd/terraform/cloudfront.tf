@@ -22,6 +22,11 @@ resource "aws_cloudfront_distribution" "api_cdn" {
     target_origin_id = "eks-api-origin"
 
     forwarded_values {
+    query_string = false
+
+    cookies {
+      forward = "none"
+    }
       query_string = true
       headers      = ["*"]
     }
