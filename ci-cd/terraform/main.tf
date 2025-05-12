@@ -20,7 +20,7 @@ module "vpc" {
 # ✅ EKS module just uses that VPC and does not create its own VPC
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "20.8.4"
+  version = "20.8.4" # This is key
 
   cluster_name    = var.cluster_name
   cluster_version = "1.29"
@@ -36,24 +36,19 @@ module "eks" {
     }
   }
 
-  # This enables the module to manage the aws-auth configmap
   manage_aws_auth_configmap = true
 
-  # Option 1: Using map_additional_iam_users and map_additional_iam_roles
-  # (Check module documentation for v20.8.4 if these are the exact names,
-  # sometimes it's map_users / map_roles or similar)
-
-  map_additional_iam_users = [
+  aws_auth_additional_user_mapping = [
     {
-      userarn  = "arn:aws:iam::921930869047:user/admin-user" # CORRECTED: Assuming 'admin-role' was a typo and it's a user. Or use the role mapping below.
+      userarn  = "arn:aws:iam::921930869047:user/YOUR_ACTUAL_ADMIN_USER" # ### REPLACE with your actual IAM USER ARN ###
       username = "admin"
       groups   = ["system:masters"]
     }
   ]
 
-  map_additional_iam_roles = [
+  aws_auth_additional_role_mapping = [
     {
-      rolearn  = "arn:aws:iam::921930869047:role/your-actual-admin-role" # CRITICAL: Replace with your actual IAM role ARN
+      rolearn  = "arn:aws:iam::921930869047:role/YOUR_ACTUAL_ADMIN_ROLE" # ### CRITICAL: REPLACE with your actual IAM ROLE ARN ###
       username = "eks-admin-role"
       groups   = ["system:masters"]
     }
