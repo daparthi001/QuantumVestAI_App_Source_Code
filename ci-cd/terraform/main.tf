@@ -30,7 +30,7 @@ module "aws_auth" {
 
   cluster_name = module.eks.cluster_name
 
-  users = [
+  map_users = [
     {
       userarn  = "arn:aws:iam::921930869047:user/admin-role"
       username = "admin"
