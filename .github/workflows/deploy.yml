@@ -35,16 +35,16 @@ jobs:
       run: |
         terraform init
         terraform plan
+        # terraform apply -auto-approve
 
     - name: Log in to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
     - name: Build, tag, and push Docker image
-      working-directory: ai-stock-platform
       run: |
         IMAGE_TAG=latest
-        docker build -t $ECR_REPOSITORY:$IMAGE_TAG ai-stock-platform
+        docker build -t $ECR_REPOSITORY:$IMAGE_TAG ./ai-stock-platform
         docker tag $ECR_REPOSITORY:$IMAGE_TAG ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
         docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
 
@@ -55,7 +55,7 @@ jobs:
     - name: Deploy to EKS
       working-directory: ci-cd/k8s
       run: |
-        kubectl apply -f k8s/deployment.yaml
-        kubectl apply -f k8s/service.yaml
-        kubectl apply -f k8s/ingress.yaml
-        kubectl apply -f k8s/retrain-cronjob.yaml
+        kubectl apply -f deployment.yaml
+        kubectl apply -f service.yaml
+        kubectl apply -f ingress.yaml
+        kubectl apply -f retrain-cronjob.yaml
