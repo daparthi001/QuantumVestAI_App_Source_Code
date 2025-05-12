@@ -42,14 +42,16 @@ jobs:
       with:
         terraform_version: 1.5.7
 
-    - name: Terraform Init, Validate, Plan, and Apply
+    - name: Terraform Init, Fmt, Validate, Plan, and Apply
       working-directory: ci-cd/terraform
       run: |
         rm -rf .terraform
         terraform init -upgrade
+        terraform fmt -check
         terraform validate
         terraform plan -lock-timeout=300s -out=tfplan
         terraform apply -lock-timeout=300s -auto-approve tfplan
+        terraform output
 
     - name: Log in to Amazon ECR
       id: login-ecr
