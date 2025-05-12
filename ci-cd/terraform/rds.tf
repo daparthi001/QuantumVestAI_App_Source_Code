@@ -1,6 +1,6 @@
 resource "aws_db_subnet_group" "main" {
   name       = "quantumvestai-db-subnet-group"
-  subnet_ids = aws_subnet.private[*].id
+  subnet_ids = module.vpc.private_subnets
 }
 
 resource "aws_db_instance" "postgres" {
@@ -19,7 +19,7 @@ resource "aws_db_instance" "postgres" {
 
 resource "aws_security_group" "db" {
   name   = "quantumvestai-db-sg"
-  vpc_id = aws_vpc.main.id
+  vpc_id = module.vpc.vpc_id
 
   ingress {
     from_port   = 5432
