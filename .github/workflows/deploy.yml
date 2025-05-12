@@ -47,7 +47,7 @@ jobs:
       run: |
         terraform init
         terraform plan -out=tfplan
-        terraform import 'module.eks.module.kms.aws_kms_alias.this["cluster"]' arn:aws:kms:us-east-1:921930869047:alias/eks/quantumvestai-eks
+        #terraform import 'module.eks.module.kms.aws_kms_alias.this["cluster"]' arn:aws:kms:us-east-1:921930869047:alias/eks/quantumvestai-eks
         terraform apply -auto-approve tfplan
 
     - name: Log in to Amazon ECR
