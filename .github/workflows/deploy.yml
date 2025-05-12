@@ -41,10 +41,10 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v1
 
     - name: Build, tag, and push Docker image
-      working-directory: ./ai-stock-platform
+      working-directory: ai-stock-platform
       run: |
         IMAGE_TAG=latest
-        docker build -t $ECR_REPOSITORY:$IMAGE_TAG ./ai-stock-platform
+        docker build -t $ECR_REPOSITORY:$IMAGE_TAG ai-stock-platform
         docker tag $ECR_REPOSITORY:$IMAGE_TAG ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
         docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
 
