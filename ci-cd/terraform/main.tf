@@ -20,7 +20,7 @@ module "vpc" {
 # ✅ EKS module just uses that VPC and does not create its own VPC
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "20.8.4"
+  version = "20.8.4" # This is key
 
   cluster_name    = var.cluster_name
   cluster_version = "1.29"
@@ -36,29 +36,21 @@ module "eks" {
     }
   }
 
-  # This enables the module to manage the aws-auth configmap. This IS a valid argument.
   manage_aws_auth_configmap = true
 
-  # THESE ARE THE CORRECTED ARGUMENT NAMES FOR v20.8.4
   aws_auth_additional_user_mapping = [
     {
-      userarn  = "arn:aws:iam::921930869047:user/admin-user" # ### REPLACE with your actual IAM USER ARN ###
-      username = "admin" # Kubernetes username
+      userarn  = "arn:aws:iam::921930869047:user/YOUR_ACTUAL_ADMIN_USER" # ### REPLACE with your actual IAM USER ARN ###
+      username = "admin"
       groups   = ["system:masters"]
     }
   ]
 
   aws_auth_additional_role_mapping = [
     {
-      rolearn  = "arn:aws:iam::921930869047:role/your-actual-admin-role" # ### CRITICAL: REPLACE with your actual IAM ROLE ARN ###
-      username = "eks-admin-role" # Kubernetes username
+      rolearn  = "arn:aws:iam::921930869047:role/YOUR_ACTUAL_ADMIN_ROLE" # ### CRITICAL: REPLACE with your actual IAM ROLE ARN ###
+      username = "eks-admin-role"
       groups   = ["system:masters"]
     }
   ]
-
-  # Remove or comment out any lines that look like:
-  # map_additional_iam_users = [ ... ]
-  # map_additional_iam_roles = [ ... ]
-  # And remove the commented-out sections like /* aws_auth_configmap_data = { ... } */
-  # unless you intend to use them specifically (which we are not doing right now).
 }
