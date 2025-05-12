@@ -5,8 +5,20 @@ on:
     branches:
       - main
 
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Choose action (deploy or destroy)"
+        required: true
+        default: deploy
+        type: choice
+        options:
+          - deploy
+          - destroy
+
 jobs:
   deploy:
+    if: ${{ github.event.inputs.action == 'deploy' || github.event_name == 'push' }}
     runs-on: ubuntu-latest
 
     env:
@@ -18,11 +30,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_version: 1.5.7
-
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
@@ -30,12 +37,17 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
-    - name: Terraform Init and Apply
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.5.7
+
+    - name: Terraform Init, Plan, and Apply (S3 Backend)
       working-directory: ci-cd/terraform
       run: |
         terraform init
-        terraform plan
-        terraform apply -auto-approve
+        terraform plan -out=tfplan
+        terraform apply -auto-approve tfplan
 
     - name: Log in to Amazon ECR
       id: login-ecr
@@ -52,10 +64,39 @@ jobs:
       run: |
         aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
 
-    - name: Deploy to EKS
+    - name: Deploy to EKS (Kubernetes)
       working-directory: ci-cd/k8s
       run: |
         kubectl apply -f deployment.yaml
         kubectl apply -f service.yaml
         kubectl apply -f ingress.yaml
         kubectl apply -f retrain-cronjob.yaml
+
+  destroy:
+    if: ${{ github.event.inputs.action == 'destroy' }}
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: us-east-1
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.5.7
+
+    - name: Terraform Destroy (S3 Backend)
+      working-directory: ci-cd/terraform
+      run: |
+        terraform init
+        terraform destroy -auto-approve

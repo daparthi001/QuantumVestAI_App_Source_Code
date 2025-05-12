@@ -10,7 +10,7 @@ resource "aws_db_instance" "postgres" {
   allocated_storage = 20
   db_name           = "quantumvest"
   username          = "admin"
-  password          = "securepass123"
+  password          = "securepass123$#"
   skip_final_snapshot = true
   vpc_security_group_ids = [aws_security_group.db.id]
   db_subnet_group_name   = aws_db_subnet_group.main.name
