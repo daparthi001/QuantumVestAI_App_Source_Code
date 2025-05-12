@@ -1,5 +1,3 @@
-
-
 resource "aws_route53_record" "app" {
   zone_id = aws_route53_zone.main.zone_id
   name    = "quantumvestai.com"
@@ -11,11 +9,9 @@ resource "aws_route53_record" "app" {
     evaluate_target_health = true
   }
 }
-  }
 
   zone_id = aws_route53_zone.main.zone_id
   name    = each.value.name
   type    = each.value.type
   ttl     = 60
   records = [each.value.value]
-}
