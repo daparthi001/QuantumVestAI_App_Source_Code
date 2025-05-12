@@ -1,4 +1,7 @@
-# ✅ Only ONE VPC module here
+provider "aws" {
+  region = "us-east-1"
+}
+
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "5.1.1"
