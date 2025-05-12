@@ -28,9 +28,9 @@ module "aws_auth" {
   source  = "terraform-aws-modules/eks/aws//modules/aws-auth"
   version = "20.8.4"
 
-  cluster_name = module.eks.cluster_name
+  eks_cluster_name = module.eks.cluster_name
 
-  map_users = [
+  users = [
     {
       userarn  = "arn:aws:iam::921930869047:user/admin-role"
       username = "admin"
@@ -38,3 +38,4 @@ module "aws_auth" {
     }
   ]
 }
+
