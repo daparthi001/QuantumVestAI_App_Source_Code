@@ -36,53 +36,29 @@ module "eks" {
     }
   }
 
-  # This enables the module to manage the aws-auth configmap
+  # This enables the module to manage the aws-auth configmap. This IS a valid argument.
   manage_aws_auth_configmap = true
 
-  # Option 1: Using map_additional_iam_users and map_additional_iam_roles
-  # (Check module documentation for v20.8.4 if these are the exact names,
-  # sometimes it's map_users / map_roles or similar)
-
-  map_additional_iam_users = [
+  # THESE ARE THE CORRECTED ARGUMENT NAMES FOR v20.8.4
+  aws_auth_additional_user_mapping = [
     {
-      userarn  = "arn:aws:iam::921930869047:user/admin-user" # CORRECTED: Assuming 'admin-role' was a typo and it's a user. Or use the role mapping below.
-      username = "admin"
+      userarn  = "arn:aws:iam::921930869047:user/admin-user" # ### REPLACE with your actual IAM USER ARN ###
+      username = "admin" # Kubernetes username
       groups   = ["system:masters"]
     }
   ]
 
-  map_additional_iam_roles = [
+  aws_auth_additional_role_mapping = [
     {
-      rolearn  = "arn:aws:iam::921930869047:role/your-actual-admin-role" # CRITICAL: Replace with your actual IAM role ARN
-      username = "eks-admin-role"
+      rolearn  = "arn:aws:iam::921930869047:role/your-actual-admin-role" # ### CRITICAL: REPLACE with your actual IAM ROLE ARN ###
+      username = "eks-admin-role" # Kubernetes username
       groups   = ["system:masters"]
     }
   ]
 
-  # If the above map_additional_iam_users/roles are not the exact input names for v20.8.4,
-  # another common pattern for this module version is:
-  # aws_auth_additional_labels = {} # if you need labels
-  # aws_auth_additional_annotations = {} # if you need annotations
-
-  # And for the mappings themselves, sometimes structured like this:
-  /*
-  aws_auth_configmap_data = {
-    mapRoles = yamlencode([
-      {
-        rolearn  = "arn:aws:iam::921930869047:role/your-actual-admin-role" # CRITICAL: Replace with your actual IAM role ARN
-        username = "eks-admin-role"
-        groups   = ["system:masters"]
-      }
-    ])
-    mapUsers = yamlencode([
-      {
-        userarn  = "arn:aws:iam::921930869047:user/admin-user"
-        username = "admin"
-        groups   = ["system:masters"]
-      }
-    ])
-  }
-  */
-  # However, `map_additional_iam_users` and `map_additional_iam_roles` are more likely for v20.x.
-  # The module also adds the EKS worker nodes' IAM role automatically.
+  # Remove or comment out any lines that look like:
+  # map_additional_iam_users = [ ... ]
+  # map_additional_iam_roles = [ ... ]
+  # And remove the commented-out sections like /* aws_auth_configmap_data = { ... } */
+  # unless you intend to use them specifically (which we are not doing right now).
 }
