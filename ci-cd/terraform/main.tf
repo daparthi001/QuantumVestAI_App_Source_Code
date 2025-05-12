@@ -36,12 +36,13 @@ module "eks" {
     }
   }
 
-  create_aws_auth_configmap = true
+  manage_aws_auth_configmap = true
+  create_aws_auth_configmap = "false"
 
   aws_auth_users = [
     {
       userarn  = "arn:aws:iam::921930869047:user/admin-role"
-      username = "admin"
+      username = "admin-role"
       groups   = ["system:masters"]
     }
   ]
@@ -49,7 +50,7 @@ module "eks" {
   aws_auth_roles = [
     {
       rolearn  = "arn:aws:iam::921930869047:role/quantumai"
-      username = "eks-admin-role"
+      username = "quantumai"
       groups   = ["system:masters"]
     }
   ]
