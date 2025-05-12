@@ -45,7 +45,7 @@ jobs:
     - name: Terraform Init, Fmt, Validate, Plan, and Apply
       working-directory: ci-cd/terraform
       run: |
-        rm -rf .terraform
+        rm -rf .terraform .terraform.lock.hcl
         terraform init -upgrade
         terraform validate
         terraform plan -lock-timeout=300s -out=tfplan

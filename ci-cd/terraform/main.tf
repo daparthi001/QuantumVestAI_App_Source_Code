@@ -29,19 +29,15 @@ module "aws_auth" {
 
   cluster_name = module.eks.cluster_name
 
-  map_users = [
-    {
-      userarn  = "arn:aws:iam::921930869047:user/admin-role"
-      username = "admin"
-      groups   = ["system:masters"]
-    }
-  ]
+  map_users = [{
+    userarn  = "arn:aws:iam::921930869047:user/admin-role"
+    username = "admin"
+    groups   = ["system:masters"]
+  }]
 
-  map_roles = [
-    {
-      rolearn  = "arn:aws:iam::921930869047:role/quantumai"
-      username = "eks-admin-role"
-      groups   = ["system:masters"]
-    }
-  ]
+  map_roles = [{
+    rolearn  = "arn:aws:iam::921930869047:role/quantumai"
+    username = "eks-admin-role"
+    groups   = ["system:masters"]
+  }]
 }
