@@ -20,7 +20,7 @@ module "vpc" {
 # ✅ EKS module just uses that VPC and does not create its own VPC
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "20.8.4" # This is key
+  version = "~> 20.0" # This is key
 
   cluster_name    = var.cluster_name
   cluster_version = "1.29"
