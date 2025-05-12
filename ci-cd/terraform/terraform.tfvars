@@ -1,3 +1,3 @@
-# terraform.tfvars
+## terraform.tfvars
 
 cluster_name = "quantumvestai-eks"
