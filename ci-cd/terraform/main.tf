@@ -40,7 +40,7 @@ module "eks" {
 
   aws_auth_additional_user_mapping = [
     {
-      userarn  = "arn:aws:iam::921930869047:user/YOUR_ACTUAL_ADMIN_USER" # ### REPLACE with your actual IAM USER ARN ###
+      userarn  = "arn:aws:iam::921930869047:user/admin-role" # ### REPLACE with your actual IAM USER ARN ###
       username = "admin"
       groups   = ["system:masters"]
     }
@@ -48,30 +48,26 @@ module "eks" {
 
   aws_auth_additional_role_mapping = [
     {
-      rolearn  = "arn:aws:iam::921930869047:role/YOUR_ACTUAL_ADMIN_ROLE" # ### CRITICAL: REPLACE with your actual IAM ROLE ARN ###
+      rolearn  = "arn:aws:iam::921930869047:role/quantumai" # ### CRITICAL: REPLACE with your actual IAM ROLE ARN ###
       username = "eks-admin-role"
       groups   = ["system:masters"]
     }
   ]
 
-  # If the above map_additional_iam_users/roles are not the exact input names for v20.8.4,
-  # another common pattern for this module version is:
-  # aws_auth_additional_labels = {} # if you need labels
-  # aws_auth_additional_annotations = {} # if you need annotations
 
   # And for the mappings themselves, sometimes structured like this:
   /*
   aws_auth_configmap_data = {
     mapRoles = yamlencode([
       {
-        rolearn  = "arn:aws:iam::921930869047:role/your-actual-admin-role" # CRITICAL: Replace with your actual IAM role ARN
+        rolearn  = "arn:aws:iam::921930869047:role/quantumai" # CRITICAL: Replace with your actual IAM role ARN
         username = "eks-admin-role"
         groups   = ["system:masters"]
       }
     ])
     mapUsers = yamlencode([
       {
-        userarn  = "arn:aws:iam::921930869047:user/admin-user"
+        userarn  = "arn:aws:iam::921930869047:user/admin-role"
         username = "admin"
         groups   = ["system:masters"]
       }
