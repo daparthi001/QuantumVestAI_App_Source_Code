@@ -23,7 +23,7 @@ module "eks" {
   }
 }
 
-# ✅ aws_auth is now its own module block
+# #✅ aws_auth is now its own module block
 module "aws_auth" {
   source  = "terraform-aws-modules/eks/aws//modules/aws-auth"
   version = "20.8.4"
