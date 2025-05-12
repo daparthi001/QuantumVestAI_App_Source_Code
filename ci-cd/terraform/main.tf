@@ -21,23 +21,22 @@ module "eks" {
     resources        = ["secrets"]
     provider_key_arn = aws_kms_key.eks_key.arn
   }
-}
 
-module "aws_auth" {
-  source  = "terraform-aws-modules/eks/aws//modules/aws-auth"
-  version = "20.8.4"
+  manage_aws_auth_configmap = true
 
-  cluster_name = module.eks.cluster_name
+  aws_auth_users = [
+    {
+      userarn  = "arn:aws:iam::921930869047:user/admin-role"
+      username = "admin"
+      groups   = ["system:masters"]
+    }
+  ]
 
-  map_users = [{
-    userarn  = "arn:aws:iam::921930869047:user/admin-role"
-    username = "admin"
-    groups   = ["system:masters"]
-  }]
-
-  map_roles = [{
-    rolearn  = "arn:aws:iam::921930869047:role/quantumai"
-    username = "eks-admin-role"
-    groups   = ["system:masters"]
-  }]
+  aws_auth_roles = [
+    {
+      rolearn  = "arn:aws:iam::921930869047:role/quantumai"
+      username = "eks-admin-role"
+      groups   = ["system:masters"]
+    }
+  ]
 }
