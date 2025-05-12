@@ -42,7 +42,7 @@ jobs:
       with:
         terraform_version: 1.5.7
 
-    - name: Terraform Init, Fmt, Validate, Plan, and Apply
+    - name: Terraform Init, Validate, Plan, and Apply
       working-directory: ci-cd/terraform
       run: |
         rm -rf .terraform .terraform.lock.hcl
@@ -50,13 +50,13 @@ jobs:
         terraform validate
         terraform plan -lock-timeout=300s -out=tfplan
         terraform apply -lock-timeout=300s -auto-approve tfplan
-        terraform output
 
     - name: Log in to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
     - name: Build, tag, and push Docker image
+      working-directory: ai-stock-platform
       run: |
         IMAGE_TAG=latest
         docker build -t $ECR_REPOSITORY:$IMAGE_TAG ./ai-stock-platform
@@ -105,5 +105,5 @@ jobs:
     - name: Terraform Destroy (S3 Backend)
       working-directory: ci-cd/terraform
       run: |
-        terraform init
+        terraform init -upgrade
         terraform destroy -lock-timeout=300s -auto-approve
