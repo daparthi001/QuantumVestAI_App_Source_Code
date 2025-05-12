@@ -8,7 +8,7 @@ metadata:
     alb.ingress.kubernetes.io/target-type: ip
 spec:
   rules:
-    - host: quantumvestai.example.com
+    - host: quantumvestai.com
       http:
         paths:
           - path: /
