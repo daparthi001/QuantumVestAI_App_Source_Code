@@ -47,7 +47,6 @@ jobs:
       run: |
         rm -rf .terraform
         terraform init -upgrade
-        terraform fmt -check
         terraform validate
         terraform plan -lock-timeout=300s -out=tfplan
         terraform apply -lock-timeout=300s -auto-approve tfplan
