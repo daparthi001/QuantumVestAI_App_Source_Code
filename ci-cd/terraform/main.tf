@@ -82,7 +82,4 @@ module "eks" {
       }
     ])
   }
-  */
-  # However, `map_additional_iam_users` and `map_additional_iam_roles` are more likely for v20.x.
-  # The module also adds the EKS worker nodes' IAM role automatically.
 }
