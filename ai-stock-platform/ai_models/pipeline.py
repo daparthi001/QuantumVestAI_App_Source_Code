@@ -1,9 +1,14 @@
-import pandas as pd
-from prophet_model import run_prophet
-from xgboost_model import run_xgboost
-from ensemble import ensemble_predictions
+def run_ensemble(lstm_forecast, prophet_forecast):
+    """
+    Combine forecasts from LSTM and Prophet using a simple average.
+    """
+    if len(lstm_forecast) != len(prophet_forecast):
+        raise ValueError("Forecast lengths must match.")
+    
+    # Prophet forecast expects dataframe with 'ds' and 'yhat'
+    prophet_values = prophet_forecast.tail(len(lstm_forecast))['yhat'].values
 
-def run_ensemble_pipeline(df: pd.DataFrame, forecast_days: int = 7):
-    preds_prophet = run_prophet(df, forecast_days)
-    preds_xgb = run_xgboost(df, forecast_days)
-    return ensemble_predictions([preds_prophet, preds_xgb])
+    # Simple average ensemble
+    ensemble_forecast = (lstm_forecast + prophet_values) / 2
+
+    return ensemble_forecast
