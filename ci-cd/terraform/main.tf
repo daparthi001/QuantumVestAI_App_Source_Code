@@ -1,3 +1,7 @@
+provider "aws" {
+  region = "us-east-1"
+}
+
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "5.1.1"
@@ -13,9 +17,20 @@ module "vpc" {
   single_nat_gateway = true
 }
 
+resource "aws_kms_key" "eks_key" {
+  description             = "KMS key for QuantumVestAI EKS cluster"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
+
+resource "aws_kms_alias" "eks_key_alias" {
+  name          = "alias/eks/quantumvestai-eks"
+  target_key_id = aws_kms_key.eks_key.key_id
+}
+
 module "eks" {
-  source          = "terraform-aws-modules/eks/aws"
-  version         = "20.8.4" # Best practice to pin latest stable (update if older)
+  source  = "terraform-aws-modules/eks/aws"
+  version = "20.8.4"
 
   cluster_name    = var.cluster_name
   cluster_version = "1.29"
@@ -31,4 +46,19 @@ module "eks" {
       instance_types = ["t3.medium"]
     }
   }
+
+  cluster_encryption_config = {
+    resources        = ["secrets"]
+    provider_key_arn = aws_kms_key.eks_key.arn
+  }
+
+  manage_aws_auth_configmap = true
+
+  aws_auth_users = [
+    {
+      userarn  = "arn:aws:iam::921930869047:user/admin-role "
+      username = "admin"
+      groups   = ["system:masters"]
+    }
+  ]
 }
