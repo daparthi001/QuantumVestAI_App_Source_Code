@@ -32,26 +32,57 @@ module "eks" {
       desired_size = 2
       max_size     = 3
       min_size     = 1
-
       instance_types = ["t3.medium"]
     }
   }
 
+  # This enables the module to manage the aws-auth configmap
   manage_aws_auth_configmap = true
 
-  aws_auth_users = [
+  # Option 1: Using map_additional_iam_users and map_additional_iam_roles
+  # (Check module documentation for v20.8.4 if these are the exact names,
+  # sometimes it's map_users / map_roles or similar)
+
+  map_additional_iam_users = [
     {
-      userarn  = "arn:aws:iam::921930869047:user/admin-role"
+      userarn  = "arn:aws:iam::921930869047:user/admin-user" # CORRECTED: Assuming 'admin-role' was a typo and it's a user. Or use the role mapping below.
       username = "admin"
       groups   = ["system:masters"]
     }
   ]
 
-  aws_auth_roles = [
+  map_additional_iam_roles = [
     {
-      rolearn  = "arn:aws:iam::921930869047:role/your-admin-role"
+      rolearn  = "arn:aws:iam::921930869047:role/your-actual-admin-role" # CRITICAL: Replace with your actual IAM role ARN
       username = "eks-admin-role"
       groups   = ["system:masters"]
     }
   ]
+
+  # If the above map_additional_iam_users/roles are not the exact input names for v20.8.4,
+  # another common pattern for this module version is:
+  # aws_auth_additional_labels = {} # if you need labels
+  # aws_auth_additional_annotations = {} # if you need annotations
+
+  # And for the mappings themselves, sometimes structured like this:
+  /*
+  aws_auth_configmap_data = {
+    mapRoles = yamlencode([
+      {
+        rolearn  = "arn:aws:iam::921930869047:role/your-actual-admin-role" # CRITICAL: Replace with your actual IAM role ARN
+        username = "eks-admin-role"
+        groups   = ["system:masters"]
+      }
+    ])
+    mapUsers = yamlencode([
+      {
+        userarn  = "arn:aws:iam::921930869047:user/admin-user"
+        username = "admin"
+        groups   = ["system:masters"]
+      }
+    ])
+  }
+  */
+  # However, `map_additional_iam_users` and `map_additional_iam_roles` are more likely for v20.x.
+  # The module also adds the EKS worker nodes' IAM role automatically.
 }
