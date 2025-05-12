@@ -37,5 +37,13 @@ module "aws_auth" {
       groups   = ["system:masters"]
     }
   ]
+  # Optional if you have roles
+  map_roles = [
+    {
+      rolearn  = "arn:aws:iam::921930869047:role/your-admin-role"
+      username = "eks-admin-role"
+      groups   = ["system:masters"]
+    }
+  ]
 }
 
