@@ -28,7 +28,7 @@ module "aws_auth" {
   source  = "terraform-aws-modules/eks/aws//modules/aws-auth"
   version = "20.8.4"
 
-  eks_cluster_name = module.eks.cluster_name
+  cluster_name = module.eks.cluster_name
 
   users = [
     {
