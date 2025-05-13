@@ -1,4 +1,4 @@
-# Consolidated Output Definitions for QuantumVestAI Infrastructure
+# Global Outputs for QuantumVestAI Infrastructure
 
 # AWS Account Outputs
 output "account_id" {
@@ -93,11 +93,6 @@ output "cloudfront_domain_name" {
   value       = aws_cloudfront_distribution.api_cdn.domain_name
 }
 
-output "cloudfront_hosted_zone_id" {
-  description = "Hosted zone ID of the CloudFront distribution"
-  value       = aws_cloudfront_distribution.api_cdn.hosted_zone_id
-}
-
 # ECR Outputs
 output "ecr_repository_url" {
   description = "URL of the ECR repository"
@@ -120,11 +115,6 @@ output "eks_kms_key_arn" {
 output "rds_kms_key_arn" {
   description = "ARN of the KMS key used for RDS encryption"
   value       = aws_kms_key.rds_key.arn
-}
-
-output "secrets_kms_key_arn" {
-  description = "ARN of the KMS key for Secrets Manager encryption"
-  value       = aws_kms_key.secrets_key.arn
 }
 
 # Route 53 Outputs
