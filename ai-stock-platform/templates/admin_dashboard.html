@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>QuantumVestAI Admin Dashboard</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <style>
+    table { border-collapse: collapse; width: 80%; margin: 20px auto; }
+    th, td { border: 1px solid #aaa; padding: 10px; text-align: center; }
+    .dashboard-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .actions { margin-top: 40px; text-align: center; }
+    .btn { padding: 8px 16px; background-color: #4CAF50; color: white; border: none; cursor: pointer; border-radius: 4px; }
+    .btn:hover { background-color: #45a049; }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <h1 style="text-align:center;">QuantumVestAI Admin Dashboard</h1>
+    
+    <h2>Model Status</h2>
+    <table>
+      <tr>
+        <th>Ticker</th>
+        <th>Model</th>
+        <th>Last Retrained</th>
+        <th>Actions</th>
+      </tr>
+      {% for ticker, info in models.items() %}
+      <tr>
+        <td>{{ ticker }}</td>
+        <td>{{ info.model }}</td>
+        <td>{{ info.last_updated }}</td>
+        <td>
+          <form action="/admin/retrain" method="post">
+            <input type="hidden" name="ticker" value="{{ ticker }}">
+            <select name="model_type">
+              <option value="ensemble" {% if info.model == "Ensemble" %}selected{% endif %}>Ensemble</option>
+              <option value="prophet" {% if info.model == "Prophet" %}selected{% endif %}>Prophet</option>
+              <option value="xgboost" {% if info.model == "XGBoost" %}selected{% endif %}>XGBoost</option>
+              <option value="lstm" {% if info.model == "LSTM" %}selected{% endif %}>LSTM</option>
+            </select>
+            <button type="submit" class="btn">Retrain</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    
+    <div class="actions">
+      <form action="/admin/retrain" method="post">
+        <h3>Add New Model</h3>
+        <label for="new_ticker">Ticker:</label>
+        <input type="text" id="new_ticker" name="ticker" required>
+        
+        <label for="new_model_type">Model Type:</label>
+        <select id="new_model_type" name="model_type">
+          <option value="ensemble">Ensemble</option>
+          <option value="prophet">Prophet</option>
+          <option value="xgboost">XGBoost</option>
+          <option value="lstm">LSTM</option>
+        </select>
+        
+        <button type="submit" class="btn">Create Model</button>
+      </form>
+    </div>
+    
+    <div style="text-align:center; margin-top: 30px;">
+      <a href="/" class="btn">Back to Home</a>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add any JavaScript for the admin dashboard here
+    });
+  </script>
+</body>
+</html>

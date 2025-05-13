@@ -1,0 +1,76 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-init
+  namespace: quantumvestai-ENVIRONMENT_PLACEHOLDER
+  labels:
+    app: quantumvestai
+    component: db-init
+    environment: ENVIRONMENT_PLACEHOLDER
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: quantumvestai
+        component: db-init
+        environment: ENVIRONMENT_PLACEHOLDER
+    spec:
+      containers:
+      - name: db-init
+        image: postgres:14
+        command:
+        - /bin/bash
+        - -c
+        - |
+          echo "Running database initialization scripts..."
+          
+          # Run SQL scripts in order
+          for script in /scripts/01-create-tables.sql /scripts/02-create-functions.sql /scripts/03-grant-permissions.sql
+          do
+            echo "Executing $script..."
+            PGPASSWORD="$DB_PASSWORD" psql -h $DB_HOST -U $DB_USER -d $DB_NAME -f $script
+            
+            if [ $? -ne 0 ]; then
+              echo "Error executing $script"
+              exit 1
+            fi
+          done
+          
+          echo "Database initialization completed successfully"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        env:
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: quantumvestai-rds-credentials
+              key: host
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: quantumvestai-rds-credentials
+              key: username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: quantumvestai-rds-credentials
+              key: password
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: quantumvestai-rds-credentials
+              key: dbname
+        volumeMounts:
+        - name: scripts-volume
+          mountPath: /scripts
+      volumes:
+      - name: scripts-volume
+        configMap:
+          name: db-init-scripts
+      restartPolicy: Never

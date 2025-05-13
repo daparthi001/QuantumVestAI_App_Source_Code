@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>QuantumVestAI - Error</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f5f7fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    
+    .error-container {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      padding: 30px;
+      width: 500px;
+      text-align: center;
+    }
+    
+    h2 {
+      color: #e74c3c;
+      margin-bottom: 20px;
+    }
+    
+    .error-message {
+      color: #333;
+      margin-bottom: 30px;
+      padding: 20px;
+      background-color: #f8d7da;
+      border-radius: 8px;
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #3498db;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+    }
+    
+    .btn:hover {
+      background-color: #2980b9;
+    }
+  </style>
+</head>
+<body>
+  <div class="error-container">
+    <h2>An Error Occurred</h2>
+    
+    <div class="error-message">
+      {{ error }}
+    </div>
+    
+    <a href="/" class="btn">Back to Home</a>
+  </div>
+</body>
+</html>

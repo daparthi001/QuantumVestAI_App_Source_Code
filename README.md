@@ -4,7 +4,7 @@ QuantumVestAI is a multi-modal AI platform for predicting stock volatility using
 
 ---
 
-## 🧱 Project Structure
+## 🧱 Project Structure ###
 
 ```
 ai-stock-platform/

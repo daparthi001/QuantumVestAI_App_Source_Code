@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>QuantumVestAI - Home</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f7fa;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+    }
+    
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .nav {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+    
+    .nav a {
+      margin: 0 15px;
+      text-decoration: none;
+      color: #3498db;
+      font-weight: bold;
+    }
+    
+    .nav a:hover {
+      text-decoration: underline;
+    }
+    
+    .forecast-form {
+      background-color: #f8f9fa;
+      padding: 20px;
+      border-radius: 6px;
+      margin-bottom: 30px;
+    }
+    
+    .forecast-form input, .forecast-form select, .forecast-form button {
+      padding: 8px 12px;
+      margin: 5px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .forecast-form button {
+      background-color: #3498db;
+      color: white;
+      cursor: pointer;
+      border: none;
+    }
+    
+    .forecast-form button:hover {
+      background-color: #2980b9;
+    }
+    
+    .features {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      margin-top: 40px;
+    }
+    
+    .feature {
+      flex-basis: 30%;
+      margin-bottom: 30px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 6px;
+      text-align: center;
+    }
+    
+    .feature h3 {
+      color: #2c3e50;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome to QuantumVestAI</h1>
+    
+    <div class="nav">
+      {% if user %}
+        <a href="/">Home</a>
+        <a href="/admin/dashboard">Admin</a>
+        <a href="/logout">Logout ({{ user.username }})</a>
+      {% else %}
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+      {% endif %}
+    </div>
+    
+    <div class="forecast-form">
+      <h2>Stock Price Forecast</h2>
+      <form method="get" action="/forecast">
+        <label for="ticker">Ticker Symbol:</label>
+        <input id="ticker" name="ticker" required placeholder="e.g., AAPL">
+        
+        <label for="days">Forecast Days:</label>
+        <input id="days" name="days" type="number" value="7" min="1" max="30">
+        
+        <label for="model">Model:</label>
+        <select id="model" name="model">
+          <option value="ensemble">Ensemble</option>
+          <option value="prophet">Prophet</option>
+          <option value="xgboost">XGBoost</option>
+          <option value="lstm">LSTM</option>
+        </select>
+        
+        <button type="submit">Generate Forecast</button>
+      </form>
+    </div>
+    
+    <div class="features">
+      <div class="feature">
+        <h3>Price Forecasting</h3>
+        <p>Use cutting-edge AI models to predict future stock prices based on historical data.</p>
+      </div>
+      
+      <div class="feature">
+        <h3>Sentiment Analysis</h3>
+        <p>Analyze market sentiment from social media and news sources to gauge investor mood.</p>
+      </div>
+      
+      <div class="feature">
+        <h3>Company Summaries</h3>
+        <p>Get AI-generated summaries of company profiles and recent SEC filings.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -4,7 +4,10 @@ on:
   push:
     branches:
       - main
-
+    paths-ignore:
+      - "*.md"
+      - "docs/**"
+      
   workflow_dispatch:
     inputs:
       action:
@@ -15,16 +18,28 @@ on:
         options:
           - deploy
           - destroy
+      environment:
+        description: "Deployment environment"
+        required: true
+        default: dev
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
 
 jobs:
   deploy:
     if: ${{ github.event.inputs.action == 'deploy' || github.event_name == 'push' }}
     runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev' }}
 
     env:
       ECR_REPOSITORY: quantumvestai
       AWS_REGION: us-east-1
       CLUSTER_NAME: quantumvestai-eks
+      #CLUSTER_NAME: quantumvestai-eks-${{ github.event.inputs.environment || 'dev' }}
+      IMAGE_TAG: ${{ github.sha }}
 
     steps:
     - name: Checkout code
@@ -45,26 +60,24 @@ jobs:
     - name: Terraform Init, Validate, Plan, and Apply
       working-directory: ci-cd/terraform
       run: |
-        rm -rf .terraform 
-        rm -rf .terraform.lock.hcl
-        rm -rf .terraform/modules
         terraform init -upgrade
         terraform providers
         terraform validate
-        terraform plan -lock-timeout=300s -out=tfplan
-        terraform apply -lock-timeout=300s -auto-approve tfplan
+        terraform plan 
+        terraform apply -auto-approve
 
     - name: Log in to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
     - name: Build, tag, and push Docker image
-      working-directory: ai-stock-platform
       run: |
-        IMAGE_TAG=latest
-        docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
+        docker build -t $ECR_REPOSITORY:$IMAGE_TAG ./ai-stock-platform
         docker tag $ECR_REPOSITORY:$IMAGE_TAG ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+        docker tag $ECR_REPOSITORY:$IMAGE_TAG ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:latest
         docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+        docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:latest
+        echo "::set-output name=image::${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG"
 
     - name: Update kubeconfig
       run: |
@@ -74,20 +87,42 @@ jobs:
       run: |
         kubectl get nodes
 
+    - name: Update Kubernetes manifests
+      working-directory: ci-cd/k8s
+      run: |
+        # Replace placeholders in manifests
+        sed -i "s|IMAGE_PLACEHOLDER|${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG|g" deployment.yaml
+        sed -i "s|ENVIRONMENT_PLACEHOLDER|${{ github.event.inputs.environment || 'dev' }}|g" deployment.yaml configmap.yaml
+        
+        # Create namespace if it doesn't exist
+        kubectl create namespace quantumvestai-${{ github.event.inputs.environment || 'dev' }} --dry-run=client -o yaml | kubectl apply -f -
+
     - name: Deploy to EKS (Kubernetes)
       working-directory: ci-cd/k8s
       run: |
-        kubectl apply -f deployment.yaml
-        kubectl apply -f service.yaml
-        kubectl apply -f ingress.yaml
-        kubectl apply -f retrain-cronjob.yaml
+        kubectl apply -f configmap.yaml -n quantumvestai-${{ github.event.inputs.environment || 'dev' }}
+        kubectl apply -f secrets.yaml -n quantumvestai-${{ github.event.inputs.environment || 'dev' }}
+        kubectl apply -f pvc.yaml -n quantumvestai-${{ github.event.inputs.environment || 'dev' }}
+        kubectl apply -f deployment.yaml -n quantumvestai-${{ github.event.inputs.environment || 'dev' }}
+        kubectl apply -f service.yaml -n quantumvestai-${{ github.event.inputs.environment || 'dev' }}
+        kubectl apply -f ingress.yaml -n quantumvestai-${{ github.event.inputs.environment || 'dev' }}
+        kubectl apply -f hpa.yaml -n quantumvestai-${{ github.event.inputs.environment || 'dev' }}
+        kubectl apply -f cronjob.yaml -n quantumvestai-${{ github.event.inputs.environment || 'dev' }}
+
+    - name: Verify deployment
+      run: |
+        kubectl get pods -n quantumvestai-${{ github.event.inputs.environment || 'dev' }}
+        kubectl get svc -n quantumvestai-${{ github.event.inputs.environment || 'dev' }}
+        kubectl get ingress -n quantumvestai-${{ github.event.inputs.environment || 'dev' }}
 
   destroy:
     if: ${{ github.event.inputs.action == 'destroy' }}
     runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev' }}
 
     env:
       AWS_REGION: us-east-1
+      CLUSTER_NAME: quantumvestai-eks-${{ github.event.inputs.environment || 'dev' }}
 
     steps:
     - name: Checkout code
@@ -100,13 +135,21 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
+    - name: Update kubeconfig
+      run: |
+        aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+
+    - name: Remove Kubernetes resources
+      run: |
+        kubectl delete namespace quantumvestai-${{ github.event.inputs.environment || 'dev' }} --ignore-not-found
+
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v2
       with:
         terraform_version: 1.5.7
 
-    - name: Terraform Destroy (S3 Backend)
+    - name: Terraform Destroy
       working-directory: ci-cd/terraform
       run: |
         terraform init -upgrade
-        terraform destroy -lock-timeout=300s -auto-approve
+        terraform destroy -var="environment=${{ github.event.inputs.environment || 'dev' }}" -var="aws_region=${{ env.AWS_REGION }}" -lock-timeout=300s -auto-approve

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>QuantumVestAI - Forecast</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f7fa;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+    }
+    
+    h1, h2, h3 {
+      color: #2c3e50;
+    }
+    
+    .forecast-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 20px;
+    }
+    
+    .ticker-info {
+      display: flex;
+      align-items: center;
+    }
+    
+    .ticker-symbol {
+      font-size: 2.5em;
+      margin-right: 15px;
+      font-weight: bold;
+    }
+    
+    .model-badge {
+      background-color: #3498db;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+    
+    .chart-container {
+      margin: 30px 0;
+      height: 400px;
+    }
+    
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+    
+    .data-table th, .data-table td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+    
+    .data-table th {
+      background-color: #f2f2f2;
+    }
+    
+    .data-table tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    
+    .sentiment-container {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 40px;
+      padding: 20px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+    }
+    
+    .sentiment-meter {
+      flex-basis: 30%;
+      text-align: center;
+      padding: 15px;
+      border-radius: 8px;
+    }
+    
+    .positive {
+      background-color: rgba(46, 204, 113, 0.2);
+    }
+    
+    .neutral {
+      background-color: rgba(241, 196, 15, 0.2);
+    }
+    
+    .negative {
+      background-color: rgba(231, 76, 60, 0.2);
+    }
+    
+    .sentiment-score {
+      font-size: 2em;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    
+    .actions {
+      margin-top: 40px;
+      text-align: center;
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #3498db;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      margin: 0 10px;
+    }
+    
+    .btn:hover {
+      background-color: #2980b9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="forecast-header">
+      <div class="ticker-info">
+        <div class="ticker-symbol">{{ forecast.ticker }}</div>
+        <div class="model-badge">{{ forecast.model|title }} Model</div>
+      </div>
+      
+      <div>
+        <p>Forecast generated on {{ forecast.dates[0] }}</p>
+      </div>
+    </div>
+    
+    <div class="chart-container">
+      <canvas id="forecastChart"></canvas>
+    </div>
+    
+    <div class="data-section">
+      <h2>Forecast Data</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Predicted Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for i in range(forecast.dates|length) %}
+          <tr>
+            <td>{{ forecast.dates[i] }}</td>
+            <td>${{ "%.2f"|format(forecast.predictions[i]) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    {% if forecast.sentiment %}
+    <div class="sentiment-section">
+      <h2>Sentiment Analysis</h2>
+      <div class="sentiment-container">
+        <div class="sentiment-meter positive">
+          <h3>Positive</h3>
+          <div class="sentiment-score">{{ "%.0f"|format(forecast.sentiment.positive * 100) }}%</div>
+        </div>
+        
+        <div class="sentiment-meter neutral">
+          <h3>Neutral</h3>
+          <div class="sentiment-score">{{ "%.0f"|format(forecast.sentiment.neutral * 100) }}%</div>
+        </div>
+        
+        <div class="sentiment-meter negative">
+          <h3>Negative</h3>
+          <div class="sentiment-score">{{ "%.0f"|format(forecast.sentiment.negative * 100) }}%</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    
+    <div class="actions">
+      <a href="/" class="btn">Back to Home</a>
+      <a href="/forecast?ticker={{ forecast.ticker }}&days={{ forecast.dates|length }}&model=prophet" class="btn">Try Prophet Model</a>
+      <a href="/forecast?ticker={{ forecast.ticker }}&days={{ forecast.dates|length }}&model=xgboost" class="btn">Try XGBoost Model</a>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const ctx = document.getElementById('forecastChart').getContext('2d');
+      
+      const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: {{ forecast.dates|tojson }},
+          datasets: [{
+            label: 'Price Forecast',
+            data: {{ forecast.predictions|tojson }},
+            borderColor: '#3498db',
+            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+            borderWidth: 2,
+            pointRadius: 4,
+            pointBackgroundColor: '#3498db',
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: false,
+              grid: {
+                drawBorder: false
+              },
+              ticks: {
+                callback: function(value) {
+                  return '$' + value.toFixed(2);
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top'
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return '$' + context.raw.toFixed(2);
+                }
+              }
+            }
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>

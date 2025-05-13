@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: quantumvestai
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - JWT_SECRET_KEY=your_secure_jwt_secret_change_this_in_production
+      - ADMIN_API_KEY=your_secure_admin_api_key_change_this_in_production
+      - TWITTER_BEARER_TOKEN=your_twitter_bearer_token_if_needed
+      - TZ=UTC
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Add a database service if needed
+  # db:
+  #   image: postgres:14
+  #   container_name: quantumvestai-db
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data/
+  #   environment:
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=postgres
+  #     - POSTGRES_DB=quantumvestai
+  #   restart: unless-stopped
+
+# Optional: Define volumes if using database
+# volumes:
+#   postgres_data:
