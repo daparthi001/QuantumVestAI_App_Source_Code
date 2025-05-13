@@ -1,0 +1,25 @@
+# RDS PostgreSQL setup - Remove the duplicate kubernetes_secret resource
+# Assuming the original kubernetes_secret is kept in kubernetes.tf
+
+# Original RDS configurations here...
+# ...
+
+# Remove or comment out this duplicate Kubernetes secret
+# resource "kubernetes_secret" "rds_credentials" {
+#   metadata {
+#     name      = "${var.cluster_name}-rds-credentials"
+#     namespace = "default"
+#   }
+#
+#   data = {
+#     username = aws_db_instance.main.username
+#     password = random_password.rds_password.result
+#     endpoint = aws_db_instance.main.endpoint
+#     port     = aws_db_instance.main.port
+#     database = aws_db_instance.main.name
+#   }
+#
+#   type = "Opaque"
+# }
+
+# Output blocks should be removed from here and kept in the consolidated outputs.tf

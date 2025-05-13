@@ -1,0 +1,16 @@
+# Route53 Configuration - remove duplicated resources
+# Keep original configurations but remove duplicated resources
+
+# Original Route53 zone and certificate configurations here...
+# ...
+
+# Remove these duplicate resources
+# resource "aws_route53_record" "app" {
+#   # Already defined in quantumvestai-route53.tf
+# }
+
+# resource "aws_route53_record" "cdn" {
+#   # Already defined in cloudfront.tf
+# }
+
+# Output blocks should be removed from here and kept in the consolidated outputs.tf
