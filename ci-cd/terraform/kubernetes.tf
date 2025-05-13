@@ -289,16 +289,17 @@ resource "kubernetes_deployment" "ml_processor" {
             mount_path = "/app/models"
           }
           
+          # Fixed GPU resources syntax
           resources {
             limits = {
               cpu    = "4"
               memory = "8Gi"
-              nvidia.com/gpu = "1"
+              "nvidia.com/gpu" = "1"  # Use quotes around the key
             }
             requests = {
               cpu    = "2"
               memory = "4Gi"
-              nvidia.com/gpu = "1"
+              "nvidia.com/gpu" = "1"  # Use quotes around the key
             }
           }
         }
