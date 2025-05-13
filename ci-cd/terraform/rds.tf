@@ -1,11 +1,15 @@
 # RDS Database Configuration
+# Created: 2025-05-13 20:52:42
+# Author: daparthi001
 
 # KMS Key for RDS encryption
 resource "aws_kms_key" "rds_key" {
   description             = "KMS key for RDS database encryption"
   deletion_window_in_days = 30
   enable_key_rotation     = true
-  tags                    = local.common_tags
+  tags = {
+    Name = "${var.project}-${var.environment}-rds-key"
+  }
 }
 
 resource "aws_kms_alias" "rds_key_alias" {
@@ -35,13 +39,6 @@ resource "aws_security_group" "rds" {
     cidr_blocks = ["0.0.0.0/0"]
     description = "Allow all outbound traffic"
   }
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "${var.project}-${var.environment}-rds-sg"
-    }
-  )
 }
 
 # Subnet group for RDS
@@ -49,12 +46,9 @@ resource "aws_db_subnet_group" "main" {
   name       = "${var.project}-${var.environment}-subnet-group"
   subnet_ids = module.vpc.private_subnets
 
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "${var.project}-${var.environment}-subnet-group"
-    }
-  )
+  tags = {
+    Name = "${var.project}-${var.environment}-subnet-group"
+  }
 }
 
 # Random password generator for RDS
@@ -79,7 +73,9 @@ resource "aws_db_parameter_group" "main" {
     value = "1000"
   }
 
-  tags = local.common_tags
+  tags = {
+    Name = "${var.project}-${var.environment}-pg"
+  }
 }
 
 # RDS PostgreSQL Instance
@@ -108,7 +104,9 @@ resource "aws_db_instance" "main" {
   auto_minor_version_upgrade = true
   deletion_protection      = var.environment == "prod"
   
-  tags = local.common_tags
+  tags = {
+    Name = "${var.project}-${var.environment}-rds"
+  }
 }
 
 # Store RDS credentials in Kubernetes secret
@@ -122,7 +120,7 @@ resource "kubernetes_secret" "rds_credentials" {
     username = aws_db_instance.main.username
     password = random_password.rds_password.result
     endpoint = aws_db_instance.main.endpoint
-    port     = aws_db_instance.main.port
+    port     = tostring(aws_db_instance.main.port)
     database = aws_db_instance.main.db_name
   }
 

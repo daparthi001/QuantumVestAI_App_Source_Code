@@ -1,15 +1,14 @@
 # S3 Buckets
+# Created: 2025-05-13 20:46:04
+# Author: daparthi001
 
 # ML Model Storage Bucket
 resource "aws_s3_bucket" "model_storage" {
   bucket = var.model_storage_bucket
   
-  tags = merge(
-    local.common_tags,
-    {
-      Name = var.model_storage_bucket
-    }
-  )
+  tags = {
+    Name = var.model_storage_bucket
+  }
 }
 
 resource "aws_s3_bucket_versioning" "model_storage_versioning" {
@@ -66,12 +65,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "model_storage_lifecycle" {
 resource "aws_s3_bucket" "frontend_assets" {
   bucket = "${var.project}-${var.environment}-frontend-assets"
   
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "${var.project}-${var.environment}-frontend-assets"
-    }
-  )
+  tags = {
+    Name = "${var.project}-${var.environment}-frontend-assets"
+  }
 }
 
 resource "aws_s3_bucket_versioning" "frontend_assets_versioning" {

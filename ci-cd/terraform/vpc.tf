@@ -29,7 +29,7 @@ module "vpc" {
     "kubernetes.io/role/elb"                    = "1"
   }
 
-  tags = local.common_tags
+  
 }
 
 # Flow logs
@@ -38,13 +38,11 @@ resource "aws_flow_log" "vpc_flow_log" {
   log_destination = aws_cloudwatch_log_group.flow_logs.arn
   traffic_type    = "ALL"
   vpc_id          = module.vpc.vpc_id
-  tags            = local.common_tags
 }
 
 resource "aws_cloudwatch_log_group" "flow_logs" {
   name              = "/aws/vpc-flow-logs/${var.project}-${var.environment}"
   retention_in_days = 30
-  tags              = local.common_tags
 }
 
 resource "aws_iam_role" "flow_logs_role" {
@@ -63,7 +61,7 @@ resource "aws_iam_role" "flow_logs_role" {
     ]
   })
 
-  tags = local.common_tags
+  
 }
 
 resource "aws_iam_role_policy" "flow_logs_policy" {

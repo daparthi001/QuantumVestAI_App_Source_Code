@@ -1,5 +1,4 @@
-# Provider configurations for AWS, Kubernetes, and Helm
-
+# Provider Configurations
 terraform {
   required_providers {
     aws = {
@@ -24,15 +23,21 @@ terraform {
     }
   }
   required_version = ">= 1.0.0"
-  # Backend configuration is in backend.tf
 }
 
 # Default AWS provider
 provider "aws" {
   region = var.region
-  
+  # Update timestamp in default_tags
   default_tags {
-    tags = local.common_tags
+    tags = {
+      Project     = var.project
+      Environment = var.environment
+      ManagedBy   = "Terraform"
+      Owner       = "QuantumVestAI"
+      CreatedBy   = "daparthi001"
+      CreatedAt   = "2025-05-13 20:34:14"
+    }
   }
 }
 
@@ -42,7 +47,14 @@ provider "aws" {
   region = "us-east-1"
   
   default_tags {
-    tags = local.common_tags
+    tags = {
+      Project     = var.project
+      Environment = var.environment
+      ManagedBy   = "Terraform"
+      Owner       = "QuantumVestAI"
+      CreatedBy   = "daparthi001"
+      CreatedAt   = "2025-05-13"
+    }
   }
 }
 

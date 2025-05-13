@@ -8,7 +8,7 @@ resource "aws_eks_addon" "vpc_cni" {
   resolve_conflicts        = "OVERWRITE"
   service_account_role_arn = aws_iam_role.vpc_cni_role.arn
   
-  tags = local.common_tags
+  
 }
 
 resource "aws_iam_role" "vpc_cni_role" {
@@ -32,7 +32,7 @@ resource "aws_iam_role" "vpc_cni_role" {
     ]
   })
   
-  tags = local.common_tags
+  
 }
 
 resource "aws_iam_role_policy_attachment" "vpc_cni_policy" {
@@ -47,7 +47,7 @@ resource "aws_eks_addon" "coredns" {
   addon_version     = var.eks_addon_versions["coredns"]
   resolve_conflicts = "OVERWRITE"
   
-  tags = local.common_tags
+  
   
   depends_on = [aws_eks_node_group.standard]
 }
@@ -59,7 +59,7 @@ resource "aws_eks_addon" "kube_proxy" {
   addon_version     = var.eks_addon_versions["kube-proxy"]
   resolve_conflicts = "OVERWRITE"
   
-  tags = local.common_tags
+  
 }
 
 # EBS CSI Driver
@@ -70,7 +70,7 @@ resource "aws_eks_addon" "aws_ebs_csi_driver" {
   resolve_conflicts        = "OVERWRITE"
   service_account_role_arn = aws_iam_role.ebs_csi_role.arn
   
-  tags = local.common_tags
+  
 }
 
 resource "aws_iam_role" "ebs_csi_role" {
@@ -94,7 +94,7 @@ resource "aws_iam_role" "ebs_csi_role" {
     ]
   })
   
-  tags = local.common_tags
+  
 }
 
 resource "aws_iam_policy" "ebs_csi_policy" {
@@ -235,7 +235,7 @@ resource "aws_iam_policy" "ebs_csi_policy" {
     ]
   })
   
-  tags = local.common_tags
+  
 }
 
 resource "aws_iam_role_policy_attachment" "ebs_csi_policy_attachment" {

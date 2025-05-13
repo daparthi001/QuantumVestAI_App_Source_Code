@@ -1,15 +1,8 @@
 # Local variables used throughout the configuration
 
 locals {
-  common_tags = {
-    Project     = var.project
-    Environment = var.environment
-    ManagedBy   = "Terraform"
-    Owner       = "QuantumVestAI"
-    CreatedBy   = "daparthi001"
-    CreatedAt   = "2025-05-13"
-  }
-
+  # Remove common_tags as they're now in the provider's default_tags
+  
   # EKS Authentication - used in eks-auth.tf
   map_roles = [
     # Add any predefined role mappings here

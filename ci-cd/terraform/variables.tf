@@ -172,6 +172,7 @@ variable "domain_name" {
 variable "route53_zone_id" {
   description = "Route53 zone ID for the domain"
   type        = string
+  default     = "Z00140672OE92YR0CD3MZ"
 }
 
 # CloudFront

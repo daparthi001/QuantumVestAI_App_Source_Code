@@ -174,7 +174,7 @@ resource "aws_iam_role" "api_role" {
     ]
   })
   
-  tags = local.common_tags
+  
 }
 
 # Policy for S3 access from API
@@ -201,7 +201,7 @@ resource "aws_iam_policy" "api_s3_policy" {
     ]
   })
   
-  tags = local.common_tags
+  
 }
 
 resource "aws_iam_role_policy_attachment" "api_s3_policy_attachment" {
@@ -368,7 +368,7 @@ resource "aws_iam_role" "ml_processor_role" {
     ]
   })
   
-  tags = local.common_tags
+  
 }
 
 # Policy for S3 access from ML processor

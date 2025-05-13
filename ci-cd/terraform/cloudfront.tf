@@ -12,7 +12,7 @@ resource "aws_acm_certificate" "cloudfront" {
     create_before_destroy = true
   }
   
-  tags = local.common_tags
+  
 }
 
 # DNS validation record for CloudFront certificate
@@ -167,7 +167,7 @@ resource "aws_cloudfront_distribution" "frontend" {
     minimum_protocol_version = "TLSv1.2_2021"
   }
   
-  tags = local.common_tags
+  
 }
 
 # CloudFront Function for SPA routing
@@ -188,7 +188,7 @@ resource "aws_iam_role" "lambda_edge_role" {
     ]
   })
 
-  tags = local.common_tags
+  
 }
 
 resource "aws_iam_policy" "lambda_edge_policy" {
@@ -210,7 +210,7 @@ resource "aws_iam_policy" "lambda_edge_policy" {
     ]
   })
 
-  tags = local.common_tags
+  
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_edge_policy_attachment" {
@@ -255,7 +255,7 @@ resource "aws_lambda_function" "spa_router" {
   runtime          = "nodejs16.x"
   publish          = true
 
-  tags = local.common_tags
+  
 }
 
 # Route53 record for CloudFront

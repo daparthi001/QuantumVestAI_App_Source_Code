@@ -42,7 +42,7 @@ resource "aws_kms_key" "cloudwatch_logs" {
     ]
   })
   
-  tags = local.common_tags
+  
 }
 
 resource "aws_kms_alias" "cloudwatch_logs_alias" {
@@ -56,7 +56,7 @@ resource "aws_kms_key" "s3" {
   deletion_window_in_days = 30
   enable_key_rotation     = true
   
-  tags = local.common_tags
+  
 }
 
 resource "aws_kms_alias" "s3_alias" {

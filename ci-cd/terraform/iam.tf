@@ -23,7 +23,7 @@ resource "aws_iam_policy" "s3_model_access" {
     ]
   })
 
-  tags = local.common_tags
+  
 }
 
 # Attach S3 access policy to node role

@@ -1,11 +1,15 @@
 # EKS Cluster and Node Groups Configuration
+# Created: 2025-05-13 20:54:00
+# Author: daparthi001
 
 # KMS Key for EKS encryption
 resource "aws_kms_key" "eks_key" {
   description             = "KMS key for EKS cluster encryption"
   deletion_window_in_days = 30
   enable_key_rotation     = true
-  tags                    = local.common_tags
+  tags = {
+    Name = "${var.project}-${var.environment}-eks-key"
+  }
 }
 
 resource "aws_kms_alias" "eks_key_alias" {
@@ -30,7 +34,9 @@ resource "aws_iam_role" "eks_cluster" {
     ]
   })
 
-  tags = local.common_tags
+  tags = {
+    Name = "${var.cluster_name}-cluster-role"
+  }
 }
 
 # Attach AmazonEKSClusterPolicy to the cluster role
@@ -61,12 +67,9 @@ resource "aws_security_group" "eks_cluster" {
     description = "Allow HTTPS traffic for Kubernetes API"
   }
 
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "${var.cluster_name}-cluster-sg"
-    }
-  )
+  tags = {
+    Name = "${var.cluster_name}-cluster-sg"
+  }
 }
 
 # EKS Cluster
@@ -102,7 +105,9 @@ resource "aws_eks_cluster" "eks" {
     aws_iam_role_policy_attachment.eks_cluster_policy
   ]
 
-  tags = local.common_tags
+  tags = {
+    Name = var.cluster_name
+  }
 }
 
 # EKS Node Group IAM Role
@@ -122,7 +127,9 @@ resource "aws_iam_role" "eks_node" {
     ]
   })
 
-  tags = local.common_tags
+  tags = {
+    Name = "${var.cluster_name}-node-role"
+  }
 }
 
 # Attach policies to node role
@@ -162,13 +169,10 @@ resource "aws_eks_node_group" "standard" {
     "environment" = var.environment
   }
 
-  tags = merge(
-    local.common_tags,
-    {
-      "k8s.io/cluster-autoscaler/enabled" = "true"
-      "k8s.io/cluster-autoscaler/${var.cluster_name}" = "owned"
-    }
-  )
+  tags = {
+    "k8s.io/cluster-autoscaler/enabled" = "true"
+    "k8s.io/cluster-autoscaler/${var.cluster_name}" = "owned"
+  }
 
   depends_on = [
     aws_iam_role_policy_attachment.eks_worker_policy,
@@ -207,15 +211,13 @@ resource "aws_eks_node_group" "ml" {
     effect = "NO_SCHEDULE"
   }
 
-  tags = merge(
-    local.common_tags,
-    {
-      "k8s.io/cluster-autoscaler/enabled" = "true"
-      "k8s.io/cluster-autoscaler/${var.cluster_name}" = "owned"
-      "k8s.io/cluster-autoscaler/node-template/label/workload-type" = "ml"
-    }
-  )
-
+  # Fixed the tags syntax - removed the extra braces
+  tags = {
+    "k8s.io/cluster-autoscaler/enabled" = "true"
+    "k8s.io/cluster-autoscaler/${var.cluster_name}" = "owned"
+    "k8s.io/cluster-autoscaler/node-template/label/workload-type" = "ml"
+  }
+  
   depends_on = [
     aws_iam_role_policy_attachment.eks_worker_policy,
     aws_iam_role_policy_attachment.eks_cni_policy,
@@ -233,7 +235,9 @@ resource "aws_iam_openid_connect_provider" "eks" {
   thumbprint_list = [data.tls_certificate.eks.certificates[0].sha1_fingerprint]
   url             = aws_eks_cluster.eks.identity[0].oidc[0].issuer
   
-  tags = local.common_tags
+  tags = {
+    Name = "${var.cluster_name}-oidc-provider"
+  }
 }
 
 # Optional: Kubeconfig update script

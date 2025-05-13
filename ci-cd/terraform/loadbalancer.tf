@@ -1,4 +1,6 @@
 # Load Balancer Configuration
+# Created: 2025-05-13 20:48:38
+# Author: daparthi001
 
 # Security group for ALB
 resource "aws_security_group" "alb" {
@@ -29,13 +31,10 @@ resource "aws_security_group" "alb" {
     cidr_blocks = ["0.0.0.0/0"]
     description = "Allow all outbound traffic"
   }
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "${var.project}-${var.environment}-alb-sg"
-    }
-  )
+  
+  tags = {
+    Name = "${var.project}-${var.environment}-alb-sg"
+  }
 }
 
 # Security group for backend services
@@ -60,12 +59,9 @@ resource "aws_security_group" "backend" {
     description = "Allow all outbound traffic"
   }
 
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "${var.project}-${var.environment}-backend-sg"
-    }
-  )
+  tags = {
+    Name = "${var.project}-${var.environment}-backend-sg"
+  }
 }
 
 # ACM certificate
@@ -79,7 +75,9 @@ resource "aws_acm_certificate" "cert" {
     create_before_destroy = true
   }
   
-  tags = local.common_tags
+  tags = {
+    Name = "api.${var.domain_name}-certificate"
+  }
 }
 
 # DNS validation record
@@ -122,14 +120,18 @@ resource "aws_lb" "main" {
     enabled = true
   }
 
-  tags = local.common_tags
+  tags = {
+    Name = "${var.project}-${var.environment}-alb"
+  }
 }
 
 # S3 bucket for ALB access logs
 resource "aws_s3_bucket" "alb_logs" {
   bucket = "${var.project}-${var.environment}-alb-logs"
   
-  tags = local.common_tags
+  tags = {
+    Name = "${var.project}-${var.environment}-alb-logs"
+  }
 }
 
 resource "aws_s3_bucket_ownership_controls" "alb_logs" {
@@ -228,7 +230,9 @@ resource "aws_lb_target_group" "main" {
     matcher             = "200"
   }
 
-  tags = local.common_tags
+  tags = {
+    Name = "${var.project}-${var.environment}-api-tg"
+  }
 }
 
 # API listener rule
