@@ -26,7 +26,7 @@ module "eks" {
   cluster_version = "1.29"
   vpc_id          = module.vpc.vpc_id
   subnet_ids      = module.vpc.private_subnets
-
+  cluster_endpoint_public_access = true
   eks_managed_node_groups = {
     default = {
       desired_size = 2
@@ -35,23 +35,4 @@ module "eks" {
       instance_types = ["t3.medium"]
     }
   }
-
-  manage_aws_auth_configmap = true
-  create_aws_auth_configmap = "false"
-
-  aws_auth_users = [
-    {
-      userarn  = "arn:aws:iam::921930869047:user/admin-role"
-      username = "admin-role"
-      groups   = ["system:masters"]
-    }
-  ]
-
-  aws_auth_roles = [
-    {
-      rolearn  = "arn:aws:iam::921930869047:role/quantumai"
-      username = "quantumai"
-      groups   = ["system:masters"]
-    }
-  ]
 }
