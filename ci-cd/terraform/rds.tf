@@ -1,17 +1,49 @@
 # Amazon RDS for model training data and prediction results
 
+# Import relevant data from existing VPC and EKS modules
+data "aws_vpc" "selected" {
+  filter {
+    name   = "tag:Name"
+    values = ["quantumvestai-vpc-${var.environment}"]
+  }
+}
+
+data "aws_subnets" "private" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.selected.id]
+  }
+
+  filter {
+    name   = "tag:Name"
+    values = ["*private*"]
+  }
+}
+
+data "aws_security_group" "eks_nodes" {
+  filter {
+    name   = "tag:Name"
+    values = ["*eks*node*"]
+  }
+
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.selected.id]
+  }
+}
+
 # Security group for RDS
 resource "aws_security_group" "rds_sg" {
   name        = "quantumvestai-rds-sg-${var.environment}"
   description = "Security group for QuantumVestAI RDS instance"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = data.aws_vpc.selected.id
 
   # Allow incoming traffic from EKS nodes
   ingress {
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
-    security_groups = [module.eks.node_security_group_id]
+    security_groups = [data.aws_security_group.eks_nodes.id]
     description     = "Allow PostgreSQL traffic from EKS nodes"
   }
 
@@ -35,7 +67,7 @@ resource "aws_security_group" "rds_sg" {
 # RDS Subnet Group
 resource "aws_db_subnet_group" "rds_subnet_group" {
   name       = "quantumvestai-rds-subnet-group-${var.environment}"
-  subnet_ids = module.vpc.private_subnets
+  subnet_ids = data.aws_subnets.private.ids
   
   tags = merge(
     local.tags,
@@ -173,17 +205,10 @@ resource "aws_db_instance" "quantumvestai" {
     }
   )
 
-  # This needs to be a fixed value, not a dynamic variable
-  # For production environment, manually set this to true in a separate file
+  # Fixed value for prevent_destroy
   lifecycle {
     prevent_destroy = false
   }
-}
-
-# Production environment RDS instance with prevent_destroy = true
-# Only create this for production environment
-locals {
-  create_prod_instance = var.environment == "prod" ? 1 : 0
 }
 
 # IAM Role for RDS Enhanced Monitoring
@@ -210,27 +235,6 @@ resource "aws_iam_role" "rds_monitoring_role" {
 resource "aws_iam_role_policy_attachment" "rds_monitoring_attachment" {
   role       = aws_iam_role.rds_monitoring_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
-}
-
-# Create Kubernetes secret for RDS access
-resource "kubernetes_secret" "rds_credentials" {
-  metadata {
-    name      = "quantumvestai-rds-credentials"
-    namespace = "quantumvestai-${var.environment}"
-  }
-
-  data = {
-    username = var.rds_username
-    password = random_password.rds_password.result
-    host     = aws_db_instance.quantumvestai.address
-    port     = "5432"
-    dbname   = var.rds_database_name
-    url      = "postgresql://${var.rds_username}:${random_password.rds_password.result}@${aws_db_instance.quantumvestai.address}:5432/${var.rds_database_name}"
-  }
-
-  depends_on = [
-    kubernetes_namespace.quantumvestai
-  ]
 }
 
 # Outputs
