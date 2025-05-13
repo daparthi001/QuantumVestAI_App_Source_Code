@@ -1,9 +1,7 @@
-# Create this as a separate file and apply it before the main configuration
+# Resources for Terraform Backend
+# Note: Using the AWS provider already defined in providers.tf
 
-provider "aws" {
-  region = "us-west-2"
-}
-
+# S3 bucket for Terraform state
 resource "aws_s3_bucket" "terraform_state" {
   bucket = "quantumvestai-terraform-state"
 
