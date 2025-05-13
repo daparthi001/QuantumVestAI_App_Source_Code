@@ -4,7 +4,7 @@
 variable "region" {
   description = "AWS Region"
   type        = string
-  default     = "us-west-2"
+  default     = "us-east-1"
 }
 
 variable "environment" {
@@ -29,7 +29,7 @@ variable "vpc_cidr" {
 variable "availability_zones" {
   description = "List of availability zones"
   type        = list(string)
-  default     = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  default     = ["us-east-1a", "us-east-1b", "us-east-1c"]
 }
 
 # EKS variables
@@ -42,7 +42,7 @@ variable "cluster_name" {
 variable "kubernetes_version" {
   description = "Kubernetes version for EKS cluster"
   type        = string
-  default     = "1.27"
+  default     = "1.31"
 }
 
 variable "node_instance_type" {
@@ -60,7 +60,7 @@ variable "node_disk_size" {
 variable "min_nodes" {
   description = "Minimum number of nodes"
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "max_nodes" {
@@ -72,7 +72,7 @@ variable "max_nodes" {
 variable "desired_nodes" {
   description = "Desired number of nodes"
   type        = number
-  default     = 2
+  default     = 1
 }
 
 # EKS ML nodes
@@ -193,7 +193,7 @@ variable "alb_internal" {
 variable "admin_user_arns" {
   description = "ARNs of IAM users/roles for EKS admin access"
   type        = list(string)
-  default     = []
+  default     = ["arn:aws:iam::921930869047:user/admin-role"]
 }
 
 variable "developer_user_arns" {
@@ -205,7 +205,7 @@ variable "developer_user_arns" {
 variable "readonly_user_arns" {
   description = "ARNs of IAM users/roles for EKS read-only access"
   type        = list(string)
-  default     = []
+  default     = ["arn:aws:iam::921930869047:user/admin-role",]
 }
 
 variable "environments" {
@@ -228,7 +228,7 @@ variable "elb_account_ids" {
     "us-east-1"      = "127311923021"
     "us-east-2"      = "033677994240"
     "us-west-1"      = "027434742980"
-    "us-west-2"      = "797873946194"
+    "us-east-1"      = "797873946194"
     "af-south-1"     = "098369216593"
     "ap-east-1"      = "754344448648"
     "ap-northeast-1" = "582318560864"
