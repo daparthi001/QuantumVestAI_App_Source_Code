@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: quantumvestai
-        image: <your-ecr-repo>/quantumvestai:latest
+        image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:latest
         ports:
         - containerPort: 8000
         env:
