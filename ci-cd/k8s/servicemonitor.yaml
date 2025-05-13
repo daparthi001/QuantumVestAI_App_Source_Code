@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: quantumvestai
+  labels:
+    app: quantumvestai
+spec:
+  selector:
+    matchLabels:
+      app: quantumvestai
+  endpoints:
+  - port: web
+    interval: 30s
+    path: /metrics

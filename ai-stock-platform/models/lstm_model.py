@@ -3,14 +3,28 @@ import pandas as pd
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from sklearn.preprocessing import MinMaxScaler
+import datetime
 
 def run_lstm(df, forecast_days=7, epochs=20, look_back=30):
     """
     Train an LSTM model on the provided dataframe's 'close' column and forecast future prices.
-    Assumes the dataframe has a 'close' column and is sorted by date.
+    
+    Args:
+        df: DataFrame with historical price data
+        forecast_days: Number of days to forecast
+        epochs: Number of training epochs
+        look_back: Number of previous days to use for prediction
+        
+    Returns:
+        numpy array of predicted values
     """
+    # Ensure we have the 'close' column
+    if 'close' not in df.columns and 'Close' in df.columns:
+        df = df.copy()
+        df['close'] = df['Close']
+    
     if 'close' not in df.columns:
-        raise ValueError("Input dataframe must have a 'close' column.")
+        raise ValueError("Input dataframe must have a 'close' or 'Close' column.")
     
     # Scale data
     scaler = MinMaxScaler(feature_range=(0, 1))
