@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: db-backup-pvc
+  namespace: quantumvestai-ENVIRONMENT_PLACEHOLDER
+  labels:
+    app: quantumvestai
+    component: db-backup
+    environment: ENVIRONMENT_PLACEHOLDER
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: gp2  # Using AWS EBS GP2 storage class
