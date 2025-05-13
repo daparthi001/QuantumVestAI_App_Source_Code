@@ -177,3 +177,36 @@ output "aws_caller_arn" {
   description = "ARN of current AWS caller"
   value       = data.aws_caller_identity.current.arn
 }
+
+variable "environment" {
+  description = "Environment (dev, staging, prod)"
+  type        = string
+  default     = "dev"
+}
+
+variable "aws_region" {
+  description = "AWS region to deploy resources"
+  type        = string
+  default     = "us-east-1"
+}
+
+variable "vpc_cidr" {
+  description = "CIDR block for VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "project" {
+  description = "Project name"
+  type        = string
+  default     = "QuantumVestAI"
+}
+
+# Common tags to be applied to all resources
+locals {
+  tags = {
+    Environment = var.environment
+    Project     = var.project
+    ManagedBy   = "Terraform"
+  }
+}
