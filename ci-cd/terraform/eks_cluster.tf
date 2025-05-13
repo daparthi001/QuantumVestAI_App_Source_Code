@@ -1,26 +1,29 @@
-# EKS Cluster and Node Groups
+# EKS Cluster and Node Groups Configuration
 
-resource "aws_eks_cluster" "eks" {
-  name     = var.cluster_name
-  role_arn = aws_iam_role.eks_cluster.arn
-  version  = var.kubernetes_version
+# IAM Role for EKS Cluster
+resource "aws_iam_role" "eks_cluster" {
+  name = "${var.cluster_name}-cluster-role"
 
-  vpc_config {
-    subnet_ids         = module.vpc.private_subnets
-    security_group_ids = [aws_security_group.eks_cluster.id]
-    endpoint_private_access = true
-    endpoint_public_access  = true
-  }
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "eks.amazonaws.com"
+        }
+      }
+    ]
+  })
 
-  # Enable EKS logging
-  enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+  tags = local.common_tags
+}
 
-  # Ensure IAM Role permissions are created before and deleted after EKS Cluster handling
-  depends_on = [
-    aws_iam_role_policy_attachment.eks_cluster_policy
-  ]
-
-  tags = local.tags
+# Attach AmazonEKSClusterPolicy to the cluster role
+resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+  role       = aws_iam_role.eks_cluster.name
 }
 
 # Security group for EKS cluster
@@ -46,63 +49,86 @@ resource "aws_security_group" "eks_cluster" {
   }
 
   tags = merge(
-    local.tags,
+    local.common_tags,
     {
       Name = "${var.cluster_name}-cluster-sg"
     }
   )
 }
 
-# Security group for EKS nodes
-resource "aws_security_group" "eks_nodes" {
-  name        = "${var.cluster_name}-node-sg"
-  description = "Security group for EKS worker nodes"
-  vpc_id      = module.vpc.vpc_id
+# EKS Cluster
+resource "aws_eks_cluster" "eks" {
+  name     = var.cluster_name
+  role_arn = aws_iam_role.eks_cluster.arn
+  version  = var.kubernetes_version
 
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow all outbound traffic"
+  vpc_config {
+    subnet_ids = module.vpc.private_subnets
+    
+    security_group_ids = [
+      aws_security_group.eks_cluster.id
+    ]
+    
+    endpoint_private_access = true
+    endpoint_public_access  = true
   }
 
-  # Allow nodes to communicate with each other
-  ingress {
-    from_port   = 0
-    to_port     = 65535
-    protocol    = "-1"
-    self        = true
-    description = "Allow nodes to communicate with each other"
-  }
+  # Enable EKS logging
+  enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
-  # Allow worker nodes to communicate with the cluster API
-  ingress {
-    from_port       = 443
-    to_port         = 443
-    protocol        = "tcp"
-    security_groups = [aws_security_group.eks_cluster.id]
-    description     = "Allow pods to communicate with the cluster API"
-  }
-
-  # Allow cluster control plane to communicate with worker nodes
-  ingress {
-    from_port       = 1025
-    to_port         = 65535
-    protocol        = "tcp"
-    security_groups = [aws_security_group.eks_cluster.id]
-    description     = "Allow cluster control plane to communicate with worker nodes"
-  }
-
-  tags = merge(
-    local.tags,
-    {
-      Name = "${var.cluster_name}-node-sg"
+  # Encryption configuration
+  encryption_config {
+    provider {
+      key_arn = aws_kms_key.eks_key.arn
     }
-  )
+    resources = ["secrets"]
+  }
+
+  # Ensure IAM Role permissions are created before and deleted after EKS Cluster handling
+  depends_on = [
+    aws_iam_role_policy_attachment.eks_cluster_policy
+  ]
+
+  tags = local.common_tags
 }
 
-# EKS Node Group - Standard
+# EKS Node Group IAM Role
+resource "aws_iam_role" "eks_node" {
+  name = "${var.cluster_name}-node-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = local.common_tags
+}
+
+# Attach policies to node role
+resource "aws_iam_role_policy_attachment" "eks_worker_policy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+  role       = aws_iam_role.eks_node.name
+}
+
+resource "aws_iam_role_policy_attachment" "eks_cni_policy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+  role       = aws_iam_role.eks_node.name
+}
+
+resource "aws_iam_role_policy_attachment" "ecr_readonly" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  role       = aws_iam_role.eks_node.name
+}
+
+# Standard Node Group
 resource "aws_eks_node_group" "standard" {
   cluster_name    = aws_eks_cluster.eks.name
   node_group_name = "${var.cluster_name}-standard-nodes"
@@ -116,31 +142,21 @@ resource "aws_eks_node_group" "standard" {
   }
 
   instance_types = [var.node_instance_type]
+  disk_size      = var.node_disk_size
 
-  # Disk configuration
-  disk_size = var.node_disk_size
-
-  # Node labels
   labels = {
-    "role" = "standard"
+    "role"        = "standard"
     "environment" = var.environment
   }
 
-  # Enable cluster autoscaler tags
   tags = merge(
-    local.tags,
+    local.common_tags,
     {
-      "k8s.io/cluster-autoscaler/enabled" = "true",
+      "k8s.io/cluster-autoscaler/enabled" = "true"
       "k8s.io/cluster-autoscaler/${var.cluster_name}" = "owned"
     }
   )
 
-  # Update configuration
-  update_config {
-    max_unavailable = 1
-  }
-
-  # Ensure IAM Role permissions are created before and deleted after EKS Node Group handling
   depends_on = [
     aws_iam_role_policy_attachment.eks_worker_policy,
     aws_iam_role_policy_attachment.eks_cni_policy,
@@ -148,7 +164,7 @@ resource "aws_eks_node_group" "standard" {
   ]
 }
 
-# EKS Node Group - ML (for AI/ML workloads)
+# ML Node Group (Optional)
 resource "aws_eks_node_group" "ml" {
   count = var.enable_ml_nodes ? 1 : 0
 
@@ -164,39 +180,29 @@ resource "aws_eks_node_group" "ml" {
   }
 
   instance_types = [var.ml_node_instance_type]
+  disk_size      = var.ml_node_disk_size
 
-  # Disk configuration
-  disk_size = var.ml_node_disk_size
-
-  # Node labels and taints
   labels = {
-    "role" = "ml-worker"
+    "role"         = "ml-worker"
     "workload-type" = "ml"
-    "environment" = var.environment
+    "environment"   = var.environment
   }
-  
+
   taint {
     key    = "workload-type"
     value  = "ml"
     effect = "NO_SCHEDULE"
   }
 
-  # Enable cluster autoscaler tags
   tags = merge(
-    local.tags,
+    local.common_tags,
     {
-      "k8s.io/cluster-autoscaler/enabled" = "true",
-      "k8s.io/cluster-autoscaler/${var.cluster_name}" = "owned",
+      "k8s.io/cluster-autoscaler/enabled" = "true"
+      "k8s.io/cluster-autoscaler/${var.cluster_name}" = "owned"
       "k8s.io/cluster-autoscaler/node-template/label/workload-type" = "ml"
     }
   )
 
-  # Update configuration
-  update_config {
-    max_unavailable = 1
-  }
-
-  # Ensure IAM Role permissions are created before and deleted after EKS Node Group handling
   depends_on = [
     aws_iam_role_policy_attachment.eks_worker_policy,
     aws_iam_role_policy_attachment.eks_cni_policy,
@@ -204,7 +210,7 @@ resource "aws_eks_node_group" "ml" {
   ]
 }
 
-# EKS OIDC Provider for IAM Roles for Service Accounts (IRSA)
+# OIDC Provider for IAM Roles for Service Accounts (IRSA)
 data "tls_certificate" "eks" {
   url = aws_eks_cluster.eks.identity[0].oidc[0].issuer
 }
@@ -215,12 +221,12 @@ resource "aws_iam_openid_connect_provider" "eks" {
   url             = aws_eks_cluster.eks.identity[0].oidc[0].issuer
 }
 
-# Kubeconfig update script
+# Optional: Kubeconfig update script
 resource "local_file" "kubeconfig_update_script" {
   count    = var.output_kubeconfig_update_script ? 1 : 0
   content  = <<-EOT
     #!/bin/bash
-    aws eks update-kubeconfig --region ${var.aws_region} --name ${aws_eks_cluster.eks.name}
+    aws eks update-kubeconfig --region ${var.region} --name ${aws_eks_cluster.eks.name}
     echo "Kubeconfig updated for cluster ${aws_eks_cluster.eks.name}"
   EOT
   filename = "${path.module}/update-kubeconfig.sh"
@@ -229,4 +235,21 @@ resource "local_file" "kubeconfig_update_script" {
   provisioner "local-exec" {
     command = "chmod +x ${path.module}/update-kubeconfig.sh"
   }
+}
+
+# Outputs
+output "eks_cluster_name" {
+  description = "Name of the EKS cluster"
+  value       = aws_eks_cluster.eks.name
+}
+
+output "eks_cluster_endpoint" {
+  description = "Endpoint of the EKS cluster"
+  value       = aws_eks_cluster.eks.endpoint
+}
+
+output "eks_cluster_certificate_authority_data" {
+  description = "Certificate authority data for the EKS cluster"
+  value       = aws_eks_cluster.eks.certificate_authority[0].data
+  sensitive   = true
 }
