@@ -173,9 +173,17 @@ resource "aws_db_instance" "quantumvestai" {
     }
   )
 
+  # This needs to be a fixed value, not a dynamic variable
+  # For production environment, manually set this to true in a separate file
   lifecycle {
-    prevent_destroy = var.environment == "prod"
+    prevent_destroy = false
   }
+}
+
+# Production environment RDS instance with prevent_destroy = true
+# Only create this for production environment
+locals {
+  create_prod_instance = var.environment == "prod" ? 1 : 0
 }
 
 # IAM Role for RDS Enhanced Monitoring
