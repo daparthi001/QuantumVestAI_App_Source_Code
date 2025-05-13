@@ -65,8 +65,8 @@ jobs:
         terraform init -upgrade
         terraform providers
         terraform validate
-        terraform plan -var="environment=${{ github.event.inputs.environment || 'dev' }}" -var="aws_region=${{ env.AWS_REGION }}" -lock-timeout=300s -out=tfplan
-        terraform apply -lock-timeout=300s -auto-approve tfplan
+        terraform plan 
+        terraform apply -auto-approve
 
     - name: Log in to Amazon ECR
       id: login-ecr
