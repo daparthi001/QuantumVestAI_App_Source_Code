@@ -8,6 +8,10 @@ variable "cluster_name" {
   description = "EKS cluster name"
 }
 
+variable "env" {
+  default     = "dev"
+}
+
 variable "node_instance_type" {
   default     = "t3.medium"
   description = "Instance type for worker nodes"

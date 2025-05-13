@@ -37,7 +37,7 @@ jobs:
     env:
       ECR_REPOSITORY: quantumvestai
       AWS_REGION: us-east-1
-      CLUSTER_NAME: quantumvestai
+      CLUSTER_NAME: quantumvestai-eks
       #CLUSTER_NAME: quantumvestai-eks-${{ github.event.inputs.environment || 'dev' }}
       IMAGE_TAG: ${{ github.sha }}
 
