@@ -1,32 +1,10 @@
 # QuantumVestAI Infrastructure
+# Created: 2025-05-13
+# Author: daparthi001
 
-# Local variables
-locals {
-  common_tags = {
-    Project     = var.project
-    Environment = var.environment
-    ManagedBy   = "Terraform"
-  }
-}
+# Main configuration file that ties everything together
+# Note: All provider configurations are in providers.tf
+# Note: All backend configuration is in backend.tf
+# Note: All outputs are in outputs.tf
 
-# Module imports and other configurations that aren't duplicated
-# Keep any unique resources that don't conflict with other files
-
-# Remove the duplicate:
-# - terraform block with required_providers
-# - backend "s3" block
-# - provider "aws" block
-# - provider "kubernetes" block 
-# - provider "helm" block
-# - data "aws_caller_identity" "current" block
-
-# Keep only unique outputs if any
-output "account_id" {
-  description = "AWS Account ID"
-  value       = data.aws_caller_identity.current.account_id
-}
-
-output "region" {
-  description = "AWS Region"
-  value       = var.region
-}
+# Local variables are imported from locals.tf

@@ -1,4 +1,5 @@
-# Provider Configurations
+# Provider configurations for AWS, Kubernetes, and Helm
+
 terraform {
   required_providers {
     aws = {
@@ -13,13 +14,20 @@ terraform {
       source  = "hashicorp/helm"
       version = "~> 2.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 4.0"
+    }
   }
   required_version = ">= 1.0.0"
+  # Backend configuration is in backend.tf
 }
 
-# Note: The backend configuration is now in backend.tf
-# Do not add it here
-
+# Default AWS provider
 provider "aws" {
   region = var.region
   
@@ -52,7 +60,7 @@ provider "kubernetes" {
   }
 }
 
-# Helm provider
+# Helm provider for deploying charts
 provider "helm" {
   kubernetes {
     host                   = aws_eks_cluster.eks.endpoint

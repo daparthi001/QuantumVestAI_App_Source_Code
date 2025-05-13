@@ -1,8 +1,4 @@
 # CloudFront Variables
 
-# Keep all variable definitions
-
-# Remove the duplicate provider:
-# provider "aws" { ... }
-
-# Keep the rest of your CloudFront variable definitions
+# Remove the provider "aws" with alias "us_east_1" - now in providers.tf
+# Keep all your existing variable declarations

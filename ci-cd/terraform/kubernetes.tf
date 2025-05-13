@@ -1,33 +1,377 @@
-# Kubernetes namespace for application deployment
-resource "kubernetes_namespace" "quantumvestai" {
+# Kubernetes Resources
+
+# Default namespace for application
+resource "kubernetes_namespace" "app" {
   metadata {
-    name = "quantumvestai-${var.environment}"
-    
+    name = "quantumvestai"
+
     labels = {
-      app = "quantumvestai"
+      app         = "quantumvestai"
       environment = var.environment
-      managed-by = "terraform"
     }
   }
+
+  depends_on = [aws_eks_cluster.eks]
 }
 
-# Create Kubernetes secret for RDS access
-resource "kubernetes_secret" "rds_credentials" {
+# Config map for environment variables
+resource "kubernetes_config_map" "app_config" {
   metadata {
-    name      = "quantumvestai-rds-credentials"
-    namespace = kubernetes_namespace.quantumvestai.metadata[0].name
+    name      = "quantumvestai-config"
+    namespace = kubernetes_namespace.app.metadata[0].name
   }
 
   data = {
-    username = var.rds_username
-    password = random_password.rds_password.result
-    host     = aws_db_instance.quantumvestai.address
-    port     = "5432"
-    dbname   = var.rds_database_name
-    url      = "postgresql://${var.rds_username}:${random_password.rds_password.result}@${aws_db_instance.quantumvestai.address}:5432/${var.rds_database_name}"
+    ENVIRONMENT = var.environment
+    API_URL     = "https://api.${var.domain_name}"
+    CDN_URL     = "https://cdn.${var.domain_name}"
+  }
+}
+
+# Persistent Volume Claim for ML models
+resource "kubernetes_persistent_volume_claim" "ml_models" {
+  metadata {
+    name      = "ml-models-pvc"
+    namespace = kubernetes_namespace.app.metadata[0].name
+  }
+  
+  spec {
+    access_modes = ["ReadWriteMany"]
+    resources {
+      requests = {
+        storage = "10Gi"
+      }
+    }
+    storage_class_name = "gp2"
+  }
+}
+
+# Deployment for the API service
+resource "kubernetes_deployment" "api" {
+  metadata {
+    name      = "quantumvestai-api"
+    namespace = kubernetes_namespace.app.metadata[0].name
+    
+    labels = {
+      app = "quantumvestai-api"
+    }
   }
 
-  depends_on = [
-    kubernetes_namespace.quantumvestai
-  ]
+  spec {
+    replicas = 2
+
+    selector {
+      match_labels = {
+        app = "quantumvestai-api"
+      }
+    }
+
+    template {
+      metadata {
+        labels = {
+          app = "quantumvestai-api"
+        }
+      }
+
+      spec {
+        container {
+          name  = "api"
+          image = "public.ecr.aws/quantumvestai/api:latest"
+          
+          port {
+            container_port = 8080
+          }
+          
+          env_from {
+            config_map_ref {
+              name = kubernetes_config_map.app_config.metadata[0].name
+            }
+          }
+          
+          env_from {
+            secret_ref {
+              name = kubernetes_secret.rds_credentials.metadata[0].name
+            }
+          }
+          
+          resources {
+            limits = {
+              cpu    = "1"
+              memory = "1Gi"
+            }
+            requests = {
+              cpu    = "500m"
+              memory = "512Mi"
+            }
+          }
+          
+          liveness_probe {
+            http_get {
+              path = "/api/health"
+              port = 8080
+            }
+            
+            initial_delay_seconds = 30
+            period_seconds        = 10
+            timeout_seconds       = 5
+            failure_threshold     = 3
+          }
+          
+          readiness_probe {
+            http_get {
+              path = "/api/health"
+              port = 8080
+            }
+            
+            initial_delay_seconds = 30
+            period_seconds        = 10
+            timeout_seconds       = 5
+            failure_threshold     = 3
+          }
+        }
+        
+        # Service account for API
+        service_account_name = "quantumvestai-api"
+      }
+    }
+  }
+  
+  depends_on = [aws_eks_cluster.eks, kubernetes_secret.rds_credentials]
+}
+
+# Service account with IAM role for API
+resource "kubernetes_service_account" "api" {
+  metadata {
+    name      = "quantumvestai-api"
+    namespace = kubernetes_namespace.app.metadata[0].name
+    annotations = {
+      "eks.amazonaws.com/role-arn" = aws_iam_role.api_role.arn
+    }
+  }
+  
+  depends_on = [aws_eks_cluster.eks]
+}
+
+# IAM role for API service account
+resource "aws_iam_role" "api_role" {
+  name = "${var.project}-${var.environment}-api-role"
+  
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.eks.arn
+        }
+        Condition = {
+          StringEquals = {
+            "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub": "system:serviceaccount:${kubernetes_namespace.app.metadata[0].name}:quantumvestai-api"
+          }
+        }
+      }
+    ]
+  })
+  
+  tags = local.common_tags
+}
+
+# Policy for S3 access from API
+resource "aws_iam_policy" "api_s3_policy" {
+  name        = "${var.project}-${var.environment}-api-s3-policy"
+  description = "Policy for API to access S3 buckets"
+  
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          aws_s3_bucket.model_storage.arn,
+          "${aws_s3_bucket.model_storage.arn}/*"
+        ]
+      }
+    ]
+  })
+  
+  tags = local.common_tags
+}
+
+resource "aws_iam_role_policy_attachment" "api_s3_policy_attachment" {
+  policy_arn = aws_iam_policy.api_s3_policy.arn
+  role       = aws_iam_role.api_role.name
+}
+
+# Service for API
+resource "kubernetes_service" "api" {
+  metadata {
+    name      = "quantumvestai-api"
+    namespace = kubernetes_namespace.app.metadata[0].name
+    
+    annotations = {
+      "alb.ingress.kubernetes.io/target-type" = "ip"
+    }
+  }
+  
+  spec {
+    selector = {
+      app = kubernetes_deployment.api.metadata[0].labels.app
+    }
+    
+    port {
+      name        = "http"
+      port        = 8080
+      target_port = 8080
+    }
+    
+    type = "NodePort"
+  }
+}
+
+# Target group attachment for API
+resource "aws_lb_target_group_attachment" "api" {
+  target_group_arn = aws_lb_target_group.main.arn
+  target_id        = kubernetes_service.api.metadata[0].name
+  port             = 8080
+  
+  depends_on = [kubernetes_service.api]
+}
+
+# Deployment for the ML Processing service
+resource "kubernetes_deployment" "ml_processor" {
+  count = var.enable_ml_nodes ? 1 : 0
+  
+  metadata {
+    name      = "ml-processor"
+    namespace = kubernetes_namespace.app.metadata[0].name
+    
+    labels = {
+      app = "ml-processor"
+    }
+  }
+
+  spec {
+    replicas = 1
+
+    selector {
+      match_labels = {
+        app = "ml-processor"
+      }
+    }
+
+    template {
+      metadata {
+        labels = {
+          app = "ml-processor"
+        }
+      }
+
+      spec {
+        container {
+          name  = "ml-processor"
+          image = "public.ecr.aws/quantumvestai/ml-processor:latest"
+          
+          env_from {
+            config_map_ref {
+              name = kubernetes_config_map.app_config.metadata[0].name
+            }
+          }
+          
+          volume_mount {
+            name       = "model-data"
+            mount_path = "/app/models"
+          }
+          
+          resources {
+            limits = {
+              cpu    = "4"
+              memory = "8Gi"
+              nvidia.com/gpu = "1"
+            }
+            requests = {
+              cpu    = "2"
+              memory = "4Gi"
+              nvidia.com/gpu = "1"
+            }
+          }
+        }
+        
+        # Toleration for ML workloads
+        toleration {
+          key      = "workload-type"
+          operator = "Equal"
+          value    = "ml"
+          effect   = "NoSchedule"
+        }
+        
+        # Node selector for ML workloads
+        node_selector = {
+          "workload-type" = "ml"
+        }
+        
+        volume {
+          name = "model-data"
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim.ml_models.metadata[0].name
+          }
+        }
+        
+        # Service account for ML processor
+        service_account_name = "ml-processor"
+      }
+    }
+  }
+  
+  depends_on = [aws_eks_cluster.eks, aws_eks_node_group.ml]
+}
+
+# Service account with IAM role for ML processor
+resource "kubernetes_service_account" "ml_processor" {
+  metadata {
+    name      = "ml-processor"
+    namespace = kubernetes_namespace.app.metadata[0].name
+    annotations = {
+      "eks.amazonaws.com/role-arn" = aws_iam_role.ml_processor_role.arn
+    }
+  }
+  
+  depends_on = [aws_eks_cluster.eks]
+}
+
+# IAM role for ML processor
+resource "aws_iam_role" "ml_processor_role" {
+  name = "${var.project}-${var.environment}-ml-processor-role"
+  
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.eks.arn
+        }
+        Condition = {
+          StringEquals = {
+            "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub": "system:serviceaccount:${kubernetes_namespace.app.metadata[0].name}:ml-processor"
+          }
+        }
+      }
+    ]
+  })
+  
+  tags = local.common_tags
+}
+
+# Policy for S3 access from ML processor
+resource "aws_iam_role_policy_attachment" "ml_processor_s3_policy_attachment" {
+  policy_arn = aws_iam_policy.api_s3_policy.arn
+  role       = aws_iam_role.ml_processor_role.name
 }

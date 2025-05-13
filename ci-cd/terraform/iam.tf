@@ -1,4 +1,4 @@
-# IAM Roles and Policies for EKS - Additional Policies Only
+# IAM Roles and Policies (Additional to EKS roles)
 
 # Custom policy for S3 access (for ML model storage)
 resource "aws_iam_policy" "s3_model_access" {
@@ -23,7 +23,7 @@ resource "aws_iam_policy" "s3_model_access" {
     ]
   })
 
-  tags = local.tags
+  tags = local.common_tags
 }
 
 # Attach S3 access policy to node role

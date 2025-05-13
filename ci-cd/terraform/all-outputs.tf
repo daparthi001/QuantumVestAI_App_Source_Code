@@ -1,4 +1,4 @@
-# Consolidated Outputs
+# Consolidated outputs file containing all outputs
 
 # General
 output "account_id" {

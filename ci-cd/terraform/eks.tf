@@ -1,5 +1,18 @@
 # EKS Cluster and Node Groups Configuration
 
+# KMS Key for EKS encryption
+resource "aws_kms_key" "eks_key" {
+  description             = "KMS key for EKS cluster encryption"
+  deletion_window_in_days = 30
+  enable_key_rotation     = true
+  tags                    = local.common_tags
+}
+
+resource "aws_kms_alias" "eks_key_alias" {
+  name          = "alias/${var.project}-${var.environment}-eks"
+  target_key_id = aws_kms_key.eks_key.key_id
+}
+
 # IAM Role for EKS Cluster
 resource "aws_iam_role" "eks_cluster" {
   name = "${var.cluster_name}-cluster-role"
@@ -219,6 +232,8 @@ resource "aws_iam_openid_connect_provider" "eks" {
   client_id_list  = ["sts.amazonaws.com"]
   thumbprint_list = [data.tls_certificate.eks.certificates[0].sha1_fingerprint]
   url             = aws_eks_cluster.eks.identity[0].oidc[0].issuer
+  
+  tags = local.common_tags
 }
 
 # Optional: Kubeconfig update script
@@ -235,21 +250,4 @@ resource "local_file" "kubeconfig_update_script" {
   provisioner "local-exec" {
     command = "chmod +x ${path.module}/update-kubeconfig.sh"
   }
-}
-
-# Outputs
-output "eks_cluster_name" {
-  description = "Name of the EKS cluster"
-  value       = aws_eks_cluster.eks.name
-}
-
-output "eks_cluster_endpoint" {
-  description = "Endpoint of the EKS cluster"
-  value       = aws_eks_cluster.eks.endpoint
-}
-
-output "eks_cluster_certificate_authority_data" {
-  description = "Certificate authority data for the EKS cluster"
-  value       = aws_eks_cluster.eks.certificate_authority[0].data
-  sensitive   = true
 }

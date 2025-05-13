@@ -1,30 +1,27 @@
-# Application Load Balancer for QuantumVestAI
+# Load Balancer Configuration
 
-# Security group for the ALB
-resource "aws_security_group" "alb_sg" {
-  name        = "${var.project_name}-alb-sg-${var.environment}"
-  description = "Security group for QuantumVestAI application load balancer"
+# Security group for ALB
+resource "aws_security_group" "alb" {
+  name        = "${var.project}-${var.environment}-alb-sg"
+  description = "Security group for Application Load Balancer"
   vpc_id      = module.vpc.vpc_id
 
-  # HTTPS ingress from anywhere
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow HTTPS traffic from anywhere"
-  }
-
-  # HTTP ingress for redirect to HTTPS
   ingress {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow HTTP traffic for redirect to HTTPS"
+    description = "Allow HTTP traffic"
   }
 
-  # Outbound traffic to EKS nodes
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow HTTPS traffic"
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -34,148 +31,195 @@ resource "aws_security_group" "alb_sg" {
   }
 
   tags = merge(
-    local.tags,
+    local.common_tags,
     {
-      Name = "${var.project_name}-alb-sg-${var.environment}"
+      Name = "${var.project}-${var.environment}-alb-sg"
     }
   )
 }
 
-# Application Load Balancer
-resource "aws_lb" "app" {
-  name               = "${var.project_name}-alb-${var.environment}"
-  internal           = false
-  load_balancer_type = "application"
-  subnets            = module.vpc.public_subnets
-  security_groups    = [aws_security_group.alb_sg.id]
-  
-  # Enable deletion protection in production
-  enable_deletion_protection = var.environment == "prod" ? true : false
-  
-  # Enable access logs
-  access_logs {
-    bucket  = aws_s3_bucket.alb_logs.id
-    prefix  = "alb-logs"
-    enabled = true
+# Security group for backend services
+resource "aws_security_group" "backend" {
+  name        = "${var.project}-${var.environment}-backend-sg"
+  description = "Security group for backend services"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    from_port       = 8080
+    to_port         = 8080
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+    description     = "Allow traffic from ALB on port 8080"
   }
-  
-  # Load balancer attributes
-  idle_timeout               = var.alb_idle_timeout
-  enable_http2               = true
-  drop_invalid_header_fields = true
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all outbound traffic"
+  }
 
   tags = merge(
-    local.tags,
+    local.common_tags,
     {
-      Name = "${var.project_name}-alb-${var.environment}"
+      Name = "${var.project}-${var.environment}-backend-sg"
     }
   )
+}
+
+# ACM certificate
+resource "aws_acm_certificate" "cert" {
+  domain_name       = "api.${var.domain_name}"
+  validation_method = "DNS"
+  
+  subject_alternative_names = ["*.api.${var.domain_name}"]
+  
+  lifecycle {
+    create_before_destroy = true
+  }
+  
+  tags = local.common_tags
+}
+
+# DNS validation record
+resource "aws_route53_record" "cert_validation" {
+  for_each = {
+    for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = var.route53_zone_id
+}
+
+# Certificate validation
+resource "aws_acm_certificate_validation" "cert" {
+  certificate_arn         = aws_acm_certificate.cert.arn
+  validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
+}
+
+# Application Load Balancer
+resource "aws_lb" "main" {
+  name               = "${var.project}-${var.environment}-alb"
+  internal           = var.alb_internal
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb.id]
+  subnets            = var.alb_internal ? module.vpc.private_subnets : module.vpc.public_subnets
+
+  enable_deletion_protection = var.environment == "prod"
+  
+  access_logs {
+    bucket  = aws_s3_bucket.alb_logs.bucket
+    prefix  = "${var.project}-${var.environment}-alb"
+    enabled = true
+  }
+
+  tags = local.common_tags
 }
 
 # S3 bucket for ALB access logs
 resource "aws_s3_bucket" "alb_logs" {
-  bucket = "${var.project_name}-alb-logs-${var.environment}-${random_string.suffix.result}"
-  force_destroy = var.environment != "prod"
-
-  tags = local.tags
+  bucket = "${var.project}-${var.environment}-alb-logs"
+  
+  tags = local.common_tags
 }
 
-# Random string for S3 bucket name uniqueness
-resource "random_string" "suffix" {
-  length  = 8
-  special = false
-  upper   = false
+resource "aws_s3_bucket_ownership_controls" "alb_logs" {
+  bucket = aws_s3_bucket.alb_logs.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
 }
 
-# S3 bucket policy for ALB access logs
+resource "aws_s3_bucket_acl" "alb_logs" {
+  bucket = aws_s3_bucket.alb_logs.id
+  acl    = "private"
+  depends_on = [aws_s3_bucket_ownership_controls.alb_logs]
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "alb_logs" {
+  bucket = aws_s3_bucket.alb_logs.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
 resource "aws_s3_bucket_policy" "alb_logs" {
   bucket = aws_s3_bucket.alb_logs.id
-  policy = data.aws_iam_policy_document.alb_logs.json
-}
 
-# Policy document for ALB access logs
-data "aws_iam_policy_document" "alb_logs" {
-  statement {
-    effect = "Allow"
-    principals {
-      type        = "AWS"
-      identifiers = [data.aws_elb_service_account.main.arn]
-    }
-    actions = [
-      "s3:PutObject"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${lookup(var.elb_account_ids, var.region, "127311923021")}:root"
+        }
+        Action = "s3:PutObject"
+        Resource = "${aws_s3_bucket.alb_logs.arn}/${var.project}-${var.environment}-alb/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
+      }
     ]
-    resources = [
-      "${aws_s3_bucket.alb_logs.arn}/alb-logs/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
-    ]
-  }
+  })
 }
 
-# Get the AWS ELB service account
-data "aws_elb_service_account" "main" {}
-
-# Get the current AWS account ID
-data "aws_caller_identity" "current2" {}
-
-# ACM Certificate for HTTPS
-resource "aws_acm_certificate" "app" {
-  domain_name       = var.domain_name
-  validation_method = "DNS"
-  
-  subject_alternative_names = [
-    "*.${var.domain_name}"
-  ]
-
-  lifecycle {
-    create_before_destroy = true
-  }
-
-  tags = local.tags
-}
-
-# HTTPS Listener
-resource "aws_lb_listener" "https" {
-  load_balancer_arn = aws_lb.app.arn
-  port              = 443
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
-  certificate_arn   = aws_acm_certificate.app.arn
-
-  default_action {
-    type = "forward"
-    target_group_arn = aws_lb_target_group.app.arn
-  }
-
-  tags = local.tags
-}
-
-# HTTP Listener (redirects to HTTPS)
+# ALB Listener HTTP -> HTTPS redirect
 resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.app.arn
+  load_balancer_arn = aws_lb.main.arn
   port              = 80
   protocol          = "HTTP"
 
   default_action {
     type = "redirect"
+
     redirect {
       port        = "443"
       protocol    = "HTTPS"
       status_code = "HTTP_301"
     }
   }
-
-  tags = local.tags
 }
 
-# Target Group for the API
-resource "aws_lb_target_group" "app" {
-  name     = "${var.project_name}-tg-${var.environment}"
-  port     = 80
+# ALB Listener HTTPS
+resource "aws_lb_listener" "https" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
+  certificate_arn   = aws_acm_certificate_validation.cert.certificate_arn
+
+  default_action {
+    type = "fixed-response"
+    
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "No routes matched"
+      status_code  = "404"
+    }
+  }
+}
+
+# Target group for API
+resource "aws_lb_target_group" "main" {
+  name     = "${var.project}-${var.environment}-api"
+  port     = 8080
   protocol = "HTTP"
   vpc_id   = module.vpc.vpc_id
-  target_type = "ip"
   
   health_check {
-    path                = "/health"
+    enabled             = true
+    path                = "/api/health"
     port                = "traffic-port"
     healthy_threshold   = 3
     unhealthy_threshold = 3
@@ -184,169 +228,35 @@ resource "aws_lb_target_group" "app" {
     matcher             = "200"
   }
 
-  tags = local.tags
+  tags = local.common_tags
 }
 
-# WAF Web ACL for the ALB
-resource "aws_wafv2_web_acl" "app" {
-  count = var.enable_waf ? 1 : 0
-  
-  name        = "${var.project_name}-waf-${var.environment}"
-  description = "WAF for QuantumVestAI application"
-  scope       = "REGIONAL"
+# API listener rule
+resource "aws_lb_listener_rule" "api" {
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 100
 
-  default_action {
-    allow {}
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.main.arn
   }
 
-  # AWS Managed Core Rule Set
-  rule {
-    name     = "AWSManagedRulesCommonRuleSet"
-    priority = 10
-
-    override_action {
-      none {}
-    }
-
-    statement {
-      managed_rule_group_statement {
-        name        = "AWSManagedRulesCommonRuleSet"
-        vendor_name = "AWS"
-      }
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = true
-      metric_name                = "AWSManagedRulesCommonRuleSet"
-      sampled_requests_enabled   = true
+  condition {
+    path_pattern {
+      values = ["/api/*"]
     }
   }
+}
 
-  # AWS Managed SQL Injection Rule Set
-  rule {
-    name     = "AWSManagedRulesSQLiRuleSet"
-    priority = 20
+# Route53 record for API
+resource "aws_route53_record" "app" {
+  zone_id = var.route53_zone_id
+  name    = "api.${var.domain_name}"
+  type    = "A"
 
-    override_action {
-      none {}
-    }
-
-    statement {
-      managed_rule_group_statement {
-        name        = "AWSManagedRulesSQLiRuleSet"
-        vendor_name = "AWS"
-      }
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = true
-      metric_name                = "AWSManagedRulesSQLiRuleSet"
-      sampled_requests_enabled   = true
-    }
+  alias {
+    name                   = aws_lb.main.dns_name
+    zone_id                = aws_lb.main.zone_id
+    evaluate_target_health = true
   }
-  
-  # Rate-based rule to prevent DDoS
-  rule {
-    name     = "RateLimitRule"
-    priority = 30
-
-    action {
-      block {}
-    }
-
-    statement {
-      rate_based_statement {
-        limit              = var.waf_rate_limit
-        aggregate_key_type = "IP"
-      }
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = true
-      metric_name                = "RateLimitRule"
-      sampled_requests_enabled   = true
-    }
-  }
-
-  visibility_config {
-    cloudwatch_metrics_enabled = true
-    metric_name                = "${var.project_name}-waf-${var.environment}"
-    sampled_requests_enabled   = true
-  }
-
-  tags = local.tags
-}
-
-# Associate WAF with ALB
-resource "aws_wafv2_web_acl_association" "app" {
-  count = var.enable_waf ? 1 : 0
-  
-  resource_arn = aws_lb.app.arn
-  web_acl_arn  = aws_wafv2_web_acl.app[0].arn
-}
-
-# CloudWatch Alarm for ALB 5XX errors
-resource "aws_cloudwatch_metric_alarm" "alb_5xx" {
-  alarm_name          = "${var.project_name}-alb-5xx-${var.environment}"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = "3"
-  metric_name         = "HTTPCode_ELB_5XX_Count"
-  namespace           = "AWS/ApplicationELB"
-  period              = "60"
-  statistic           = "Sum"
-  threshold           = "10"
-  alarm_description   = "This alarm monitors ALB 5XX errors"
-  alarm_actions       = [aws_sns_topic.alb_alerts.arn]
-  ok_actions          = [aws_sns_topic.alb_alerts.arn]
-  
-  dimensions = {
-    LoadBalancer = aws_lb.app.arn_suffix
-  }
-
-  tags = local.tags
-}
-
-# CloudWatch Alarm for target 5XX errors
-resource "aws_cloudwatch_metric_alarm" "target_5xx" {
-  alarm_name          = "${var.project_name}-target-5xx-${var.environment}"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = "3"
-  metric_name         = "HTTPCode_Target_5XX_Count"
-  namespace           = "AWS/ApplicationELB"
-  period              = "60"
-  statistic           = "Sum"
-  threshold           = "10"
-  alarm_description   = "This alarm monitors target 5XX errors"
-  alarm_actions       = [aws_sns_topic.alb_alerts.arn]
-  ok_actions          = [aws_sns_topic.alb_alerts.arn]
-  
-  dimensions = {
-    LoadBalancer = aws_lb.app.arn_suffix
-    TargetGroup  = aws_lb_target_group.app.arn_suffix
-  }
-
-  tags = local.tags
-}
-
-# SNS Topic for ALB alerts
-resource "aws_sns_topic" "alb_alerts" {
-  name = "${var.project_name}-alb-alerts-${var.environment}"
-  
-  tags = local.tags
-}
-
-# Outputs
-output "alb_dns_name" {
-  description = "DNS name of the load balancer"
-  value       = aws_lb.app.dns_name
-}
-
-output "alb_zone_id" {
-  description = "Zone ID of the load balancer"
-  value       = aws_lb.app.zone_id
-}
-
-output "target_group_arn" {
-  description = "ARN of the target group"
-  value       = aws_lb_target_group.app.arn
 }

@@ -1,328 +1,141 @@
-# CloudFront Distribution for QuantumVestAI API
+# CloudFront Configuration
 
-# CloudFront origin request policy
-resource "aws_cloudfront_origin_request_policy" "api_policy" {
-  name    = "${var.project_name}-api-policy-${var.environment}"
-  comment = "QuantumVestAI API origin request policy"
-  
-  cookies_config {
-    cookie_behavior = "none"
-  }
-  
-  headers_config {
-    header_behavior = "whitelist"
-    headers {
-      items = ["Host", "Origin", "Authorization", "Accept", "Content-Type"]
-    }
-  }
-  
-  query_strings_config {
-    query_string_behavior = "all"
-  }
-}
-
-# CloudFront cache policy
-resource "aws_cloudfront_cache_policy" "api_cache_policy" {
-  name        = "${var.project_name}-api-cache-policy-${var.environment}"
-  comment     = "QuantumVestAI API cache policy"
-  default_ttl = var.cdn_default_ttl
-  max_ttl     = var.cdn_max_ttl
-  min_ttl     = var.cdn_min_ttl
-  
-  parameters_in_cache_key_and_forwarded_to_origin {
-    cookies_config {
-      cookie_behavior = "none"
-    }
-    
-    headers_config {
-      header_behavior = "whitelist"
-      headers {
-        items = ["Authorization", "Accept", "Content-Type"]
-      }
-    }
-    
-    query_strings_config {
-      query_string_behavior = "whitelist"
-      query_strings {
-        items = ["ticker", "model", "days", "format"]
-      }
-    }
-    
-    enable_accept_encoding_brotli = true
-    enable_accept_encoding_gzip   = true
-  }
-}
-
-# CloudFront response headers policy
-resource "aws_cloudfront_response_headers_policy" "security_headers" {
-  name    = "${var.project_name}-security-headers-${var.environment}"
-  comment = "Security headers policy for QuantumVestAI API"
-  
-  security_headers_config {
-    content_type_options {
-      override = true
-    }
-    
-    frame_options {
-      frame_option = "DENY"
-      override     = true
-    }
-    
-    referrer_policy {
-      referrer_policy = "same-origin"
-      override        = true
-    }
-    
-    strict_transport_security {
-      access_control_max_age_sec = 63072000 # 2 years
-      include_subdomains         = true
-      override                   = true
-      preload                    = true
-    }
-    
-    xss_protection {
-      mode_block = true
-      protection = true
-      override   = true
-    }
-  }
-  
-  cors_config {
-    access_control_allow_credentials = false
-    
-    access_control_allow_headers {
-      items = ["Authorization", "Content-Type", "Accept"]
-    }
-    
-    access_control_allow_methods {
-      items = ["GET", "HEAD", "OPTIONS", "POST", "PUT", "DELETE"]
-    }
-    
-    access_control_allow_origins {
-      items = var.cdn_cors_origins
-    }
-    
-    origin_override = true
-  }
-}
-
-# WAF Web ACL for CloudFront
-resource "aws_wafv2_web_acl" "cloudfront_waf" {
-  count = var.enable_cloudfront_waf ? 1 : 0
-  
-  name        = "${var.project_name}-cloudfront-waf-${var.environment}"
-  description = "WAF for QuantumVestAI CloudFront distribution"
-  scope       = "CLOUDFRONT"
-
-  default_action {
-    allow {}
-  }
-
-  # AWS Managed Core Rule Set
-  rule {
-    name     = "AWSManagedRulesCommonRuleSet"
-    priority = 10
-
-    override_action {
-      none {}
-    }
-
-    statement {
-      managed_rule_group_statement {
-        name        = "AWSManagedRulesCommonRuleSet"
-        vendor_name = "AWS"
-      }
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = true
-      metric_name                = "AWSManagedRulesCommonRuleSet"
-      sampled_requests_enabled   = true
-    }
-  }
-
-  # AWS Managed SQL Injection Rule Set
-  rule {
-    name     = "AWSManagedRulesSQLiRuleSet"
-    priority = 20
-
-    override_action {
-      none {}
-    }
-
-    statement {
-      managed_rule_group_statement {
-        name        = "AWSManagedRulesSQLiRuleSet"
-        vendor_name = "AWS"
-      }
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = true
-      metric_name                = "AWSManagedRulesSQLiRuleSet"
-      sampled_requests_enabled   = true
-    }
-  }
-  
-  # Rate-based rule to prevent DDoS
-  rule {
-    name     = "RateLimitRule"
-    priority = 30
-
-    action {
-      block {}
-    }
-
-    statement {
-      rate_based_statement {
-        limit              = var.cloudfront_waf_rate_limit
-        aggregate_key_type = "IP"
-      }
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = true
-      metric_name                = "RateLimitRule"
-      sampled_requests_enabled   = true
-    }
-  }
-
-  # Geo-blocking rule (optional)
-  dynamic "rule" {
-    for_each = length(var.blocked_countries) > 0 ? [1] : []
-    
-    content {
-      name     = "GeoBlockRule"
-      priority = 40
-
-      action {
-        block {}
-      }
-
-      statement {
-        geo_match_statement {
-          country_codes = var.blocked_countries
-        }
-      }
-
-      visibility_config {
-        cloudwatch_metrics_enabled = true
-        metric_name                = "GeoBlockRule"
-        sampled_requests_enabled   = true
-      }
-    }
-  }
-
-  visibility_config {
-    cloudwatch_metrics_enabled = true
-    metric_name                = "${var.project_name}-cloudfront-waf-${var.environment}"
-    sampled_requests_enabled   = true
-  }
-
-  tags = local.tags
-}
-
-# ACM Certificate for CloudFront (in us-east-1 region)
-resource "aws_acm_certificate" "cdn" {
-  provider = aws.us_east_1
-  
-  domain_name       = var.cdn_domain_name
+# ACM Certificate for CloudFront (must be in us-east-1)
+resource "aws_acm_certificate" "cloudfront" {
+  provider          = aws.us_east_1
+  domain_name       = "cdn.${var.domain_name}"
   validation_method = "DNS"
+  
+  subject_alternative_names = ["*.cdn.${var.domain_name}"]
   
   lifecycle {
     create_before_destroy = true
   }
-
-  tags = local.tags
+  
+  tags = local.common_tags
 }
 
-# CloudFront distribution
-resource "aws_cloudfront_distribution" "api_cdn" {
-  origin {
-    domain_name = aws_lb.app.dns_name
-    origin_id   = "eks-api-origin"
+# DNS validation record for CloudFront certificate
+resource "aws_route53_record" "cloudfront_certificate_validation" {
+  for_each = {
+    for dvo in aws_acm_certificate.cloudfront.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
 
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = var.route53_zone_id
+}
+
+# Certificate validation
+resource "aws_acm_certificate_validation" "cloudfront" {
+  provider                = aws.us_east_1
+  certificate_arn         = aws_acm_certificate.cloudfront.arn
+  validation_record_fqdns = [for record in aws_route53_record.cloudfront_certificate_validation : record.fqdn]
+}
+
+# CloudFront distribution for frontend assets
+resource "aws_cloudfront_distribution" "frontend" {
+  enabled             = true
+  is_ipv6_enabled     = true
+  comment             = "${var.project}-${var.environment} Frontend"
+  default_root_object = "index.html"
+  price_class         = var.cloudfront_price_class
+  
+  # S3 origin for static assets
+  origin {
+    domain_name = aws_s3_bucket.frontend_assets.bucket_regional_domain_name
+    origin_id   = "S3-${aws_s3_bucket.frontend_assets.bucket}"
+    
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.frontend_oai.cloudfront_access_identity_path
+    }
+  }
+  
+  # API origin for dynamic content
+  origin {
+    domain_name = aws_lb.main.dns_name
+    origin_id   = "ALB-${aws_lb.main.name}"
+    
     custom_origin_config {
       http_port              = 80
       https_port             = 443
       origin_protocol_policy = "https-only"
       origin_ssl_protocols   = ["TLSv1.2"]
     }
-    
-    # Custom headers for origin security
-    custom_header {
-      name  = "X-Origin-Verify"
-      value = var.origin_custom_header
-    }
   }
-
-  enabled             = true
-  is_ipv6_enabled     = true
-  comment             = "CDN for QuantumVestAI API - ${var.environment}"
-  default_root_object = ""
-  price_class         = var.cdn_price_class
-  web_acl_id          = var.enable_cloudfront_waf ? aws_wafv2_web_acl.cloudfront_waf[0].arn : null
   
-  # Logging configuration
-  logging_config {
-    include_cookies = false
-    bucket          = aws_s3_bucket.cdn_logs.bucket_domain_name
-    prefix          = "cdn-logs"
-  }
-
-  # Default cache behavior
+  # Default behavior for S3 assets
   default_cache_behavior {
-    target_origin_id       = "eks-api-origin"
-    viewer_protocol_policy = "redirect-to-https"
-    
-    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD"]
-    compress         = true
+    target_origin_id = "S3-${aws_s3_bucket.frontend_assets.bucket}"
     
-    # Use the cache policy and origin request policy
-    cache_policy_id          = aws_cloudfront_cache_policy.api_cache_policy.id
-    origin_request_policy_id = aws_cloudfront_origin_request_policy.api_policy.id
-    response_headers_policy_id = aws_cloudfront_response_headers_policy.security_headers.id
-    
-    # Function associations
-    dynamic "function_association" {
-      for_each = var.enable_cdn_security_headers ? [1] : []
-      
-      content {
-        event_type   = "viewer-response"
-        function_arn = aws_cloudfront_function.security_headers[0].arn
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
       }
     }
+    
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+    compress               = true
   }
   
-  # Cache behavior for static assets (if applicable)
+  # API behavior for backend
   ordered_cache_behavior {
-    path_pattern     = "/static/*"
-    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
-    cached_methods   = ["GET", "HEAD", "OPTIONS"]
-    target_origin_id = "eks-api-origin"
+    path_pattern     = "/api/*"
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "ALB-${aws_lb.main.name}"
     
-    cache_policy_id            = aws_cloudfront_cache_policy.api_cache_policy.id
-    origin_request_policy_id   = aws_cloudfront_origin_request_policy.api_policy.id
-    response_headers_policy_id = aws_cloudfront_response_headers_policy.security_headers.id
-    
-    compress               = true
-    viewer_protocol_policy = "redirect-to-https"
-  }
-
-  # Geo restriction
-  restrictions {
-    geo_restriction {
-      restriction_type = length(var.blocked_countries) > 0 ? "whitelist" : "none"
-      locations        = length(var.blocked_countries) > 0 ? var.allowed_countries : []
+    forwarded_values {
+      query_string = true
+      headers      = ["Authorization", "Host"]
+      cookies {
+        forward = "all"
+      }
     }
+    
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 0
+    max_ttl                = 0
   }
-
-  # SSL/TLS configuration
-  viewer_certificate {
-    acm_certificate_arn      = aws_acm_certificate.cdn.arn
-    ssl_support_method       = "sni-only"
-    minimum_protocol_version = "TLSv1.2_2021"
+  
+  # SPA support - direct all routes to index.html except for files with extensions
+  ordered_cache_behavior {
+    path_pattern     = "/*"
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "S3-${aws_s3_bucket.frontend_assets.bucket}"
+    
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+    
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 0
+    max_ttl                = 0
+    
+    lambda_function_association {
+      event_type   = "origin-request"
+      include_body = false
+      lambda_arn   = aws_lambda_function.spa_router.qualified_arn
+    }
   }
   
   # Custom error responses
@@ -339,129 +152,121 @@ resource "aws_cloudfront_distribution" "api_cdn" {
     response_page_path    = "/index.html"
     error_caching_min_ttl = 10
   }
-
-  tags = local.tags
-}
-
-# CloudFront function for security headers (simple edge functions)
-resource "aws_cloudfront_function" "security_headers" {
-  count = var.enable_cdn_security_headers ? 1 : 0
   
-  name    = "${var.project_name}-security-headers-${var.environment}"
-  runtime = "cloudfront-js-1.0"
-  comment = "Add security headers to responses"
-  publish = true
-  code    = <<-EOT
-    function handler(event) {
-      var response = event.response;
-      var headers = response.headers;
-      
-      // Set security headers
-      headers['strict-transport-security'] = { value: 'max-age=63072000; includeSubdomains; preload' };
-      headers['content-security-policy'] = { value: "default-src 'self'; img-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; frame-ancestors 'none'" };
-      headers['x-content-type-options'] = { value: 'nosniff' };
-      headers['x-frame-options'] = { value: 'DENY' };
-      headers['x-xss-protection'] = { value: '1; mode=block' };
-      headers['referrer-policy'] = { value: 'same-origin' };
-      
-      return response;
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
     }
-  EOT
-}
-
-# S3 bucket for CloudFront logs
-resource "aws_s3_bucket" "cdn_logs" {
-  bucket = "${var.project_name}-cdn-logs-${var.environment}-${random_string.cdn_suffix.result}"
+  }
   
-  force_destroy = var.environment != "prod"
-
-  tags = local.tags
+  aliases = ["cdn.${var.domain_name}"]
+  
+  viewer_certificate {
+    acm_certificate_arn      = aws_acm_certificate_validation.cloudfront.certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
+  }
+  
+  tags = local.common_tags
 }
 
-# Random string for S3 bucket name uniqueness
-resource "aws_s3_bucket_policy" "cdn_logs" {
-  bucket = aws_s3_bucket.cdn_logs.id
-  policy = data.aws_iam_policy_document.cdn_logs.json
+# CloudFront Function for SPA routing
+# This is a placeholder - we'll need to create an AWS Lambda@Edge function
+resource "aws_iam_role" "lambda_edge_role" {
+  name = "${var.project}-${var.environment}-lambda-edge-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = ["lambda.amazonaws.com", "edgelambda.amazonaws.com"]
+        }
+      }
+    ]
+  })
+
+  tags = local.common_tags
 }
 
-# Policy document for CloudFront logs
-data "aws_iam_policy_document" "cdn_logs" {
-  statement {
-    effect = "Allow"
-    principals {
-      type        = "Service"
-      identifiers = ["cloudfront.amazonaws.com"]
-    }
-    actions = [
-      "s3:PutObject"
+resource "aws_iam_policy" "lambda_edge_policy" {
+  name        = "${var.project}-${var.environment}-lambda-edge-policy"
+  description = "Policy for Lambda@Edge SPA router function"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:*:*:*"
+      }
     ]
-    resources = [
-      "${aws_s3_bucket.cdn_logs.arn}/*"
-    ]
-    condition {
-      test     = "StringEquals"
-      variable = "aws:SourceArn"
-      values   = [aws_cloudfront_distribution.api_cdn.arn]
-    }
+  })
+
+  tags = local.common_tags
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_edge_policy_attachment" {
+  policy_arn = aws_iam_policy.lambda_edge_policy.arn
+  role       = aws_iam_role.lambda_edge_role.name
+}
+
+# Create a zip file for the Lambda function
+data "archive_file" "spa_router" {
+  type        = "zip"
+  output_path = "${path.module}/spa_router.zip"
+  
+  source {
+    content  = <<-EOT
+      // SPA router for CloudFront
+      exports.handler = (event, context, callback) => {
+        const request = event.Records[0].cf.request;
+        const uri = request.uri;
+        
+        // Check if the request is for a file with an extension
+        if (uri.includes('.')) {
+          callback(null, request);
+          return;
+        }
+        
+        // Otherwise, rewrite to index.html
+        request.uri = '/index.html';
+        callback(null, request);
+      };
+    EOT
+    filename = "index.js"
   }
 }
 
-# Random string for S3 bucket name uniqueness
-resource "random_string" "cdn_suffix" {
-  length  = 8
-  special = false
-  upper   = false
+resource "aws_lambda_function" "spa_router" {
+  provider         = aws.us_east_1
+  filename         = data.archive_file.spa_router.output_path
+  function_name    = "${var.project}-${var.environment}-spa-router"
+  role             = aws_iam_role.lambda_edge_role.arn
+  handler          = "index.handler"
+  source_code_hash = data.archive_file.spa_router.output_base64sha256
+  runtime          = "nodejs16.x"
+  publish          = true
+
+  tags = local.common_tags
 }
 
-# Route53 record for custom domain
+# Route53 record for CloudFront
 resource "aws_route53_record" "cdn" {
-  count = var.create_dns_record ? 1 : 0
-  
   zone_id = var.route53_zone_id
-  name    = var.cdn_domain_name
+  name    = "cdn.${var.domain_name}"
   type    = "A"
-  
+
   alias {
-    name                   = aws_cloudfront_distribution.api_cdn.domain_name
-    zone_id                = aws_cloudfront_distribution.api_cdn.hosted_zone_id
+    name                   = aws_cloudfront_distribution.frontend.domain_name
+    zone_id                = aws_cloudfront_distribution.frontend.hosted_zone_id
     evaluate_target_health = false
   }
-}
-
-# CloudWatch Alarm for CloudFront 5XX errors
-resource "aws_cloudwatch_metric_alarm" "cloudfront_5xx" {
-  alarm_name          = "${var.project_name}-cloudfront-5xx-${var.environment}"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = "3"
-  metric_name         = "5xxErrorRate"
-  namespace           = "AWS/CloudFront"
-  period              = "60"
-  statistic           = "Average"
-  threshold           = "5"
-  alarm_description   = "This alarm monitors CloudFront 5XX error rate"
-  alarm_actions       = [aws_sns_topic.alb_alerts.arn]
-  ok_actions          = [aws_sns_topic.alb_alerts.arn]
-  
-  dimensions = {
-    DistributionId = aws_cloudfront_distribution.api_cdn.id
-    Region         = "Global"
-  }
-
-  tags = local.tags
-}
-
-# Outputs
-output "cloudfront_distribution_id" {
-  description = "ID of the CloudFront distribution"
-  value       = aws_cloudfront_distribution.api_cdn.id
-}
-
-output "cloudfront_domain_name" {
-  description = "Domain name of the CloudFront distribution"
-  value       = aws_cloudfront_distribution.api_cdn.domain_name
-}
-
-output "cloudfront_hosted_zone_id" {
-  description = "Hosted zone ID of the CloudFront distribution"
-  value       = aws_cloudfront_distribution.api_cdn.hosted_zone_id
 }

@@ -1,6 +1,6 @@
-# Consolidated outputs file
+# Consolidated outputs file - all outputs defined here only
 
-# Account information
+# General
 output "account_id" {
   description = "AWS Account ID"
   value       = data.aws_caller_identity.current.account_id
@@ -44,21 +44,6 @@ output "eks_cluster_certificate_authority_data" {
   sensitive   = true
 }
 
-output "eks_oidc_provider_arn" {
-  description = "ARN of the OIDC Provider for EKS"
-  value       = aws_iam_openid_connect_provider.eks.arn
-}
-
-output "eks_node_role_arn" {
-  description = "ARN of the IAM role for EKS nodes"
-  value       = aws_iam_role.eks_node.arn
-}
-
-output "eks_kms_key_arn" {
-  description = "ARN of the KMS key used for EKS encryption"
-  value       = aws_kms_key.eks_key.arn
-}
-
 # Load Balancer
 output "alb_dns_name" {
   description = "DNS name of the ALB"
@@ -88,12 +73,7 @@ output "rds_port" {
 
 output "rds_database_name" {
   description = "Name of the database"
-  value       = aws_db_instance.main.db_name
-}
-
-output "rds_kms_key_arn" {
-  description = "ARN of the KMS key used for RDS encryption"
-  value       = aws_kms_key.rds_key.arn
+  value       = aws_db_instance.main.name
 }
 
 output "rds_secret_name" {
@@ -104,23 +84,23 @@ output "rds_secret_name" {
 # CloudFront
 output "cloudfront_distribution_id" {
   description = "ID of the CloudFront distribution"
-  value       = aws_cloudfront_distribution.frontend.id
+  value       = aws_cloudfront_distribution.main.id
 }
 
 output "cloudfront_domain_name" {
   description = "Domain name of the CloudFront distribution"
-  value       = aws_cloudfront_distribution.frontend.domain_name
+  value       = aws_cloudfront_distribution.main.domain_name
 }
 
-# S3
-output "model_storage_bucket_name" {
-  description = "Name of the S3 bucket for ML model storage"
-  value       = aws_s3_bucket.model_storage.bucket
+# KMS
+output "eks_kms_key_arn" {
+  description = "ARN of the KMS key used for EKS encryption"
+  value       = aws_kms_key.eks_key.arn
 }
 
-output "frontend_assets_bucket_name" {
-  description = "Name of the S3 bucket for frontend assets"
-  value       = aws_s3_bucket.frontend_assets.bucket
+output "rds_kms_key_arn" {
+  description = "ARN of the KMS key used for RDS encryption"
+  value       = aws_kms_key.rds_key.arn
 }
 
 # Route53
@@ -132,20 +112,4 @@ output "route53_zone_id" {
 output "acm_certificate_arn" {
   description = "ARN of the ACM certificate"
   value       = aws_acm_certificate.cert.arn
-}
-
-output "cloudfront_certificate_arn" {
-  description = "ARN of the CloudFront ACM certificate"
-  value       = aws_acm_certificate.cloudfront.arn
-}
-
-# Kubernetes
-output "kubernetes_app_namespace" {
-  description = "Namespace for application"
-  value       = kubernetes_namespace.app.metadata[0].name
-}
-
-output "api_service_name" {
-  description = "Name of the API Kubernetes service"
-  value       = kubernetes_service.api.metadata[0].name
 }

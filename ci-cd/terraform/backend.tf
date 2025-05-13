@@ -1,4 +1,5 @@
 # Backend configuration for Terraform state
+
 terraform {
   backend "s3" {
     bucket         = "quantumvestai-terraform-state"
