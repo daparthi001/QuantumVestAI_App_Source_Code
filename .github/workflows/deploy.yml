@@ -93,25 +93,25 @@ jobs:
         sed -i "s|ENVIRONMENT_PLACEHOLDER|${{ github.event.inputs.environment || 'dev' }}|g" deployment.yaml configmap.yaml
         
         # Create namespace if it doesn't exist
-        kubectl create namespace quantumvestai-${{ github.event.inputs.environment || 'dev' }} --dry-run=client -o yaml | kubectl apply -f -
+        kubectl create namespace dev --dry-run=client -o yaml | kubectl apply -f -
 
     - name: Deploy to EKS (Kubernetes)
       working-directory: ci-cd/k8s
       run: |
-        kubectl apply -f configmap.yaml -n quantumvestai-${{ github.event.inputs.environment || 'dev' }}
-        kubectl apply -f secrets.yaml -n quantumvestai-${{ github.event.inputs.environment || 'dev' }}
-        kubectl apply -f pvc.yaml -n quantumvestai-${{ github.event.inputs.environment || 'dev' }}
-        kubectl apply -f deployment.yaml -n quantumvestai-${{ github.event.inputs.environment || 'dev' }}
-        kubectl apply -f service.yaml -n quantumvestai-${{ github.event.inputs.environment || 'dev' }}
-        kubectl apply -f ingress.yaml -n quantumvestai-${{ github.event.inputs.environment || 'dev' }}
-        kubectl apply -f hpa.yaml -n quantumvestai-${{ github.event.inputs.environment || 'dev' }}
-        kubectl apply -f cronjob.yaml -n quantumvestai-${{ github.event.inputs.environment || 'dev' }}
+        kubectl apply -f configmap.yaml -n dev
+        kubectl apply -f secrets.yaml -n dev
+        kubectl apply -f pvc.yaml -n dev
+        kubectl apply -f deployment.yaml -n dev
+        kubectl apply -f service.yaml -n dev
+        kubectl apply -f ingress.yaml -n dev
+        kubectl apply -f hpa.yaml -n dev
+        kubectl apply -f cronjob.yaml -n dev
 
     - name: Verify deployment
       run: |
-        kubectl get pods -n quantumvestai-${{ github.event.inputs.environment || 'dev' }}
-        kubectl get svc -n quantumvestai-${{ github.event.inputs.environment || 'dev' }}
-        kubectl get ingress -n quantumvestai-${{ github.event.inputs.environment || 'dev' }}
+        kubectl get pods -n dev
+        kubectl get svc -n dev
+        kubectl get ingress -n dev
 
   destroy:
     if: ${{ github.event.inputs.action == 'destroy' }}
@@ -139,7 +139,7 @@ jobs:
 
     - name: Remove Kubernetes resources
       run: |
-        kubectl delete namespace quantumvestai-${{ github.event.inputs.environment || 'dev' }} --ignore-not-found
+        kubectl delete namespace dev --ignore-not-found
 
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v2
