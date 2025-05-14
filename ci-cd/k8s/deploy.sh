@@ -3,9 +3,9 @@
 # This script deploys the QuantumVestAI application to a Kubernetes cluster
 
 # Set your Docker registry and other variables
-DOCKER_REGISTRY="your-registry.example.com"
+DOCKER_REGISTRY="921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai"
 IMAGE_TAG=$(git rev-parse --short HEAD)  # Use git commit hash as tag
-NAMESPACE="quantumvestai"
+NAMESPACE="dev"
 
 # Check if namespace exists, create if it doesn't
 if ! kubectl get namespace $NAMESPACE > /dev/null 2>&1; then
