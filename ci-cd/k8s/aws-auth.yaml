@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-auth
+  namespace: kube-system
+data:
+  mapRoles: |
+    - rolearn: arn:aws:iam::921930869047:role/quantumvestai-cluster-node-role
+      username: system:node:{{EC2PrivateDNSName}}
+      groups:
+        - system:bootstrappers
+        - system:nodes
+  mapUsers: |
+    - groups:
+        - system:masters
+      userarn: arn:aws:iam::921930869047:user/admin-role
+      username: admin-role
+    - groups:
+        - quantumvestai-cluster-readonly
+      userarn: arn:aws:iam::921930869047:user/admin-role
+      username: admin-role
