@@ -1,14 +1,24 @@
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query
 import os
 import logging
 import yfinance as yf
 import pandas as pd
 from datetime import datetime
-from routes.auth import get_current_user
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Try to import the authentication dependency
+try:
+    from routes.auth import get_current_user
+    has_auth = True
+except ImportError as e:
+    logger.warning(f"Authentication module could not be loaded: {e}")
+    has_auth = False
+    # Define a dummy function to prevent errors
+    def get_current_user():
+        return {"username": "guest"}
 
 # Try to load with PyTorch first
 summarizer = None
@@ -109,60 +119,104 @@ async def analyze_whitepaper(
     
     return response
 
-@router.get("/ticker-report/{ticker}")
-async def ticker_whitepaper(
-    ticker: str,
-    current_user: dict = Depends(get_current_user)
-):
-    """Generate a comprehensive report for a ticker by analyzing company info and news"""
-    try:
-        # Get stock information
-        stock_info = get_stock_info(ticker)
-        if not stock_info:
-            raise HTTPException(status_code=404, detail=f"No data found for ticker {ticker}")
-        
-        # Extract company description/business summary
-        business_summary = stock_info.get("longBusinessSummary", "")
-        
-        # If we have a summary, analyze it
-        if business_summary and summarizer:
-            try:
-                summary = summarizer(business_summary, max_length=200, min_length=50, do_sample=False)
-                analyzed_summary = summary[0]["summary_text"]
-            except:
-                analyzed_summary = business_summary[:300] + "..."
-        else:
-            analyzed_summary = "No business summary available"
+# Use a conditional for routes that require authentication
+if has_auth:
+    from fastapi import Depends
+    
+    @router.get("/ticker-report/{ticker}")
+    async def ticker_whitepaper(
+        ticker: str,
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Generate a comprehensive report for a ticker by analyzing company info and news"""
+        try:
+            # Get stock information
+            stock_info = get_stock_info(ticker)
+            if not stock_info:
+                raise HTTPException(status_code=404, detail=f"No data found for ticker {ticker}")
             
-        # Get recent price data
-        hist = yf.download(ticker, period="1y")
-        price_change = None
-        if not hist.empty:
-            recent = hist.iloc[-1]
-            year_ago = hist.iloc[0] if len(hist) > 1 else recent
-            price_change = {
-                "current": round(float(recent["Close"]), 2),
-                "year_ago": round(float(year_ago["Close"]), 2),
-                "change_pct": round(((recent["Close"] - year_ago["Close"]) / year_ago["Close"]) * 100, 2)
+            # Extract company description/business summary
+            business_summary = stock_info.get("longBusinessSummary", "")
+            
+            # If we have a summary, analyze it
+            if business_summary and summarizer:
+                try:
+                    summary = summarizer(business_summary, max_length=200, min_length=50, do_sample=False)
+                    analyzed_summary = summary[0]["summary_text"]
+                except:
+                    analyzed_summary = business_summary[:300] + "..."
+            else:
+                analyzed_summary = "No business summary available"
+                
+            # Get recent price data
+            hist = yf.download(ticker, period="1y")
+            price_change = None
+            if not hist.empty:
+                recent = hist.iloc[-1]
+                year_ago = hist.iloc[0] if len(hist) > 1 else recent
+                price_change = {
+                    "current": round(float(recent["Close"]), 2),
+                    "year_ago": round(float(year_ago["Close"]), 2),
+                    "change_pct": round(((recent["Close"] - year_ago["Close"]) / year_ago["Close"]) * 100, 2)
+                }
+            
+            # Prepare the report
+            report = {
+                "ticker": ticker,
+                "name": stock_info.get("shortName", ticker),
+                "sector": stock_info.get("sector", "Unknown"),
+                "industry": stock_info.get("industry", "Unknown"),
+                "market_cap": stock_info.get("marketCap", 0),
+                "pe_ratio": stock_info.get("trailingPE", 0),
+                "dividend_yield": stock_info.get("dividendYield", 0),
+                "analyst_recommendation": stock_info.get("recommendationKey", "unknown"),
+                "business_summary": analyzed_summary,
+                "price_data": price_change,
+                "generated_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
             }
-        
-        # Prepare the report
-        report = {
-            "ticker": ticker,
-            "name": stock_info.get("shortName", ticker),
-            "sector": stock_info.get("sector", "Unknown"),
-            "industry": stock_info.get("industry", "Unknown"),
-            "market_cap": stock_info.get("marketCap", 0),
-            "pe_ratio": stock_info.get("trailingPE", 0),
-            "dividend_yield": stock_info.get("dividendYield", 0),
-            "analyst_recommendation": stock_info.get("recommendationKey", "unknown"),
-            "business_summary": analyzed_summary,
-            "price_data": price_change,
-            "generated_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-        }
-        
-        return report
-    except HTTPException as he:
-        raise he
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+            
+            return report
+        except HTTPException as he:
+            raise he
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+else:
+    # Create a non-authenticated version of the endpoint
+    @router.get("/ticker-report/{ticker}")
+    async def ticker_whitepaper(ticker: str):
+        """Generate a comprehensive report for a ticker by analyzing company info and news (no auth required)"""
+        try:
+            # Get stock information
+            stock_info = get_stock_info(ticker)
+            if not stock_info:
+                raise HTTPException(status_code=404, detail=f"No data found for ticker {ticker}")
+            
+            # Extract company description/business summary
+            business_summary = stock_info.get("longBusinessSummary", "")
+            
+            # If we have a summary, analyze it
+            if business_summary and summarizer:
+                try:
+                    summary = summarizer(business_summary, max_length=200, min_length=50, do_sample=False)
+                    analyzed_summary = summary[0]["summary_text"]
+                except:
+                    analyzed_summary = business_summary[:300] + "..."
+            else:
+                analyzed_summary = "No business summary available"
+                
+            # Prepare a simplified report
+            report = {
+                "ticker": ticker,
+                "name": stock_info.get("shortName", ticker),
+                "sector": stock_info.get("sector", "Unknown"),
+                "industry": stock_info.get("industry", "Unknown"),
+                "business_summary": analyzed_summary,
+                "note": "Limited information available in unauthenticated mode",
+                "generated_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            }
+            
+            return report
+        except HTTPException as he:
+            raise he
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
