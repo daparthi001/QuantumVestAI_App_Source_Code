@@ -60,7 +60,6 @@ jobs:
     - name: Terraform Init, Validate, Plan, and Apply
       working-directory: ci-cd/terraform
       run: |
-        terraform init -reconfigure
         terraform init -upgrade
         terraform validate
         terraform plan 
