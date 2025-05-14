@@ -1,5 +1,6 @@
 # S3 Buckets
 # Created: 2025-05-13 20:46:04
+# Updated: 2025-05-14 00:16:35
 # Author: daparthi001
 
 # ML Model Storage Bucket
@@ -97,10 +98,10 @@ resource "aws_s3_bucket_public_access_block" "frontend_assets_public_access_bloc
   restrict_public_buckets = true
 }
 
-# CloudFront Origin Access Identity for S3
-resource "aws_cloudfront_origin_access_identity" "frontend_oai" {
-  comment = "OAI for ${var.project}-${var.environment}-frontend-assets"
-}
+# REMOVED: CloudFront Origin Access Identity for S3 (now defined in cloudfront.tf)
+# resource "aws_cloudfront_origin_access_identity" "frontend_oai" {
+#   comment = "OAI for ${var.project}-${var.environment}-frontend-assets"
+# }
 
 # S3 bucket policy for CloudFront access
 resource "aws_s3_bucket_policy" "frontend_assets_policy" {

@@ -1,43 +1,22 @@
 # CloudFront Configuration
+# Updated: 2025-05-14 00:14:04
+# Author: daparthi001
 
 # ACM Certificate for CloudFront (must be in us-east-1)
 resource "aws_acm_certificate" "cloudfront" {
   provider          = aws.us_east_1
-  domain_name       = "cdn.${var.domain_name}"
-  validation_method = "DNS"
-  
+  domain_name       = "cdn.${var.domain_name}"  
   subject_alternative_names = ["*.cdn.${var.domain_name}"]
+  validation_method = "DNS"
   
   lifecycle {
     create_before_destroy = true
   }
-  
-  
 }
 
-# DNS validation record for CloudFront certificate
-resource "aws_route53_record" "cloudfront_certificate_validation" {
-  for_each = {
-    for dvo in aws_acm_certificate.cloudfront.domain_validation_options : dvo.domain_name => {
-      name   = dvo.resource_record_name
-      record = dvo.resource_record_value
-      type   = dvo.resource_record_type
-    }
-  }
-
-  allow_overwrite = true
-  name            = each.value.name
-  records         = [each.value.record]
-  ttl             = 60
-  type            = each.value.type
-  zone_id         = var.route53_zone_id
-}
-
-# Certificate validation
-resource "aws_acm_certificate_validation" "cloudfront" {
-  provider                = aws.us_east_1
-  certificate_arn         = aws_acm_certificate.cloudfront.arn
-  validation_record_fqdns = [for record in aws_route53_record.cloudfront_certificate_validation : record.fqdn]
+# CloudFront Origin Access Identity
+resource "aws_cloudfront_origin_access_identity" "frontend_oai" {
+  comment = "OAI for ${var.project}-${var.environment} frontend"
 }
 
 # CloudFront distribution for frontend assets
@@ -162,16 +141,13 @@ resource "aws_cloudfront_distribution" "frontend" {
   aliases = ["cdn.${var.domain_name}"]
   
   viewer_certificate {
-    acm_certificate_arn      = aws_acm_certificate_validation.cloudfront.certificate_arn
+    acm_certificate_arn      = aws_acm_certificate.cloudfront.arn
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2021"
   }
-  
-  
 }
 
 # CloudFront Function for SPA routing
-# This is a placeholder - we'll need to create an AWS Lambda@Edge function
 resource "aws_iam_role" "lambda_edge_role" {
   name = "${var.project}-${var.environment}-lambda-edge-role"
 
@@ -187,8 +163,6 @@ resource "aws_iam_role" "lambda_edge_role" {
       }
     ]
   })
-
-  
 }
 
 resource "aws_iam_policy" "lambda_edge_policy" {
@@ -209,8 +183,6 @@ resource "aws_iam_policy" "lambda_edge_policy" {
       }
     ]
   })
-
-  
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_edge_policy_attachment" {
@@ -254,8 +226,6 @@ resource "aws_lambda_function" "spa_router" {
   source_code_hash = data.archive_file.spa_router.output_base64sha256
   runtime          = "nodejs16.x"
   publish          = true
-
-  
 }
 
 # Route53 record for CloudFront

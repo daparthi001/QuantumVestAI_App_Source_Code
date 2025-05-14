@@ -1,5 +1,6 @@
 # Load Balancer Configuration
 # Created: 2025-05-13 20:48:38
+# Updated: 2025-05-14 00:08:32
 # Author: daparthi001
 
 # Security group for ALB
@@ -78,30 +79,6 @@ resource "aws_acm_certificate" "cert" {
   tags = {
     Name = "api.${var.domain_name}-certificate"
   }
-}
-
-# DNS validation record
-resource "aws_route53_record" "cert_validation" {
-  for_each = {
-    for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
-      name   = dvo.resource_record_name
-      record = dvo.resource_record_value
-      type   = dvo.resource_record_type
-    }
-  }
-
-  allow_overwrite = true
-  name            = each.value.name
-  records         = [each.value.record]
-  ttl             = 60
-  type            = each.value.type
-  zone_id         = var.route53_zone_id
-}
-
-# Certificate validation
-resource "aws_acm_certificate_validation" "cert" {
-  certificate_arn         = aws_acm_certificate.cert.arn
-  validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
 }
 
 # Application Load Balancer
@@ -199,7 +176,7 @@ resource "aws_lb_listener" "https" {
   port              = 443
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
-  certificate_arn   = aws_acm_certificate_validation.cert.certificate_arn
+  certificate_arn   = aws_acm_certificate.cert.arn
 
   default_action {
     type = "fixed-response"
