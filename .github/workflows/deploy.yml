@@ -37,7 +37,7 @@ jobs:
     env:
       ECR_REPOSITORY: quantumvestai
       AWS_REGION: us-east-1
-      CLUSTER_NAME: quantumvestai-eks
+      CLUSTER_NAME: quantumvestai-cluster
       #CLUSTER_NAME: quantumvestai-eks-${{ github.event.inputs.environment || 'dev' }}
       IMAGE_TAG: ${{ github.sha }}
 
@@ -60,11 +60,11 @@ jobs:
     - name: Terraform Init, Validate, Plan, and Apply
       working-directory: ci-cd/terraform
       run: |
+        terraform init -reconfigure
         terraform init -upgrade
-        terraform providers
         terraform validate
         terraform plan 
-        terraform destroy -auto-approve
+        terraform apply
 
     - name: Log in to Amazon ECR
       id: login-ecr
