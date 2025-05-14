@@ -29,3 +29,4 @@ python-dotenv>=1.0.0
 gunicorn>=20.1.0
 
 tweepy>=4.12.0
+tf-keras>=2.6.0
