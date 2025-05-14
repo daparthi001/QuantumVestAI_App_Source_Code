@@ -102,8 +102,6 @@ jobs:
         kubectl apply -f secrets.yaml -n dev
         kubectl apply -f pvc.yaml -n dev
         kubectl apply -f deployment.yaml -n dev
-        kubectl apply -f service.yaml -n dev
-        kubectl apply -f ingress.yaml -n dev
         kubectl apply -f hpa.yaml -n dev
         kubectl apply -f cronjob.yaml -n dev
 
