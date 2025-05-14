@@ -138,14 +138,3 @@ output "cloudfront_certificate_arn" {
   description = "ARN of the CloudFront ACM certificate"
   value       = aws_acm_certificate.cloudfront.arn
 }
-
-# Kubernetes
-output "kubernetes_app_namespace" {
-  description = "Namespace for application"
-  value       = kubernetes_namespace.app.metadata[0].name
-}
-
-output "api_service_name" {
-  description = "Name of the API Kubernetes service"
-  value       = kubernetes_service.api.metadata[0].name
-}

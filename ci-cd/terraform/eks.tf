@@ -149,6 +149,7 @@ resource "aws_iam_role_policy_attachment" "ecr_readonly" {
 }
 
 # Standard Node Group
+# Standard Node Group with improved configuration
 resource "aws_eks_node_group" "standard" {
   cluster_name    = aws_eks_cluster.eks.name
   node_group_name = "${var.cluster_name}-standard-nodes"
@@ -161,12 +162,31 @@ resource "aws_eks_node_group" "standard" {
     min_size     = var.min_nodes
   }
 
-  instance_types = [var.node_instance_type]
-  disk_size      = var.node_disk_size
+  # Use a launch template instead of direct configuration
+  launch_template {
+    id      = aws_launch_template.standard_nodes.id
+    version = aws_launch_template.standard_nodes.latest_version
+  }
+
+  # Remove these as they'll be defined in the launch template
+  # instance_types = [var.node_instance_type]
+  # disk_size      = var.node_disk_size
 
   labels = {
     "role"        = "standard"
     "environment" = var.environment
+  }
+
+  # Add taints if needed
+  # taint {
+  #   key    = "dedicated"
+  #   value  = "standard"
+  #   effect = "NO_SCHEDULE"
+  # }
+
+  # Enhanced update config to minimize disruptions
+  update_config {
+    max_unavailable_percentage = 25
   }
 
   tags = {
@@ -174,11 +194,172 @@ resource "aws_eks_node_group" "standard" {
     "k8s.io/cluster-autoscaler/${var.cluster_name}" = "owned"
   }
 
+  # Add lifecycle policy to create new nodes before destroying old ones
+  lifecycle {
+    create_before_destroy = true
+  }
+
   depends_on = [
     aws_iam_role_policy_attachment.eks_worker_policy,
     aws_iam_role_policy_attachment.eks_cni_policy,
     aws_iam_role_policy_attachment.ecr_readonly
   ]
+}
+
+# Launch template for standard nodes with enhanced configuration
+resource "aws_launch_template" "standard_nodes" {
+  name = "${var.cluster_name}-standard-nodes-template"
+  
+  block_device_mappings {
+    device_name = "/dev/xvda"
+    
+    ebs {
+      volume_size           = var.node_disk_size
+      volume_type           = "gp3"
+      delete_on_termination = true
+      encrypted             = true
+      # Optional: specify KMS key for encryption
+      # kms_key_id            = aws_kms_key.eks_key.arn
+    }
+  }
+
+  # Enable detailed monitoring
+  monitoring {
+    enabled = true
+  }
+  
+  # Enable IMDS v2 but make it accessible
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "optional"  # Consider changing to "required" for production
+    http_put_response_hop_limit = 2
+  }
+
+  # User data script to help with troubleshooting and disk management
+  user_data = base64encode(<<-EOT
+    #!/bin/bash
+    
+    # Log startup information
+    echo "Node bootstrap starting at $(date)" > /var/log/eks-bootstrap.log
+    
+    # Add hostname and instance ID to the prompt to help with debugging
+    INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+    echo "export PS1='[\u@\h ($INSTANCE_ID) \W]\\$ '" >> /etc/bashrc
+    
+    # Set up automatic Docker cleanup
+    cat > /etc/cron.d/docker-cleanup << EOF
+    0 */4 * * * root docker system prune -af --volumes >> /var/log/docker-cleanup.log 2>&1
+    EOF
+    chmod 644 /etc/cron.d/docker-cleanup
+    
+    # Set up disk space monitoring and cleanup
+    cat > /usr/local/bin/cleanup-disk.sh << 'EOF'
+    #!/bin/bash
+    LOG="/var/log/disk-cleanup.log"
+    echo "=== Running disk cleanup at $(date) ===" >> $LOG
+    
+    # Check disk usage
+    DISK_USAGE=$(df -h / | grep -v Filesystem | awk '{print $5}' | sed 's/%//')
+    echo "Current disk usage: $DISK_USAGE%" >> $LOG
+    
+    if [ $DISK_USAGE -gt 80 ]; then
+      echo "Disk usage is high, running cleanup" >> $LOG
+      
+      # Clean Docker resources
+      echo "Cleaning Docker resources" >> $LOG
+      docker system prune -af --volumes >> $LOG 2>&1
+      
+      # Clean log files
+      echo "Cleaning log files" >> $LOG
+      find /var/log -type f -name "*.log" -size +100M -exec truncate -s 100M {} \; >> $LOG 2>&1
+      
+      # Clean journald
+      echo "Cleaning journald" >> $LOG
+      journalctl --vacuum-time=1d >> $LOG 2>&1
+      
+      # Check disk usage after cleanup
+      DISK_USAGE_AFTER=$(df -h / | grep -v Filesystem | awk '{print $5}' | sed 's/%//')
+      echo "Disk usage after cleanup: $DISK_USAGE_AFTER%" >> $LOG
+    fi
+    EOF
+    
+    chmod +x /usr/local/bin/cleanup-disk.sh
+    
+    cat > /etc/cron.d/disk-cleanup << EOF
+    */30 * * * * root /usr/local/bin/cleanup-disk.sh
+    EOF
+    chmod 644 /etc/cron.d/disk-cleanup
+    
+    # Create a diagnostic script
+    cat > /usr/local/bin/eks-diagnostics.sh << 'EOF'
+    #!/bin/bash
+    LOG="/var/log/eks-diagnostics.log"
+    echo "=== Running diagnostics at $(date) ===" >> $LOG
+    
+    # Check system resources
+    echo "Memory usage:" >> $LOG
+    free -h >> $LOG
+    
+    echo "Disk usage:" >> $LOG
+    df -h >> $LOG
+    
+    echo "Top processes:" >> $LOG
+    ps aux --sort=-%mem | head -10 >> $LOG
+    
+    # Check network connectivity
+    echo "Network connectivity:" >> $LOG
+    ping -c 3 8.8.8.8 >> $LOG 2>&1
+    
+    # Check DNS resolution
+    echo "DNS resolution:" >> $LOG
+    nslookup kubernetes.default.svc.cluster.local >> $LOG 2>&1
+    
+    # Check kubelet status
+    echo "Kubelet status:" >> $LOG
+    systemctl status kubelet >> $LOG 2>&1
+    
+    # Check kubelet logs
+    echo "Recent kubelet logs:" >> $LOG
+    journalctl -u kubelet --since "5 minutes ago" | tail -50 >> $LOG
+    EOF
+    
+    chmod +x /usr/local/bin/eks-diagnostics.sh
+    
+    # Run diagnostics on startup and every 5 minutes
+    /usr/local/bin/eks-diagnostics.sh
+    
+    cat > /etc/cron.d/eks-diagnostics << EOF
+    */5 * * * * root /usr/local/bin/eks-diagnostics.sh
+    EOF
+    chmod 644 /etc/cron.d/eks-diagnostics
+    
+    # Ensure kubelet is started and enabled
+    systemctl enable kubelet
+    systemctl start kubelet
+    
+    echo "Node bootstrap completed at $(date)" >> /var/log/eks-bootstrap.log
+  EOT
+  )
+  
+  # Instance tags
+  tag_specifications {
+    resource_type = "instance"
+    
+    tags = {
+      Name = "${var.cluster_name}-standard-node"
+      "kubernetes.io/cluster/${var.cluster_name}" = "owned"
+    }
+  }
+  
+  # Volume tags
+  tag_specifications {
+    resource_type = "volume"
+    
+    tags = {
+      Name = "${var.cluster_name}-standard-node-volume"
+      "kubernetes.io/cluster/${var.cluster_name}" = "owned"
+    }
+  }
 }
 
 # ML Node Group (Optional)

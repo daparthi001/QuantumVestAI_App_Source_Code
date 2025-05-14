@@ -54,13 +54,13 @@ variable "node_instance_type" {
 variable "node_disk_size" {
   description = "Disk size for EKS nodes in GB"
   type        = number
-  default     = 50
+  default     = 100
 }
 
 variable "min_nodes" {
   description = "Minimum number of nodes"
   type        = number
-  default     = 1
+  default     = 2
 }
 
 variable "max_nodes" {
@@ -72,7 +72,7 @@ variable "max_nodes" {
 variable "desired_nodes" {
   description = "Desired number of nodes"
   type        = number
-  default     = 1
+  default     = 2
 }
 
 # EKS ML nodes
@@ -91,7 +91,7 @@ variable "ml_node_instance_type" {
 variable "ml_node_disk_size" {
   description = "Disk size for ML nodes in GB"
   type        = number
-  default     = 100
+  default     = 200
 }
 
 variable "ml_min_nodes" {

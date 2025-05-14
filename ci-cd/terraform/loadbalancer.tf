@@ -94,7 +94,7 @@ resource "aws_lb" "main" {
   access_logs {
     bucket  = aws_s3_bucket.alb_logs.bucket
     prefix  = "${var.project}-${var.environment}-alb"
-    enabled = true
+    enabled = false
   }
 
   tags = {

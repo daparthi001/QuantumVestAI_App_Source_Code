@@ -82,7 +82,7 @@ resource "aws_db_parameter_group" "main" {
 resource "aws_db_instance" "main" {
   identifier             = "${var.project}-${var.environment}"
   engine                 = "postgres"
-  engine_version         = "14.6"
+  engine_version         = "14.16"
   instance_class         = var.rds_instance_class
   allocated_storage      = var.rds_allocated_storage
   max_allocated_storage  = var.rds_max_allocated_storage
