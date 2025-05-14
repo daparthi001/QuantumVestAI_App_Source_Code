@@ -27,3 +27,5 @@ python-dotenv>=1.0.0
 
 # For deployment
 gunicorn>=20.1.0
+
+tweepy>=4.12.0
