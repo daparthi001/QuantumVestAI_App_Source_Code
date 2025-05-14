@@ -64,7 +64,7 @@ jobs:
         terraform providers
         terraform validate
         terraform plan 
-        terraform apply -auto-approve
+        terraform destroy -auto-approve
 
     - name: Log in to Amazon ECR
       id: login-ecr
