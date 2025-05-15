@@ -25,7 +25,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Install the application
-RUN pip install --no-cache-dir -e .
+RUN pip install --no-cache-dir
 
 # Build stage for production
 FROM base as production
