@@ -71,7 +71,7 @@ jobs:
       working-directory: ci-cd/terraform
       run: |
         terraform init -upgrade
-        terraform plan -var="environment=${{ env.ENVIRONMENT }}" -var="aws_region=${{ env.AWS_REGION }}"
+        #terraform plan -var="environment=${{ env.ENVIRONMENT }}" -var="aws_region=${{ env.AWS_REGION }}"
         #terraform apply -var="environment=${{ env.ENVIRONMENT }}" -var="aws_region=${{ env.AWS_REGION }}" -auto-approve
 
     - name: Log in to Amazon ECR
