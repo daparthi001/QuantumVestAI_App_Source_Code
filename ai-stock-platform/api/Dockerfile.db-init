@@ -14,9 +14,10 @@ RUN mkdir -p /db-init/api/db/models /db-init/api/core
 COPY db_init/ /db-init/
 COPY alembic/ /db-init/alembic/
 COPY alembic.ini /db-init/
-COPY api/db/models/ /db-init/api/db/models/
-COPY api/db/base_class.py /db-init/api/db/
-COPY api/core/config.py /db-init/api/core/
+# Remove "api/" prefix from the paths below
+COPY db/models/ /db-init/api/db/models/
+COPY db/base_class.py /db-init/api/db/
+COPY core/config.py /db-init/api/core/
 
 # Make scripts executable
 RUN find /db-init -name "*.py" -exec chmod +x {} \;
