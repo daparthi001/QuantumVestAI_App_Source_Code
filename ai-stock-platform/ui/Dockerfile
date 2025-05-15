@@ -54,7 +54,7 @@ RUN find /app/scripts -name "*.sh" -type f -exec chmod +x {} \; 2>/dev/null || t
 # Copy additional files - fix for .env.example not found
 COPY requirements.txt /app/
 COPY setup.py /app/ 2>/dev/null || true
-COPY README.md /app/ 2>/dev/null || true
+#COPY README.md /app/ 2>/dev/null || true
 # Do not copy .env.example since it doesn't exist
 
 # Install Python dependencies
