@@ -4,40 +4,49 @@ services:
   ui:
     build:
       context: .
-      target: ${BUILD_TARGET:-production}
-    image: quantumvestai-ui:${TAG:-latest}
-    container_name: quantumvestai-ui
-    restart: unless-stopped
+      dockerfile: Dockerfile
+    image: quantumvestai-ui:latest
     ports:
-      - "${PORT:-8000}:8000"
+      - "3000:3000"
     environment:
-      - ENV=${ENV:-production}
-      - DEBUG=${DEBUG:-false}
-      - SECRET_KEY=${SECRET_KEY:-change_this_in_production}
-      - PORT=8000
-      - HOST=0.0.0.0
-      - WORKERS=${WORKERS:-4}
-      - API_BASE_URL=${API_BASE_URL}
-      - REDIS_URL=redis://redis:6379/0
+      - PORT=3000
+      - DEBUG=true
+      - API_BASE_URL=http://api:8000
+      - ENVIRONMENT=development
     volumes:
-      - ./logs:/app/logs
+      - ./ui:/app/ui
+      - ./templates:/app/templates
+      - ./static:/app/static
+      - ./scripts:/app/scripts
     depends_on:
-      - redis
-    networks:
-      - quantumvest-network
-
-  redis:
-    image: redis:6-alpine
-    container_name: quantumvestai-redis
-    restart: unless-stopped
+      - api
+      
+  api:
+    image: quantumvestai-api:latest  # You'll need to build this separately
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - DEBUG=true
+      - ENVIRONMENT=development
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=quantumvestai
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+    depends_on:
+      - db
+      
+  db:
+    image: postgres:13
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=quantumvestai
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
     volumes:
-      - redis-data:/data
-    networks:
-      - quantumvest-network
-
-networks:
-  quantumvest-network:
-    driver: bridge
+      - postgres_data:/var/lib/postgresql/data
 
 volumes:
-  redis-data:
+  postgres_data:
