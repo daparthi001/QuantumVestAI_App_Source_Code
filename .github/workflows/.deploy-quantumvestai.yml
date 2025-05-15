@@ -86,6 +86,7 @@ jobs:
 
     # Build and push API image with updated path
     - name: Build, tag, and push API Docker image
+      working-directory: ai-stock-platform/api
       run: |
         docker build -t ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:api-${IMAGE_TAG} ./ai-stock-platform/api
         docker tag ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:api-${IMAGE_TAG} ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:api-${ENVIRONMENT}-latest
@@ -95,6 +96,7 @@ jobs:
 
     # Build and push UI image with updated path
     - name: Build, tag, and push UI Docker image
+      working-directory: ai-stock-platform/ui
       run: |
         docker build -t ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:ui-${IMAGE_TAG} ./ai-stock-platform/ui
         docker tag ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:ui-${IMAGE_TAG} ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:ui-${ENVIRONMENT}-latest
@@ -104,6 +106,7 @@ jobs:
 
     # Build and push DB init image with updated path
     - name: Build, tag, and push DB Init Docker image
+      working-directory: ai-stock-platform/api
       run: |
         docker build -t ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:db-init-${IMAGE_TAG} -f ./ai-stock-platform/api/Dockerfile.db-init ./ai-stock-platform/api
         docker tag ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:db-init-${IMAGE_TAG} ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:db-init-${ENVIRONMENT}-latest
