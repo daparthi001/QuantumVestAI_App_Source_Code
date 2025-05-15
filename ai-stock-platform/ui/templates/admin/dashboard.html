@@ -1,0 +1,503 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - QuantumVestAI{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="/">Home</a></li>
+<li class="breadcrumb-item active">Admin Dashboard</li>
+{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', path='/css/admin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <h1 class="page-title">Admin Dashboard</h1>
+        <p class="text-muted">System overview and statistics</p>
+    </div>
+    <div class="header-actions">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#settingsModal">
+            <i class="bi bi-gear"></i> System Settings
+        </button>
+    </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ error }}
+</div>
+{% endif %}
+
+<!-- Stats Overview -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <span class="stat-card-label">Active Users</span>
+                <div class="stat-card-value">{{ stats.users_active }}</div>
+                <div class="stat-card-change positive">
+                    <i class="bi bi-arrow-up"></i> 
+                    {{ stats.user_growth_percent }}% from last month
+                </div>
+            </div>
+            <div class="stat-card-icon purple">
+                <i class="bi bi-people"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <span class="stat-card-label">API Requests</span>
+                <div class="stat-card-value">{{ stats.api_requests_today }}</div>
+                <div class="stat-card-change {{ 'positive' if stats.api_requests_change > 0 else 'negative' }}">
+                    <i class="bi {{ 'bi-arrow-up' if stats.api_requests_change > 0 else 'bi-arrow-down' }}"></i> 
+                    {{ stats.api_requests_change_percent }}% from yesterday
+                </div>
+            </div>
+            <div class="stat-card-icon blue">
+                <i class="bi bi-server"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <span class="stat-card-label">Model Accuracy</span>
+                <div class="stat-card-value">{{ stats.model_accuracy }}%</div>
+                <div class="stat-card-change {{ 'positive' if stats.model_accuracy_change > 0 else 'negative' }}">
+                    <i class="bi {{ 'bi-arrow-up' if stats.model_accuracy_change > 0 else 'bi-arrow-down' }}"></i> 
+                    {{ stats.model_accuracy_change }}% from last version
+                </div>
+            </div>
+            <div class="stat-card-icon green">
+                <i class="bi bi-graph-up"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <span class="stat-card-label">System Health</span>
+                <div class="stat-card-value">{{ stats.system_health_score }}%</div>
+                <div class="stat-card-change neutral">
+                    <i class="bi bi-circle-fill"></i> 
+                    {{ stats.system_status }}
+                </div>
+            </div>
+            <div class="stat-card-icon {{ stats.system_health_score >= 90 and 'green' or stats.system_health_score >= 70 and 'yellow' or 'red' }}">
+                <i class="bi bi-activity"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Dashboard Content -->
+<div class="row g-4">
+    <!-- System Status -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">System Status</h3>
+                <div class="card-actions">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="refreshStatus">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="system-status-grid">
+                    {% for service in health_metrics.services %}
+                    <div class="service-status {{ service.status }}">
+                        <div class="service-icon">
+                            <i class="bi {{ service.icon }}"></i>
+                        </div>
+                        <div class="service-info">
+                            <h4 class="service-name">{{ service.name }}</h4>
+                            <div class="service-metrics">
+                                <div class="service-uptime">
+                                    <span class="label">Uptime:</span>
+                                    <span class="value">{{ service.uptime }}</span>
+                                </div>
+                                <div class="service-load">
+                                    <span class="label">Load:</span>
+                                    <span class="value">{{ service.load }}%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="service-status-indicator">
+                            <span class="status-badge {{ service.status }}">{{ service.status|capitalize }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <hr>
+                
+                <h4 class="section-title">System Resources</h4>
+                <div class="resource-metrics">
+                    <div class="resource-metric">
+                        <div class="metric-label">
+                            <span class="label-name">CPU Usage</span>
+                            <span class="label-value">{{ health_metrics.resources.cpu }}%</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar {{ 'bg-warning' if health_metrics.resources.cpu >= 70 else 'bg-primary' }}" 
+                                 style="width: {{ health_metrics.resources.cpu }}%"></div>
+                        </div>
+                    </div>
+                    <div class="resource-metric">
+                        <div class="metric-label">
+                            <span class="label-name">Memory Usage</span>
+                            <span class="label-value">{{ health_metrics.resources.memory }}%</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar {{ 'bg-warning' if health_metrics.resources.memory >= 80 else 'bg-primary' }}" 
+                                 style="width: {{ health_metrics.resources.memory }}%"></div>
+                        </div>
+                    </div>
+                    <div class="resource-metric">
+                        <div class="metric-label">
+                            <span class="label-name">Disk Usage</span>
+                            <span class="label-value">{{ health_metrics.resources.disk }}%</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar {{ 'bg-danger' if health_metrics.resources.disk >= 90 else 'bg-primary' }}" 
+                                 style="width: {{ health_metrics.resources.disk }}%"></div>
+                        </div>
+                    </div>
+                    <div class="resource-metric">
+                        <div class="metric-label">
+                            <span class="label-name">DB Usage</span>
+                            <span class="label-value">{{ health_metrics.resources.db }}%</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar {{ 'bg-warning' if health_metrics.resources.db >= 75 else 'bg-primary' }}" 
+                                 style="width: {{ health_metrics.resources.db }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activities -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Recent Activities</h3>
+                <div class="card-actions">
+                    <a href="/admin/activity-log" class="btn btn-sm btn-link">View All</a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="activity-list">
+                    {% for activity in stats.recent_activities %}
+                    <div class="activity-item">
+                        <div class="activity-icon {{ activity.type }}">
+                            <i class="bi {{ activity.icon }}"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-text">{{ activity.description }}</div>
+                            <div class="activity-meta">
+                                <div class="activity-user">{{ activity.user }}</div>
+                                <div class="activity-time">{{ activity.time_ago }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Signups -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h3 class="card-title">Recent Signups</h3>
+                <div class="card-actions">
+                    <a href="/admin/users?sort=created_at&order=desc" class="btn btn-sm btn-link">View All</a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Signed Up</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in recent_users %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar avatar-sm me-2">
+                                            <img src="{{ user.avatar_url or url_for('static', path='/img/avatars/default.png') }}" alt="{{ user.username }}">
+                                        </div>
+                                        <div>{{ user.username }}</div>
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-secondary">{{ user.role }}</span></td>
+                                <td>{{ user.created_at }}</td>
+                                <td>
+                                    <a href="/admin/users/{{ user.id }}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Settings Modal -->
+<div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="settingsModalLabel">System Settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs" id="settingsTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab" aria-controls="general" aria-selected="true">General</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="api-tab" data-bs-toggle="tab" data-bs-target="#api" type="button" role="tab" aria-controls="api" aria-selected="false">API</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="models-tab" data-bs-toggle="tab" data-bs-target="#models" type="button" role="tab" aria-controls="models" aria-selected="false">Models</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="notifications-tab" data-bs-toggle="tab" data-bs-target="#notifications" type="button" role="tab" aria-controls="notifications" aria-selected="false">Notifications</button>
+                    </li>
+                </ul>
+                <div class="tab-content p-3" id="settingsTabContent">
+                    <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
+                        <form id="generalSettingsForm">
+                            <div class="mb-3">
+                                <label for="appName" class="form-label">Application Name</label>
+                                <input type="text" class="form-control" id="appName" value="QuantumVestAI">
+                            </div>
+                            <div class="mb-3">
+                                <label for="maintenance" class="form-label">Maintenance Mode</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="maintenance">
+                                    <label class="form-check-label" for="maintenance">Enable Maintenance Mode</label>
+                                </div>
+                                <div class="form-text">When enabled, the site will display a maintenance message to all users except admins.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="debugMode" class="form-label">Debug Mode</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="debugMode">
+                                    <label class="form-check-label" for="debugMode">Enable Debug Mode</label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="defaultTheme" class="form-label">Default Theme</label>
+                                <select class="form-select" id="defaultTheme">
+                                    <option value="light">Light</option>
+                                    <option value="dark">Dark</option>
+                                    <option value="auto">Auto (System)</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="tab-pane fade" id="api" role="tabpanel" aria-labelledby="api-tab">
+                        <form id="apiSettingsForm">
+                            <div class="mb-3">
+                                <label for="apiRateLimit" class="form-label">API Rate Limit</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="apiRateLimit" value="100">
+                                    <span class="input-group-text">requests per minute</span>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="apiTimeout" class="form-label">API Timeout</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="apiTimeout" value="30">
+                                    <span class="input-group-text">seconds</span>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="yahooFinanceKey" class="form-label">Yahoo Finance API Key</label>
+                                <input type="password" class="form-control" id="yahooFinanceKey" value="••••••••••••••••">
+                            </div>
+                            <div class="mb-3">
+                                <label for="cacheTime" class="form-label">Cache Duration</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="cacheTime" value="3600">
+                                    <span class="input-group-text">seconds</span>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="tab-pane fade" id="models" role="tabpanel" aria-labelledby="models-tab">
+                        <form id="modelsSettingsForm">
+                            <div class="mb-3">
+                                <label for="defaultModel" class="form-label">Default Forecast Model</label>
+                                <select class="form-select" id="defaultModel">
+                                    <option value="ensemble">Ensemble</option>
+                                    <option value="lstm">LSTM</option>
+                                    <option value="prophet">Prophet</option>
+                                    <option value="xgboost">XGBoost</option>
+                                    <option value="arima">ARIMA</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="modelUpdateSchedule" class="form-label">Model Update Schedule</label>
+                                <select class="form-select" id="modelUpdateSchedule">
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly" selected>Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="manual">Manual Only</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="defaultForecastDays" class="form-label">Default Forecast Days</label>
+                                <input type="number" class="form-control" id="defaultForecastDays" value="7">
+                            </div>
+                            <div class="mb-3">
+                                <label for="maxForecastDays" class="form-label">Maximum Forecast Days</label>
+                                <input type="number" class="form-control" id="maxForecastDays" value="90">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="tab-pane fade" id="notifications" role="tabpanel" aria-labelledby="notifications-tab">
+                        <form id="notificationsSettingsForm">
+                            <div class="mb-3">
+                                <label class="form-label">System Notifications</label>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="notifyModelTraining" checked>
+                                    <label class="form-check-label" for="notifyModelTraining">Model Training Events</label>
+                                </div>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="notifySystemErrors" checked>
+                                    <label class="form-check-label" for="notifySystemErrors">System Errors</label>
+                                </div>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="notifyNewUsers">
+                                    <label class="form-check-label" for="notifyNewUsers">New User Registrations</label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="adminEmail" class="form-label">Admin Email</label>
+                                <input type="email" class="form-control" id="adminEmail" value="admin@quantumvestai.com">
+                                <div class="form-text">Critical system notifications will be sent to this email.</div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveSettings">Save Settings</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Refresh status button
+        const refreshBtn = document.getElementById('refreshStatus');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', function() {
+                this.disabled = true;
+                this.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Refreshing...';
+                
+                // Simulate refresh with timeout
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            });
+        }
+        
+        // Save settings button
+        const saveBtn = document.getElementById('saveSettings');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', function() {
+                this.disabled = true;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+                
+                // Collect form data
+                const formData = {
+                    general: {
+                        appName: document.getElementById('appName').value,
+                        maintenanceMode: document.getElementById('maintenance').checked,
+                        debugMode: document.getElementById('debugMode').checked,
+                        defaultTheme: document.getElementById('defaultTheme').value
+                    },
+                    api: {
+                        rateLimit: document.getElementById('apiRateLimit').value,
+                        timeout: document.getElementById('apiTimeout').value,
+                        yahooFinanceKey: document.getElementById('yahooFinanceKey').value,
+                        cacheDuration: document.getElementById('cacheTime').value
+                    },
+                    models: {
+                        defaultModel: document.getElementById('defaultModel').value,
+                        updateSchedule: document.getElementById('modelUpdateSchedule').value,
+                        defaultForecastDays: document.getElementById('defaultForecastDays').value,
+                        maxForecastDays: document.getElementById('maxForecastDays').value
+                    },
+                    notifications: {
+                        notifyModelTraining: document.getElementById('notifyModelTraining').checked,
+                        notifySystemErrors: document.getElementById('notifySystemErrors').checked,
+                        notifyNewUsers: document.getElementById('notifyNewUsers').checked,
+                        adminEmail: document.getElementById('adminEmail').value
+                    }
+                };
+                
+                // Send AJAX request to update settings
+                fetch('/admin/settings/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('settingsModal'));
+                        modal.hide();
+                        
+                        // Show toast
+                        const toast = new bootstrap.Toast(document.createElement('div'));
+                        toast.show();
+                        
+                        // Reload page after short delay
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        alert('Error: ' + data.message);
+                        this.disabled = false;
+                        this.innerHTML = 'Save Settings';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while saving settings.');
+                    this.disabled = false;
+                    this.innerHTML = 'Save Settings';
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: db-health-check
+  namespace: dev
+spec:
+  schedule: "0 */4 * * *"  # Run every 4 hours
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: quantumvestai-sa
+          containers:
+          - name: db-health-check
+            image: IMAGE_PLACEHOLDER
+            command: ["/bin/sh"]
+            args:
+            - "-c"
+            - |
+              echo "Running database health check"
+              python -c "from api.core.db_init import verify_database_connection; exit(0 if verify_database_connection() else 1)"
+          restartPolicy: OnFailure

@@ -1,0 +1,69 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-init-job
+  namespace: NAMESPACE_PLACEHOLDER
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 86400  # Delete job after 1 day
+  template:
+    spec:
+      serviceAccountName: quantumvestai-sa
+      restartPolicy: Never
+      containers:
+      - name: db-init
+        image: DB_INIT_IMAGE_PLACEHOLDER
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        env:
+        # Database credentials from Terraform-created secret
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: quantumvestai-cluster-rds-credentials
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: quantumvestai-cluster-rds-credentials
+              key: password
+        - name: POSTGRES_SERVER
+          valueFrom:
+            secretKeyRef:
+              name: quantumvestai-cluster-rds-credentials
+              key: host
+        - name: POSTGRES_PORT
+          valueFrom:
+            secretKeyRef:
+              name: quantumvestai-cluster-rds-credentials
+              key: port
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: quantumvestai-cluster-rds-credentials
+              key: dbname
+        # Application secrets
+        - name: ADMIN_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: ADMIN_USERNAME
+        - name: ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: ADMIN_PASSWORD
+        - name: ADMIN_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: ADMIN_EMAIL
+        envFrom:
+        - configMapRef:
+            name: api-configmap

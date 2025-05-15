@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ui-configmap
+  namespace: NAMESPACE_PLACEHOLDER
+data:
+  # UI Configuration
+  NODE_ENV: "production"
+  API_URL: "http://api-service:8000"
+  PUBLIC_URL: "/"
+  
+  # Feature flags
+  ENABLE_ANALYTICS: "true"
+  ENABLE_WHITEPAPER_UPLOAD: "true"
+  ENABLE_SENTIMENT_ANALYSIS: "true"

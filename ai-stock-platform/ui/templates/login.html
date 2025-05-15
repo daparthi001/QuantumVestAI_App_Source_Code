@@ -1,0 +1,80 @@
+{% extends "auth_layout.html" %}
+
+{% block title %}Login - QuantumVestAI{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <a href="/" class="auth-logo">
+                <img src="{{ url_for('static', path='/img/logo.svg') }}" alt="QuantumVestAI">
+            </a>
+            <h1 class="auth-title">Sign In</h1>
+            <p class="auth-subtitle">Sign in to your account to continue</p>
+        </div>
+        
+        {% if msg %}
+        <div class="alert alert-{% if 'success' in msg %}success{% else %}danger{% endif %} alert-dismissible fade show" role="alert">
+            {{ msg }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endif %}
+        
+        <div class="auth-body">
+            <form method="post" action="/login{% if next %}?next={{ next }}{% endif %}">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" class="form-control" id="username" name="username" required autofocus>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <div class="password-input">
+                        <input type="password" class="form-control" id="password" name="password" required>
+                        <button type="button" class="password-toggle" tabindex="-1">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="remember" name="remember">
+                            <label class="form-check-label" for="remember">Remember me</label>
+                        </div>
+                        <div>
+                            <a href="/password-reset" class="forgot-password">Forgot password?</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">Sign In</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="auth-footer">
+            <p class="text-center">Don't have an account? <a href="/register{% if next %}?next={{ next }}{% endif %}">Sign up</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Password visibility toggle
+        const toggleButton = document.querySelector('.password-toggle');
+        const passwordInput = document.querySelector('#password');
+        
+        if (toggleButton && passwordInput) {
+            toggleButton.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                // Toggle icon
+                const icon = toggleButton.querySelector('i');
+                icon.classList.toggle('bi-eye');
+                icon.classList.toggle('bi-eye-slash');
+            });
+        }
+    });
+</script>
+{% endblock %}

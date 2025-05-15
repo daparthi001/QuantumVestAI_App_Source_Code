@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - QuantumVestAI Admin{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="/">Home</a></li>
+<li class="breadcrumb-item"><a href="/admin/dashboard">Admin</a></li>
+<li class="breadcrumb-item active">User Management</li>
+{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', path='/css/admin.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='/vendors/datatables/dataTables.min.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <h1 class="page-title">User Management</h1>
+        <p class="text-muted">Manage system users and permissions</p>
+    </div>
+    <div class="header-actions">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createUserModal">
+            <i class="bi bi-person-plus"></i> Create User
+        </button>
+    </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ error }}
+</div>
+{% endif %}
+
+{% if success %}
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i> {{ success }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+<!-- User Stats -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <span class="stat-card-label">Total Users</span>
+                <div class="stat-card-value">{{ stats.total_users }}</div>
+                <div class="stat-card-change positive">
+                    <i class="bi bi-arrow-up"></i> 
+                    {{ stats.user_growth_percent }}% from last month
+                </div>
+            </div>
+            <div class="stat-card-icon purple">
+                <i class="bi bi-people"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <span class="stat-card-label">Active Users</span>
+                <div class="stat-card-value">{{ stats.active_users }}</div>
+                <div class="stat-card-change neutral">
+                    <i class="bi bi-activity"></i>
+                    {{ stats.active_percent }}% of total
+                </div>
+            </div>
+            <div class="stat-card-icon green">
+                <i class="bi bi-person-check"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <span class="stat-card-label">Premium Users</span>
+                <div class="stat-card-value">{{ stats.premium_users }}</div>
+                <div class="stat-card-change positive">
+                    <i class="bi bi-graph-up"></i>
+                    {{ stats.premium_percent }}% of total
+                </div>
+            </div>
+            <div class="stat-card-icon blue">
+                <i class="bi bi-star"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <span class="stat-card-label">New Users (30d)</span>
+                <div class="stat-card-value">{{ stats.new_users }}</div>
+                <div class="stat-card-change {{ 'positive' if stats.new_users_change > 0 else 'negative' }}">
+                    <i class="bi {{ 'bi-arrow-up' if stats.new_users_change > 0 else 'bi-arrow-down' }}"></i>
+                    {{ stats.new_users_change_percent }}% vs previous
+                </div>
+            </div>
+            <div class="stat-card-icon gold">
+                <i class="bi bi-person-plus"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User List -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">User List</h3>
+        <div class="card-actions">
+            <div class="input-group">
+                <div class="input-group-text">
+                    <i class="bi bi-funnel"></i>
+                </div>
+                <select class="form-select form-select-sm" id="roleFilter">
+                    <option value="">All Roles</option>
+                    <option value="admin">Admin</option>
+                    <option value="premium">Premium</option>
+                    <option value="basic">Basic</option>
+                    <option value="free">Free</option>
+                </select>
+                <select class="form-select form-select-sm" id="statusFilter">
+                    <option value="">All Statuses</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="suspended">Suspended</option>
+                </select>
+                <button class="btn btn-outline-secondary btn-sm" id="clearFilters">
+                    <i class="bi bi-x-lg"></i> Clear
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover" id="usersTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Registered</th>
+                        <th>Last Login</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>
+                            <div class="user-cell">
+                                <div class="user-avatar">
+                                    {% if user.avatar_url %}
+                                    <img src="{{ user.avatar_url }}" alt="{{ user.username }}">
+                                    {% else %}
+                                    <div class="avatar-placeholder">
+                                        <span>{{ user.username[0]|upper }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <span class="user-name">{{ user.username }}</span>
+                            </div>
+                        </td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            <span class="badge 
+                                {{ 'bg-danger' if user.role == 'admin' else 
+                                'bg-primary' if user.role == 'premium' else 
+                                'bg-success' if user.role == 'basic' else 
+                                'bg-secondary' }}">
+                                {{ user.role|capitalize }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge 
+                                {{ 'bg-success' if user.status == 'active' else 
+                                'bg-danger' if user.status == 'suspended' else 
+                                'bg-warning' }}">
+                                {{ user.status|capitalize }}
+                            </span>
+                        </td>
+                        <td>{{ user.created_at }}</td>
+                        <td>{{ user.last_login }}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="/admin/users/{{ user.id }}" class="btn btn-sm btn-outline-primary" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <button class="btn btn-sm btn-outline-secondary edit-user-btn" title="Edit User" 
+                                    data-user-id="{{ user.id }}" 
+                                    data-username="{{ user.username }}" 
+                                    data-email="{{ user.email }}" 
+                                    data-role="{{ user.role }}" 
+                                    data-status="{{ user.status }}">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <div class="dropdown d-inline-block">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="userActionsDropdown{{ user.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-three-dots"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userActionsDropdown{{ user.id }}">
+                                        <li><a class="dropdown-item" href="/admin/users/{{ user.id }}/activity"><i class="bi bi-activity me-2"></i>View Activity</a></li>
+                                        <li><a class="dropdown-item reset-password-btn" href="#" data-user-id="{{ user.id }}" data-username="{{ user.username }}"><i class="bi bi-key me-2"></i>Reset Password</a></li>
+                                        {% if user.status == 'active' %}
+                                        <li><a class="dropdown-item suspend-user-btn text-warning" href="#" data-user-id="{{ user.id }}" data-username="{{ user.username }}"><i class="bi bi-pause-circle me-2"></i>Suspend User</a></li>
+                                        {% elif user.status == 'suspended' %}
+                                        <li><a class="dropdown-item reactivate-user-btn text-success" href="#" data-user-id="{{ user.id }}" data-username="{{ user.username }}"><i class="bi bi-play-circle me-2"></i>Reactivate User</a></li>
+                                        {% endif %}
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item delete-user-btn text-danger" href="#" data-user-id="{{ user.id }}" data-username="{{ user.username }}"><i class="bi bi-trash me-2"></i>Delete User</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create User Modal -->
+<div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createUserModalLabel">Create New User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createUserForm">
+                    <div class="mb-3">
+                        <label for="newUsername" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="newUsername" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="newEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">Password</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="newPassword" required>
+                            <button class="btn btn-outline-secondary toggle-password" type="button">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newRole" class="form-label">Role</label>
+                        <select class="form-select" id="newRole" required>
+                            <option value="free">Free</option>
+                            <option value="basic">Basic</option>
+                            <option value="premium">Premium</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="sendWelcomeEmail" checked>
+                            <label class="form-check-label" for="sendWelcomeEmail">
+                                Send welcome email
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="submitCreateUser">Create User</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>

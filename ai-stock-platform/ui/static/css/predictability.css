@@ -1,0 +1,377 @@
+/* QuantumVestAI - Predictability Analysis Styles */
+
+/* Score Card */
+.score-card {
+    background: linear-gradient(120deg, var(--card-bg) 0%, rgba(var(--primary-color-rgb), 0.05) 100%);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    border: none;
+    overflow: hidden;
+}
+
+.score-overview {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+}
+
+.score-gauge-container {
+    position: relative;
+    min-width: 200px;
+    max-width: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+}
+
+.gauge-label {
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.gauge-title {
+    display: block;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.gauge-score {
+    display: block;
+    font-size: var(--font-size-3xl);
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.score-summary {
+    flex: 1;
+    padding: 1rem 1rem 1rem 0;
+}
+
+.score-description {
+    margin-bottom: 1.5rem;
+    font-size: var(--font-size-md);
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.model-accuracy {
+    margin-top: 1.5rem;
+}
+
+.model-accuracy h5 {
+    margin-bottom: 1rem;
+    font-size: var(--font-size-md);
+    font-weight: 600;
+}
+
+.model-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.model-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.model-name {
+    min-width: 80px;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.model-bar .progress {
+    flex: 1;
+    height: 8px;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.model-bar .progress-bar {
+    background-color: var(--primary-color);
+    border-radius: inherit;
+    font-size: var(--font-size-xs);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 0.5rem;
+    color: white;
+}
+
+.model-bar:last-child .progress-bar {
+    background-color: var(--success-color);
+}
+
+/* Factor Analysis Cards */
+.factor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.factor-card {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 1.5rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.factor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.factor-header h4 {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    margin: 0;
+}
+
+.factor-score {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    padding: 0.25rem 0.75rem;
+    border-radius: 2rem;
+}
+
+.factor-score.high {
+    background-color: rgba(var(--success-color-rgb), 0.1);
+    color: var(--success-color);
+}
+
+.factor-score.medium {
+    background-color: rgba(var(--warning-color-rgb), 0.1);
+    color: var(--warning-color);
+}
+
+.factor-score.low {
+    background-color: rgba(var(--danger-color-rgb), 0.1);
+    color: var(--danger-color);
+}
+
+.factor-chart {
+    height: 180px;
+    margin: 1rem 0;
+}
+
+.factor-description {
+    margin-top: auto;
+}
+
+.factor-description p {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.factor-metrics {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+}
+
+.factor-metrics li {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.factor-metrics li strong {
+    color: var(--text-primary);
+}
+
+/* Sentiment Analysis */
+.sentiment-overview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+}
+
+.sentiment-gauge-container {
+    width: 100%;
+    max-width: 300px;
+    margin-bottom: 1.5rem;
+}
+
+.sentiment-details {
+    width: 100%;
+    text-align: center;
+}
+
+.sentiment-details h5 {
+    margin-bottom: 1rem;
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+}
+
+.sentiment-distribution {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.sentiment-type {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.sentiment-label {
+    min-width: 80px;
+    font-size: var(--font-size-sm);
+    text-align: right;
+    color: var(--text-secondary);
+}
+
+.sentiment-type .progress {
+    flex: 1;
+    height: 8px;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar.bg-success {
+    background-color: var(--success-color);
+}
+
+.progress-bar.bg-warning {
+    background-color: var(--warning-color);
+}
+
+.progress-bar.bg-danger {
+    background-color: var(--danger-color);
+}
+
+/* Predictability Ranking */
+.ranking-filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.filter-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.ranking-table th {
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-top: none;
+}
+
+.ranking-table td {
+    vertical-align: middle;
+}
+
+.rank-cell {
+    font-weight: 700;
+    width: 50px;
+}
+
+.ticker-cell {
+    font-weight: 600;
+}
+
+.company-name {
+    display: block;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.score-cell {
+    font-weight: 700;
+}
+
+.score-bar-container {
+    height: 8px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.score-bar {
+    height: 100%;
+    border-radius: 4px;
+}
+
+.score-bar.high {
+    background-color: var(--success-color);
+}
+
+.score-bar.medium {
+    background-color: var(--warning-color);
+}
+
+.score-bar.low {
+    background-color: var(--danger-color);
+}
+
+/* Comparison View */
+.comparison-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.comparison-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.comparison-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.comparison-card {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.comparison-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 4px;
+    width: 100%;
+}
+
+.comparison-card.high::after {

@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: quantumvestai
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    # Set your ACM certificate ARN
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:921930869047:certificate/5c7be917-ceec-4ba5-95bf-cfc28566bd4c
+    # Optional group name to use the same ALB for multiple ingresses
+    alb.ingress.kubernetes.io/group.name: quantumvestai
+    # Health checks
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    alb.ingress.kubernetes.io/success-codes: '200'
+spec:
+  rules:
+  - host: quantumvestai.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: quantumvestai
+            port:
+              number: 80

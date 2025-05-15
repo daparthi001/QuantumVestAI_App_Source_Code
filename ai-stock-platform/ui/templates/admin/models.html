@@ -1,0 +1,633 @@
+{% extends "base.html" %}
+
+{% block title %}Model Management - QuantumVestAI Admin{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="/">Home</a></li>
+<li class="breadcrumb-item"><a href="/admin/dashboard">Admin</a></li>
+<li class="breadcrumb-item active">Model Management</li>
+{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', path='/css/admin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <h1 class="page-title">Model Management</h1>
+        <p class="text-muted">Manage and monitor AI forecasting models</p>
+    </div>
+    <div class="header-actions">
+        <a href="/admin/models/new" class="btn btn-primary">
+            <i class="bi bi-plus"></i> Deploy New Model
+        </a>
+        <button type="button" class="btn btn-outline-secondary" id="retrain-models-btn">
+            <i class="bi bi-arrow-repeat"></i> Retrain All
+        </button>
+    </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ error }}
+</div>
+{% endif %}
+
+{% if success %}
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i> {{ success }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+<!-- Model Performance Overview -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <span class="stat-card-label">Active Models</span>
+                <div class="stat-card-value">{{ model_stats.active_count }}</div>
+                <div class="stat-card-change neutral">
+                    <i class="bi bi-check-circle"></i> 
+                    {{ model_stats.deployment_success_rate }}% deployment success
+                </div>
+            </div>
+            <div class="stat-card-icon blue">
+                <i class="bi bi-cpu"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <span class="stat-card-label">Overall Accuracy</span>
+                <div class="stat-card-value">{{ model_stats.overall_accuracy }}%</div>
+                <div class="stat-card-change positive">
+                    <i class="bi bi-arrow-up"></i> 
+                    +{{ model_stats.accuracy_change }}% from previous
+                </div>
+            </div>
+            <div class="stat-card-icon green">
+                <i class="bi bi-graph-up"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <span class="stat-card-label">Today's Predictions</span>
+                <div class="stat-card-value">{{ model_stats.predictions_today }}</div>
+                <div class="stat-card-change neutral">
+                    <i class="bi bi-activity"></i>
+                    {{ model_stats.avg_response_time }}ms avg response
+                </div>
+            </div>
+            <div class="stat-card-icon purple">
+                <i class="bi bi-lightning"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <span class="stat-card-label">Training Jobs</span>
+                <div class="stat-card-value">{{ model_stats.training_jobs_active }}</div>
+                <div class="stat-card-change {{ 'neutral' if model_stats.training_jobs_queue == 0 else 'negative' }}">
+                    <i class="bi {{ 'bi-check-circle' if model_stats.training_jobs_queue == 0 else 'bi-hourglass' }}"></i> 
+                    {{ model_stats.training_jobs_queue }} in queue
+                </div>
+            </div>
+            <div class="stat-card-icon {{ 'green' if model_stats.training_jobs_queue == 0 else 'orange' }}">
+                <i class="bi bi-gear"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs for model sections -->
+<ul class="nav nav-tabs mb-4" id="modelTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="deployed-tab" data-bs-toggle="tab" data-bs-target="#deployed" type="button" role="tab" aria-controls="deployed" aria-selected="true">
+            Deployed Models
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="training-tab" data-bs-toggle="tab" data-bs-target="#training" type="button" role="tab" aria-controls="training" aria-selected="false">
+            Training Jobs
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="accuracy-tab" data-bs-toggle="tab" data-bs-target="#accuracy" type="button" role="tab" aria-controls="accuracy" aria-selected="false">
+            Accuracy Reports
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="false">
+            Model Settings
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="modelTabsContent">
+    <!-- Deployed Models Tab -->
+    <div class="tab-pane fade show active" id="deployed" role="tabpanel" aria-labelledby="deployed-tab">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Deployed Models</h3>
+                <div class="card-actions">
+                    <div class="input-group">
+                        <div class="input-group-text">
+                            <i class="bi bi-funnel"></i>
+                        </div>
+                        <select class="form-select form-select-sm" id="modelTypeFilter">
+                            <option value="">All Types</option>
+                            <option value="ensemble">Ensemble</option>
+                            <option value="lstm">LSTM</option>
+                            <option value="prophet">Prophet</option>
+                            <option value="xgboost">XGBoost</option>
+                            <option value="arima">ARIMA</option>
+                        </select>
+                        <select class="form-select form-select-sm" id="modelStatusFilter">
+                            <option value="">All Statuses</option>
+                            <option value="active">Active</option>
+                            <option value="paused">Paused</option>
+                            <option value="deprecated">Deprecated</option>
+                        </select>
+                        <button class="btn btn-outline-secondary btn-sm" id="clearModelFilters">
+                            <i class="bi bi-x-lg"></i> Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="modelsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Version</th>
+                                <th>Accuracy</th>
+                                <th>Status</th>
+                                <th>Last Updated</th>
+                                <th>Usage</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for model in deployed_models %}
+                            <tr>
+                                <td>{{ model.id }}</td>
+                                <td>
+                                    <div class="model-name-cell">
+                                        <i class="bi {{ model.icon }} model-icon {{ model.type }}"></i>
+                                        <div>
+                                            <span class="model-name">{{ model.name }}</span>
+                                            {% if model.is_default %}
+                                            <span class="badge bg-primary">Default</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ model.type|capitalize }}</td>
+                                <td>{{ model.version }}</td>
+                                <td>
+                                    <div class="accuracy-indicator">
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar 
+                                                {{ 'bg-success' if model.accuracy >= 90 else 'bg-warning' if model.accuracy >= 75 else 'bg-danger' }}" 
+                                                style="width: {{ model.accuracy }}%">
+                                            </div>
+                                        </div>
+                                        <span>{{ model.accuracy }}%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge 
+                                        {{ 'bg-success' if model.status == 'active' else 
+                                        'bg-warning' if model.status == 'paused' else 
+                                        'bg-secondary' }}">
+                                        {{ model.status|capitalize }}
+                                    </span>
+                                </td>
+                                <td>{{ model.updated_at }}</td>
+                                <td>{{ model.usage_count }} requests</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="/admin/models/{{ model.id }}" class="btn btn-sm btn-outline-primary" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <button class="btn btn-sm btn-outline-secondary edit-model-btn" title="Edit Model" 
+                                            data-model-id="{{ model.id }}"
+                                            data-model-name="{{ model.name }}">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <div class="dropdown d-inline-block">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="modelActionsDropdown{{ model.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="bi bi-three-dots"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="modelActionsDropdown{{ model.id }}">
+                                                <li><a class="dropdown-item" href="/admin/models/{{ model.id }}/metrics"><i class="bi bi-graph-up me-2"></i>View Metrics</a></li>
+                                                <li><a class="dropdown-item retrain-model-btn" href="#" data-model-id="{{ model.id }}" data-model-name="{{ model.name }}"><i class="bi bi-arrow-repeat me-2"></i>Retrain Model</a></li>
+                                                {% if model.status == 'active' %}
+                                                <li><a class="dropdown-item pause-model-btn text-warning" href="#" data-model-id="{{ model.id }}" data-model-name="{{ model.name }}"><i class="bi bi-pause-circle me-2"></i>Pause Model</a></li>
+                                                {% elif model.status == 'paused' %}
+                                                <li><a class="dropdown-item activate-model-btn text-success" href="#" data-model-id="{{ model.id }}" data-model-name="{{ model.name }}"><i class="bi bi-play-circle me-2"></i>Activate Model</a></li>
+                                                {% endif %}
+                                                <li><a class="dropdown-item set-default-model-btn" href="#" data-model-id="{{ model.id }}" data-model-name="{{ model.name }}"><i class="bi bi-star me-2"></i>Set as Default</a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item deprecate-model-btn text-danger" href="#" data-model-id="{{ model.id }}" data-model-name="{{ model.name }}"><i class="bi bi-archive me-2"></i>Deprecate Model</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Training Jobs Tab -->
+    <div class="tab-pane fade" id="training" role="tabpanel" aria-labelledby="training-tab">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Training Jobs</h3>
+                <div class="card-actions">
+                    <button type="button" class="btn btn-primary btn-sm" id="new-training-job-btn">
+                        <i class="bi bi-plus"></i> New Training Job
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Job ID</th>
+                                <th>Model Type</th>
+                                <th>Training Data</th>
+                                <th>Parameters</th>
+                                <th>Status</th>
+                                <th>Started</th>
+                                <th>Duration</th>
+                                <th>Progress</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in training_jobs %}
+                            <tr>
+                                <td>{{ job.id }}</td>
+                                <td>{{ job.model_type|capitalize }}</td>
+                                <td>{{ job.data_range }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary view-params-btn" 
+                                        data-bs-toggle="tooltip" title="View Parameters"
+                                        data-params="{{ job.parameters|tojson }}">
+                                        <i class="bi bi-info-circle"></i>
+                                    </button>
+                                </td>
+                                <td>
+                                    <span class="badge 
+                                        {{ 'bg-success' if job.status == 'completed' else 
+                                        'bg-primary' if job.status == 'running' else 
+                                        'bg-warning' if job.status == 'queued' else 
+                                        'bg-danger' if job.status == 'failed' else 
+                                        'bg-secondary' }}">
+                                        {{ job.status|capitalize }}
+                                    </span>
+                                </td>
+                                <td>{{ job.started_at }}</td>
+                                <td>{{ job.duration }}</td>
+                                <td>
+                                    <div class="progress">
+                                        <div class="progress-bar 
+                                            {{ 'bg-success' if job.status == 'completed' else 
+                                            'bg-primary progress-bar-striped progress-bar-animated' if job.status == 'running' else 
+                                            'bg-warning' if job.status == 'queued' else 
+                                            'bg-danger' }}" 
+                                            role="progressbar" 
+                                            style="width: {{ job.progress }}%"
+                                            aria-valuenow="{{ job.progress }}" 
+                                            aria-valuemin="0" 
+                                            aria-valuemax="100">
+                                            {{ job.progress }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="/admin/models/training/{{ job.id }}" class="btn btn-sm btn-outline-primary" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        {% if job.status == 'running' %}
+                                        <button class="btn btn-sm btn-outline-danger cancel-job-btn" title="Cancel Job"
+                                            data-job-id="{{ job.id }}">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                        {% elif job.status == 'queued' %}
+                                        <button class="btn btn-sm btn-outline-warning remove-job-btn" title="Remove from Queue"
+                                            data-job-id="{{ job.id }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        {% elif job.status == 'completed' %}
+                                        <button class="btn btn-sm btn-outline-success deploy-model-btn" title="Deploy Model"
+                                            data-job-id="{{ job.id }}" data-model-type="{{ job.model_type }}">
+                                            <i class="bi bi-rocket"></i>
+                                        </button>
+                                        {% elif job.status == 'failed' %}
+                                        <button class="btn btn-sm btn-outline-primary retry-job-btn" title="Retry Job"
+                                            data-job-id="{{ job.id }}">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Training Resources -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h3 class="card-title">Training Resources</h3>
+            </div>
+            <div class="card-body">
+                <h5>Resource Allocation</h5>
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="resource-metric">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="resource-label">CPU Usage</span>
+                                <span class="resource-value">{{ resources.cpu_usage }}%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar {{ 'bg-warning' if resources.cpu_usage > 80 else 'bg-primary' }}" 
+                                     role="progressbar" style="width: {{ resources.cpu_usage }}%">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="resource-metric">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="resource-label">Memory Usage</span>
+                                <span class="resource-value">{{ resources.memory_usage }}%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar {{ 'bg-warning' if resources.memory_usage > 80 else 'bg-primary' }}" 
+                                     role="progressbar" style="width: {{ resources.memory_usage }}%">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="resource-metric">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="resource-label">GPU Utilization</span>
+                                <span class="resource-value">{{ resources.gpu_usage }}%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar {{ 'bg-warning' if resources.gpu_usage > 80 else 'bg-primary' }}" 
+                                     role="progressbar" style="width: {{ resources.gpu_usage }}%">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="resource-metric">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="resource-label">Storage</span>
+                                <span class="resource-value">{{ resources.storage_usage }}%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar {{ 'bg-warning' if resources.storage_usage > 80 else 'bg-primary' }}" 
+                                     role="progressbar" style="width: {{ resources.storage_usage }}%">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h5 class="mt-4">Training Queue</h5>
+                <div class="training-queue">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Queue Size: {{ resources.queue_size }} jobs</span>
+                        <span>Estimated wait time: {{ resources.estimated_wait_time }}</span>
+                    </div>
+                    <div class="progress mb-3" style="height: 10px;">
+                        <div class="progress-bar bg-info" role="progressbar" 
+                             style="width: {{ (resources.queue_size / resources.queue_capacity) * 100 }}%">
+                        </div>
+                    </div>
+                    <div class="text-muted text-end">{{ resources.queue_size }}/{{ resources.queue_capacity }} queue capacity</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Accuracy Reports Tab -->
+    <div class="tab-pane fade" id="accuracy" role="tabpanel" aria-labelledby="accuracy-tab">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Accuracy Reports</h3>
+                <div class="card-actions">
+                    <div class="input-group">
+                        <select class="form-select form-select-sm" id="reportModelFilter">
+                            <option value="">All Models</option>
+                            <option value="ensemble">Ensemble</option>
+                            <option value="lstm">LSTM</option>
+                            <option value="prophet">Prophet</option>
+                            <option value="xgboost">XGBoost</option>
+                            <option value="arima">ARIMA</option>
+                        </select>
+                        <select class="form-select form-select-sm" id="reportPeriodFilter">
+                            <option value="7">Last 7 Days</option>
+                            <option value="30" selected>Last 30 Days</option>
+                            <option value="90">Last 90 Days</option>
+                            <option value="180">Last 180 Days</option>
+                        </select>
+                        <button class="btn btn-outline-secondary btn-sm" id="generateReportBtn">
+                            <i class="bi bi-arrow-repeat"></i> Update
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="chart-container mb-4">
+                    <canvas id="accuracyChart"></canvas>
+                </div>
+                
+                <h4>Model Performance Comparison</h4>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>RMSE</th>
+                                <th>MAE</th>
+                                <th>MAPE</th>
+                                <th>Direction Accuracy</th>
+                                <th>Predictability Score</th>
+                                <th>Metrics Trend</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for model_perf in model_performance %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi {{ model_perf.icon }} me-2 model-icon {{ model_perf.type }}"></i>
+                                        {{ model_perf.type|capitalize }}
+                                    </div>
+                                </td>
+                                <td>{{ model_perf.rmse }}</td>
+                                <td>{{ model_perf.mae }}</td>
+                                <td>{{ model_perf.mape }}%</td>
+                                <td>{{ model_perf.direction_accuracy }}%</td>
+                                <td>
+                                    <div class="progress">
+                                        <div class="progress-bar 
+                                            {{ 'bg-success' if model_perf.predictability_score >= 90 else 
+                                            'bg-warning' if model_perf.predictability_score >= 75 else 
+                                            'bg-danger' }}" 
+                                            role="progressbar" 
+                                            style="width: {{ model_perf.predictability_score }}%">
+                                            {{ model_perf.predictability_score }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="sparkline">
+                                        {% if model_perf.trend == 'improving' %}
+                                        <i class="bi bi-arrow-up text-success"></i>
+                                        <span>Improving</span>
+                                        {% elif model_perf.trend == 'stable' %}
+                                        <i class="bi bi-dash text-primary"></i>
+                                        <span>Stable</span>
+                                        {% else %}
+                                        <i class="bi bi-arrow-down text-danger"></i>
+                                        <span>Declining</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title">Sector Accuracy Breakdown</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="sectorAccuracyChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title">Forecast Period Accuracy</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="periodAccuracyChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h3 class="card-title">Recent Backtesting Results</h3>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Model</th>
+                                <th>Ticker</th>
+                                <th>Period</th>
+                                <th>RMSE</th>
+                                <th>Direction</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in backtest_results %}
+                            <tr>
+                                <td>{{ result.date }}</td>
+                                <td>{{ result.model_type|capitalize }}</td>
+                                <td>{{ result.ticker }}</td>
+                                <td>{{ result.period }} days</td>
+                                <td>{{ result.rmse }}</td>
+                                <td>{{ result.direction_accuracy }}%</td>
+                                <td>
+                                    <span class="badge 
+                                        {{ 'bg-success' if result.status == 'passed' else 'bg-danger' }}">
+                                        {{ result.status|capitalize }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="/admin/models/backtest/{{ result.id }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Model Settings Tab -->
+    <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">General Settings</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="generalSettingsForm">
+                            <div class="mb-3">
+                                <label for="defaultModel" class="form-label">Default Forecast Model</label>
+                                <select class="form-select" id="defaultModel">
+                                    <option value="ensemble" {% if model_settings.default_model == 'ensemble' %}selected{% endif %}>Ensemble</option>
+                                    <option value="lstm" {% if model_settings.default_model == 'lstm' %}selected{% endif %}>LSTM</option>
+                                    <option value="prophet" {% if model_settings.default_model == 'prophet' %}selected{% endif %}>Prophet</option>
+                                    <option value="xgboost" {% if model_settings.default_model == 'xgboost' %}selected{% endif %}>XGBoost</option>
+                                    <option value="arima" {% if model_settings.default_model == 'arima' %}selected{% endif %}>ARIMA</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="modelUpdateSchedule" class="form-label">Model Update Schedule</label>
+                                <select class="form-select" id="modelUpdateSchedule">
+                                    <option value="daily" {% if model_settings.update_schedule == 'daily' %}selected{% endif %

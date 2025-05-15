@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: quantumvestai-ui-service
+  namespace: quantumvestai
+  labels:
+    app: quantumvestai-ui
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8000"
+    prometheus.io/path: "/metrics"
+    service.beta.kubernetes.io/aws-load-balancer-type: "external"
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    service.beta.kubernetes.io/aws-load-balancer-security-groups: "sg-xxxxxxxx,sg-yyyyyyyy"
+spec:
+  type: ClusterIP  # Type remains ClusterIP since ALB will handle external traffic
+  ports:
+  - port: 80
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  selector:
+    app: quantumvestai-ui

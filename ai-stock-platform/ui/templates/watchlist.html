@@ -1,0 +1,529 @@
+{% extends "base.html" %}
+
+{% block title %}My Watchlist - QuantumVestAI{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="/">Home</a></li>
+<li class="breadcrumb-item active">Watchlist</li>
+{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', path='/css/watchlist.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <h1 class="page-title">My Watchlist</h1>
+        <p class="text-muted">Track and monitor your favorite stocks</p>
+    </div>
+    <div class="header-actions">
+        <div class="btn-group" role="group">
+            <a href="/watchlist?view=grid" class="btn btn-outline-primary {{ 'active' if view == 'grid' else '' }}">
+                <i class="bi bi-grid"></i> Grid
+            </a>
+            <a href="/watchlist?view=list" class="btn btn-outline-primary {{ 'active' if view == 'list' else '' }}">
+                <i class="bi bi-list-ul"></i> List
+            </a>
+        </div>
+        <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#addStockModal">
+            <i class="bi bi-plus"></i> Add Stock
+        </button>
+    </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ error }}
+</div>
+{% endif %}
+
+{% if not watchlist or watchlist|length == 0 %}
+<div class="empty-watchlist">
+    <div class="empty-icon">
+        <i class="bi bi-star"></i>
+    </div>
+    <h3>Your watchlist is empty</h3>
+    <p>Add stocks to your watchlist to track their performance and get forecasts</p>
+    <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#addStockModal">
+        <i class="bi bi-plus"></i> Add Stock
+    </button>
+</div>
+{% else %}
+
+<!-- Watchlist Summary -->
+<div class="watchlist-summary mb-4">
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="summary-card">
+                <div class="summary-icon">
+                    <i class="bi bi-graph-up"></i>
+                </div>
+                <div class="summary-content">
+                    <span class="summary-value positive">{{ summary.gainers_count }}</span>
+                    <span class="summary-label">Gainers</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="summary-card">
+                <div class="summary-icon">
+                    <i class="bi bi-graph-down"></i>
+                </div>
+                <div class="summary-content">
+                    <span class="summary-value negative">{{ summary.losers_count }}</span>
+                    <span class="summary-label">Losers</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="summary-card">
+                <div class="summary-icon">
+                    <i class="bi bi-arrow-up-right"></i>
+                </div>
+                <div class="summary-content">
+                    <span class="summary-value">{{ summary.best_performer.ticker }}</span>
+                    <span class="summary-label positive">+{{ summary.best_performer.change_percent }}%</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="summary-card">
+                <div class="summary-icon">
+                    <i class="bi bi-arrow-down-right"></i>
+                </div>
+                <div class="summary-content">
+                    <span class="summary-value">{{ summary.worst_performer.ticker }}</span>
+                    <span class="summary-label negative">{{ summary.worst_performer.change_percent }}%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active alerts -->
+{% if alerts and alerts|length > 0 %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title mb-0">Active Price Alerts</h3>
+        <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createAlertModal">Create Alert</a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Stock</th>
+                        <th>Condition</th>
+                        <th>Current</th>
+                        <th>Target</th>
+                        <th>Distance</th>
+                        <th>Created</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alert in alerts %}
+                    <tr>
+                        <td>
+                            <a href="/forecast?ticker={{ alert.ticker }}" class="d-flex align-items-center">
+                                <div class="symbol-logo me-2">
+                                    <img src="https://logo.clearbit.com/{{ alert.ticker.lower() }}.com" alt="{{ alert.ticker }}" onerror="this.src='{{ url_for('static', path='/img/stock-placeholder.png') }}'">
+                                </div>
+                                <span class="font-weight-bold">{{ alert.ticker }}</span>
+                            </a>
+                        </td>
+                        <td>{{ alert.direction|capitalize }} </td>
+                        <td>${{ alert.current_price }}</td>
+                        <td>${{ alert.price }}</td>
+                        <td>
+                            {% set distance = ((alert.price - alert.current_price) / alert.current_price * 100)|abs|round(2) %}
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar {{ 'bg-success' if distance < 5 else 'bg-warning' }}" style="width: {{ 100 - distance if distance < 100 else 1 }}%"></div>
+                            </div>
+                            <div class="mt-1">{{ distance }}% away</div>
+                        </td>
+                        <td>{{ alert.created_at }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger delete-alert-btn" data-alert-id="{{ alert.alert_id }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Grid View -->
+{% if view == 'grid' %}
+<div class="row g-4 watchlist-grid">
+    {% for item in watchlist %}
+    <div class="col-lg-4 col-md-6">
+        <div class="stock-card">
+            <div class="stock-card-header">
+                <div class="stock-card-title">
+                    <div class="stock-logo">
+                        <img src="https://logo.clearbit.com/{{ item.ticker.lower() }}.com" alt="{{ item.ticker }}" onerror="this.src='{{ url_for('static', path='/img/stock-placeholder.png') }}'">
+                    </div>
+                    <div class="stock-name">
+                        <h4>{{ item.ticker }}</h4>
+                        <span class="company-name">{{ item.info.name }}</span>
+                    </div>
+                </div>
+                <div class="stock-actions dropdown">
+                    <button class="btn btn-sm action-button" data-bs-toggle="dropdown">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/forecast?ticker={{ item.ticker }}">View Forecast</a></li>
+                        <li><a class="dropdown-item" href="/predictability?ticker={{ item.ticker }}">Predictability Analysis</a></li>
+                        <li><a class="dropdown-item set-alert-btn" href="#" data-ticker="{{ item.ticker }}" data-current-price="{{ item.info.price }}">Set Price Alert</a></li>
+                        <li><a class="dropdown-item edit-notes-btn" href="#" data-ticker="{{ item.ticker }}" data-notes="{{ item.notes }}">Edit Notes</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger remove-stock-btn" href="#" data-ticker="{{ item.ticker }}">Remove from Watchlist</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="stock-card-price">
+                <div class="current-price">${{ item.info.price }}</div>
+                <div class="price-change {{ 'positive' if item.info.change > 0 else 'negative' if item.info.change < 0 else 'neutral' }}">
+                    <i class="bi {{ 'bi-arrow-up' if item.info.change > 0 else 'bi-arrow-down' if item.info.change < 0 else 'bi-dash' }}"></i>
+                    {{ item.info.change }} ({{ item.info.change_percent }}%)
+                </div>
+            </div>
+            
+            <div class="stock-chart">
+                <canvas class="mini-stock-chart" data-ticker="{{ item.ticker }}"></canvas>
+            </div>
+            
+            <div class="stock-card-info">
+                <div class="info-row">
+                    <div class="info-item">
+                        <span class="info-label">Market Cap</span>
+                        <span class="info-value">${{ '{:,.2f}'.format(item.info.market_cap / 1000000000) }}B</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Volume</span>
+                        <span class="info-value">{{ '{:,.0f}'.format(item.info.volume) }}</span>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-item">
+                        <span class="info-label">P/E Ratio</span>
+                        <span class="info-value">{{ item.info.pe_ratio|round(2) }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">52W Range</span>
+                        <span class="info-value">${{ item.info.low_52w }} - ${{ item.info.high_52w }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Forecast summary -->
+            <div class="forecast-preview">
+                <div class="forecast-header">
+                    <h5>7-Day Forecast</h5>
+                    <a href="/forecast?ticker={{ item.ticker }}" class="btn btn-sm btn-link">Details</a>
+                </div>
+                <div class="forecast-stats">
+                    <div class="forecast-stat">
+                        <span class="stat-label">End Price</span>
+                        <span class="stat-value">${{ (item.info.price * 1.03)|round(2) }}</span>
+                        <span class="stat-change positive">+3.0%</span>
+                    </div>
+                    <div class="forecast-stat">
+                        <span class="stat-label">Confidence</span>
+                        <span class="stat-value">87%</span>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary" style="width: 87%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if item.notes %}
+            <div class="stock-notes">
+                <h5><i class="bi bi-pencil-square"></i> Notes</h5>
+                <p>{{ item.notes }}</p>
+            </div>
+            {% endif %}
+            
+            <div class="stock-card-footer">
+                <a href="/forecast?ticker={{ item.ticker }}" class="btn btn-outline-primary btn-sm">View Forecast</a>
+                <a href="/technical-analysis?ticker={{ item.ticker }}" class="btn btn-outline-secondary btn-sm">Technical Analysis</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- List View -->
+{% else %}
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover watchlist-table">
+                <thead>
+                    <tr>
+                        <th>Stock</th>
+                        <th>Price</th>
+                        <th>Change</th>
+                        <th>Market Cap</th>
+                        <th>Volume</th>
+                        <th>P/E Ratio</th>
+                        <th>7-Day Forecast</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in watchlist %}
+                    <tr>
+                        <td>
+                            <div class="stock-cell">
+                                <div class="stock-logo">
+                                    <img src="https://logo.clearbit.com/{{ item.ticker.lower() }}.com" alt="{{ item.ticker }}" onerror="this.src='{{ url_for('static', path='/img/stock-placeholder.png') }}'">
+                                </div>
+                                <div>
+                                    <div class="stock-symbol">{{ item.ticker }}</div>
+                                    <div class="company-name">{{ item.info.name }}</div>
+                                    {% if item.notes %}
+                                    <a href="#" class="notes-indicator edit-notes-btn" data-ticker="{{ item.ticker }}" data-notes="{{ item.notes }}">
+                                        <i class="bi bi-sticky-fill"></i> Notes
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>${{ item.info.price }}</td>
+                        <td class="{{ 'positive' if item.info.change > 0 else 'negative' if item.info.change < 0 else 'neutral' }}">
+                            <i class="bi {{ 'bi-arrow-up' if item.info.change > 0 else 'bi-arrow-down' if item.info.change < 0 else 'bi-dash' }}"></i>
+                            {{ item.info.change }} ({{ item.info.change_percent }}%)
+                        </td>
+                        <td>${{ '{:,.2f}'.format(item.info.market_cap / 1000000000) }}B</td>
+                        <td>{{ '{:,.0f}'.format(item.info.volume) }}</td>
+                        <td>{{ item.info.pe_ratio|round(2) }}</td>
+                        <td>
+                            <div class="forecast-cell">
+                                <div class="forecast-price">${{ (item.info.price * 1.03)|round(2) }}</div>
+                                <div class="forecast-change positive">+3.0%</div>
+                                <div class="forecast-confidence">
+                                    <div class="progress" style="height: 4px;">
+                                        <div class="progress-bar bg-primary" style="width: 87%"></div>
+                                    </div>
+                                    <span>87% confidence</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="/forecast?ticker={{ item.ticker }}" class="btn btn-sm btn-outline-primary" title="View Forecast">
+                                    <i class="bi bi-graph-up"></i>
+                                </a>
+                                <button class="btn btn-sm btn-outline-secondary set-alert-btn" title="Set Alert" data-ticker="{{ item.ticker }}" data-current-price="{{ item.info.price }}">
+                                    <i class="bi bi-bell"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger remove-stock-btn" title="Remove" data-ticker="{{ item.ticker }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endif %}
+
+<!-- Add Stock Modal -->
+<div class="modal fade" id="addStockModal" tabindex="-1" aria-labelledby="addStockModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addStockModalLabel">Add Stock to Watchlist</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addStockForm">
+                    <div class="mb-3">
+                        <label for="stockSearch" class="form-label">Search Stock</label>
+                        <div class="ticker-search-container">
+                            <input type="text" class="form-control" id="stockSearch" placeholder="Enter ticker symbol or company name">
+                            <div class="ticker-search-results" id="searchResults"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="stockNotes" class="form-label">Notes (optional)</label>
+                        <textarea class="form-control" id="stockNotes" rows="3" placeholder="Add your notes about this stock"></textarea>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary" id="addStockBtn" disabled>Add to Watchlist</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Notes Modal -->
+<div class="modal fade" id="editNotesModal" tabindex="-1" aria-labelledby="editNotesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editNotesModalLabel">Edit Notes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editNotesForm">
+                    <input type="hidden" id="notesTickerSymbol">
+                    <div class="mb-3">
+                        <label for="editedNotes" class="form-label">Notes for <span id="notesTickerLabel"></span></label>
+                        <textarea class="form-control" id="editedNotes" rows="5"></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Notes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Set Alert Modal -->
+<div class="modal fade" id="setAlertModal" tabindex="-1" aria-labelledby="setAlertModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="setAlertModalLabel">Set Price Alert</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="setAlertForm">
+                    <input type="hidden" id="alertTickerSymbol">
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <h5 class="mb-0" id="alertTickerLabel"></h5>
+                            <span class="ms-2" id="alertCurrentPrice"></span>
+                        </div>
+                        
+                        <div class="alert-type-selector mb-3">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="alertDirection" id="alertAbove" value="above" checked>
+                                <label class="form-check-label" for="alertAbove">
+                                    <i class="bi bi-arrow-up"></i> Price Above
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="alertDirection" id="alertBelow" value="below">
+                                <label class="form-check-label" for="alertBelow">
+                                    <i class="bi bi-arrow-down"></i> Price Below
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="alertPrice" step="0.01" min="0.01" required>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Set Alert</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Alert Modal -->
+<div class="modal fade" id="createAlertModal" tabindex="-1" aria-labelledby="createAlertModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createAlertModalLabel">Create Price Alert</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createAlertForm">
+                    <div class="mb-3">
+                        <label for="alertStockSearch" class="form-label">Select Stock</label>
+                        <div class="ticker-search-container">
+                            <input type="text" class="form-control" id="alertStockSearch" placeholder="Enter ticker symbol or company name">
+                            <div class="ticker-search-results" id="alertSearchResults"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="alertConfigSection" style="display: none;">
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <h5 class="mb-0" id="newAlertTickerLabel"></h5>
+                                <span class="ms-2" id="newAlertCurrentPrice"></span>
+                            </div>
+                            
+                            <div class="alert-type-selector mb-3">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="newAlertDirection" id="newAlertAbove" value="above" checked>
+                                    <label class="form-check-label" for="newAlertAbove">
+                                        <i class="bi bi-arrow-up"></i> Price Above
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="newAlertDirection" id="newAlertBelow" value="below">
+                                    <label class="form-check-label" for="newAlertBelow">
+                                        <i class="bi bi-arrow-down"></i> Price Below
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="newAlertPrice" step="0.01" min="0.01" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary" id="createAlertBtn" disabled>Create Alert</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteConfirmModalLabel">Confirm Removal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Remove <span id="removeStockSymbol"></span> from your watchlist?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmRemoveBtn">Remove</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', path='/vendors/chart.js/chart.min.js') }}"></script>
+<script src="{{ url_for('static', path='/js/watchlist.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mini charts for grid view
+        

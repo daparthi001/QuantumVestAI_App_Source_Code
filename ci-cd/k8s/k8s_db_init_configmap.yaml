@@ -1,0 +1,227 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-init-scripts
+  namespace: dev
+  labels:
+    app: quantumvestai
+    component: db-init
+    environment: dev
+data:
+  00-create-role.sql: |
+    -- Create application role if it doesn't exist
+    DO
+    $$
+    BEGIN
+        IF NOT EXISTS (
+            SELECT FROM pg_catalog.pg_roles WHERE rolname = 'quantumvestai'
+        ) THEN
+            CREATE ROLE quantumvestai LOGIN PASSWORD 'ChangeThisToSecurePassword!';
+            RAISE NOTICE 'Role quantumvestai created successfully';
+        ELSE
+            RAISE NOTICE 'Role quantumvestai already exists';
+        END IF;
+    END
+    $$;
+
+  01-create-tables.sql: |
+    -- Create schema for model data
+    CREATE SCHEMA IF NOT EXISTS model_data;
+    
+    -- Create table for stock price history
+    CREATE TABLE IF NOT EXISTS model_data.stock_prices (
+        id SERIAL PRIMARY KEY,
+        ticker VARCHAR(10) NOT NULL,
+        date DATE NOT NULL,
+        open NUMERIC(15, 5) NOT NULL,
+        high NUMERIC(15, 5) NOT NULL,
+        low NUMERIC(15, 5) NOT NULL,
+        close NUMERIC(15, 5) NOT NULL,
+        volume BIGINT NOT NULL,
+        adjusted_close NUMERIC(15, 5) NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(ticker, date)
+    );
+    
+    -- Create table for model predictions
+    CREATE TABLE IF NOT EXISTS model_data.predictions (
+        id SERIAL PRIMARY KEY,
+        ticker VARCHAR(10) NOT NULL,
+        model_type VARCHAR(50) NOT NULL,
+        prediction_date DATE NOT NULL,
+        target_date DATE NOT NULL,
+        predicted_price NUMERIC(15, 5) NOT NULL,
+        confidence_interval_lower NUMERIC(15, 5),
+        confidence_interval_upper NUMERIC(15, 5),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(ticker, model_type, prediction_date, target_date)
+    );
+    
+    -- Create table for model metrics
+    CREATE TABLE IF NOT EXISTS model_data.model_metrics (
+        id SERIAL PRIMARY KEY,
+        ticker VARCHAR(10) NOT NULL,
+        model_type VARCHAR(50) NOT NULL,
+        training_date DATE NOT NULL,
+        mse NUMERIC(15, 5),
+        mae NUMERIC(15, 5),
+        rmse NUMERIC(15, 5),
+        r2_score NUMERIC(5, 4),
+        training_time_seconds INTEGER,
+        parameters JSONB,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+    
+    -- Create table for sentiment analysis
+    CREATE TABLE IF NOT EXISTS model_data.sentiment_analysis (
+        id SERIAL PRIMARY KEY,
+        ticker VARCHAR(10) NOT NULL,
+        date DATE NOT NULL,
+        source VARCHAR(50) NOT NULL,
+        positive_score NUMERIC(5, 4),
+        neutral_score NUMERIC(5, 4),
+        negative_score NUMERIC(5, 4),
+        compound_score NUMERIC(5, 4),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(ticker, date, source)
+    );
+    
+    -- Create indexes
+    CREATE INDEX IF NOT EXISTS idx_stock_prices_ticker_date ON model_data.stock_prices(ticker, date);
+    CREATE INDEX IF NOT EXISTS idx_predictions_ticker_model ON model_data.predictions(ticker, model_type);
+    CREATE INDEX IF NOT EXISTS idx_sentiment_ticker_date ON model_data.sentiment_analysis(ticker, date);
+    
+    -- Create schema for user data
+    CREATE SCHEMA IF NOT EXISTS user_data;
+    
+    -- Create table for user preferences
+    CREATE TABLE IF NOT EXISTS user_data.user_preferences (
+        id SERIAL PRIMARY KEY,
+        user_id VARCHAR(50) NOT NULL,
+        default_tickers JSONB,
+        default_forecast_days INTEGER DEFAULT 7,
+        default_model VARCHAR(50) DEFAULT 'ensemble',
+        theme VARCHAR(20) DEFAULT 'light',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id)
+    );
+    
+    -- Create table for saved forecasts
+    CREATE TABLE IF NOT EXISTS user_data.saved_forecasts (
+        id SERIAL PRIMARY KEY,
+        user_id VARCHAR(50) NOT NULL,
+        ticker VARCHAR(10) NOT NULL,
+        model_type VARCHAR(50) NOT NULL,
+        forecast_days INTEGER NOT NULL,
+        prediction_data JSONB NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        note TEXT
+    );
+
+  02-create-functions.sql: |
+    -- Function to update "updated_at" timestamp
+    CREATE OR REPLACE FUNCTION update_modified_column()
+    RETURNS TRIGGER AS $$
+    BEGIN
+        NEW.updated_at = CURRENT_TIMESTAMP;
+        RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+    
+    -- Create triggers for all tables with updated_at
+    CREATE TRIGGER update_stock_prices_modtime
+    BEFORE UPDATE ON model_data.stock_prices
+    FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+    
+    CREATE TRIGGER update_user_preferences_modtime
+    BEFORE UPDATE ON user_data.user_preferences
+    FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+    
+    -- Function to get latest prediction for a ticker and model
+    CREATE OR REPLACE FUNCTION get_latest_prediction(
+        p_ticker VARCHAR,
+        p_model VARCHAR
+    )
+    RETURNS TABLE (
+        ticker VARCHAR,
+        model_type VARCHAR,
+        prediction_date DATE,
+        target_date DATE,
+        predicted_price NUMERIC,
+        confidence_interval_lower NUMERIC,
+        confidence_interval_upper NUMERIC
+    ) AS $$
+    BEGIN
+        RETURN QUERY
+        SELECT
+            p.ticker,
+            p.model_type,
+            p.prediction_date,
+            p.target_date,
+            p.predicted_price,
+            p.confidence_interval_lower,
+            p.confidence_interval_upper
+        FROM
+            model_data.predictions p
+        WHERE
+            p.ticker = p_ticker
+            AND p.model_type = p_model
+        ORDER BY
+            p.prediction_date DESC,
+            p.target_date ASC
+        LIMIT 7;
+    END;
+    $$ LANGUAGE plpgsql;
+    
+    -- Function to get historical prediction accuracy
+    CREATE OR REPLACE FUNCTION get_prediction_accuracy(
+        p_ticker VARCHAR,
+        p_model VARCHAR,
+        p_days INTEGER DEFAULT 30
+    )
+    RETURNS TABLE (
+        prediction_date DATE,
+        target_date DATE,
+        predicted_price NUMERIC,
+        actual_price NUMERIC,
+        error_percentage NUMERIC
+    ) AS $$
+    BEGIN
+        RETURN QUERY
+        SELECT
+            p.prediction_date,
+            p.target_date,
+            p.predicted_price,
+            s.close AS actual_price,
+            ABS(p.predicted_price - s.close) / s.close * 100 AS error_percentage
+        FROM
+            model_data.predictions p
+        JOIN
+            model_data.stock_prices s ON p.ticker = s.ticker AND p.target_date = s.date
+        WHERE
+            p.ticker = p_ticker
+            AND p.model_type = p_model
+            AND p.target_date <= CURRENT_DATE
+            AND p.prediction_date >= CURRENT_DATE - INTERVAL '1 day' * p_days
+        ORDER BY
+            p.prediction_date DESC,
+            p.target_date ASC;
+    END;
+    $$ LANGUAGE plpgsql;
+
+  03-grant-permissions.sql: |
+    -- Grant permissions to application user
+    GRANT USAGE ON SCHEMA model_data TO quantumvestai;
+    GRANT USAGE ON SCHEMA user_data TO quantumvestai;
+    
+    GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA model_data TO quantumvestai;
+    GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA user_data TO quantumvestai;
+    GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA model_data TO quantumvestai;
+    GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA user_data TO quantumvestai;
+    
+    -- Grant execute permission on functions
+    GRANT EXECUTE ON FUNCTION update_modified_column() TO quantumvestai;
+    GRANT EXECUTE ON FUNCTION get_latest_prediction(VARCHAR, VARCHAR) TO quantumvestai;
+    GRANT EXECUTE ON FUNCTION get_prediction_accuracy(VARCHAR, VARCHAR, INTEGER) TO quantumvestai;

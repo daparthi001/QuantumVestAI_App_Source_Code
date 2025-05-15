@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-configmap
+  namespace: NAMESPACE_PLACEHOLDER
+data:
+  # Application configuration
+  ENVIRONMENT: "NAMESPACE_PLACEHOLDER"
+  API_BASE_URL: "/api"
+  LOG_LEVEL: "INFO"
+  CORS_ORIGINS: "*"
+  
+  # AWS configuration
+  AWS_REGION: "us-east-1"
+  USE_IAM_AUTH: "true"
+  
+  # Database initialization settings
+  AUTO_APPLY_MIGRATIONS: "true"
+  SEED_SAMPLE_DATA: "false"
+  INIT_ADMIN_USER: "true"

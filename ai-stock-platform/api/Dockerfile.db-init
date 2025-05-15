@@ -1,0 +1,25 @@
+FROM postgres:13-alpine AS db-tools
+
+# Install Python and required packages
+RUN apk add --no-cache python3 py3-pip curl jq aws-cli && \
+    pip3 install --no-cache-dir psycopg2-binary sqlalchemy alembic pydantic boto3 passlib
+
+# Working directory
+WORKDIR /db-init
+
+# Copy database initialization scripts
+COPY db_init/ /db-init/
+COPY alembic/ /db-init/alembic/
+COPY alembic.ini /db-init/
+COPY api/db/models/ /db-init/api/db/models/
+COPY api/db/base_class.py /db-init/api/db/
+COPY api/core/config.py /db-init/api/core/
+
+# Make scripts executable
+RUN chmod +x /db-init/*.py
+
+# Entry point script
+COPY scripts/run_db_init.sh /db-init/
+RUN chmod +x /db-init/run_db_init.sh
+
+ENTRYPOINT ["/db-init/run_db_init.sh"]

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+  namespace: quantumvestai
+data:
+  # Application configuration
+  ENVIRONMENT: "production"
+  API_BASE_URL: "/api"
+  LOG_LEVEL: "INFO"
+  CORS_ORIGINS: "*"
+  # RDS configuration (non-sensitive)
+  POSTGRES_SERVER: "your-rds-instance.region.rds.amazonaws.com" # Update this
+  POSTGRES_DB: "quantumvestai"
+  POSTGRES_PORT: "5432"
+  # AWS configuration
+  AWS_REGION: "us-east-1"
+  USE_IAM_AUTH: "true"

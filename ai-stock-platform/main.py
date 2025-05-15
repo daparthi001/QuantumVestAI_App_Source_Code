@@ -9,8 +9,8 @@ app.include_router(sentiment)
 app.include_router(admin)
 app.include_router(whitepaper_analysis)
 
-# Add a health check endpoint
+# Add health check endpoint required by Kubernetes liveness and readiness probes
 @app.get("/health")
 async def health():
-    """Simple health check endpoint for monitoring services"""
-    return {"status": "ok", "service": "ai-stock-platform", "version": "1.0.0"}
+    """Health check endpoint for Kubernetes liveness and readiness probes"""
+    return {"status": "ok", "service": "QuantumVestAI", "version": "1.0.0"}

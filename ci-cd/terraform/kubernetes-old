@@ -42,7 +42,7 @@ resource "kubernetes_persistent_volume_claim" "ml_models" {
         storage = "10Gi"
       }
     }
-    storage_class_name = "gp2"
+    storage_class_name = "gp3"
   }
 }
 

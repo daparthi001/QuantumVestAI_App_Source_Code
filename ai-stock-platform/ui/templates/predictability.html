@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block title %}QuantumVestAI - Stock Predictability Analysis{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', path='/css/predictability.css') }}">
+{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="/">Home</a></li>
+<li class="breadcrumb-item active">Predictability Analysis</li>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <h1 class="page-title">Stock Predictability Analysis</h1>
+        <p class="text-muted">Assess how predictable a stock's price movements are before investing</p>
+    </div>
+    <div class="header-actions">
+        <form id="ticker-form" class="ticker-form">
+            <div class="input-group">
+                <input type="text" id="ticker-input" class="form-control" placeholder="Enter a stock symbol" 
+                    value="{{ ticker }}" required>
+                <select id="timeframe-select" class="form-select">
+                    <option value="1mo" {% if timeframe == '1mo' %}selected{% endif %}>1 Month</option>
+                    <option value="3mo" {% if timeframe == '3mo' %}selected{% endif %}>3 Months</option>
+                    <option value="6mo" {% if timeframe == '6mo' %}selected{% endif %}>6 Months</option>
+                    <option value="1y" {% if timeframe == '1y' %}selected{% endif %}>1 Year</option>
+                    <option value="2y" {% if timeframe == '2y' %}selected{% endif %}>2 Years</option>
+                    <option value="5y" {% if timeframe == '5y' %}selected{% endif %}>5 Years</option>
+                </select>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i> Analyze
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger" role="alert">
+    <i class="bi bi-exclamation-triangle me-2"></i> {{ error }}
+</div>
+{% else %}
+<!-- Stock Info -->
+<div class="card stock-info-card mb-4">
+    <div class="card-body">
+        <div class="stock-info">
+            <div class="stock-logo">
+                <img src="{{ url_for('static', path='/img/stock-logos/' + ticker.lower() + '.png') }}" alt="{{ ticker }}" 
+                    onerror="this.src='{{ url_for('static', path='/img/stock-logos/default.png') }}'">
+            </div>
+            <div class="stock-details">
+                <h2 class="stock-name">{{ stock_info.name }}</h2>
+                <div class="stock-meta">
+                    <span class="stock-ticker">{{ ticker }}</span>
+                    <span class="stock-exchange">{{ stock_info.exchange }}</span>
+                    <span class="stock-sector">{{ stock_info.sector }}</span>
+                </div>
+                <div class="stock-price-info">
+                    <div class="current-price">
+                        <span class="price">${{ stock_info.price }}</span>
+                        <span class="change {% if stock_info.change > 0 %}positive{% else %}negative{% endif %}">
+                            {% if stock_info.change > 0 %}
+                            <i class="bi bi-arrow-up-right"></i>
+                            {% else %}
+                            <i class="bi bi-arrow-down-right"></i>
+                            {% endif %}
+                            {{ stock_info.change }} ({{ stock_info.change_percent }}%)
+                        </span>
+                    </div>
+                    <div class="trading-info">
+                        <span class="trading-label">Volume:</span>
+                        <span class="trading-value">{{ stock_info.volume }}</span>
+                        
+                        <span class="trading-label">52w High:</span>
+                        <span class="trading-value">${{ stock_info.high_52w }}</span>
+                        
+                        <span class="trading-label">52w Low:</span>
+                        <span class="trading-value">${{ stock_info.low_52w }}</span>
+                        
+                        <span class="trading-label">P/E:</span>
+                        <span class="trading-value">{{ stock_info.pe_ratio }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Predictability Score Card -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-12">
+        <div class="card score-card">
+            <div class="card-body">
+                <div class="score-overview">
+                    <div class="score-gauge-container">
+                        <div id="predictability-gauge"></div>
+                        <div class="gauge-label">
+                            <span class="gauge-title">Overall Predictability</span>
+                            <span class="gauge-score">{{ predictability_score }}%</span>
+                        </div>
+                    </div>
+                    <div class="score-summary">
+                        <h3>Predictability Analysis for {{ ticker }}</h3>
+                        <p class="score-description">
+                            {{ ticker }} shows {% if predictability_score >= 80 %}high{% elif predictability_score >= 60 %}moderate{% else %}low{% endif %} 
+                            predictability with our AI models. 
+                            {% if predictability_score >= 80 %}
+                                This stock demonstrates consistent patterns and responses to market factors, making it highly suitable for quantitative prediction models.
+                            {% elif predictability_score >= 60 %}
+                                This stock has reasonably predictable patterns but with some irregularities. Our models can forecast with moderate confidence.
+                            {% else %}
+                                This stock demonstrates irregular patterns and high volatility, making accurate predictions challenging.
+                            {% endif %}
+                        </p>
+                        
+                        <div class="model-accuracy">
+                            <h5>Model Accuracy Comparison</h5>
+                            <div class="model-bars">
+                                <div class="model-bar">
+                                    <span class="model-name">LSTM</span>
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" style="width: {{ model_accuracies.lstm }}%;" 
+                            aria-valuenow="{{ model_accuracies.lstm }}" aria-valuemin="0" aria-valuemax="100">{{ model_accuracies.lstm }}%</div>
+                                    </div>
+                                </div>
+                                <div class="model-bar">
+                                    <span class="model-name">Prophet</span>
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" style="width: {{ model_accuracies.prophet }}%;" 
+                            aria-valuenow="{{ model_accuracies.prophet }}" aria-valuemin="0" aria-valuemax="100">{{ model_accuracies.prophet }}%</div>
+                                    </div>
+                                </div>
+                                <div class="model-bar">
+                                    <span class="model-name">XGBoost</span>
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" style="width: {{ model_accuracies.xgboost }}%;" 
+                            aria-valuenow="{{ model_accuracies.xgboost }}" aria-valuemin="0" aria-valuemax="100">{{ model_accuracies.xgboost }}%</div>
+                                    </div>
+                                </div>
+                                <div class="model-bar">
+                                    <span class="model-name">Ensemble</span>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ model_accuracies.ensemble }}%;" 
+                            aria-valuenow="{{ model_accuracies.ensemble }}" aria-valuemin="0" aria-valuemax="100">{{ model_accuracies.ensemble }}%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Predictability Factors -->
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Predictability Factors</h3>
+                <div class="card-actions">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-primary active" data-period="1y">1Y</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-period="6mo">6M</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-period="3mo">3M</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="factor-grid">
+                    <div class="factor-card">
+                        <div class="factor-header">
+                            <h4>Volatility</h4>
+                            <div class="factor-score {% if volatility_score >= 80 %}high{% elif volatility_score >= 60 %}medium{% else %}low{% endif %}">
+                                {{ volatility_score }}%
+                            </div>
+                        </div>
+                        <div class="factor-chart" id="volatility-chart"></div>
+                        <div class="factor-description">
+                            <p>Measures price stability and how much the stock price fluctuates over time.</p>
+                            <ul class="factor-metrics">
+                                <li>Standard Deviation: <strong>{{ volatility_metrics.std_dev }}</strong></li>
+                                <li>Average True Range: <strong>{{ volatility_metrics.atr }}</strong></li>
+                                <li>Beta: <strong>{{ volatility_metrics.beta }}</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="factor-card">
+                        <div class="factor-header">
+                            <h4>Pattern Recognition</h4>
+                            <div class="factor-score {% if pattern_score >= 80 %}high{% elif pattern_score >= 60 %}medium{% else %}low{% endif %}">
+                                {{ pattern_score }}%
+                            </div>
+                        </div>
+                        <div class="factor-chart" id="pattern-chart"></div>
+                        <div class="factor-description">
+                            <p>Evaluates how consistently the stock forms recognizable chart patterns.</p>
+                            <ul class="factor-metrics">
+                                <li>Pattern Clarity: <strong>{{ pattern_metrics.clarity }}</strong></li>
+                                <li>Pattern Frequency: <strong>{{ pattern_metrics.frequency }}</strong></li>
+                                <li>Completion Rate: <strong>{{ pattern_metrics.completion_rate }}</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="factor-card">
+                        <div class="factor-header">
+                            <h4>Trend Stability</h4>
+                            <div class="factor-score {% if stability_score >= 80 %}high{% elif stability_score >= 60 %}medium{% else %}low{% endif %}">
+                                {{ stability_score }}%
+                            </div>
+                        </div>
+                        <div class="factor-chart" id="stability-chart"></div>
+                        <div class="factor-description">
+                            <p>Assesses how consistently the stock maintains established trends.</p>
+                            <ul class="factor-metrics">
+                                <li>Trend Strength: <strong>{{ stability_metrics.trend_strength }}</strong></li>
+                                <li>Moving Avg Crossovers: <strong>{{ stability_metrics.ma_crossovers }}</strong></li>
+                                <li>Trend Duration: <strong>{{ stability_metrics.trend_duration }}</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="factor-card">
+                        <div class="factor-header">
+                            <h4>Market Correlation</h4>
+                            <div class="factor-score {% if correlation_score >= 80 %}high{% elif correlation_score >= 60 %}medium{% else %}low{% endif %}">
+                                {{ correlation_score }}%
+                            </div>
+                        </div>
+                        <div class="factor-chart" id="correlation-chart"></div>
+                        <div class="factor-description">
+                            <p>Shows how closely the stock follows broader market movements.</p>
+                            <ul class="factor-metrics">
+                                <li>S&P 500 Correlation: <strong>{{ correlation_metrics.sp500 }}</strong></li>
+                                <li>Sector Correlation: <strong>{{ correlation_metrics.sector }}</strong></li>
+                                <li>Correlation Stability: <strong>{{ correlation_metrics.stability }}</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Sentiment Analysis -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title">Sentiment Analysis</h3>
+                <div class="card-actions">
+                    <span class="badge bg-primary">AI Generated</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="sentiment-overview">
+                    <div class="sentiment-gauge-container">
+                        <div id="sentiment-gauge"></div>
+                    </div>
+                    <div class="sentiment-details">
+                        <h5>Overall Market Sentiment</h5>
+                        <div class="sentiment-distribution">
+                            <div class="sentiment-type">
+                                <div class="sentiment-label">Positive</div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ sentiment_distribution.positive }}%;" 
+                                        aria-valuenow="{{ sentiment_distribution.positive }}" aria-valuemin="0" aria-valuemax="100">{{ sentiment_distribution.positive }}%</div>
+                                </div>
+                            </div>
+                            <div class="sentiment-type">
+                                <div class="sentiment-label">Neutral</div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-warning"

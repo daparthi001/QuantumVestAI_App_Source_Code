@@ -2,11 +2,11 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: db-init
-  namespace: quantumvestai-ENVIRONMENT_PLACEHOLDER
+  namespace: dev
   labels:
     app: quantumvestai
     component: db-init
-    environment: ENVIRONMENT_PLACEHOLDER
+    environment: dev
 spec:
   backoffLimit: 3
   template:
@@ -14,7 +14,7 @@ spec:
       labels:
         app: quantumvestai
         component: db-init
-        environment: ENVIRONMENT_PLACEHOLDER
+        environment: dev
     spec:
       containers:
       - name: db-init
@@ -25,11 +25,29 @@ spec:
         - |
           echo "Running database initialization scripts..."
           
+          # Extract hostname from the endpoint if it contains port
+          if [[ "$DB_HOST" == *":"* ]]; then
+            DB_HOSTNAME=$(echo $DB_HOST | cut -d':' -f1)
+            echo "Extracted hostname: $DB_HOSTNAME from $DB_HOST"
+          else
+            DB_HOSTNAME=$DB_HOST
+            echo "Using hostname as-is: $DB_HOSTNAME"
+          fi
+          
+          echo "Connection details:"
+          echo "Host: $DB_HOSTNAME"
+          echo "Port: $DB_PORT"
+          echo "User: $DB_USER"
+          echo "Database: $DB_NAME"
+          
           # Run SQL scripts in order
-          for script in /scripts/01-create-tables.sql /scripts/02-create-functions.sql /scripts/03-grant-permissions.sql
+          for script in /scripts/00-create-role.sql /scripts/01-create-tables.sql /scripts/02-create-functions.sql /scripts/03-grant-permissions.sql
           do
             echo "Executing $script..."
-            PGPASSWORD="$DB_PASSWORD" psql -h $DB_HOST -U $DB_USER -d $DB_NAME -f $script
+            
+            # Use separate command arguments (avoids connection string issues)
+            export PGPASSWORD="$DB_PASSWORD"
+            psql -h "$DB_HOSTNAME" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$script"
             
             if [ $? -ne 0 ]; then
               echo "Error executing $script"
@@ -49,23 +67,28 @@ spec:
         - name: DB_HOST
           valueFrom:
             secretKeyRef:
-              name: quantumvestai-rds-credentials
-              key: host
+              name: quantumvestai-cluster-rds-credentials
+              key: endpoint
+        - name: DB_PORT
+          valueFrom:
+            secretKeyRef:
+              name: quantumvestai-cluster-rds-credentials
+              key: port
         - name: DB_USER
           valueFrom:
             secretKeyRef:
-              name: quantumvestai-rds-credentials
+              name: quantumvestai-cluster-rds-credentials
               key: username
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: quantumvestai-rds-credentials
+              name: quantumvestai-cluster-rds-credentials
               key: password
         - name: DB_NAME
           valueFrom:
             secretKeyRef:
-              name: quantumvestai-rds-credentials
-              key: dbname
+              name: quantumvestai-cluster-rds-credentials
+              key: database
         volumeMounts:
         - name: scripts-volume
           mountPath: /scripts

@@ -1,0 +1,629 @@
+{% extends "base.html" %}
+
+{% block title %}{{ ticker }} Stock Forecast - QuantumVestAI{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="/">Home</a></li>
+<li class="breadcrumb-item"><a href="/ticker-search">Forecast</a></li>
+<li class="breadcrumb-item active">{{ ticker }}</li>
+{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', path='/css/stockanalysis.css') }}">
+{% endblock %}
+
+{% block content %}
+{% if error %}
+<div class="alert alert-danger" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ error }}
+    <p class="mt-2 mb-0">Please try another ticker symbol or refresh the page.</p>
+</div>
+{% else %}
+
+<!-- Stock Info Card -->
+<div class="card stock-info-card mb-4">
+    <div class="card-body">
+        <div class="stock-info">
+            <div class="stock-logo">
+                <img src="https://logo.clearbit.com/{{ ticker.lower() }}.com" alt="{{ stock_info.name }}" onerror="this.src='{{ url_for('static', path='/img/stock-placeholder.png') }}'">
+            </div>
+            <div class="stock-details">
+                <h2 class="stock-name">{{ stock_info.name }}</h2>
+                <div class="stock-meta">
+                    <span class="stock-ticker">{{ ticker }}</span>
+                    <span class="stock-exchange">{{ stock_info.exchange }}</span>
+                    <span class="stock-sector">{{ stock_info.sector }}</span>
+                </div>
+                <div class="stock-price-info">
+                    <div class="current-price">
+                        <span class="price">${{ stock_info.price }}</span>
+                        <span class="change {{ 'positive' if stock_info.change > 0 else 'negative' if stock_info.change < 0 else 'neutral' }}">
+                            <i class="bi {{ 'bi-arrow-up' if stock_info.change > 0 else 'bi-arrow-down' if stock_info.change < 0 else 'bi-dash' }}"></i>
+                            {{ stock_info.change }} ({{ stock_info.change_percent }}%)
+                        </span>
+                    </div>
+                    <div class="trading-info">
+                        <div>
+                            <span class="trading-label">Volume</span>
+                            <span class="trading-value">{{ '{:,}'.format(stock_info.volume) }}</span>
+                        </div>
+                        <div>
+                            <span class="trading-label">Avg Volume</span>
+                            <span class="trading-value">{{ '{:,}'.format(stock_info.average_volume) }}</span>
+                        </div>
+                        <div>
+                            <span class="trading-label">Market Cap</span>
+                            <span class="trading-value">${{ '{:,.2f}'.format(stock_info.market_cap / 1000000000) }}B</span>
+                        </div>
+                        <div>
+                            <span class="trading-label">P/E</span>
+                            <span class="trading-value">{{ stock_info.pe_ratio|round(2) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="ml-auto">
+                {% if user %}
+                <button id="addToWatchlist" class="btn btn-outline-primary" data-ticker="{{ ticker }}">
+                    <i class="bi bi-star"></i> Add to Watchlist
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart and Analysis Tabs -->
+<div class="card mb-4">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" id="stockTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="forecast-tab" data-bs-toggle="tab" data-bs-target="#forecast" type="button" role="tab" aria-controls="forecast" aria-selected="true">Forecast</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="historical-tab" data-bs-toggle="tab" data-bs-target="#historical" type="button" role="tab" aria-controls="historical" aria-selected="false">Historical</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="technical-tab" data-bs-toggle="tab" data-bs-target="#technical" type="button" role="tab" aria-controls="technical" aria-selected="false">Technical</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="news-tab" data-bs-toggle="tab" data-bs-target="#news" type="button" role="tab" aria-controls="news" aria-selected="false">News</button>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body">
+        <div class="tab-content" id="stockTabContent">
+            <!-- Forecast Tab -->
+            <div class="tab-pane fade show active" id="forecast" role="tabpanel" aria-labelledby="forecast-tab">
+                <div class="chart-controls">
+                    <div class="chart-control-group">
+                        <label>Forecast Period:</label>
+                        <select id="forecastDays" class="form-select form-select-sm">
+                            <option value="7" {% if days == 7 %}selected{% endif %}>7 Days</option>
+                            <option value="14" {% if days == 14 %}selected{% endif %}>14 Days</option>
+                            <option value="30" {% if days == 30 %}selected{% endif %}>30 Days</option>
+                            <option value="60" {% if days == 60 %}selected{% endif %}>60 Days</option>
+                            <option value="90" {% if days == 90 %}selected{% endif %}>90 Days</option>
+                        </select>
+                    </div>
+                    <div class="chart-control-group">
+                        <label>Model:</label>
+                        <select id="forecastModel" class="form-select form-select-sm">
+                            <option value="ensemble" {% if model == 'ensemble' %}selected{% endif %}>Ensemble</option>
+                            <option value="lstm" {% if model == 'lstm' %}selected{% endif %}>LSTM</option>
+                            <option value="prophet" {% if model == 'prophet' %}selected{% endif %}>Prophet</option>
+                            <option value="xgboost" {% if model == 'xgboost' %}selected{% endif %}>XGBoost</option>
+                            <option value="arima" {% if model == 'arima' %}selected{% endif %}>ARIMA</option>
+                        </select>
+                    </div>
+                    <div class="chart-control-group">
+                        <button id="updateForecast" class="btn btn-primary btn-sm">Update Forecast</button>
+                    </div>
+                </div>
+                
+                <div class="forecast-header">
+                    <h3 class="forecast-title">{{ ticker }} {{ days }}-Day Price Forecast</h3>
+                    <div class="forecast-model-info">
+                        <span class="forecast-model">{{ model|capitalize }} Model</span>
+                        <span class="model-accuracy">{{ forecast.accuracy }}% accuracy</span>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="forecastChart"></canvas>
+                </div>
+                
+                <div class="forecast-stats">
+                    <div class="forecast-stat">
+                        <div class="forecast-stat-label">End Price ({{ days }} Days)</div>
+                        <div class="forecast-stat-value">${{ forecast.end_price }}</div>
+                        <div class="change {{ 'positive' if forecast.price_change_percent > 0 else 'negative' if forecast.price_change_percent < 0 else 'neutral' }}">
+                            <i class="bi {{ 'bi-arrow-up' if forecast.price_change_percent > 0 else 'bi-arrow-down' if forecast.price_change_percent < 0 else 'bi-dash' }}"></i>
+                            {{ forecast.price_change_percent }}%
+                        </div>
+                    </div>
+                    <div class="forecast-stat">
+                        <div class="forecast-stat-label">Peak Price</div>
+                        <div class="forecast-stat-value">${{ forecast.peak_price }}</div>
+                        <div class="change positive">
+                            <i class="bi bi-arrow-up"></i> 
+                            {{ forecast.peak_change_percent }}%
+                        </div>
+                    </div>
+                    <div class="forecast-stat">
+                        <div class="forecast-stat-label">Minimum Price</div>
+                        <div class="forecast-stat-value">${{ forecast.minimum_price }}</div>
+                        <div class="change {{ 'negative' if forecast.minimum_change_percent < 0 else 'neutral' }}">
+                            <i class="bi {{ 'bi-arrow-down' if forecast.minimum_change_percent < 0 else 'bi-dash' }}"></i>
+                            {{ forecast.minimum_change_percent }}%
+                        </div>
+                    </div>
+                    <div class="forecast-stat">
+                        <div class="forecast-stat-label">Price Range</div>
+                        <div class="forecast-stat-value">${{ forecast.price_range }}</div>
+                        <div class="forecast-range-container">
+                            <div class="forecast-range" style="width: {{ forecast.range_percent }}%"></div>
+                            <span class="forecast-range-min">${{ forecast.minimum_price }}</span>
+                            <span class="forecast-range-max">${{ forecast.peak_price }}</span>
+                        </div>
+                    </div>
+                    <div class="forecast-stat">
+                        <div class="forecast-stat-label">Confidence Level</div>
+                        <div class="forecast-stat-value">{{ forecast.confidence_level }}%</div>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: {{ forecast.confidence_level }}%" aria-valuenow="{{ forecast.confidence_level }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    <div class="forecast-stat">
+                        <div class="forecast-stat-label">Volatility</div>
+                        <div class="forecast-stat-value">{{ forecast.volatility }}</div>
+                        <div class="text-muted">{{ forecast.volatility_description }}</div>
+                    </div>
+                    <div class="forecast-stat">
+                        <div class="forecast-stat-label">Trend Direction</div>
+                        <div class="forecast-stat-value {{ 'positive' if forecast.trend == 'Upward' else 'negative' if forecast.trend == 'Downward' else 'neutral' }}">
+                            {{ forecast.trend }}
+                            <i class="bi {{ 'bi-arrow-up' if forecast.trend == 'Upward' else 'bi-arrow-down' if forecast.trend == 'Downward' else 'bi-dash' }}"></i>
+                        </div>
+                        <div class="text-muted">{{ forecast.trend_strength }}</div>
+                    </div>
+                    <div class="forecast-stat">
+                        <div class="forecast-stat-label">Trading Signal</div>
+                        <div class="forecast-stat-value {{ 'positive' if forecast.signal == 'Buy' else 'negative' if forecast.signal == 'Sell' else 'neutral' }}">
+                            {{ forecast.signal }}
+                        </div>
+                        <div class="text-muted">{{ forecast.signal_strength }}</div>
+                    </div>
+                </div>
+                
+                <div class="forecast-actions mt-4">
+                    <a href="/backtest?ticker={{ ticker }}&model={{ model }}" class="btn btn-outline-primary">
+                        <i class="bi bi-graph-up"></i> View Backtest Results
+                    </a>
+                    <a href="/compare-models?ticker={{ ticker }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-bar-chart"></i> Compare Models
+                    </a>
+                    <a href="/technical-analysis?ticker={{ ticker }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-activity"></i> Technical Analysis
+                    </a>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h4 class="card-title">Forecast Analysis</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5>Summary</h5>
+                        <p>{{ forecast.summary|safe }}</p>
+                        
+                        <h5>Key Factors</h5>
+                        <ul>
+                            {% for factor in forecast.key_factors %}
+                            <li>{{ factor|safe }}</li>
+                            {% endfor %}
+                        </ul>
+                        
+                        <h5>Market Context</h5>
+                        <p>{{ forecast.market_context|safe }}</p>
+                        
+                        <h5>Risks and Caveats</h5>
+                        <p>{{ forecast.risks|safe }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Historical Tab -->
+            <div class="tab-pane fade" id="historical" role="tabpanel" aria-labelledby="historical-tab">
+                <div class="chart-controls">
+                    <div class="chart-control-group">
+                        <label>Chart Type:</label>
+                        <div class="chart-type-selector">
+                            <button class="chart-type-btn active" data-type="line">
+                                <i class="bi bi-graph-up"></i>
+                            </button>
+                            <button class="chart-type-btn" data-type="candlestick">
+                                <i class="bi bi-bar-chart"></i>
+                            </button>
+                            <button class="chart-type-btn" data-type="ohlc">
+                                <i class="bi bi-bar-chart-steps"></i>
+                            </button>
+                            <button class="chart-type-btn" data-type="area">
+                                <i class="bi bi-graph-up-arrow"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-control-group">
+                        <label>Period:</label>
+                        <div class="chart-periods">
+                            <button class="period-btn" data-period="1mo">1M</button>
+                            <button class="period-btn" data-period="3mo">3M</button>
+                            <button class="period-btn active" data-period="6mo">6M</button>
+                            <button class="period-btn" data-period="1y">1Y</button>
+                            <button class="period-btn" data-period="2y">2Y</button>
+                            <button class="period-btn" data-period="5y">5Y</button>
+                            <button class="period-btn" data-period="max">Max</button>
+                        </div>
+                    </div>
+                    <div class="chart-control-group">
+                        <label>Indicators:</label>
+                        <select id="technicalOverlay" class="form-select form-select-sm" multiple>
+                            <option value="sma">SMA</option>
+                            <option value="ema">EMA</option>
+                            <option value="bollinger">Bollinger Bands</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="historicalChart"></canvas>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-lg-6">
+                        <h4>Performance Summary</h4>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <tbody>
+                                    <tr>
+                                        <th>1 Day</th>
+                                        <td class="{% if historical_data[-1].close > historical_data[-2].close %}positive{% else %}negative{% endif %}">
+                                            {{ ((historical_data[-1].close - historical_data[-2].close) / historical_data[-2].close * 100)|round(2) }}%
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>1 Week</th>
+                                        <td class="{% if historical_data[-1].close > historical_data[-6].close %}positive{% else %}negative{% endif %}">
+                                            {{ ((historical_data[-1].close - historical_data[-6].close) / historical_data[-6].close * 100)|round(2) }}%
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>1 Month</th>
+                                        <td class="{% if historical_data[-1].close > historical_data[-22].close %}positive{% else %}negative{% endif %}">
+                                            {{ ((historical_data[-1].close - historical_data[-22].close) / historical_data[-22].close * 100)|round(2) }}%
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>3 Months</th>
+                                        <td class="{% if historical_data[-1].close > historical_data[-66].close %}positive{% else %}negative{% endif %}">
+                                            {{ ((historical_data[-1].close - historical_data[-66].close) / historical_data[-66].close * 100)|round(2) }}%
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>YTD</th>
+                                        <td class="positive">
+                                            {{ ((historical_data[-1].close - historical_data[0].close) / historical_data[0].close * 100)|round(2) }}%
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <h4>Trading Statistics</h4>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <tbody>
+                                    <tr>
+                                        <th>Open</th>
+                                        <td>${{ historical_data[-1].open|round(2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>High</th>
+                                        <td>${{ historical_data[-1].high|round(2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Low</th>
+                                        <td>${{ historical_data[-1].low|round(2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Close</th>
+                                        <td>${{ historical_data[-1].close|round(2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Volume</th>
+                                        <td>{{ '{:,}'.format(historical_data[-1].volume) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h4 class="card-title">Historical Data</h4>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Open</th>
+                                        <th>High</th>
+                                        <th>Low</th>
+                                        <th>Close</th>
+                                        <th>Volume</th>
+                                        <th>Change</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for day in historical_data[-10:]|reverse %}
+                                    <tr>
+                                        <td>{{ day.Date }}</td>
+                                        <td>${{ day.open|round(2) }}</td>
+                                        <td>${{ day.high|round(2) }}</td>
+                                        <td>${{ day.low|round(2) }}</td>
+                                        <td>${{ day.close|round(2) }}</td>
+                                        <td>{{ '{:,}'.format(day.volume) }}</td>
+                                        <td class="{% if loop.index < loop.length and day.close > historical_data[-11 + loop.index0].close %}positive{% elif loop.index < loop.length %}negative{% else %}neutral{% endif %}">
+                                            {% if loop.index < loop.length %}
+                                                {% set prev_close = historical_data[-11 + loop.index0].close %}
+                                                {% set change_pct = ((day.close - prev_close) / prev_close * 100)|round(2) %}
+                                                {% if change_pct > 0 %}+{% endif %}{{ change_pct }}%
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer text-center">
+                        <button id="loadMoreHistory" class="btn btn-outline-primary btn-sm">Load More</button>
+                        <a href="/export?ticker={{ ticker }}&type=historical" class="btn btn-outline-secondary btn-sm">Export Data</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Technical Tab -->
+            <div class="tab-pane fade" id="technical" role="tabpanel" aria-labelledby="technical-tab">
+                <div class="chart-controls mb-4">
+                    <div class="chart-control-group">
+                        <label>Period:</label>
+                        <div class="chart-periods">
+                            <button class="tech-period-btn" data-period="1mo">1M</button>
+                            <button class="tech-period-btn active" data-period="3mo">3M</button>
+                            <button class="tech-period-btn" data-period="6mo">6M</button>
+                            <button class="tech-period-btn" data-period="1y">1Y</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="technical-indicators mb-4">
+                    <h4>Technical Indicators</h4>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Moving Averages</h5>
+                                    <div class="indicator-item">
+                                        <span class="indicator-name">MA (50)</span>
+                                        <div class="indicator-value">
+                                            <span class="indicator-data">${{ technical_indicators.moving_averages.ma_50|round(2) }}</span>
+                                            <span class="indicator-signal {{ 'signal-bullish' if technical_indicators.signals.ma_trend == 'bullish' else 'signal-bearish' }}">
+                                                {{ technical_indicators.signals.ma_trend|capitalize }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="indicator-item">
+                                        <span class="indicator-name">MA (200)</span>
+                                        <div class="indicator-value">
+                                            <span class="indicator-data">${{ technical_indicators.moving_averages.ma_200|round(2) }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="indicator-item">
+                                        <span class="indicator-name">Golden Cross</span>
+                                        <div class="indicator-value">
+                                            <span class="indicator-signal {{ 'signal-bullish' if technical_indicators.moving_averages.ma_50 > technical_indicators.moving_averages.ma_200 else 'signal-bearish' }}">
+                                                {{ 'Yes' if technical_indicators.moving_averages.ma_50 > technical_indicators.moving_averages.ma_200 else 'No' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Oscillators</h5>
+                                    <div class="indicator-item">
+                                        <span class="indicator-name">RSI (14)</span>
+                                        <div class="indicator-value">
+                                            <span class="indicator-data">{{ technical_indicators.rsi|round(2) }}</span>
+                                            <span class="indicator-signal {{ 'signal-bullish' if technical_indicators.signals.rsi_signal == 'oversold' else 'signal-bearish' if technical_indicators.signals.rsi_signal == 'overbought' else 'signal-neutral' }}">
+                                                {{ technical_indicators.signals.rsi_signal|capitalize }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="indicator-item">
+                                        <span class="indicator-name">Bollinger Bands</span>
+                                        <div class="indicator-value">
+                                            <span class="indicator-data">
+                                                {{ technical_indicators.signals.bollinger_position|capitalize }}
+                                            </span>
+                                            <span class="indicator-signal {{ 'signal-bullish' if technical_indicators.signals.bollinger_position == 'lower' else 'signal-bearish' if technical_indicators.signals.bollinger_position == 'upper' else 'signal-neutral' }}">
+                                                {{ 'Bullish' if technical_indicators.signals.bollinger_position == 'lower' else 'Bearish' if technical_indicators.signals.bollinger_position == 'upper' else 'Neutral' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="indicator-item">
+                                        <span class="indicator-name">MACD</span>
+                                        <div class="indicator-value">
+                                            <span class="indicator-data">
+                                                Signal Cross
+                                            </span>
+                                            <span class="indicator-signal signal-neutral">
+                                                Neutral
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h4>Technical Analysis</h4>
+                <div class="technical-analysis-grid">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Moving Averages</h5>
+                            <div class="technical-chart">
+                                <canvas id="maChart"></canvas>
+                            </div>
+                            <p class="indicator-description">
+                                Moving averages help identify trends by smoothing out price fluctuations. The 50-day and 200-day MAs are shown.
+                                A "Golden Cross" occurs when the 50-day crosses above the 200-day, signaling a potential bullish trend.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Relative Strength Index (RSI)</h5>
+                            <div class="technical-chart">
+                                <canvas id="rsiChart"></canvas>
+                            </div>
+                            <p class="indicator-description">
+                                RSI measures the speed and change of price movements. Values above 70 suggest overbought conditions, while values below 30 suggest oversold conditions.
+                                Current RSI: {{ technical_indicators.rsi|round(2) }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Bollinger Bands</h5>
+                            <div class="technical-chart">
+                                <canvas id="bollingerChart"></canvas>
+                            </div>
+                            <p class="indicator-description">
+                                Bollinger Bands show volatility and potential price levels. The middle band is a 20-day moving average, while the upper and lower bands represent 2 standard deviations.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">MACD</h5>
+                            <div class="technical-chart">
+                                <canvas id="macdChart"></canvas>
+                            </div>
+                            <p class="indicator-description">
+                                MACD (Moving Average Convergence Divergence) helps identify momentum and trend changes. When the MACD line crosses above the signal line, it may indicate a bullish trend.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="card-title">Technical Analysis Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Based on the technical indicators analysis for {{ ticker }}, the overall technical outlook appears <strong class="{{ 'text-success' if technical_indicators.signals.ma_trend == 'bullish' else 'text-danger' }}">{{ technical_indicators.signals.ma_trend }}</strong>.</p>
+                        
+                        <ul>
+                            <li>The stock is trading {{ 'above' if technical_indicators.signals.ma_trend == 'bullish' else 'below' }} its 50-day moving average, indicating a {{ technical_indicators.signals.ma_trend }} short-term trend.</li>
+                            <li>The RSI at {{ technical_indicators.rsi|round(2) }} suggests the stock is {{ 'oversold and may be due for a rebound' if technical_indicators.signals.rsi_signal == 'oversold' else 'overbought and may be due for a pullback' if technical_indicators.signals.rsi_signal == 'overbought' else 'neither overbought nor oversold' }}.</li>
+                            <li>Bollinger Bands position indicates the stock is trading near the {{ technical_indicators.signals.bollinger_position }} band, suggesting {{ 'potential upward movement' if technical_indicators.signals.bollinger_position == 'lower' else 'potential downward pressure' if technical_indicators.signals.bollinger_position == 'upper' else 'consolidation' }}.</li>
+                        </ul>
+                        
+                        <p>The key resistance levels to watch are ${{ (stock_info.price * 1.05)|round(2) }} and ${{ (stock_info.price * 1.10)|round(2) }}. Support levels are at ${{ (stock_info.price * 0.95)|round(2) }} and ${{ (stock_info.price * 0.90)|round(2) }}.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- News Tab -->
+            <div class="tab-pane fade" id="news" role="tabpanel" aria-labelledby="news-tab">
+                <div class="stock-news">
+                    <h4 class="mb-4">Latest News for {{ ticker }}</h4>
+                    
+                    <div class="news-grid">
+                        {% for article in news %}
+                        <div class="card news-card">
+                            <div class="news-image-wrapper">
+                                <img src="{{ article.thumbnail }}" class="news-image" alt="{{ article.title }}" onerror="this.src='{{ url_for('static', path='/img/news-placeholder.jpg') }}'">
+                            </div>
+                            <div class="news-content">
+                                <div class="news-meta">
+                                    <span class="news-source">{{ article.source }}</span>
+                                    <span class="news-date">{{ article.published_at }}</span>
+                                </div>
+                                <h5 class="news-heading">{{ article.title }}</h5>
+                                <p class="news-summary">{{ article.summary }}</p>
+                                <a href="{{ article.url }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">Read More</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-center mt-4">
+                        <button id="loadMoreNews" class="btn btn-outline-primary">Load More News</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Related Stocks -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Related Stocks</h3>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Company</th>
+                        <th>Price</th>
+                        <th>Change</th>
+                        <th>Predictability</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set related_stocks = [
+                        {'symbol': 'AAPL', 'name': 'Apple Inc.', 'price': '187.42', 'change': '+1.16', 'predictability': 87},
+                        {'symbol': 'MSFT', 'name': 'Microsoft Corp.', 'price': '349.35', 'change': '+0.32', 'predictability': 94},
+                        {'symbol': 'GOOG', 'name': 'Alphabet Inc.', 'price': '152.66', 'change': '-0.49', 'predictability': 86},
+                        {'symbol': 'META', 'name': 'Meta Platforms', 'price': '472.18', 'change': '+0.72', 'predictability': 84},
+                        {'symbol': 'NVDA', 'name': 'NVIDIA Corp.', 'price': '825.20', 'change': '+1.54', 'predictability': 91}
+                    ] %}
+                    
+                    {% for stock in related_stocks if stock.symbol != ticker %}
+                    <tr>
+                        <td>{{ stock.symbol }}</td>
+                        <td>{{ stock.name }}</td>
+                        <td>${{ stock.price }}</td>
+                        <td class="{{ 'positive' if stock.change.startswith('+') else 'negative' }}">
+                            {{ stock.change }}%
+                        </td>
+                        <td>
+                            <div class="progress" style="height: 5px;">
+                                <div class="progress-bar bg-primary" style="width: {{ stock.predictability }}%"></div>
+                            </div>
+                            <small>{{ stock.predictability }}%</small>

@@ -11,7 +11,7 @@ spec:
         spec:
           containers:
           - name: model-retrain
-            image: ${DOCKER_REGISTRY}/quantumvestai:latest
+            image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:latest
             imagePullPolicy: IfNotPresent
             command:
             - python
@@ -40,12 +40,12 @@ spec:
                   name: quantumvestai-secrets
                   key: twitter-bearer-token
                   optional: true
-            - name: SLACK_WEBHOOK
-              valueFrom:
-                secretKeyRef:
-                  name: quantumvestai-secrets
-                  key: slack-webhook
-                  optional: true
+            # - name: SLACK_WEBHOOK
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: quantumvestai-secrets
+            #       key: slack-webhook
+            #       optional: true
             volumeMounts:
             - name: data-volume
               mountPath: /app/data

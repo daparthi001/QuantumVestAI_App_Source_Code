@@ -1,0 +1,571 @@
+/* QuantumVestAI - Stock Analysis Specific Styles */
+
+/* Chart Containers */
+.chart-container {
+    width: 100%;
+    height: 400px;
+    margin-bottom: 2rem;
+}
+
+.mini-chart {
+    height: 200px;
+    margin-bottom: 1rem;
+}
+
+/* Chart Controls */
+.chart-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.chart-control-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.chart-type-selector {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.chart-type-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background-color: var(--light-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.chart-type-btn:hover {
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+    border-color: var(--primary-color);
+}
+
+.chart-type-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* Stock Info Section */
+.stock-info-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.stock-info {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.stock-logo {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: var(--light-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stock-logo img {
+    max-width: 70%;
+    max-height: 70%;
+}
+
+.stock-details {
+    flex: 1;
+}
+
+.stock-name {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.stock-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0.5rem 0;
+    flex-wrap: wrap;
+}
+
+.stock-ticker {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.stock-exchange,
+.stock-sector {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    position: relative;
+    padding-right: 1rem;
+}
+
+.stock-exchange::after {
+    content: '•';
+    position: absolute;
+    right: 0.25rem;
+    top: 0;
+    color: var(--text-muted);
+}
+
+.stock-price-info {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+}
+
+.current-price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.current-price .price {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.current-price .change {
+    font-size: 1rem;
+}
+
+.trading-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.trading-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-right: 0.25rem;
+}
+
+.trading-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* Forecast Results */
+.forecast-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.forecast-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.forecast-model-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.forecast-model {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.model-accuracy {
+    background-color: var(--success-color);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.forecast-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.forecast-stat {
+    background-color: var(--light-color);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.forecast-stat-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.forecast-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.forecast-range-container {
+    display: flex;
+    align-items: center;
+    height: 8px;
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+    border-radius: 4px;
+    margin-top: 0.5rem;
+    position: relative;
+}
+
+.forecast-range {
+    height: 100%;
+    background-color: var(--primary-color);
+    border-radius: 4px;
+}
+
+.forecast-range-min,
+.forecast-range-max {
+    position: absolute;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    bottom: -1.5rem;
+}
+
+.forecast-range-min {
+    left: 0;
+}
+
+.forecast-range-max {
+    right: 0;
+}
+
+/* Technical Indicators */
+.technical-indicators {
+    margin-top: 2rem;
+}
+
+.indicator-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.indicator-item:last-child {
+    border-bottom: none;
+}
+
+.indicator-name {
+    font-weight: 500;
+}
+
+.indicator-value {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.indicator-data {
+    font-weight: 600;
+}
+
+.indicator-signal {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.signal-bullish {
+    background-color: rgba(var(--success-color-rgb), 0.1);
+    color: var(--success-color);
+}
+
+.signal-bearish {
+    background-color: rgba(var(--danger-color-rgb), 0.1);
+    color: var(--danger-color);
+}
+
+.signal-neutral {
+    background-color: rgba(var(--warning-color-rgb), 0.1);
+    color: var(--warning-color);
+}
+
+/* News Section */
+.stock-news {
+    margin-top: 2rem;
+}
+
+.news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.news-card {
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.news-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.news-image-wrapper {
+    height: 160px;
+    overflow: hidden;
+}
+
+.news-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.news-card:hover .news-image {
+    transform: scale(1.05);
+}
+
+.news-content {
+    padding: 1rem;
+}
+
+.news-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.news-heading {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+    line-height: 1.4;
+}
+
+.news-summary {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+}
+
+/* Chart Periods */
+.chart-periods {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.period-btn {
+    border: 1px solid var(--border-color);
+    background-color: var(--light-color);
+    color: var(--text-secondary);
+    border-radius: 4px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.period-btn:hover {
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.period-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* Technical Analysis Tab */
+.technical-analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.technical-chart {
+    height: 200px;
+    margin-bottom: 0.5rem;
+}
+
+.indicator-description {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+/* Model Comparison */
+.model-comparison-chart {
+    height: 400px;
+    margin-bottom: 2rem;
+}
+
+.model-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.metric-card {
+    background-color: var(--light-color);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.metric-name {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.metric-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.metric-bar-container {
+    height: 8px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    position: relative;
+    margin-top: 0.5rem;
+}
+
+.metric-bar {
+    height: 100%;
+    border-radius: 4px;
+}
+
+/* Backtesting Results */
+.backtest-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.backtest-stat {
+    background-color: var(--light-color);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.backtest-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.backtest-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.trade-list {
+    margin-top: 2rem;
+}
+
+.trade-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.trade-date {
+    font-size: 0.875rem;
+}
+
+.trade-action {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.trade-action.buy {
+    color: var(--primary-color);
+}
+
+.trade-action.sell {
+    color: var(--danger-color);
+}
+
+.trade-price {
+    font-weight: 600;
+}
+
+.trade-result {
+    font-weight: 600;
+}
+
+.trade-result.profit {
+    color: var(--success-color);
+}
+
+.trade-result.loss {
+    color: var(--danger-color);
+}
+
+/* Responsive Styles */
+@media (max-width: 991.98px) {
+    .stock-info {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .stock-logo {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .chart-controls {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .chart-control-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .news-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .technical-analysis-grid {
+        grid-template-columns: 1fr;
+    }
+}

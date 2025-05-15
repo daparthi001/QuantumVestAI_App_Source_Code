@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  ui:
+    build:
+      context: .
+      target: ${BUILD_TARGET:-production}
+    image: quantumvestai-ui:${TAG:-latest}
+    container_name: quantumvestai-ui
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8000}:8000"
+    environment:
+      - ENV=${ENV:-production}
+      - DEBUG=${DEBUG:-false}
+      - SECRET_KEY=${SECRET_KEY:-change_this_in_production}
+      - PORT=8000
+      - HOST=0.0.0.0
+      - WORKERS=${WORKERS:-4}
+      - API_BASE_URL=${API_BASE_URL}
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - redis
+    networks:
+      - quantumvest-network
+
+  redis:
+    image: redis:6-alpine
+    container_name: quantumvestai-redis
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    networks:
+      - quantumvest-network
+
+networks:
+  quantumvest-network:
+    driver: bridge
+
+volumes:
+  redis-data:

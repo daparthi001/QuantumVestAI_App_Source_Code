@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ui-deployment
+  namespace: NAMESPACE_PLACEHOLDER
+  labels:
+    app: quantumvestai
+    tier: ui
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: quantumvestai
+      tier: ui
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: quantumvestai
+        tier: ui
+    spec:
+      containers:
+      - name: ui
+        image: UI_IMAGE_PLACEHOLDER
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+          name: http
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "300m"
+            memory: "256Mi"
+        envFrom:
+        - configMapRef:
+            name: ui-configmap
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 2
+          successThreshold: 1
+          failureThreshold: 3

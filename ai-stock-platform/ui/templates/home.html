@@ -1,0 +1,624 @@
+{% extends "base.html" %}
+
+{% block title %}QuantumVestAI - Stock Market Forecasting and Analytics{% endblock %}
+
+{% block content %}
+<div class="home-hero">
+    <div class="row align-items-center">
+        <div class="col-lg-6">
+            <h1 class="hero-title">Advanced Stock Market <span class="highlight">Forecasting</span> with Quantum AI</h1>
+            <p class="hero-subtitle">Harness the power of quantum machine learning models to predict market movements with unprecedented accuracy.</p>
+            <div class="hero-actions">
+                <a href="/ticker-search" class="btn btn-primary btn-lg">Try Stock Forecasting</a>
+                <a href="/predictability" class="btn btn-outline-primary btn-lg ms-2">Explore Predictability</a>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="hero-chart">
+                <canvas id="heroChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Market Summary -->
+<div class="section mb-5">
+    <div class="section-header">
+        <h2 class="section-title">Market Summary</h2>
+        <div class="section-actions">
+            <span class="market-date">{{ now.strftime('%B %d, %Y') }}</span>
+        </div>
+    </div>
+    <div class="row g-4">
+        {% for index in ['S&P 500', 'NASDAQ', 'Dow Jones', 'Russell 2000'] %}
+        <div class="col-md-3">
+            <div class="card market-card">
+                <div class="card-body">
+                    <div class="market-header">
+                        <h5 class="index-name">{{ index }}</h5>
+                        <span class="index-tag">Index</span>
+                    </div>
+                    <div class="market-price">
+                        <span class="price">${{ (30000 * (loop.index / 2))|round(2) }}</span>
+                        <span class="change {% if loop.index % 2 == 0 %}positive{% else %}negative{% endif %}">
+                            <i class="bi {% if loop.index % 2 == 0 %}bi-arrow-up{% else %}bi-arrow-down{% endif %}"></i>
+                            {% if loop.index % 2 == 0 %}+{{ (0.5 * loop.index)|round(2) }}%{% else %}-{{ (0.4 * loop.index)|round(2) }}%{% endif %}
+                        </span>
+                    </div>
+                    <div class="market-chart">
+                        <canvas id="marketChart{{ loop.index }}"></canvas>
+                    </div>
+                    <div class="market-range">
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: {{ 30 + (loop.index * 15) }}%"></div>
+                        </div>
+                        <div class="range-info">
+                            <span>{{ (29000 * (loop.index / 2))|round }}</span>
+                            <span>{{ (31000 * (loop.index / 2))|round }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Featured Forecast -->
+<div class="section mb-5">
+    <div class="section-header">
+        <h2 class="section-title">Featured Forecast</h2>
+        <div class="section-actions">
+            <a href="/forecast?ticker=AAPL" class="btn btn-outline-primary btn-sm">View Details</a>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <div class="featured-forecast">
+                <div class="featured-stock-info">
+                    <div class="featured-stock-logo">
+                        <img src="https://logo.clearbit.com/apple.com" alt="Apple Inc.">
+                    </div>
+                    <div>
+                        <h3 class="featured-stock-name">Apple Inc. (AAPL)</h3>
+                        <div class="featured-stock-price">
+                            <span class="price">$187.42</span>
+                            <span class="change positive">
+                                <i class="bi bi-arrow-up"></i> +2.15 (+1.16%)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="forecast-chart-container">
+                    <canvas id="forecastChart"></canvas>
+                </div>
+                
+                <div class="forecast-metrics">
+                    <div class="metric">
+                        <div class="metric-label">7-Day Forecast</div>
+                        <div class="metric-value">$192.85</div>
+                        <div class="change positive">+2.90%</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Confidence Score</div>
+                        <div class="metric-value">87%</div>
+                        <div class="confidence-bar">
+                            <div class="confidence-level" style="width: 87%"></div>
+                        </div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Predictability Rating</div>
+                        <div class="metric-value">A+</div>
+                        <div class="change positive">Top 10%</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Forecast Model</div>
+                        <div class="metric-value">Ensemble</div>
+                        <div class="text-muted">LSTM + XGBoost + Prophet</div>
+                    </div>
+                </div>
+                
+                <div class="forecast-actions">
+                    <a href="/forecast?ticker=AAPL" class="btn btn-primary">View Full Analysis</a>
+                    <a href="/compare-models?ticker=AAPL" class="btn btn-outline-secondary">Compare Models</a>
+                    {% if user %}
+                    <button class="btn btn-outline-primary add-watchlist-btn" data-ticker="AAPL">
+                        <i class="bi bi-star"></i> Add to Watchlist
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Predictable Stocks -->
+<div class="section mb-5">
+    <div class="section-header">
+        <h2 class="section-title">Top Predictable Stocks</h2>
+        <div class="section-actions">
+            <a href="/predictability/ranking" class="btn btn-link">View All</a>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-stocks">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Stock</th>
+                            <th>Price</th>
+                            <th>Change</th>
+                            <th>Predictability Score</th>
+                            <th>7-Day Forecast</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set stocks = [
+                            {"symbol": "MSFT", "name": "Microsoft Corp.", "price": "349.35", "change": "+1.2", "change_percent": "+0.32", "score": "94", "forecast": "+2.8"},
+                            {"symbol": "NVDA", "name": "NVIDIA Corp.", "price": "825.20", "change": "+12.5", "change_percent": "+1.54", "score": "91", "forecast": "+3.2"},
+                            {"symbol": "AAPL", "name": "Apple Inc.", "price": "187.42", "change": "+2.15", "change_percent": "+1.16", "score": "87", "forecast": "+2.9"},
+                            {"symbol": "GOOGL", "name": "Alphabet Inc.", "price": "152.66", "change": "-0.75", "change_percent": "-0.49", "score": "86", "forecast": "+1.7"},
+                            {"symbol": "META", "name": "Meta Platforms Inc.", "price": "472.18", "change": "+3.40", "change_percent": "+0.72", "score": "84", "forecast": "+2.4"}
+                        ] %}
+                        
+                        {% for stock in stocks %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>
+                                <div class="stock-symbol">
+                                    <div class="symbol-logo me-2">
+                                        <img src="https://logo.clearbit.com/{{ stock.symbol.lower() }}.com" alt="{{ stock.name }}" onerror="this.src='{{ url_for('static', path='/img/stock-placeholder.png') }}'">
+                                    </div>
+                                    <div>
+                                        <div class="symbol">{{ stock.symbol }}</div>
+                                        <div class="company">{{ stock.name }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>${{ stock.price }}</td>
+                            <td class="{{ 'positive' if stock.change.startswith('+') else 'negative' }}">
+                                {{ stock.change }} ({{ stock.change_percent }}%)
+                            </td>
+                            <td>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-primary" style="width: {{ stock.score }}%"></div>
+                                </div>
+                                <span class="ms-1">{{ stock.score }}%</span>
+                            </td>
+                            <td class="positive">{{ stock.forecast }}%</td>
+                            <td>
+                                <div class="stock-actions">
+                                    <a href="/forecast?ticker={{ stock.symbol }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-graph-up"></i>
+                                    </a>
+                                    {% if user %}
+                                    <button class="btn btn-sm btn-outline-secondary add-watchlist-btn" data-ticker="{{ stock.symbol }}">
+                                        <i class="bi bi-star"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Market Sentiment -->
+<div class="section mb-5">
+    <div class="section-header">
+        <h2 class="section-title">Market Sentiment</h2>
+        <div class="section-actions">
+            <a href="/market/sentiment" class="btn btn-link">View Details</a>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="market-sentiment">
+                        <div class="sentiment-gauge">
+                            <canvas id="sentimentGauge"></canvas>
+                        </div>
+                        <div class="gauge-label">Current Market Sentiment</div>
+                        <div class="sentiment-summary">
+                            <h4>Cautiously Bullish</h4>
+                            <p>The market sentiment is leaning positively with moderate optimism among investors.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">Market Insights</h4>
+                    <div class="insight-sections">
+                        <div class="insight">
+                            <div class="insight-icon positive">
+                                <i class="bi bi-graph-up"></i>
+                            </div>
+                            <div class="insight-content">
+                                <h5>Strong Tech Performance</h5>
+                                <p>Technology stocks continue to lead the market with robust earnings reports and positive growth forecasts, driving broader market sentiment.</p>
+                            </div>
+                        </div>
+                        <div class="insight">
+                            <div class="insight-icon neutral">
+                                <i class="bi bi-currency-dollar"></i>
+                            </div>
+                            <div class="insight-content">
+                                <h5>Fed Policy Impact</h5>
+                                <p>The Federal Reserve's recent interest rate decisions have created mixed signals, with markets showing resilience despite policy uncertainty.</p>
+                            </div>
+                        </div>
+                        <div class="insight">
+                            <div class="insight-icon negative">
+                                <i class="bi bi-exclamation-triangle"></i>
+                            </div>
+                            <div class="insight-content">
+                                <h5>Global Supply Chain Concerns</h5>
+                                <p>Ongoing supply chain disruptions continue to affect certain sectors, with manufacturing and retail facing inventory challenges.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Latest News -->
+<div class="section">
+    <div class="section-header">
+        <h2 class="section-title">Latest Market News</h2>
+        <div class="section-actions">
+            <a href="/news" class="btn btn-link">View All News</a>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="news-list">
+                {% set news_items = [
+                    {"title": "Tech Giants Exceed Earnings Expectations in Q2", "source": "Market Daily", "date": "2 hours ago", "sentiment": "positive"},
+                    {"title": "Federal Reserve Signals Possible Rate Cut in September Meeting", "source": "Financial Times", "date": "4 hours ago", "sentiment": "neutral"},
+                    {"title": "Global Chip Shortage Continues to Impact Automotive Sector", "source": "Industry News", "date": "6 hours ago", "sentiment": "negative"},
+                    {"title": "Renewable Energy Stocks Surge on New Climate Policy Announcement", "source": "Green Investor", "date": "8 hours ago", "sentiment": "positive"},
+                    {"title": "Retail Sales Show Modest Growth in Latest Report", "source": "Consumer Watch", "date": "12 hours ago", "sentiment": "neutral"}
+                ] %}
+                
+                {% for item in news_items %}
+                <a href="/news/article" class="news-item">
+                    <div class="news-source-date">
+                        <div class="news-source">{{ item.source }}</div>
+                        <div class="news-date">{{ item.date }}</div>
+                    </div>
+                    <h4 class="news-title">{{ item.title }}</h4>
+                    <div class="news-sentiment {{ item.sentiment }}">
+                        <span class="sentiment-dot"></span>
+                        <span>{{ item.sentiment|capitalize }} sentiment</span>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if not user %}
+<!-- CTA Section -->
+<div class="cta-section mt-5">
+    <div class="card">
+        <div class="card-body text-center p-5">
+            <h2>Ready to elevate your investment strategy?</h2>
+            <p class="lead">Join thousands of investors using QuantumVestAI to make data-driven decisions.</p>
+            <div class="cta-buttons mt-4">
+                <a href="/register" class="btn btn-primary btn-lg me-3">Sign Up - It's Free</a>
+                <a href="/about" class="btn btn-outline-secondary btn-lg">Learn More</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', path='/js/charts.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Hero Chart
+        const heroCtx = document.getElementById('heroChart').getContext('2d');
+        const gradientFill = heroCtx.createLinearGradient(0, 0, 0, 350);
+        gradientFill.addColorStop(0, 'rgba(67, 97, 238, 0.3)');
+        gradientFill.addColorStop(1, 'rgba(67, 97, 238, 0.0)');
+        
+        const heroChart = new Chart(heroCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Portfolio Performance',
+                    data: [10000, 10800, 10600, 11200, 11800, 11600, 12400, 13200, 13800, 14200, 14800, 15600],
+                    borderColor: '#4361ee',
+                    backgroundColor: gradientFill,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#4361ee',
+                    pointBorderColor: '#fff',
+                    pointRadius: 4,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        grid: {
+                            borderDash: [5, 5]
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value / 1000 + 'k';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Market Charts
+        for (let i = 1; i <= 4; i++) {
+            const marketCtx = document.getElementById('marketChart' + i).getContext('2d');
+            const marketChart = new Chart(marketCtx, {
+                type: 'line',
+                data: {
+                    labels: Array(24).fill(''),
+                    datasets: [{
+                        data: generateRandomData(24, i % 2 === 0),
+                        borderColor: i % 2 === 0 ? '#06d6a0' : '#ef476f',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: false
+                        },
+                        y: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Forecast Chart
+        const forecastCtx = document.getElementById('forecastChart').getContext('2d');
+        const forecastChart = new Chart(forecastCtx, {
+            type: 'line',
+            data: {
+                labels: ['May 8', 'May 9', 'May 10', 'May 11', 'May 12', 'May 13', 'May 14', 'May 15', 'May 16', 'May 17', 'May 18', 'May 19', 'May 20', 'May 21', 'May 22'],
+                datasets: [
+                    {
+                        label: 'Historical',
+                        data: [182.21, 183.05, 184.92, 185.75, 186.10, 185.85, 186.75, 187.42, null, null, null, null, null, null, null],
+                        borderColor: '#8b8b8b',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#8b8b8b',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Forecasted',
+                        data: [null, null, null, null, null, null, null, 187.42, 188.15, 189.26, 190.35, 191.20, 191.75, 192.40, 192.85],
+                        borderColor: '#4361ee',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#4361ee',
+                        borderDash: [5, 5],
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Upper Bound',
+                        data: [null, null, null, null, null, null, null, 187.42, 189.05, 190.75, 192.35, 193.80, 194.95, 196.10, 197.25],
+                        borderColor: 'rgba(67, 97, 238, 0.3)',
+                        backgroundColor: 'transparent',
+                        borderWidth: 1,
+                        pointRadius: 0,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Lower Bound',
+                        data: [null, null, null, null, null, null, null, 187.42, 187.25, 187.75, 188.35, 188.60, 188.55, 188.70, 188.45],
+                        borderColor: 'rgba(67, 97, 238, 0.3)',
+                        backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                        borderWidth: 1,
+                        pointRadius: 0,
+                        tension: 0.4,
+                        fill: {
+                            target: '+1',
+                            above: 'rgba(67, 97, 238, 0.1)'
+                        }
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                if (!context.parsed.y) return null;
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += '$' + context.parsed.y.toFixed(2);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        grid: {
+                            borderDash: [5, 5]
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Sentiment Gauge
+        const sentimentCtx = document.getElementById('sentimentGauge').getContext('2d');
+        const sentimentGauge = new Chart(sentimentCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Bearish', 'Neutral', 'Bullish'],
+                datasets: [{
+                    data: [20, 35, 45],
+                    backgroundColor: ['#ef476f', '#ffd166', '#06d6a0'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.parsed + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Helper function to generate random chart data
+        function generateRandomData(count, uptrend) {
+            const volatility = 0.2;
+            const baseValue = 100;
+            const trendStrength = uptrend ? 0.8 : -0.8;
+            
+            let data = [];
+            let value = baseValue;
+            
+            for (let i = 0; i < count; i++) {
+                // Random component
+                let change = (Math.random() - 0.5) * volatility;
+                // Add trend component
+                change += trendStrength * 0.1;
+                // Apply change
+                value += value * change;
+                data.push(value);
+            }
+            
+            return data;
+        }
+        
+        // Add to watchlist buttons
+        const watchlistButtons = document.querySelectorAll('.add-watchlist-btn');
+        watchlistButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const ticker = this.getAttribute('data-ticker');
+                
+                // Send request to add to watchlist
+                fetch('/watchlist/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `ticker=${ticker}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.innerHTML = '<i class="bi bi-star-fill"></i> Added';
+                        this.classList.remove('btn-outline-primary', 'btn-outline-secondary');
+                        this.classList.add('btn-success');
+                        this.disabled = true;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

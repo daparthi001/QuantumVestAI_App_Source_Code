@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+
+{% block title %}API Status - QuantumVestAI{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="/">Home</a></li>
+<li class="breadcrumb-item"><a href="/admin/dashboard">Admin</a></li>
+<li class="breadcrumb-item active">API Status</li>
+{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', path='/css/admin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <h1 class="page-title">API Status</h1>
+        <p class="text-muted">Monitor API performance and endpoints</p>
+    </div>
+    <div class="header-actions">
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-primary active" id="live-view">Live View</button>
+            <button type="button" class="btn btn-outline-primary" id="historical-view">Historical</button>
+        </div>
+    </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ error }}
+</div>
+{% endif %}
+
+<!-- API Health Overview -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <span class="stat-card-label">Uptime</span>
+                <div class="stat-card-value">{{ metrics.uptime }}</div>
+                <div class="stat-card-change neutral">
+                    <i class="bi bi-clock"></i> 
+                    Last restart: {{ metrics.last_restart }}
+                </div>
+            </div>
+            <div class="stat-card-icon blue">
+                <i class="bi bi-activity"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <span class="stat-card-label">Requests (Today)</span>
+                <div class="stat-card-value">{{ metrics.request_count }}</div>
+                <div class="stat-card-change {{ 'positive' if metrics.request_change > 0 else 'negative' }}">
+                    <i class="bi {{ 'bi-arrow-up' if metrics.request_change > 0 else 'bi-arrow-down' }}"></i> 
+                    {{ metrics.request_change_percent }}% from yesterday
+                </div>
+            </div>
+            <div class="stat-card-icon purple">
+                <i class="bi bi-arrow-repeat"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <span class="stat-card-label">Response Time</span>
+                <div class="stat-card-value">{{ metrics.response_time }} ms</div>
+                <div class="stat-card-change {{ 'negative' if metrics.response_time_change > 0 else 'positive' }}">
+                    <i class="bi {{ 'bi-arrow-up' if metrics.response_time_change > 0 else 'bi-arrow-down' }}"></i> 
+                    {{ metrics.response_time_change }}% from yesterday
+                </div>
+            </div>
+            <div class="stat-card-icon green">
+                <i class="bi bi-speedometer"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <span class="stat-card-label">Error Rate</span>
+                <div class="stat-card-value">{{ metrics.error_rate }}%</div>
+                <div class="stat-card-change {{ 'negative' if metrics.error_rate_change > 0 else 'positive' }}">
+                    <i class="bi {{ 'bi-arrow-up' if metrics.error_rate_change > 0 else 'bi-arrow-down' }}"></i> 
+                    {{ metrics.error_rate_change }}% from yesterday
+                </div>
+            </div>
+            <div class="stat-card-icon {{ 'red' if metrics.error_rate > 5 else 'yellow' if metrics.error_rate > 1 else 'green' }}">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main API Status Content -->
+<div class="row g-4">
+    <!-- API Performance Chart -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">API Performance</h3>
+                <div class="card-actions">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary active" data-time="24h">24h</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-time="7d">7d</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-time="30d">30d</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="apiPerformanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Endpoint Performance -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h3 class="card-title">Endpoint Performance</h3>
+                <div class="card-actions">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">Filter</span>
+                        <input type="text" class="form-control" id="endpointFilter" placeholder="Search endpoints...">
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="endpointTable">
+                        <thead>
+                            <tr>
+                                <th>Endpoint</th>
+                                <th>Method</th>
+                                <th>Requests</th>
+                                <th>Avg. Response Time</th>
+                                <th>Error Rate</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for endpoint in services %}
+                            <tr>
+                                <td><code>{{ endpoint.path }}</code></td>
+                                <td><span class="badge bg-method-{{ endpoint.method|lower }}">{{ endpoint.method }}</span></td>
+                                <td>{{ endpoint.requests }}</td>
+                                <td>{{ endpoint.avg_response_time }} ms</td>
+                                <td>{{ endpoint.error_rate }}%</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if endpoint.status == 'healthy' else 'danger' if endpoint.status == 'critical' else 'warning' }}">
+                                        {{ endpoint.status|capitalize }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- API Logs and Errors -->
+    <div class="col-lg-4">
+        <!-- Recent Errors -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Recent Errors</h3>
+                <div class="card-actions">
+                    <a href="/admin/logs?filter=errors" class="btn btn-sm btn-link">View All</a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="error-list">
+                    {% for error in logs %}
+                    {% if error.level == 'ERROR' %}
+                    <div class="error-item">
+                        <div class="error-header">
+                            <span class="error-code">{{ error.status_code }}</span>
+                            <span class="error-time">{{ error.timestamp }}</span>
+                        </div>
+                        <div class="error-endpoint"><code>{{ error.method }} {{ error.endpoint }}</code></div>
+                        <div class="error-message">{{ error.message }}</div>
+                        <div class="error-footer">
+                            <span class="error-ip">{{ error.ip_address }}</span>
+                            <button class="btn btn-sm btn-outline-secondary error-details-btn" data-bs-toggle="collapse" data-bs-target="#error-details-{{ loop.index }}">
+                                Details <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                        <div class="collapse" id="error-details-{{ loop.index }}">
+                            <div class="error-trace">
+                                <pre>{{ error.traceback }}</pre>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- API Logs -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h3 class="card-title">API Logs</h3>
+                <div class="card-actions">
+                    <select class="form-select form-select-sm" id="logLevel">
+                        <option value="all">All Levels</option>
+                        <option value="info">Info</option>
+                        <option value="warning">Warning</option>
+                        <option value="error">Error</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="log-list">
+                    {% for log in logs %}
+                    <div class="log-item log-level-{{ log.level|lower }}">
+                        <div class="log-time">{{ log.timestamp }}</div>
+                        <div class="log-level">{{ log.level }}</div>
+                        <div class="log-message">{{ log.message }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-sm btn-primary" id="loadMoreLogs">
+                    Load More Logs
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', path='/vendors/chart.js/chart.min.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize API Performance Chart
+        const ctx = document.getElementById('apiPerformanceChart').getContext('2d');
+        const apiChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [{% for point in metrics.chart_data.timestamps %}'{{ point }}',{% endfor %}],
+                datasets: [
+                    {
+                        label: 'Response Time (ms)',
+                        data: [{% for point in metrics.chart_data.response_times %}{{ point }},{% endfor %}],
+                        borderColor: '#4361ee',
+                        backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Requests',
+                        data: [{% for point in metrics.chart_data.request_counts %}{{ point }},{% endfor %}],
+                        borderColor: '#6c757d',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    },
+                    {
+                        label: 'Error Rate (%)',
+                        data: [{% for point in metrics.chart_data.error_rates %}{{ point }},{% endfor %}],
+                        borderColor: '#ef476f',
+                        backgroundColor: 'rgba(239, 71, 111, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        yAxisID: 'y2'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    if (label.includes('Error Rate')) {
+                                        label += context.parsed.y + '%';
+                                    } else if (label.includes('Response Time')) {
+                                        label += context.parsed.y + ' ms';
+                                    } else {
+                                        label += context.parsed.y;
+                                    }
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            maxRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: 12
+                        }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Response Time (ms)'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                        title: {
+                            display: true,
+                            text: 'Request Count'
+                        }
+                    },
+                    y2: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                        title: {
+                            display: true,
+                            
