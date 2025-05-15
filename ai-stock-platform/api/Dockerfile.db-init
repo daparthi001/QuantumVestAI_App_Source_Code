@@ -1,8 +1,12 @@
 FROM postgres:13-alpine AS db-tools
 
-# Install Python and required packages
-RUN apk add --no-cache python3 py3-pip curl jq aws-cli && \
-    pip3 install --no-cache-dir psycopg2-binary sqlalchemy alembic pydantic boto3 passlib
+# Install system packages
+RUN apk add --no-cache python3 py3-pip curl jq aws-cli \
+    # Install Python packages from Alpine package repository when available
+    py3-psycopg2 py3-sqlalchemy py3-pydantic py3-passlib \
+    # Create a virtual environment for other packages
+    && python3 -m venv /venv \
+    && /venv/bin/pip install --no-cache-dir alembic boto3
 
 # Working directory
 WORKDIR /db-init
@@ -14,7 +18,7 @@ RUN mkdir -p /db-init/api/db/models /db-init/api/core
 COPY db_init/ /db-init/
 COPY alembic/ /db-init/alembic/
 COPY alembic.ini /db-init/
-# Remove "api/" prefix from the paths below
+# Use correct paths for your project structure
 COPY db/models/ /db-init/api/db/models/
 COPY db/base_class.py /db-init/api/db/
 COPY core/config.py /db-init/api/core/
@@ -26,7 +30,8 @@ RUN find /db-init -name "*.py" -exec chmod +x {} \;
 COPY scripts/run_db_init.sh /db-init/
 RUN chmod +x /db-init/run_db_init.sh
 
-# Environment variables
+# Set Python path and virtual environment
 ENV PYTHONPATH=/db-init
+ENV PATH="/venv/bin:$PATH"
 
 ENTRYPOINT ["/db-init/run_db_init.sh"]
