@@ -1,114 +1,21 @@
-# Core API framework
-fastapi==0.103.1
-uvicorn==0.23.2
-pydantic==2.4.2
-pydantic-settings==2.0.3
-starlette==0.31.1
-python-multipart==0.0.6
-email-validator==2.0.0
-
-# ASGI middleware and extensions
-uvicorn[standard]==0.23.2
-websockets==11.0.3
-
-# Authentication and security
+# API dependencies
+fastapi==0.100.0
+uvicorn[standard]==0.22.0
+sqlalchemy==2.0.15
+alembic==1.11.1
+pydantic==2.0.2
+pydantic-settings==2.0.1
+psycopg2-binary==2.9.6
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-python-dateutil==2.8.2
-
-# Database
-sqlalchemy==2.0.21
-alembic==1.12.0
-asyncpg==0.28.0
-psycopg2-binary==2.9.7
-SQLAlchemy-Utils==0.41.1
-greenlet==2.0.2
-
-# AWS Integration
-boto3==1.28.40
-aioboto3==11.3.0
-aws-psycopg2==1.3.8
-
-# Data processing and analysis
-pandas==2.1.1
-numpy==1.26.0
-polars==0.19.13
-pyarrow==13.0.0
-scikit-learn==1.3.1
-statsmodels==0.14.0
-scipy==1.11.3
-
-# Machine Learning & Time Series
-tensorflow==2.14.0
-keras==2.14.0
-xgboost==2.0.0
-prophet==1.1.4
-pmdarima==2.0.4
-
-# NLP and Document Processing
+python-multipart==0.0.6
+email-validator==2.0.0
+httpx==0.24.1
+pandas==2.0.2
+numpy==1.24.3
+scikit-learn==1.2.2
+tensorflow==2.12.0
+boto3==1.26.153
+tweepy==4.12.0
+textblob==0.15.3
 nltk==3.8.1
-spacy==3.7.1
-transformers==4.34.0
-sentence-transformers==2.2.2
-pytesseract==0.3.10
-PyPDF2==3.0.1
-pdfplumber==0.10.2
-
-# API Clients and Integrations
-yfinance==0.2.31
-alpha_vantage==2.3.1
-requests==2.31.0
-httpx==0.25.0
-aiohttp==3.8.5
-requests-cache==1.1.0
-
-# Visualization (for reports/exports)
-matplotlib==3.8.0
-seaborn==0.13.0
-plotly==5.17.0
-kaleido==0.2.1
-
-# Utils
-python-dotenv==1.0.0
-pyyaml==6.0.1
-tenacity==8.2.3
-Jinja2==3.1.2
-itsdangerous==2.1.2
-humanize==4.8.0
-tqdm==4.66.1
-loguru==0.7.2
-python-slugify==8.0.1
-
-# Testing
-pytest==7.4.2
-pytest-asyncio==0.21.1
-pytest-cov==4.1.0
-httpx==0.25.0
-factory-boy==3.3.0
-pytest-mock==3.11.1
-
-# Development tools
-black==23.9.1
-flake8==6.1.0
-isort==5.12.0
-mypy==1.6.0
-pre-commit==3.4.0
-
-# Documentation
-pdoc3==0.10.0
-
-# Feature Flags
-launchdarkly-server-sdk==8.2.1
-
-# Cache and Rate Limiting
-redis==5.0.1
-fastapi-limiter==0.1.5
-
-# Background tasks
-celery==5.3.4
-flower==2.0.1
-
-# Optional: performance monitoring
-opentelemetry-api==1.20.0
-opentelemetry-sdk==1.20.0
-opentelemetry-exporter-otlp==1.20.0
