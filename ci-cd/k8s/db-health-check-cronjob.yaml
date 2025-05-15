@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: db-health-check
-  namespace: NAMESPACE_PLACEHOLDER
+  namespace: dev
 spec:
   schedule: "0 */4 * * *"  # Run every 4 hours
   concurrencyPolicy: Forbid
@@ -15,7 +15,7 @@ spec:
           serviceAccountName: quantumvestai-sa
           containers:
           - name: db-health-check
-            image: API_IMAGE_PLACEHOLDER
+            image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:api-dev-latest
             command: ["/bin/sh"]
             args:
             - "-c"

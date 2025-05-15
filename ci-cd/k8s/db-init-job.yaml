@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: db-init-job
-  namespace: NAMESPACE_PLACEHOLDER
+  namespace: dev
 spec:
   backoffLimit: 3
   ttlSecondsAfterFinished: 86400  # Delete job after 1 day
@@ -12,7 +12,7 @@ spec:
       restartPolicy: Never
       containers:
       - name: db-init
-        image: DB_INIT_IMAGE_PLACEHOLDER
+        image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:db-init-dev-latest
         imagePullPolicy: Always
         resources:
           requests:

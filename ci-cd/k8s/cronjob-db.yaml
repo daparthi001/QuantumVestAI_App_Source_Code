@@ -15,7 +15,7 @@ spec:
           serviceAccountName: quantumvestai-sa
           containers:
           - name: db-health-check
-            image: IMAGE_PLACEHOLDER
+            image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:db-init-dev-latest
             command: ["/bin/sh"]
             args:
             - "-c"

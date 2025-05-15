@@ -121,132 +121,132 @@ jobs:
       run: |
         kubectl get nodes
 
-    - name: Create namespace
-      run: |
-        # Create namespace if it doesn't exist
-        kubectl create namespace ${{ env.ENVIRONMENT }} --dry-run=client -o yaml | kubectl apply -f -
+    # - name: Create namespace
+    #   run: |
+    #     # Create namespace if it doesn't exist
+    #     kubectl create namespace ${{ env.ENVIRONMENT }} --dry-run=client -o yaml | kubectl apply -f -
 
-    - name: Update Kubernetes manifests
-      working-directory: ci-cd/k8s
-      run: |
-        # Replace placeholders in manifests
-        for file in *.yaml; do
-          sed -i "s|API_IMAGE_PLACEHOLDER|${{ env.API_IMAGE }}|g" $file
-          sed -i "s|UI_IMAGE_PLACEHOLDER|${{ env.UI_IMAGE }}|g" $file
-          sed -i "s|DB_INIT_IMAGE_PLACEHOLDER|${{ env.DB_INIT_IMAGE }}|g" $file
-          sed -i "s|NAMESPACE_PLACEHOLDER|${{ env.ENVIRONMENT }}|g" $file
-          sed -i "s|ENVIRONMENT_PLACEHOLDER|${{ env.ENVIRONMENT }}|g" $file
-        done
+    # - name: Update Kubernetes manifests
+    #   working-directory: ci-cd/k8s
+    #   run: |
+    #     # Replace placeholders in manifests
+    #     for file in *.yaml; do
+    #       sed -i "s|API_IMAGE_PLACEHOLDER|${{ env.API_IMAGE }}|g" $file
+    #       sed -i "s|UI_IMAGE_PLACEHOLDER|${{ env.UI_IMAGE }}|g" $file
+    #       sed -i "s|DB_INIT_IMAGE_PLACEHOLDER|${{ env.DB_INIT_IMAGE }}|g" $file
+    #       sed -i "s|NAMESPACE_PLACEHOLDER|${{ env.ENVIRONMENT }}|g" $file
+    #       sed -i "s|ENVIRONMENT_PLACEHOLDER|${{ env.ENVIRONMENT }}|g" $file
+    #     done
         
-        # Configure environment-specific settings
-        if [ "${{ env.ENVIRONMENT }}" = "dev" ] || [ "${{ env.ENVIRONMENT }}" = "staging" ]; then
-          # Allow sample data in dev/staging
-          sed -i "s|SEED_SAMPLE_DATA: \"false\"|SEED_SAMPLE_DATA: \"${{ github.event.inputs.seed_data || 'false' }}\"|g" api-configmap.yaml
-        else
-          # Ensure no sample data in prod
-          sed -i "s|SEED_SAMPLE_DATA: \"false\"|SEED_SAMPLE_DATA: \"false\"|g" api-configmap.yaml
-        fi
+    #     # Configure environment-specific settings
+    #     if [ "${{ env.ENVIRONMENT }}" = "dev" ] || [ "${{ env.ENVIRONMENT }}" = "staging" ]; then
+    #       # Allow sample data in dev/staging
+    #       sed -i "s|SEED_SAMPLE_DATA: \"false\"|SEED_SAMPLE_DATA: \"${{ github.event.inputs.seed_data || 'false' }}\"|g" api-configmap.yaml
+    #     else
+    #       # Ensure no sample data in prod
+    #       sed -i "s|SEED_SAMPLE_DATA: \"false\"|SEED_SAMPLE_DATA: \"false\"|g" api-configmap.yaml
+    #     fi
         
-        # Update API URL in UI configuration based on environment
-        if [ "${{ env.ENVIRONMENT }}" = "prod" ]; then
-          sed -i "s|API_URL: \"http://api-service:8000\"|API_URL: \"https://api.quantumvestai.com\"|g" ui-configmap.yaml
-        elif [ "${{ env.ENVIRONMENT }}" = "staging" ]; then
-          sed -i "s|API_URL: \"http://api-service:8000\"|API_URL: \"https://api.staging.quantumvestai.com\"|g" ui-configmap.yaml
-        else
-          sed -i "s|API_URL: \"http://api-service:8000\"|API_URL: \"https://api.dev.quantumvestai.com\"|g" ui-configmap.yaml
-        fi
+    #     # Update API URL in UI configuration based on environment
+    #     if [ "${{ env.ENVIRONMENT }}" = "prod" ]; then
+    #       sed -i "s|API_URL: \"http://api-service:8000\"|API_URL: \"https://api.quantumvestai.com\"|g" ui-configmap.yaml
+    #     elif [ "${{ env.ENVIRONMENT }}" = "staging" ]; then
+    #       sed -i "s|API_URL: \"http://api-service:8000\"|API_URL: \"https://api.staging.quantumvestai.com\"|g" ui-configmap.yaml
+    #     else
+    #       sed -i "s|API_URL: \"http://api-service:8000\"|API_URL: \"https://api.dev.quantumvestai.com\"|g" ui-configmap.yaml
+    #     fi
 
-    # Create non-RDS secrets from GitHub secrets
-    - name: Create application secrets
-      run: |
-        # Create application secrets (non-RDS)
-        cat <<EOF > app-secrets.yaml
-        apiVersion: v1
-        kind: Secret
-        metadata:
-          name: app-secrets
-          namespace: ${{ env.ENVIRONMENT }}
-        type: Opaque
-        data:
-          JWT_SECRET: $(echo -n "${{ secrets.JWT_SECRET }}" | base64 -w 0)
-          ADMIN_USERNAME: $(echo -n "${{ secrets.ADMIN_USERNAME }}" | base64 -w 0)
-          ADMIN_PASSWORD: $(echo -n "${{ secrets.ADMIN_PASSWORD }}" | base64 -w 0)
-          ADMIN_EMAIL: $(echo -n "${{ secrets.ADMIN_EMAIL }}" | base64 -w 0)
-          ALPHA_VANTAGE_API_KEY: $(echo -n "${{ secrets.ALPHA_VANTAGE_API_KEY }}" | base64 -w 0)
-        EOF
+    # # Create non-RDS secrets from GitHub secrets
+    # - name: Create application secrets
+    #   run: |
+    #     # Create application secrets (non-RDS)
+    #     cat <<EOF > app-secrets.yaml
+    #     apiVersion: v1
+    #     kind: Secret
+    #     metadata:
+    #       name: app-secrets
+    #       namespace: ${{ env.ENVIRONMENT }}
+    #     type: Opaque
+    #     data:
+    #       JWT_SECRET: $(echo -n "${{ secrets.JWT_SECRET }}" | base64 -w 0)
+    #       ADMIN_USERNAME: $(echo -n "${{ secrets.ADMIN_USERNAME }}" | base64 -w 0)
+    #       ADMIN_PASSWORD: $(echo -n "${{ secrets.ADMIN_PASSWORD }}" | base64 -w 0)
+    #       ADMIN_EMAIL: $(echo -n "${{ secrets.ADMIN_EMAIL }}" | base64 -w 0)
+    #       ALPHA_VANTAGE_API_KEY: $(echo -n "${{ secrets.ALPHA_VANTAGE_API_KEY }}" | base64 -w 0)
+    #     EOF
         
-        # Apply secrets
-        kubectl apply -f app-secrets.yaml
-        rm app-secrets.yaml
+    #     # Apply secrets
+    #     kubectl apply -f app-secrets.yaml
+    #     rm app-secrets.yaml
 
-    - name: Deploy to EKS (Kubernetes)
-      working-directory: ci-cd/k8s
-      run: |
-        # Apply shared resources
-        kubectl apply -f pvc.yaml -n ${{ env.ENVIRONMENT }}
-        kubectl apply -f service-account.yaml -n ${{ env.ENVIRONMENT }}
-        kubectl apply -f models-pvc.yaml -n ${{ env.ENVIRONMENT }}
+    # - name: Deploy to EKS (Kubernetes)
+    #   working-directory: ci-cd/k8s
+    #   run: |
+    #     # Apply shared resources
+    #     kubectl apply -f pvc.yaml -n ${{ env.ENVIRONMENT }}
+    #     kubectl apply -f service-account.yaml -n ${{ env.ENVIRONMENT }}
+    #     kubectl apply -f models-pvc.yaml -n ${{ env.ENVIRONMENT }}
         
-        # Apply API resources
-        kubectl apply -f api-configmap.yaml -n ${{ env.ENVIRONMENT }}
-        kubectl apply -f api-deployment.yaml -n ${{ env.ENVIRONMENT }}
-        kubectl apply -f api-service.yaml -n ${{ env.ENVIRONMENT }}
-        kubectl apply -f api-ingress.yaml -n ${{ env.ENVIRONMENT }}
-        kubectl apply -f api-hpa.yaml -n ${{ env.ENVIRONMENT }}
+    #     # Apply API resources
+    #     kubectl apply -f api-configmap.yaml -n ${{ env.ENVIRONMENT }}
+    #     kubectl apply -f api-deployment.yaml -n ${{ env.ENVIRONMENT }}
+    #     kubectl apply -f api-service.yaml -n ${{ env.ENVIRONMENT }}
+    #     kubectl apply -f api-ingress.yaml -n ${{ env.ENVIRONMENT }}
+    #     kubectl apply -f api-hpa.yaml -n ${{ env.ENVIRONMENT }}
         
-        # Apply UI resources
-        kubectl apply -f ui-configmap.yaml -n ${{ env.ENVIRONMENT }}
-        kubectl apply -f ui-deployment.yaml -n ${{ env.ENVIRONMENT }}
-        kubectl apply -f ui-service.yaml -n ${{ env.ENVIRONMENT }}
-        kubectl apply -f ui-ingress.yaml -n ${{ env.ENVIRONMENT }}
-        kubectl apply -f ui-hpa.yaml -n ${{ env.ENVIRONMENT }}
+    #     # Apply UI resources
+    #     kubectl apply -f ui-configmap.yaml -n ${{ env.ENVIRONMENT }}
+    #     kubectl apply -f ui-deployment.yaml -n ${{ env.ENVIRONMENT }}
+    #     kubectl apply -f ui-service.yaml -n ${{ env.ENVIRONMENT }}
+    #     kubectl apply -f ui-ingress.yaml -n ${{ env.ENVIRONMENT }}
+    #     kubectl apply -f ui-hpa.yaml -n ${{ env.ENVIRONMENT }}
         
-        # Apply cron jobs and other resources
-        kubectl apply -f db-health-check-cronjob.yaml -n ${{ env.ENVIRONMENT }}
-        # Apply the Twitter secrets template (will be populated with actual secrets earlier)
-        kubectl apply -f twitter-secrets.yaml -n ${{ env.ENVIRONMENT }}
+    #     # Apply cron jobs and other resources
+    #     kubectl apply -f db-health-check-cronjob.yaml -n ${{ env.ENVIRONMENT }}
+    #     # Apply the Twitter secrets template (will be populated with actual secrets earlier)
+    #     kubectl apply -f twitter-secrets.yaml -n ${{ env.ENVIRONMENT }}
 
-    # Database initialization job
-    - name: Run Database Initialization
-      if: ${{ github.event.inputs.init_db == 'true' || github.event.inputs.environment == 'dev' || (github.event_name == 'push' && env.ENVIRONMENT == 'dev') }}
-      run: |
-        echo "Running database initialization for ${{ env.ENVIRONMENT }} environment..."
+    # # Database initialization job
+    # - name: Run Database Initialization
+    #   if: ${{ github.event.inputs.init_db == 'true' || github.event.inputs.environment == 'dev' || (github.event_name == 'push' && env.ENVIRONMENT == 'dev') }}
+    #   run: |
+    #     echo "Running database initialization for ${{ env.ENVIRONMENT }} environment..."
         
-        # Delete any existing job to ensure a clean run
-        kubectl delete job db-init-job -n ${{ env.ENVIRONMENT }} --ignore-not-found
+    #     # Delete any existing job to ensure a clean run
+    #     kubectl delete job db-init-job -n ${{ env.ENVIRONMENT }} --ignore-not-found
         
-        # Apply the job
-        kubectl apply -f ci-cd/k8s/db-init-job.yaml -n ${{ env.ENVIRONMENT }}
+    #     # Apply the job
+    #     kubectl apply -f ci-cd/k8s/db-init-job.yaml -n ${{ env.ENVIRONMENT }}
         
-        # Wait for job to complete (with timeout)
-        echo "Waiting for database initialization job to complete..."
-        kubectl wait --for=condition=complete --timeout=300s job/db-init-job -n ${{ env.ENVIRONMENT }} || true
+    #     # Wait for job to complete (with timeout)
+    #     echo "Waiting for database initialization job to complete..."
+    #     kubectl wait --for=condition=complete --timeout=300s job/db-init-job -n ${{ env.ENVIRONMENT }} || true
         
-        # Check if job succeeded
-        JOB_STATUS=$(kubectl get job db-init-job -n ${{ env.ENVIRONMENT }} -o jsonpath='{.status.succeeded}')
-        if [ "$JOB_STATUS" != "1" ]; then
-          echo "Database initialization job failed or timed out."
-          kubectl logs -n ${{ env.ENVIRONMENT }} -l job-name=db-init-job
-          # Do not fail the workflow as the DB might already be initialized
-          # exit 1
-        else
-          echo "Database initialization completed successfully!"
-          kubectl logs -n ${{ env.ENVIRONMENT }} -l job-name=db-init-job
-        fi
+    #     # Check if job succeeded
+    #     JOB_STATUS=$(kubectl get job db-init-job -n ${{ env.ENVIRONMENT }} -o jsonpath='{.status.succeeded}')
+    #     if [ "$JOB_STATUS" != "1" ]; then
+    #       echo "Database initialization job failed or timed out."
+    #       kubectl logs -n ${{ env.ENVIRONMENT }} -l job-name=db-init-job
+    #       # Do not fail the workflow as the DB might already be initialized
+    #       # exit 1
+    #     else
+    #       echo "Database initialization completed successfully!"
+    #       kubectl logs -n ${{ env.ENVIRONMENT }} -l job-name=db-init-job
+    #     fi
 
-    - name: Verify deployment
-      run: |
-        echo "Checking API deployment..."
-        kubectl get deployment api-deployment -n ${{ env.ENVIRONMENT }}
+    # - name: Verify deployment
+    #   run: |
+    #     echo "Checking API deployment..."
+    #     kubectl get deployment api-deployment -n ${{ env.ENVIRONMENT }}
         
-        echo "Checking UI deployment..."
-        kubectl get deployment ui-deployment -n ${{ env.ENVIRONMENT }}
+    #     echo "Checking UI deployment..."
+    #     kubectl get deployment ui-deployment -n ${{ env.ENVIRONMENT }}
         
-        echo "Listing all services..."
-        kubectl get svc -n ${{ env.ENVIRONMENT }}
+    #     echo "Listing all services..."
+    #     kubectl get svc -n ${{ env.ENVIRONMENT }}
         
-        echo "Listing all ingresses..."
-        kubectl get ingress -n ${{ env.ENVIRONMENT }}
+    #     echo "Listing all ingresses..."
+    #     kubectl get ingress -n ${{ env.ENVIRONMENT }}
 
   destroy:
     if: ${{ github.event.inputs.action == 'destroy' }}

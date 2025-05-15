@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ui-deployment
-  namespace: NAMESPACE_PLACEHOLDER
+  namespace: dev
   labels:
     app: quantumvestai
     tier: ui
@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
       - name: ui
-        image: UI_IMAGE_PLACEHOLDER
+        image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:ui-dev-latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8000
@@ -36,11 +36,11 @@ spec:
             secretKeyRef:
               name: ui-secrets
               key: JWT_SECRET_KEY
-        - name: YAHOO_FINANCE_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: ui-secrets
-              key: YAHOO_FINANCE_API_KEY
+        # - name: YAHOO_FINANCE_API_KEY
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: ui-secrets
+        #       key: YAHOO_FINANCE_API_KEY
         - name: TWITTER_API_KEY
           valueFrom:
             secretKeyRef:

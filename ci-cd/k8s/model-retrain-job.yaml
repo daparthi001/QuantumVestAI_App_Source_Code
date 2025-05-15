@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: model-retrain-job
-  namespace: NAMESPACE_PLACEHOLDER
+  namespace: dev
   labels:
     app: quantumvestai
     component: ml-training
@@ -24,7 +24,7 @@ spec:
           restartPolicy: Never
           containers:
           - name: model-trainer
-            image: API_IMAGE_PLACEHOLDER
+            image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:api-dev-latest
             imagePullPolicy: Always
             command: ["python", "-m", "app.ml.train_models"]
             args: ["--full-retrain", "--all-models"]
@@ -76,7 +76,7 @@ spec:
               - name: MODELS_STORAGE_PATH
                 value: "/app/models"
               - name: S3_MODEL_BUCKET
-                value: "quantumvestai-models-NAMESPACE_PLACEHOLDER"
+                value: "quantumvestai-models-dev"
               # API keys from app-secrets
               - name: ALPHA_VANTAGE_API_KEY
                 valueFrom:

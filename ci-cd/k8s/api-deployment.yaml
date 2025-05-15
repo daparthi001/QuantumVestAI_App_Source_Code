@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api-deployment
-  namespace: NAMESPACE_PLACEHOLDER
+  namespace: dev
   labels:
     app: quantumvestai
     tier: api
@@ -26,7 +26,7 @@ spec:
       serviceAccountName: quantumvestai-sa
       containers:
       - name: api
-        image: API_IMAGE_PLACEHOLDER
+        image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:api-dev-latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8000
@@ -148,6 +148,6 @@ spec:
       volumes:
       - name: uploads
         persistentVolumeClaim:
-          claimName: quantumvestai-uploads
+          claimName: quantumvestai-pvc
       - name: tmp
         emptyDir: {}

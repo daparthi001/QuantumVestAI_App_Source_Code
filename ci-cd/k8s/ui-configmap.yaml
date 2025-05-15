@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: ui-configmap
-  namespace: NAMESPACE_PLACEHOLDER
+  namespace: dev
 data:
   # UI Configuration
   NODE_ENV: "production"
