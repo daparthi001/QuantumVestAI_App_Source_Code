@@ -108,6 +108,7 @@ jobs:
     - name: Build, tag, and push DB Init Docker image
       working-directory: ai-stock-platform/api
       run: |
+        ls -l
         docker build -t ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:db-init-${IMAGE_TAG}  ./Dockerfile.db-init 
         docker tag ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:db-init-${IMAGE_TAG} ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:db-init-${ENVIRONMENT}-latest
         docker push ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:db-init-${IMAGE_TAG}
