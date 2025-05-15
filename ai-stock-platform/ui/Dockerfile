@@ -1,57 +1,61 @@
-# Base image
-FROM python:3.9-slim as base
+# Build stage for React components
+FROM node:16-alpine AS react-build
 
-# Set working directory
 WORKDIR /app
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=off \
-    PIP_DISABLE_PIP_VERSION_CHECK=on
+# Copy package files for React components
+COPY package.json package-lock.json* ./
+RUN npm ci --silent
+
+# Copy React source files
+COPY src/ src/
+COPY public/ public/
+COPY tsconfig.json .
+COPY .env* ./
+
+# Build React application
+RUN npm run build
+
+# Python runtime stage
+FROM python:3.9-slim
+
+WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
+    nodejs \
+    npm \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Set up Python package structure
+RUN mkdir -p /app/ui/config /app/ui/routes /app/ui/middleware /app/ui/services /app/templates /app/static
+
+# Copy Python package files
+COPY ui/ /app/ui/
+COPY templates/ /app/templates/
+COPY static/ /app/static/
+COPY main.py /app/
+
+# Make scripts executable
+RUN if [ -d "/app/ui/scripts" ]; then chmod +x /app/ui/scripts/*.sh; fi
+
+# Copy requirements and install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project files
-COPY . .
+# Copy the built React files to static directory
+COPY --from=react-build /app/build /app/static/react
 
-# Install the application
-RUN pip install --no-cache-dir
-
-# Build stage for production
-FROM base as production
-
-ENV ENV=production \
-    PORT=8000 \
+# Environment variables (non-sensitive defaults only)
+ENV PORT=3000 \
     HOST=0.0.0.0 \
-    WORKERS=4
+    PYTHONPATH=/app
 
-# Expose the application port
-EXPOSE 8000
+# Expose application port
+EXPOSE 3000
 
-# Set the startup command
-CMD ["./scripts/start.sh"]
-
-# Development stage with additional tools
-FROM base as development
-
-# Install development dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements-dev.txt
-
-ENV ENV=development \
-    DEBUG=true \
-    PORT=8000 \
-    HOST=0.0.0.0
-
-# Set the startup command for development
-CMD ["./scripts/start.sh"]
+# Set the startup command - use direct uvicorn command instead of script
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3000"]

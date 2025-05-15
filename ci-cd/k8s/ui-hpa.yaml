@@ -9,7 +9,7 @@ spec:
     kind: Deployment
     name: ui-deployment
   minReplicas: 2
-  maxReplicas: 8
+  maxReplicas: 10
   metrics:
   - type: Resource
     resource:
@@ -17,6 +17,14 @@ spec:
       target:
         type: Utilization
         averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
   behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
     scaleDown:
       stabilizationWindowSeconds: 300

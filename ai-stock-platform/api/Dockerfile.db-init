@@ -7,6 +7,9 @@ RUN apk add --no-cache python3 py3-pip curl jq aws-cli && \
 # Working directory
 WORKDIR /db-init
 
+# Create necessary directories
+RUN mkdir -p /db-init/api/db/models /db-init/api/core
+
 # Copy database initialization scripts
 COPY db_init/ /db-init/
 COPY alembic/ /db-init/alembic/
@@ -16,10 +19,13 @@ COPY api/db/base_class.py /db-init/api/db/
 COPY api/core/config.py /db-init/api/core/
 
 # Make scripts executable
-RUN chmod +x /db-init/*.py
+RUN find /db-init -name "*.py" -exec chmod +x {} \;
 
 # Entry point script
 COPY scripts/run_db_init.sh /db-init/
 RUN chmod +x /db-init/run_db_init.sh
+
+# Environment variables
+ENV PYTHONPATH=/db-init
 
 ENTRYPOINT ["/db-init/run_db_init.sh"]
