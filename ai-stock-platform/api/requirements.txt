@@ -11,11 +11,17 @@ passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
 email-validator==2.0.0
 httpx==0.24.1
+
+# Scientific and ML libraries - optimized for compatibility
+numpy==1.23.5  # Changed to be compatible with TensorFlow
 pandas==2.0.2
-numpy==1.24.3
 scikit-learn==1.2.2
 tensorflow==2.12.0
+
+# AWS
 boto3==1.26.153
+
+# Twitter integration
 tweepy==4.12.0
 textblob==0.15.3
 nltk==3.8.1
