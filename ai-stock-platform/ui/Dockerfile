@@ -20,7 +20,7 @@ COPY ui/ /app/ui/
 COPY static/ /app/static/
 COPY templates/ /app/templates/
 COPY scripts/ /app/scripts/
-COPY setup.py README.md .env.example .gitignore .dockerignore /app/
+COPY setup.py README.md .env.example /app/
 
 # Make scripts executable
 RUN chmod +x /app/scripts/*.sh
