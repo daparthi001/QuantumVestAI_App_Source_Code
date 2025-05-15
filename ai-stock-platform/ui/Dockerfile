@@ -1,15 +1,15 @@
-# Build stage for React components
+# Build stage for React components (if needed)
 FROM node:16-alpine AS react-build
 
 WORKDIR /app
 
-# Copy package files for React components
-COPY package*.json ./
-RUN npm ci --silent || npm install --silent
+# Copy package files for React components - only if they exist
+COPY package*.json ./ || true
+RUN if [ -f "package.json" ]; then npm ci --silent || npm install --silent; fi
 
-# Copy React source files - only if they exist
-COPY src/ src/ || true
-COPY public/ public/ || true
+# Copy React source files if they exist
+COPY src/ ./src/ || true
+COPY public/ ./public/ || true
 COPY tsconfig*.json ./ || true
 COPY .env* ./ || true
 
@@ -30,31 +30,34 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Set up Python package structure
-RUN mkdir -p /app/config /app/routes /app/middleware /app/services /app/templates /app/static
+# Create the Python package structure that matches your project
+RUN mkdir -p /app/ui/config /app/ui/routes /app/ui/services \
+    /app/ui/utils /app/ui/middleware /app/ui/dependencies \
+    /app/static/css /app/static/js /app/static/img /app/static/vendors \
+    /app/templates /app/templates/admin /app/tests
 
-# Copy Python files - with fallbacks in case directories don't exist
-COPY config/ /app/config/ || true
-COPY dependencies/ /app/dependencies/ || true
-COPY middleware/ /app/middleware/ || true
-COPY routes/ /app/routes/ || true
-COPY scripts/ /app/scripts/ || true
-COPY services/ /app/services/ || true
-COPY templates/ /app/templates/ || true
-COPY static/ /app/static/ || true
+# Copy the UI Python package
+COPY ui/ /app/ui/
 
-# Copy main.py if it exists
-COPY main.py /app/ || true
-COPY app.py /app/ || true  # Alternative main file name
+# Copy static files
+COPY static/ /app/static/
 
-# Make scripts executable if they exist
-RUN if [ -d "/app/scripts" ]; then find /app/scripts -name "*.sh" -exec chmod +x {} \; || true; fi
+# Copy templates
+COPY templates/ /app/templates/
 
-# Copy requirements and install Python dependencies
-COPY requirements*.txt ./ || true
-RUN if [ -f "requirements.txt" ]; then pip install --no-cache-dir -r requirements.txt; elif [ -f "requirements-dev.txt" ]; then pip install --no-cache-dir -r requirements-dev.txt; fi
+# Copy scripts and make them executable
+COPY scripts/ /app/scripts/
+RUN chmod +x /app/scripts/*.sh
 
-# Copy the built React files to static directory
+# Copy additional files
+COPY requirements.txt setup.py README.md /app/
+COPY .env.example /app/.env.example || true
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -e .
+
+# Copy the built React files to static directory if they exist
 COPY --from=react-build /app/build /app/static/react || true
 
 # Environment variables (non-sensitive defaults only)
@@ -65,16 +68,9 @@ ENV PORT=3000 \
 # Expose application port
 EXPOSE 3000
 
-# Determine appropriate startup command
-RUN if [ -f "/app/main.py" ]; then \
-        echo "python -m uvicorn main:app --host 0.0.0.0 --port \${PORT}" > /app/start.sh; \
-    elif [ -f "/app/app.py" ]; then \
-        echo "python -m uvicorn app:app --host 0.0.0.0 --port \${PORT}" > /app/start.sh; \
-    elif [ -d "/app/scripts" ] && [ -f "/app/scripts/start.sh" ]; then \
-        echo "/app/scripts/start.sh" > /app/start.sh; \
+# Set the startup command to use your start.sh script or fall back to running directly
+CMD if [ -f "/app/scripts/start.sh" ]; then \
+        /app/scripts/start.sh; \
     else \
-        echo "python -m uvicorn main:app --host 0.0.0.0 --port \${PORT}" > /app/start.sh; \
-    fi && chmod +x /app/start.sh
-
-# Set the startup command
-CMD ["/bin/bash", "/app/start.sh"]
+        python -m uvicorn ui.main:app --host 0.0.0.0 --port ${PORT}; \
+    fi
