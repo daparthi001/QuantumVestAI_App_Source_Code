@@ -4,14 +4,14 @@ FROM node:16-alpine AS react-build
 WORKDIR /app
 
 # Copy package files for React components - only if they exist
-COPY package*.json ./ || true
+COPY package*.json ./ 2>/dev/null || true
 RUN if [ -f "package.json" ]; then npm ci --silent || npm install --silent; fi
 
 # Copy React source files if they exist
-COPY src/ ./src/ || true
-COPY public/ ./public/ || true
-COPY tsconfig*.json ./ || true
-COPY .env* ./ || true
+COPY src/ ./src/ 2>/dev/null || true
+COPY public/ ./public/ 2>/dev/null || true
+COPY tsconfig*.json ./ 2>/dev/null || true
+COPY .env* ./ 2>/dev/null || true
 
 # Build React application if package.json exists
 RUN if [ -f "package.json" ]; then npm run build || echo "Build failed but continuing"; else mkdir -p build; fi
@@ -45,20 +45,25 @@ COPY static/ /app/static/
 # Copy templates
 COPY templates/ /app/templates/
 
-# Copy scripts and make them executable
-COPY scripts/ /app/scripts/
-RUN chmod +x /app/scripts/*.sh
+# Copy scripts and make them executable (if they exist)
+RUN mkdir -p /app/scripts
+COPY scripts/ /app/scripts/ 2>/dev/null || true
+# If scripts directory exists, make .sh files executable
+RUN find /app/scripts -name "*.sh" -type f -exec chmod +x {} \; 2>/dev/null || true
 
-# Copy additional files
-COPY requirements.txt setup.py README.md /app/
-COPY .env.example /app/.env.example || true
+# Copy additional files - fix for .env.example not found
+COPY requirements.txt /app/
+COPY setup.py /app/ 2>/dev/null || true
+COPY README.md /app/ 2>/dev/null || true
+# Do not copy .env.example since it doesn't exist
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install -e .
+# Only run setup.py if it exists
+RUN if [ -f "/app/setup.py" ]; then pip install -e .; fi
 
 # Copy the built React files to static directory if they exist
-COPY --from=react-build /app/build /app/static/react || true
+COPY --from=react-build /app/build /app/static/react 2>/dev/null || true
 
 # Environment variables (non-sensitive defaults only)
 ENV PORT=3000 \
@@ -68,9 +73,5 @@ ENV PORT=3000 \
 # Expose application port
 EXPOSE 3000
 
-# Set the startup command to use your start.sh script or fall back to running directly
-CMD if [ -f "/app/scripts/start.sh" ]; then \
-        /app/scripts/start.sh; \
-    else \
-        python -m uvicorn ui.main:app --host 0.0.0.0 --port ${PORT}; \
-    fi
+# Fix for CMD JSON format as recommended in warning
+CMD ["sh", "-c", "if [ -f \"/app/scripts/start.sh\" ]; then /app/scripts/start.sh; else python -m uvicorn ui.main:app --host 0.0.0.0 --port ${PORT}; fi"]
