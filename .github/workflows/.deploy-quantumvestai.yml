@@ -88,7 +88,7 @@ jobs:
     - name: Build, tag, and push API Docker image
       working-directory: ai-stock-platform/api
       run: |
-        docker build -t ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:api-${IMAGE_TAG} ./ai-stock-platform/api
+        docker build -t ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:api-${IMAGE_TAG} .
         docker tag ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:api-${IMAGE_TAG} ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:api-${ENVIRONMENT}-latest
         docker push ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:api-${IMAGE_TAG}
         docker push ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:api-${ENVIRONMENT}-latest
@@ -98,7 +98,7 @@ jobs:
     - name: Build, tag, and push UI Docker image
       working-directory: ai-stock-platform/ui
       run: |
-        docker build -t ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:ui-${IMAGE_TAG} ./ai-stock-platform/ui
+        docker build -t ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:ui-${IMAGE_TAG} .
         docker tag ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:ui-${IMAGE_TAG} ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:ui-${ENVIRONMENT}-latest
         docker push ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:ui-${IMAGE_TAG}
         docker push ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:ui-${ENVIRONMENT}-latest
@@ -108,7 +108,7 @@ jobs:
     - name: Build, tag, and push DB Init Docker image
       working-directory: ai-stock-platform/api
       run: |
-        docker build -t ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:db-init-${IMAGE_TAG} -f ./ai-stock-platform/api/Dockerfile.db-init ./ai-stock-platform/api
+        docker build -t ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:db-init-${IMAGE_TAG} -f ./Dockerfile.db-init 
         docker tag ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:db-init-${IMAGE_TAG} ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:db-init-${ENVIRONMENT}-latest
         docker push ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:db-init-${IMAGE_TAG}
         docker push ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:db-init-${ENVIRONMENT}-latest
