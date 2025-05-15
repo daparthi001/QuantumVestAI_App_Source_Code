@@ -45,7 +45,7 @@ CMD ["./scripts/start.sh"]
 FROM base as development
 
 # Install development dependencies
-COPY requirements-dev.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements-dev.txt
 
 ENV ENV=development \
