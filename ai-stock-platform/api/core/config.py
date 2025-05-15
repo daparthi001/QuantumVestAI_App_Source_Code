@@ -4,6 +4,15 @@ import os
 from datetime import timedelta
 
 class Settings(BaseSettings):
+    # ... existing settings ...
+    
+    # Twitter API settings
+    twitter_consumer_key: Optional[str] = None
+    twitter_consumer_secret: Optional[str] = None
+    twitter_access_token: Optional[str] = None
+    twitter_access_secret: Optional[str] = None
+	
+class Settings(BaseSettings):
     # Application settings
     APP_NAME: str = "QuantumVestAI API"
     ENVIRONMENT: str = "development"

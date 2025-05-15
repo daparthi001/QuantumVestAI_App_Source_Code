@@ -184,6 +184,7 @@ jobs:
         kubectl apply -f namespace.yaml
         kubectl apply -f pvc.yaml -n ${{ env.ENVIRONMENT }}
         kubectl apply -f service-account.yaml -n ${{ env.ENVIRONMENT }}
+        kubectl apply -f models-pvc.yaml -n ${{ env.ENVIRONMENT }}
         
         # Apply API resources
         kubectl apply -f api-configmap.yaml -n ${{ env.ENVIRONMENT }}
@@ -201,6 +202,8 @@ jobs:
         
         # Apply cron jobs and other resources
         kubectl apply -f db-health-check-cronjob.yaml -n ${{ env.ENVIRONMENT }}
+        # Apply the Twitter secrets template (will be populated with actual secrets earlier)
+        kubectl apply -f twitter-secrets.yaml -n ${{ env.ENVIRONMENT }}
 
     # Database initialization job
     - name: Run Database Initialization

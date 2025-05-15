@@ -73,6 +73,27 @@ spec:
             secretKeyRef:
               name: quantumvestai-cluster-rds-credentials
               key: dbname
+        # Twitter API credentials from dedicated secret
+        - name: TWITTER_CONSUMER_KEY
+          valueFrom:
+            secretKeyRef:
+              name: twitter-secrets
+              key: TWITTER_CONSUMER_KEY
+        - name: TWITTER_CONSUMER_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: twitter-secrets
+              key: TWITTER_CONSUMER_SECRET
+        - name: TWITTER_ACCESS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: twitter-secrets
+              key: TWITTER_ACCESS_TOKEN
+        - name: TWITTER_ACCESS_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: twitter-secrets
+              key: TWITTER_ACCESS_SECRET
         # Application secrets from the GitHub Action created secret
         - name: JWT_SECRET
           valueFrom:

@@ -1,0 +1,92 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: model-retrain-job
+  namespace: NAMESPACE_PLACEHOLDER
+  labels:
+    app: quantumvestai
+    component: ml-training
+spec:
+  schedule: "0 2 * * 0"  # Run weekly on Sunday at 2:00 AM UTC
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 14400  # 4 hours timeout
+      template:
+        metadata:
+          labels:
+            app: quantumvestai
+            component: ml-training
+        spec:
+          serviceAccountName: quantumvestai-sa
+          restartPolicy: Never
+          containers:
+          - name: model-trainer
+            image: API_IMAGE_PLACEHOLDER
+            imagePullPolicy: Always
+            command: ["python", "-m", "app.ml.train_models"]
+            args: ["--full-retrain", "--all-models"]
+            resources:
+              requests:
+                cpu: "1000m"
+                memory: "4Gi"
+              limits:
+                cpu: "2000m"
+                memory: "8Gi"
+            env:
+              # Database credentials from Terraform-created secret
+              - name: POSTGRES_USER
+                valueFrom:
+                  secretKeyRef:
+                    name: quantumvestai-cluster-rds-credentials
+                    key: username
+              - name: POSTGRES_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: quantumvestai-cluster-rds-credentials
+                    key: password
+              - name: POSTGRES_SERVER
+                valueFrom:
+                  secretKeyRef:
+                    name: quantumvestai-cluster-rds-credentials
+                    key: host
+              - name: POSTGRES_PORT
+                valueFrom:
+                  secretKeyRef:
+                    name: quantumvestai-cluster-rds-credentials
+                    key: port
+              - name: POSTGRES_DB
+                valueFrom:
+                  secretKeyRef:
+                    name: quantumvestai-cluster-rds-credentials
+                    key: dbname
+              # Environment variables
+              - name: ENVIRONMENT
+                valueFrom:
+                  configMapKeyRef:
+                    name: api-configmap
+                    key: ENVIRONMENT
+              - name: AWS_REGION
+                valueFrom:
+                  configMapKeyRef:
+                    name: api-configmap
+                    key: AWS_REGION
+              - name: MODELS_STORAGE_PATH
+                value: "/app/models"
+              - name: S3_MODEL_BUCKET
+                value: "quantumvestai-models-NAMESPACE_PLACEHOLDER"
+              # API keys from app-secrets
+              - name: ALPHA_VANTAGE_API_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: app-secrets
+                    key: ALPHA_VANTAGE_API_KEY
+            volumeMounts:
+            - name: models-storage
+              mountPath: /app/models
+          volumes:
+          - name: models-storage
+            persistentVolumeClaim:
+              claimName: models-storage
