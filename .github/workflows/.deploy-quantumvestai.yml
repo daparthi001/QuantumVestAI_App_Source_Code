@@ -183,7 +183,6 @@ jobs:
       working-directory: ci-cd/k8s
       run: |
         # Apply shared resources
-        kubectl apply -f namespace.yaml
         kubectl apply -f pvc.yaml -n ${{ env.ENVIRONMENT }}
         kubectl apply -f service-account.yaml -n ${{ env.ENVIRONMENT }}
         kubectl apply -f models-pvc.yaml -n ${{ env.ENVIRONMENT }}
