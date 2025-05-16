@@ -3,7 +3,7 @@ from typing import Optional, List, Dict, Any, Generator, Annotated
 from sqlalchemy.orm import Session
 
 from api.db.session import get_db
-from api.core.security import (
+from api.core.security_utils import (
     get_current_user, get_current_active_user, get_current_admin_user, oauth2_scheme
 )
 from api.db.models.user import User

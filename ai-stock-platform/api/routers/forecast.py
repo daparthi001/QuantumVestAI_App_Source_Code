@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Path, status
 from sqlalchemy.orm import Session
 from typing import Optional, Dict, Any
 
-from api.core.security import get_optional_current_user, get_current_user
+from api.core.security_utils import get_optional_current_user, get_current_user
 from api.core.config import settings
 from api.core.exceptions import ResourceNotFoundError, PermissionDeniedError
 from api.db.session import get_db
