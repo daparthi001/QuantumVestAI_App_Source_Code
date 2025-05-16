@@ -14,7 +14,7 @@ from routes.predictability import router as predictability_router
 from middleware.auth_middleware import AuthMiddleware
 # or
 from middleware.auth_middleware import AuthenticationMiddleware
-
+from middleware.error_handlers import setup_error_handlers
 # Create FastAPI app
 app = FastAPI(title="QuantumVestAI UI")
 
