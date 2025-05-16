@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: quantumvestai-ui-ingress
+  name: quantumvestai
   annotations:
     # Basic ALB settings
     kubernetes.io/ingress.class: alb
@@ -9,22 +9,22 @@ metadata:
     alb.ingress.kubernetes.io/target-type: ip
     
     # SSL/TLS configuration
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
-    alb.ingress.kubernetes.io/ssl-redirect: '443'
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:<YOUR-REGION>:<YOUR-ACCOUNT-ID>:certificate/<CERTIFICATE-ID>
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}'
+    #alb.ingress.kubernetes.io/ssl-redirect: '443'
+    #alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:<YOUR-REGION>:<YOUR-ACCOUNT-ID>:certificate/<CERTIFICATE-ID>
     
     # Security groups and subnets
     alb.ingress.kubernetes.io/security-groups: <SECURITY-GROUP-ID>
     alb.ingress.kubernetes.io/subnets: <SUBNET-ID-1>,<SUBNET-ID-2>,<SUBNET-ID-3>
     
     # Performance optimizations
-    alb.ingress.kubernetes.io/load-balancer-attributes: >-
-      routing.http.drop_invalid_header_fields.enabled=true,
-      idle_timeout.timeout_seconds=60,
-      deletion_protection.enabled=true,
-      access_logs.s3.enabled=true,
-      access_logs.s3.bucket=quantumvestai-logs,
-      access_logs.s3.prefix=alb-logs
+    # alb.ingress.kubernetes.io/load-balancer-attributes: >-
+    #   routing.http.drop_invalid_header_fields.enabled=true,
+    #   idle_timeout.timeout_seconds=60,
+    #   deletion_protection.enabled=true,
+    #   access_logs.s3.enabled=true,
+    #   access_logs.s3.bucket=quantumvestai-logs,
+    #   access_logs.s3.prefix=alb-logs
     
     # Health check settings
     alb.ingress.kubernetes.io/healthcheck-path: /health
@@ -40,7 +40,7 @@ metadata:
     alb.ingress.kubernetes.io/tags: Environment=production,Project=QuantumVestAI
 spec:
   rules:
-  - host: quantumvestai.yourdomain.com
+  - host: quantumvestai.com
     http:
       paths:
       - path: /

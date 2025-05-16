@@ -28,7 +28,7 @@ RUN chmod +x /app/scripts/*.sh
 # Set environment variables
 ENV PORT=3000 \
     HOST=0.0.0.0 \
-    PYTHONPATH=/app
+    PYTHONPATH=/app/ui
 
 # Expose port
 EXPOSE 3000
