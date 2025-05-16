@@ -9,7 +9,7 @@ from api.routers import (
 from api.core.config import settings
 from api.core.security.rds import validate_rds_connection
 from api.core.db_init import initialize_database
-from app.services.twitter_sentiment_scheduler import TwitterSentimentScheduler
+from api.services.twitter_sentiment_scheduler import TwitterSentimentScheduler  # <== fixed import
 
 logger = logging.getLogger(__name__)
 
