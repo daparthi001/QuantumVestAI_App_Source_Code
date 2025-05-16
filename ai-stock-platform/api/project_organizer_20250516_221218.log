@@ -1,0 +1,142 @@
+2025-05-16 17:12:18,156 - INFO - Starting project organization in /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api
+2025-05-16 17:12:18,273 - INFO - Created backup at /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/backup_20250516_221218
+2025-05-16 17:12:18,273 - INFO - Keeping main.py in root directory
+2025-05-16 17:12:18,273 - INFO - Keeping __init__.py in root directory
+2025-05-16 17:12:18,274 - INFO - Created directory /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/config
+2025-05-16 17:12:18,274 - INFO - Moved /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/.env.example to /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/config/.env.example
+2025-05-16 17:12:18,274 - INFO - Moved /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/.env.template to /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/config/.env.template
+2025-05-16 17:12:18,275 - INFO - Moved /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/alembic.ini to /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/config/alembic.ini
+2025-05-16 17:12:18,275 - INFO - Moved /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/pyproject.toml to /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/config/pyproject.toml
+2025-05-16 17:12:18,275 - INFO - Moved /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/requirements.txt to /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/config/requirements.txt
+2025-05-16 17:12:18,275 - INFO - Moved /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/setup.py to /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/config/setup.py
+2025-05-16 17:12:18,276 - INFO - Created /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/config/__init__.py
+2025-05-16 17:12:18,276 - INFO - Created directory /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/docker
+2025-05-16 17:12:18,276 - INFO - Moved /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/Dockerfile to /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/docker/Dockerfile
+2025-05-16 17:12:18,277 - INFO - Moved /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/Dockerfile.db-init to /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/docker/Dockerfile.db-init
+2025-05-16 17:12:18,277 - INFO - Moved /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/docker-compose.yml to /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/docker/docker-compose.yml
+2025-05-16 17:12:18,277 - INFO - Moved /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/build-db-init.sh to /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/scripts/build-db-init.sh
+2025-05-16 17:12:18,277 - INFO - Moved /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/deploy-to-eks.sh to /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/scripts/deploy-to-eks.sh
+2025-05-16 17:12:18,278 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/init_local_db.sh does not exist
+2025-05-16 17:12:18,278 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/run_db_init.sh does not exist
+2025-05-16 17:12:18,278 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/run_db_init_job.sh does not exist
+2025-05-16 17:12:18,278 - INFO - Created directory /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/policies
+2025-05-16 17:12:18,278 - INFO - Moved /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/iam-policy.json to /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/policies/iam-policy.json
+2025-05-16 17:12:18,279 - INFO - Moved /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/rds_connect_policy.json to /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/policies/rds_connect_policy.json
+2025-05-16 17:12:18,279 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/admin.py does not exist
+2025-05-16 17:12:18,279 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/auth.py does not exist
+2025-05-16 17:12:18,279 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/data.py does not exist
+2025-05-16 17:12:18,279 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/forecast.py does not exist
+2025-05-16 17:12:18,279 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/sentiment.py does not exist
+2025-05-16 17:12:18,280 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/stocks.py does not exist
+2025-05-16 17:12:18,280 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/users.py does not exist
+2025-05-16 17:12:18,280 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/watchlist.py does not exist
+2025-05-16 17:12:18,280 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/whitepaper.py does not exist
+2025-05-16 17:12:18,281 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/config.py does not exist
+2025-05-16 17:12:18,281 - INFO - Created /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/api/core/__init__.py
+2025-05-16 17:12:18,281 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/predictions.py does not exist
+2025-05-16 17:12:18,281 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/social.py does not exist
+2025-05-16 17:12:18,282 - INFO - Created /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/api/endpoints/__init__.py
+2025-05-16 17:12:18,282 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/stock.py does not exist
+2025-05-16 17:12:18,282 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/stock_forecast.py does not exist
+2025-05-16 17:12:18,282 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/user.py does not exist
+2025-05-16 17:12:18,282 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/user_activity_log.py does not exist
+2025-05-16 17:12:18,283 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/watchlist.py does not exist
+2025-05-16 17:12:18,283 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/watchlist_stock.py does not exist
+2025-05-16 17:12:18,283 - INFO - Created /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/api/db/models/__init__.py
+2025-05-16 17:12:18,283 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/cache.py does not exist
+2025-05-16 17:12:18,284 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/config.py does not exist
+2025-05-16 17:12:18,284 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/db_init.py does not exist
+2025-05-16 17:12:18,284 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/deps.py does not exist
+2025-05-16 17:12:18,284 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/exceptions.py does not exist
+2025-05-16 17:12:18,284 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/logging_config.py does not exist
+2025-05-16 17:12:18,284 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/middleware.py does not exist
+2025-05-16 17:12:18,284 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/security.py does not exist
+2025-05-16 17:12:18,285 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/rds.py does not exist
+2025-05-16 17:12:18,286 - INFO - Created /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/core/security/__init__.py
+2025-05-16 17:12:18,286 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/cache.py does not exist
+2025-05-16 17:12:18,286 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/config.py does not exist
+2025-05-16 17:12:18,286 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/db_init.py does not exist
+2025-05-16 17:12:18,286 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/deps.py does not exist
+2025-05-16 17:12:18,286 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/exceptions.py does not exist
+2025-05-16 17:12:18,287 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/logging_config.py does not exist
+2025-05-16 17:12:18,287 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/middleware.py does not exist
+2025-05-16 17:12:18,287 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/security.py does not exist
+2025-05-16 17:12:18,287 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/base_class.py does not exist
+2025-05-16 17:12:18,287 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/rds_session.py does not exist
+2025-05-16 17:12:18,288 - INFO - Created /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/db/__init__.py
+2025-05-16 17:12:18,288 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/stock.py does not exist
+2025-05-16 17:12:18,288 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/user.py does not exist
+2025-05-16 17:12:18,288 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/whitepaper.py does not exist
+2025-05-16 17:12:18,289 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/base_class.py does not exist
+2025-05-16 17:12:18,289 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/rds_session.py does not exist
+2025-05-16 17:12:18,289 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/01_create_database.sql does not exist
+2025-05-16 17:12:18,289 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/01_create_tables.sql does not exist
+2025-05-16 17:12:18,289 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/01_seed_data.py does not exist
+2025-05-16 17:12:18,289 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/02_reference_data.sql does not exist
+2025-05-16 17:12:18,290 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/03_create_admin.py does not exist
+2025-05-16 17:12:18,290 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/04_seed_sample_data.py does not exist
+2025-05-16 17:12:18,290 - INFO - Created /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/db_init/__init__.py
+2025-05-16 17:12:18,290 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/README does not exist
+2025-05-16 17:12:18,290 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/env.py does not exist
+2025-05-16 17:12:18,291 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/script.py.mako does not exist
+2025-05-16 17:12:18,291 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/cache.py does not exist
+2025-05-16 17:12:18,291 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/config.py does not exist
+2025-05-16 17:12:18,291 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/db_init.py does not exist
+2025-05-16 17:12:18,291 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/deps.py does not exist
+2025-05-16 17:12:18,291 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/exceptions.py does not exist
+2025-05-16 17:12:18,292 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/logging_config.py does not exist
+2025-05-16 17:12:18,292 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/middleware.py does not exist
+2025-05-16 17:12:18,292 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/security_utils.py does not exist
+2025-05-16 17:12:18,292 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/rds.py does not exist
+2025-05-16 17:12:18,293 - INFO - Created /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/alembic/core/security_pkg/__init__.py
+2025-05-16 17:12:18,293 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/cache.py does not exist
+2025-05-16 17:12:18,293 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/config.py does not exist
+2025-05-16 17:12:18,293 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/db_init.py does not exist
+2025-05-16 17:12:18,293 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/deps.py does not exist
+2025-05-16 17:12:18,294 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/exceptions.py does not exist
+2025-05-16 17:12:18,294 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/logging_config.py does not exist
+2025-05-16 17:12:18,294 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/middleware.py does not exist
+2025-05-16 17:12:18,294 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/security_utils.py does not exist
+2025-05-16 17:12:18,294 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/0001_initial_schema.py does not exist
+2025-05-16 17:12:18,295 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/20250515_initial_schema.py does not exist
+2025-05-16 17:12:18,295 - INFO - Created /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/alembic/versions/__init__.py
+2025-05-16 17:12:18,295 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/stock.py does not exist
+2025-05-16 17:12:18,295 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/user.py does not exist
+2025-05-16 17:12:18,296 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/whitepaper.py does not exist
+2025-05-16 17:12:18,296 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/README does not exist
+2025-05-16 17:12:18,296 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/env.py does not exist
+2025-05-16 17:12:18,296 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/script.py.mako does not exist
+2025-05-16 17:12:18,297 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/models.py does not exist
+2025-05-16 17:12:18,297 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/train_models.py does not exist
+2025-05-16 17:12:18,297 - INFO - Created /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/ml/__init__.py
+2025-05-16 17:12:18,298 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/arima.py does not exist
+2025-05-16 17:12:18,298 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/base.py does not exist
+2025-05-16 17:12:18,298 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/ensemble.py does not exist
+2025-05-16 17:12:18,298 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/finbert_sentiment.py does not exist
+2025-05-16 17:12:18,298 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/lstm.py does not exist
+2025-05-16 17:12:18,298 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/prophet.py does not exist
+2025-05-16 17:12:18,299 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/xgboost_model.py does not exist
+2025-05-16 17:12:18,299 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/arima.py does not exist
+2025-05-16 17:12:18,299 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/base.py does not exist
+2025-05-16 17:12:18,299 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/ensemble.py does not exist
+2025-05-16 17:12:18,300 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/finbert_sentiment.py does not exist
+2025-05-16 17:12:18,300 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/lstm.py does not exist
+2025-05-16 17:12:18,300 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/prophet.py does not exist
+2025-05-16 17:12:18,300 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/xgboost_model.py does not exist
+2025-05-16 17:12:18,300 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/prediction.py does not exist
+2025-05-16 17:12:18,301 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/stock.py does not exist
+2025-05-16 17:12:18,301 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/token.py does not exist
+2025-05-16 17:12:18,301 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/user.py does not exist
+2025-05-16 17:12:18,301 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/watchlist.py does not exist
+2025-05-16 17:12:18,301 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/whitepaper.py does not exist
+2025-05-16 17:12:18,301 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/data_service.py does not exist
+2025-05-16 17:12:18,301 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/forecast_service.py does not exist
+2025-05-16 17:12:18,302 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/twitter_service.py does not exist
+2025-05-16 17:12:18,302 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/twitter_sentiment_scheduler.py does not exist
+2025-05-16 17:12:18,302 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/data_loader.py does not exist
+2025-05-16 17:12:18,302 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/feature_engineering.py does not exist
+2025-05-16 17:12:18,302 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/logging.py does not exist
+2025-05-16 17:12:18,302 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/pipeline.py does not exist
+2025-05-16 17:12:18,303 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/validators.py does not exist
+2025-05-16 17:12:18,303 - WARNING - Source file /Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/api/whitepaper_analysis.py does not exist
+2025-05-16 17:12:18,303 - INFO - Project organization completed successfully
