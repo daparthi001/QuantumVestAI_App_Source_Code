@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Optional, Union
 from pydantic_settings import BaseSettings
 from pydantic import AnyHttpUrl, PostgresDsn, validator
 
-
 class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     SECRET_KEY: str = secrets.token_urlsafe(32)
@@ -36,14 +35,13 @@ class Settings(BaseSettings):
     def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
         if isinstance(v, str):
             return v
-        return PostgresDsn.build(
-            scheme="postgresql",
-            user=values.get("POSTGRES_USER"),
-            password=values.get("POSTGRES_PASSWORD"),
-            host=values.get("POSTGRES_SERVER"),
-            port=values.get("POSTGRES_PORT"),
-            path=f"/{values.get('POSTGRES_DB') or ''}",
-        )
+        user = values.get("POSTGRES_USER")
+        password = values.get("POSTGRES_PASSWORD")
+        host = values.get("POSTGRES_SERVER")
+        port = values.get("POSTGRES_PORT")
+        db = values.get("POSTGRES_DB")
+        # Assemble the DSN string manually for Pydantic v2 compatibility
+        return f"postgresql://{user}:{password}@{host}:{port}/{db}"
 
     class Config:
         case_sensitive = True
