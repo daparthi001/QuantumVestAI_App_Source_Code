@@ -9,13 +9,13 @@ metadata:
     alb.ingress.kubernetes.io/target-type: ip
     
     # SSL/TLS configuration
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}'
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
     #alb.ingress.kubernetes.io/ssl-redirect: '443'
     #alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:<YOUR-REGION>:<YOUR-ACCOUNT-ID>:certificate/<CERTIFICATE-ID>
     
     # Security groups and subnets
-    alb.ingress.kubernetes.io/security-groups: <SECURITY-GROUP-ID>
-    alb.ingress.kubernetes.io/subnets: <SUBNET-ID-1>,<SUBNET-ID-2>,<SUBNET-ID-3>
+    #alb.ingress.kubernetes.io/security-groups: <SECURITY-GROUP-ID>
+    alb.ingress.kubernetes.io/subnets: subnet-059291c36248c77a2,subnet-02026a49b5dbee617,subnet-0289ef733cc39a302
     
     # Performance optimizations
     # alb.ingress.kubernetes.io/load-balancer-attributes: >-
@@ -37,7 +37,7 @@ metadata:
     alb.ingress.kubernetes.io/target-group-attributes: stickiness.enabled=true,stickiness.lb_cookie.duration_seconds=86400
     
     # Additional tags for cost tracking
-    alb.ingress.kubernetes.io/tags: Environment=production,Project=QuantumVestAI
+    alb.ingress.kubernetes.io/tags: Environment=dev,Project=QuantumVestAI
 spec:
   rules:
   - host: quantumvestai.com

@@ -1,5 +1,7 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 import logging
+import os
+from typing import Optional
 from api.routers import (
     auth, users, stocks, forecast, watchlist, 
     admin, sentiment, data, whitepaper
@@ -33,8 +35,8 @@ twitter_scheduler: Optional[TwitterSentimentScheduler] = None
 
 @app.on_event("startup")
 async def startup_events():
-    # Start existing services
-    # ...
+    # Initialize database
+    initialize_database()
     
     # Check if Twitter credentials are configured
     twitter_credentials_configured = all([

@@ -6,9 +6,9 @@ metadata:
     alb.ingress.kubernetes.io/target-group-attributes: deregistration_delay.timeout_seconds=30
 spec:
   selector:
-    app: quantumvestai-ui
+    app: quantumvestai
   ports:
   - port: 80
     targetPort: 3000
     protocol: TCP
-  type: NodePort  # ALB Ingress works best with NodePort or ClusterIP
+  type: ClusterIP  # ALB Ingress works best with NodePort or ClusterIP

@@ -28,7 +28,7 @@ spec:
         image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:ui-dev-latest
         imagePullPolicy: Always
         ports:
-        - containerPort: 8000
+        - containerPort: 3000
         env:
         # Kubernetes secrets
         - name: JWT_SECRET_KEY
