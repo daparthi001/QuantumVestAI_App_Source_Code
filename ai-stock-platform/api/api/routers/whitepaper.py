@@ -9,7 +9,7 @@ from datetime import datetime
 from api.db.session import get_db
 from api.db.models.user import User
 from api.db.models.whitepaper import Whitepaper, WhitepaperAnalysis
-from api.core.security_utils import get_current_user
+from api.core.security import get_current_user
 from api.utils.whitepaper_analysis import WhitepaperAnalyzer
 from api.schemas.whitepaper import (
     WhitepaperCreate, 

@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 
 from api.core.config import settings
-from api.core.security_utils import (
+from api.core.security import (
     get_password_hash, verify_password, create_access_token,
     get_current_user
 )
