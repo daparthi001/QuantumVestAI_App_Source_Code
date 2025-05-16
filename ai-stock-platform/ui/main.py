@@ -33,6 +33,10 @@ app.add_middleware(AuthMiddleware)
 # Setup error handlers
 setup_error_handlers(app)
 
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
