@@ -5,8 +5,8 @@ metadata:
   namespace: dev
 spec:
   accessModes:
-    - ReadWriteMany
-  storageClassName: efs-sc
+    - ReadWriteOnce
+  storageClassName: ebs-sc
   resources:
     requests:
       storage: 10Gi
