@@ -1,63 +1,82 @@
+"""
+Application configuration settings.
+Created: 2025-05-17 14:49:00
+Author: daparthi001
+"""
+from typing import Any, Dict, List, Optional, Union
+from pydantic import (
+    AnyHttpUrl,
+    PostgresDsn,
+    field_validator
+)
 from pydantic_settings import BaseSettings
-from typing import List, Union, Optional
 import os
-from datetime import timedelta
+from functools import lru_cache
 
 class Settings(BaseSettings):
-    # ... existing settings ...
+    # API Settings
+    API_V1_STR: str = "/api/v1"
+    PROJECT_NAME: str = "QuantumVestAI"
+    VERSION: str = "1.0.0"
+    DEBUG: bool = False
     
-    # Twitter API settings
-    twitter_consumer_key: Optional[str] = None
-    twitter_consumer_secret: Optional[str] = None
-    twitter_access_token: Optional[str] = None
-    twitter_access_secret: Optional[str] = None
-	
-class Settings(BaseSettings):
-    # Application settings
-    APP_NAME: str = "QuantumVestAI API"
-    ENVIRONMENT: str = "development"
-    DEBUG: bool = True
-    HOST: str = "0.0.0.0"
-    PORT: int = 5000
-    API_PREFIX: str = "/api"
-    
-    # Security
+    # Security - Read from Kubernetes secrets
     SECRET_KEY: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
-    
-    # Database
-    DATABASE_URL: str
-    DB_POOL_SIZE: int = 5
-    DB_MAX_OVERFLOW: int = 10
-    DB_ECHO: bool = False
     
     # CORS
-    CORS_ORIGINS: List[str] = ["http://localhost:8000", "http://localhost:3000"]
+    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
     
-    # API Keys for external data sources
-    ALPHA_VANTAGE_API_KEY: Optional[str] = None
-    YAHOO_FINANCE_API_KEY: Optional[str] = None
+    @field_validator("BACKEND_CORS_ORIGINS", pre=True)
+    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",")]
+        elif isinstance(v, (list, str)):
+            return v
+        raise ValueError(v)
     
-    # Redis (for caching and rate limiting)
-    REDIS_URL: Optional[str] = None
+    # Database - Read from Kubernetes secrets
+    POSTGRES_SERVER: str
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_DB: str
+    POSTGRES_PORT: str
+    SQLALCHEMY_DATABASE_URI: Optional[PostgresDsn] = None
+
+    @field_validator("SQLALCHEMY_DATABASE_URI", mode='before')
+    def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
+        if isinstance(v, str):
+            return v
+        return PostgresDsn.build(
+            scheme="postgresql",
+            username=values.get("POSTGRES_USER"),
+            password=values.get("POSTGRES_PASSWORD"),
+            host=values.get("POSTGRES_SERVER"),
+            port=values.get("POSTGRES_PORT"),
+            path=f"/{values.get('POSTGRES_DB') or ''}"
+        )
     
-    # Rate limiting
-    RATE_LIMIT_DEFAULT: str = "100/minute"  # Default rate limit
-    RATE_LIMIT_AUTH: str = "20/minute"      # Auth endpoints rate limit
+    # Redis - Read from Kubernetes secrets
+    REDIS_HOST: str
+    REDIS_PORT: int
+    REDIS_PASSWORD: Optional[str]
     
-    # Model settings
-    DEFAULT_FORECAST_DAYS: int = 7
-    MAX_FORECAST_DAYS: int = 90
-    MODEL_CACHE_TTL: int = 3600  # 1 hour
+    # AWS - Using IAM roles, no credentials needed
+    S3_BUCKET: str = os.getenv("S3_BUCKET", "quantumvest-files")
+    AWS_REGION: str = os.getenv("AWS_REGION", "us-east-1")
     
-    # Feature toggles
-    ENABLE_BACKTESTING: bool = True
-    ENABLE_REALTIME_UPDATES: bool = True
-    ENABLE_SENTIMENT_ANALYSIS: bool = True
+    # Logging
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     
     class Config:
-        env_file = ".env"
         case_sensitive = True
 
-settings = Settings()
+@lru_cache()
+def get_settings() -> Settings:
+    """
+    Get cached settings instance.
+    """
+    return Settings()
+
+settings = get_settings()

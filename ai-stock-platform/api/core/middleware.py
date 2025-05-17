@@ -1,6 +1,6 @@
 from fastapi import Request, Response
-from fastapi.responses import JSONResponse
-import time
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
 import logging
 from typing import Callable, Awaitable
 

@@ -1,9 +1,11 @@
-from fastapi import HTTPException, status
-from typing import Optional
+"""
+Custom exceptions for the API.
+"""
+from fastapi import HTTPException
+from typing import Any, Dict, Optional
 
-class APIException(HTTPException):
-    """Base exception for API errors with error code."""
-    
+class APIError(HTTPException):
+    """Base API exception."""
     def __init__(
         self,
         status_code: int,
