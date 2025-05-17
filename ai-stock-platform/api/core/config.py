@@ -1,6 +1,6 @@
 """
 Application configuration settings
-Created: 2025-05-17 15:02:07 UTC
+Created: 2025-05-17 15:28:06 UTC
 Author: daparthi001
 """
 from typing import Any, Dict, List, Optional, Union
@@ -8,7 +8,8 @@ from pydantic import (
     BaseSettings,
     AnyHttpUrl,
     PostgresDsn,
-    validator
+    validator,
+    EmailStr
 )
 import os
 from functools import lru_cache
@@ -68,7 +69,6 @@ class Settings(BaseSettings):
     
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
-    LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     
     class Config:
         case_sensitive = True
@@ -78,9 +78,10 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """
     Get cached settings instance.
-    Created: 2025-05-17 15:11:46 UTC
+    Created: 2025-05-17 15:28:06 UTC
     Author: daparthi001
     """
     return Settings()
 
+# Create settings instance
 settings = get_settings()

@@ -1,19 +1,25 @@
+# Core dependencies
 fastapi==0.95.0
 uvicorn==0.21.1
+pydantic[email]==1.10.7  # Fixed typo from 'ydantic' to 'pydantic'
 sqlalchemy==2.0.9
-pydantic==1.10.7  # Using older version of pydantic
+
+# Authentication & Security
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
-python-dotenv==1.0.0
+
+# Database
 psycopg2-binary==2.9.6
+alembic==1.10.3
+
+# Caching
 redis==4.5.4
+
+# AWS
 boto3==1.26.137
+
+# Utilities
+python-dotenv==1.0.0
 python-json-logger==2.0.7
-alembic>=1.10.3
-ydantic[email]>=1.10.7
-psycopg2-binary>=2.9.6
-pandas>=2.0.0
-numpy>=1.24.2
-scikit-learn>=1.2.2
-python-dateutil>=2.8.2
+email-validator==2.0.0  # Added for pydantic email validation
