@@ -1,24 +1,31 @@
 """
-Database session configuration.
+Database session handling
 """
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from typing import Generator
-from pathlib import Path
+from functools import lru_cache
 
-from api.core.config import settings  # Changed to absolute import
+from api.core.config import settings
 
-# Database URL - update this with your actual database URL
-DATABASE_URL = "sqlite:///./test.db"  # For development, replace with your actual database URL
+@lru_cache()
+def create_engine_instance():
+    return create_engine(
+        settings.SQLALCHEMY_DATABASE_URI,
+        pool_pre_ping=True,
+        pool_size=32,
+        max_overflow=64,
+        echo=settings.SQL_ECHO
+    )
 
-# Create SQLAlchemy engine
-engine = create_engine(
-    settings.SQLALCHEMY_DATABASE_URI,
-    pool_pre_ping=True
-)
-
-# Create SessionLocal class
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+@lru_cache()
+def create_session_factory():
+    engine = create_engine_instance()
+    return sessionmaker(
+        autocommit=False,
+        autoflush=False,
+        bind=engine
+    )
 
 def get_db() -> Generator[Session, None, None]:
     """
@@ -27,6 +34,7 @@ def get_db() -> Generator[Session, None, None]:
     Yields:
         Session: SQLAlchemy database session
     """
+    SessionLocal = create_session_factory()
     db = SessionLocal()
     try:
         yield db

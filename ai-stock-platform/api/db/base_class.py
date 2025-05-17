@@ -1,19 +1,28 @@
 """
-SQLAlchemy Base Model Definition
-Created: 2025-05-15 21:07:36 (UTC)
-Author: daparthi001
+SQLAlchemy base class for all models
 """
-from sqlalchemy.ext.declarative import declarative_base
+from datetime import datetime
 from sqlalchemy import Column, DateTime
-from sqlalchemy.sql import func
+from sqlalchemy.ext.declarative import declared_attr
+from typing import Any
 
-# Create a Base class for SQLAlchemy models
-Base = declarative_base()
+from api.db.base import Base
 
 class TimestampMixin:
-    """
-    Mixin to add created_at and updated_at timestamp columns
-    to SQLAlchemy models
-    """
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    """Mixin for created_at and updated_at columns."""
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime, 
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False
+    )
+
+class BaseDBModel(Base):
+    """Base class for all database models."""
+    __abstract__ = True
+    
+    @declared_attr
+    def __tablename__(cls) -> str:
+        """Generate __tablename__ automatically from class name."""
+        return cls.__name__.lower()

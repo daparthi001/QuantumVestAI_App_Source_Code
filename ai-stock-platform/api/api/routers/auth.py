@@ -1,214 +1,171 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Body, Response, Request
-from fastapi.security import OAuth2PasswordRequestForm
-from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
+"""
+Authentication router for user login, registration, and account management.
+Created: 2025-05-17 14:29:46 UTC
+Author: daparthi001
+"""
 from datetime import datetime, timedelta
-from typing import Dict, Any, Optional
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+from typing import Any
 
 from api.core.config import settings
 from api.core.security import (
-    get_password_hash, verify_password, create_access_token,
-    get_current_user
+    create_access_token,
+    get_password_hash,
+    verify_password
 )
-from api.core.exceptions import AuthenticationError, ValidationError
-from api.db.session import get_db
-from api.db.models.user import User
-from api.schemas.token import Token
-from api.schemas.user import UserCreate, UserPrivate, UserPasswordUpdate
+from api.core.dependencies import get_db, get_current_user
+from api.schemas.auth import (
+    Token,
+    LoginResponse,
+    PasswordResetRequest,
+    PasswordChangeRequest
+)
+from api.models.user import User
+from api.core.exceptions import AuthenticationError
+from api.services.email import send_password_reset_email
 
-router = APIRouter(prefix="/auth")
+router = APIRouter(prefix="/auth", tags=["Authentication"])
 
-@router.post("/token", response_model=Token)
-async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
-):
-    """Authenticate user and return JWT token."""
-    user = db.query(User).filter(User.username == form_data.username).first()
-    
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise AuthenticationError("Incorrect username or password")
-    
-    if not user.is_active:
-        raise AuthenticationError("Inactive user")
-    
-    # Create access token
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.username, "role": user.role},
-        expires_delta=access_token_expires
-    )
-    
-    # Update last login time
-    user.last_login = datetime.utcnow()
-    db.commit()
-    
-    return {"access_token": access_token, "token_type": "bearer"}
-
-@router.post("/login", response_model=Dict[str, Any])
+@router.post("/login", response_model=LoginResponse)
 async def login(
-    response: Response,
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
-):
-    """Login endpoint for UI clients."""
-    user = db.query(User).filter(User.username == form_data.username).first()
-    
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise AuthenticationError("Incorrect username or password")
+    db: Session = Depends(get_db),
+    form_data: OAuth2PasswordRequestForm = Depends()
+) -> Any:
+    """
+    OAuth2 compatible token login.
+    """
+    user = db.query(User).filter(User.email == form_data.username).first()
+    if not user or not verify_password(form_data.password, user.password_hash):
+        raise AuthenticationError("Incorrect email or password")
     
     if not user.is_active:
-        raise AuthenticationError("Inactive user")
+        raise AuthenticationError("Account is inactive")
     
-    # Create access token
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.username, "role": user.role},
-        expires_delta=access_token_expires
-    )
-    
-    # Update last login time
+    # Update last login
     user.last_login = datetime.utcnow()
     db.commit()
     
-    # Set cookie for browser clients
-    response.set_cookie(
-        key="access_token",
-        value=f"Bearer {access_token}",
-        httponly=True,
-        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        expires=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        samesite="lax",
-        secure=settings.ENVIRONMENT != "development"
+    # Create access token
+    access_token = create_access_token(
+        data={"sub": str(user.id)}
     )
     
-    # Return token and user info
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "user": UserPrivate.from_orm(user).dict()
+        "user": user
     }
 
-@router.post("/register", status_code=status.HTTP_201_CREATED)
-async def register_user(
-    user_data: UserCreate,
-    db: Session = Depends(get_db)
-):
-    """Register a new user."""
-    # Check if username exists
-    if db.query(User).filter(User.username == user_data.username).first():
-        raise ValidationError("Username already registered")
+@router.post("/register", response_model=LoginResponse)
+async def register(
+    *,
+    db: Session = Depends(get_db),
+    background_tasks: BackgroundTasks,
+    user_in: UserCreate
+) -> Any:
+    """
+    Register new user.
+    """
+    # Check if user exists
+    if db.query(User).filter(User.email == user_in.email).first():
+        raise HTTPException(
+            status_code=400,
+            detail="Email already registered"
+        )
     
-    # Check if email exists
-    if db.query(User).filter(User.email == user_data.email).first():
-        raise ValidationError("Email already registered")
+    # Create user
+    user = User(
+        email=user_in.email,
+        password_hash=get_password_hash(user_in.password),
+        full_name=user_in.full_name,
+        is_active=True,
+        created_at=datetime.utcnow()
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
     
-    # Create new user
-    hashed_password = get_password_hash(user_data.password)
-    db_user = User(
-        username=user_data.username,
-        email=user_data.email,
-        full_name=user_data.full_name,
-        hashed_password=hashed_password,
-        role="free"  # Default role
+    # Send welcome email
+    background_tasks.add_task(
+        send_welcome_email,
+        user.email,
+        user.full_name
     )
     
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+    # Create access token
+    access_token = create_access_token(
+        data={"sub": str(user.id)}
+    )
     
-    return {"success": True, "user_id": db_user.id}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": user
+    }
 
-@router.post("/verify")
-async def verify_token(current_user: User = Depends(get_current_user)):
-    """Verify JWT token and return user info."""
-    return UserPrivate.from_orm(current_user).dict()
-
-@router.post("/logout")
-async def logout(response: Response):
-    """Logout endpoint - clear cookie."""
-    response.delete_cookie(key="access_token")
-    return {"success": True}
-
-@router.post("/password/change")
-async def change_password(
-    password_data: UserPasswordUpdate,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Change user password."""
-    user = db.query(User).filter(User.id == current_user.id).first()
-    
-    if not user or not verify_password(password_data.current_password, user.hashed_password):
-        raise AuthenticationError("Current password is incorrect")
-    
-    # Update password
-    user.hashed_password = get_password_hash(password_data.new_password)
-    db.commit()
-    
-    return {"success": True}
-
-@router.post("/password/reset/request")
+@router.post("/password-reset", response_model=dict)
 async def request_password_reset(
-    email: str = Body(..., embed=True),
-    db: Session = Depends(get_db)
-):
-    """Request password reset."""
-    user = db.query(User).filter(User.email == email).first()
+    *,
+    db: Session = Depends(get_db),
+    background_tasks: BackgroundTasks,
+    request: PasswordResetRequest
+) -> Any:
+    """
+    Request password reset.
+    """
+    user = db.query(User).filter(User.email == request.email).first()
+    if user:
+        # Generate reset token
+        reset_token = create_access_token(
+            data={"sub": str(user.id)},
+            expires_delta=timedelta(hours=1)
+        )
+        
+        # Update user
+        user.reset_token = reset_token
+        user.reset_token_expires = datetime.utcnow() + timedelta(hours=1)
+        db.commit()
+        
+        # Send reset email
+        background_tasks.add_task(
+            send_password_reset_email,
+            user.email,
+            reset_token
+        )
     
-    if not user:
-        # Don't leak information about user existence
-        return {"success": True}
-    
-    # Generate reset token
-    import uuid
-    import secrets
-    reset_token = f"{uuid.uuid4()}-{secrets.token_urlsafe(16)}"
-    
-    # Store token and expiry
-    user.password_reset_token = reset_token
-    user.password_reset_expires = datetime.utcnow() + timedelta(hours=24)
-    db.commit()
-    
-    # In a real implementation, send email with reset link
-    # For now, just return success
-    return {"success": True}
+    return {
+        "message": "If an account exists with this email, a password reset link will be sent"
+    }
 
-@router.post("/password/reset/verify")
-async def verify_reset_token(
-    token: str = Body(..., embed=True),
-    db: Session = Depends(get_db)
-):
-    """Verify password reset token."""
-    user = db.query(User).filter(
-        User.password_reset_token == token,
-        User.password_reset_expires > datetime.utcnow()
-    ).first()
-    
-    if not user:
-        raise ValidationError("Invalid or expired reset token")
-    
-    return {"success": True}
-
-@router.post("/password/reset/complete")
-async def complete_password_reset(
-    token: str = Body(...),
-    new_password: str = Body(...),
-    db: Session = Depends(get_db)
-):
-    """Complete password reset."""
-    user = db.query(User).filter(
-        User.password_reset_token == token,
-        User.password_reset_expires > datetime.utcnow()
-    ).first()
-    
-    if not user:
-        raise ValidationError("Invalid or expired reset token")
+@router.post("/password-change", response_model=dict)
+async def change_password(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    request: PasswordChangeRequest
+) -> Any:
+    """
+    Change user password.
+    """
+    if not verify_password(request.current_password, current_user.password_hash):
+        raise AuthenticationError("Incorrect current password")
     
     # Update password
-    user.hashed_password = get_password_hash(new_password)
-    user.password_reset_token = None
-    user.password_reset_expires = None
+    current_user.password_hash = get_password_hash(request.new_password)
+    current_user.updated_at = datetime.utcnow()
     db.commit()
     
-    return {"success": True}
+    return {"message": "Password updated successfully"}
+
+@router.post("/logout", response_model=dict)
+async def logout(
+    current_user: User = Depends(get_current_user)
+) -> Any:
+    """
+    Logout user.
+    """
+    # In a real implementation, you might want to invalidate the token
+    # This would require implementing a token blacklist
+    return {"message": "Successfully logged out"}

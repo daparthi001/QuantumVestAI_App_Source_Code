@@ -1,172 +1,83 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Body
+"""
+User management router.
+Created: 2025-05-17 14:29:46 UTC
+Author: daparthi001
+"""
+from fastapi import APIRouter, Depends, File, UploadFile
 from sqlalchemy.orm import Session
-from typing import List
+from typing import Any
 
-from api.core.security import get_current_user, get_current_admin_user
-from api.core.exceptions import ResourceNotFoundError, PermissionDeniedError
-from api.db.session import get_db
-from api.db.models.user import User
-from api.schemas.user import UserPrivate, UserPublic, UserUpdate
+from api.core.dependencies import get_db, get_current_user
+from api.schemas.user import UserUpdate, UserProfile
+from api.models.user import User
+from api.services.storage import upload_file
+from api.core.exceptions import NotFoundError
 
-router = APIRouter(prefix="/users")
+router = APIRouter(prefix="/users", tags=["Users"])
 
-@router.get("/me", response_model=UserPrivate)
-async def get_current_user_info(current_user: User = Depends(get_current_user)):
-    """Get current user info."""
+@router.get("/me", response_model=UserProfile)
+async def get_current_user_profile(
+    current_user: User = Depends(get_current_user)
+) -> Any:
+    """
+    Get current user profile.
+    """
     return current_user
 
-@router.put("/me", response_model=UserPrivate)
-async def update_current_user(
-    user_data: UserUpdate,
+@router.put("/me", response_model=UserProfile)
+async def update_user_profile(
+    *,
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Update current user information."""
-    user = db.query(User).filter(User.id == current_user.id).first()
-    
-    if not user:
-        raise ResourceNotFoundError("User not found")
-    
+    user_in: UserUpdate
+) -> Any:
+    """
+    Update current user profile.
+    """
     # Update user fields
-    if user_data.full_name is not None:
-        user.full_name = user_data.full_name
+    for field, value in user_in.dict(exclude_unset=True).items():
+        setattr(current_user, field, value)
     
-    if user_data.email is not None:
-        # Check if email is already used
-        existing_user = db.query(User).filter(User.email == user_data.email).first()
-        if existing_user and existing_user.id != user.id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
-            )
-        user.email = user_data.email
-    
-    if user_data.avatar_url is not None:
-        user.avatar_url = user_data.avatar_url
-    
-    if user_data.bio is not None:
-        user.bio = user_data.bio
-    
-    if user_data.phone is not None:
-        user.phone = user_data.phone
-    
-    if user_data.timezone is not None:
-        user.timezone = user_data.timezone
-    
+    current_user.updated_at = datetime.utcnow()
     db.commit()
-    db.refresh(user)
+    db.refresh(current_user)
     
-    return user
+    return current_user
 
-@router.get("/{user_id}", response_model=UserPublic)
-async def get_user(
+@router.post("/me/avatar", response_model=UserProfile)
+async def update_avatar(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    file: UploadFile = File(...)
+) -> Any:
+    """
+    Update user avatar.
+    """
+    # Upload file to storage
+    avatar_url = await upload_file(
+        file,
+        folder="avatars",
+        user_id=str(current_user.id)
+    )
+    
+    # Update user
+    current_user.avatar_url = avatar_url
+    current_user.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(current_user)
+    
+    return current_user
+
+@router.get("/{user_id}", response_model=UserProfile)
+async def get_user_profile(
     user_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Get user by ID."""
-    user = db.query(User).filter(User.id == user_id).first()
-    
-    if not user:
-        raise ResourceNotFoundError(f"User with ID {user_id} not found")
-    
-    return user
-
-@router.get("/", response_model=List[UserPublic])
-async def list_users(
-    skip: int = 0,
-    limit: int = 100,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
-):
-    """List users (admin only)."""
-    users = db.query(User).offset(skip).limit(limit).all()
-    return users
-
-@router.put("/{user_id}/role", response_model=UserPublic)
-async def update_user_role(
-    user_id: int,
-    role: str = Body(..., embed=True),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
-):
-    """Update user role (admin only)."""
-    # Check role is valid
-    valid_roles = ["free", "basic", "premium", "admin"]
-    if role not in valid_roles:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid role. Must be one of: {', '.join(valid_roles)}"
-        )
-    
-    # Get user
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Get user profile by ID.
+    """
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        raise ResourceNotFoundError(f"User with ID {user_id} not found")
-    
-    # Prevent changing own role
-    if user.id == current_user.id:
-        raise PermissionDeniedError("Cannot change own role")
-    
-    # Update role
-    user.role = role
-    db.commit()
-    db.refresh(user)
-    
+        raise NotFoundError("User not found")
     return user
-
-@router.put("/{user_id}/status", response_model=UserPublic)
-async def update_user_status(
-    user_id: int,
-    is_active: bool = Body(..., embed=True),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
-):
-    """Update user active status (admin only)."""
-    # Get user
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise ResourceNotFoundError(f"User with ID {user_id} not found")
-    
-    # Prevent deactivating own account
-    if user.id == current_user.id:
-        raise PermissionDeniedError("Cannot change own active status")
-    
-    # Update status
-    user.is_active = is_active
-    db.commit()
-    db.refresh(user)
-    
-    return user
-
-@router.get("/username/{username}", response_model=UserPublic)
-async def get_user_by_username(
-    username: str,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Get user by username."""
-    user = db.query(User).filter(User.username == username).first()
-    
-    if not user:
-        raise ResourceNotFoundError(f"User with username {username} not found")
-    
-    return user
-
-@router.post("/regenerate-api-key", response_model=dict)
-async def regenerate_api_key(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Regenerate API key for current user."""
-    user = db.query(User).filter(User.id == current_user.id).first()
-    
-    if not user:
-        raise ResourceNotFoundError("User not found")
-    
-    # Generate new API key
-    import uuid
-    user.api_key = str(uuid.uuid4())
-    db.commit()
-    
-    return {"api_key": user.api_key}
