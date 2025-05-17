@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Tab
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
-from api.db.session import Base
+from api.db.base import Base
 from api.db.models.user import user_watchlist
 
 class Stock(Base):

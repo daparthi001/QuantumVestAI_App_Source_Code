@@ -2,8 +2,8 @@ from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Tab
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
-from api.db.session import Base
-from api.db.models.user import user_watchlist
+from ..base import Base  # Fix: import Base from correct location
+from .user import user_watchlist
 
 class Stock(Base):
     """Stock model for basic stock information."""
