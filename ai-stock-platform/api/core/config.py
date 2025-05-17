@@ -5,9 +5,9 @@ Author: daparthi001
 """
 from typing import Any, Dict, List, Optional, Union
 from pydantic import (
+    BaseSettings,
     AnyHttpUrl,
     PostgresDsn,
-    BaseSettings,
     validator
 )
 import os
@@ -19,11 +19,9 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "QuantumVestAI"
     VERSION: str = "1.0.0"
     DEBUG: bool = False
-    CREATED_AT: str = "2025-05-17 15:02:07"
-    CREATED_BY: str = "daparthi001"
     
     # Security - Read from Kubernetes secrets
-    SECRET_KEY: str = os.getenv("SECRET_KEY")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     ALGORITHM: str = "HS256"
     
@@ -39,10 +37,10 @@ class Settings(BaseSettings):
         raise ValueError(v)
     
     # Database - Read from Kubernetes secrets
-    POSTGRES_SERVER: str = os.getenv("POSTGRES_SERVER")
-    POSTGRES_USER: str = os.getenv("POSTGRES_USER")
-    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD")
-    POSTGRES_DB: str = os.getenv("POSTGRES_DB")
+    POSTGRES_SERVER: str = os.getenv("POSTGRES_SERVER", "")
+    POSTGRES_USER: str = os.getenv("POSTGRES_USER", "")
+    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "")
+    POSTGRES_DB: str = os.getenv("POSTGRES_DB", "")
     POSTGRES_PORT: str = os.getenv("POSTGRES_PORT", "5432")
     SQLALCHEMY_DATABASE_URI: Optional[PostgresDsn] = None
 
@@ -60,7 +58,7 @@ class Settings(BaseSettings):
         )
     
     # Redis - Read from Kubernetes secrets
-    REDIS_HOST: str = os.getenv("REDIS_HOST")
+    REDIS_HOST: str = os.getenv("REDIS_HOST", "")
     REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
     REDIS_PASSWORD: Optional[str] = os.getenv("REDIS_PASSWORD")
     
@@ -80,7 +78,7 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """
     Get cached settings instance.
-    Created: 2025-05-17 15:02:07 UTC
+    Created: 2025-05-17 15:11:46 UTC
     Author: daparthi001
     """
     return Settings()
