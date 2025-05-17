@@ -1,26 +1,42 @@
-[build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "quantumvestai"
+[tool.poetry]
+name = "quantumvest-ai"
 version = "0.1.0"
-description = "QuantumVestAI financial analytics and investment platform"
-authors = [
-    {name = "Your Name", email = "your.email@example.com"},
-]
-readme = "README.md"
-requires-python = ">=3.8"
-classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Intended Audience :: Financial and Insurance Industry",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-]
+description = "QuantumVestAI stock market analysis platform"
+authors = ["daparthi001 <your.email@example.com>"]
 
-[project.urls]
-"Homepage" = "https://github.com/yourusername/quantumvestai"
-"Bug Tracker" = "https://github.com/yourusername/quantumvestai/issues"
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.95.0"
+uvicorn = "^0.21.1"
+sqlalchemy = "^2.0.9"
+alembic = "^1.10.3"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+python-multipart = "^0.0.6"
+python-dotenv = "^1.0.0"
+pydantic = {extras = ["email"], version = "^1.10.7"}
+psycopg2-binary = "^2.9.6"
+pandas = "^2.0.0"
+numpy = "^1.24.2"
+scikit-learn = "^1.2.2"
+python-dateutil = "^2.8.2"
 
-[tool.setuptools]
-packages = ["app"]
+[tool.poetry.dev-dependencies]
+pytest = "^7.3.1"
+black = "^23.3.0"
+isort = "^5.12.0"
+mypy = "^1.2.0"
+flake8 = "^6.0.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
