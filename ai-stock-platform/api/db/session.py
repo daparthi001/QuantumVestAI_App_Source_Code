@@ -1,5 +1,5 @@
 """
-Database session handling module.
+Database session handling.
 """
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session

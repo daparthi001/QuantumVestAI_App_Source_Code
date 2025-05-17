@@ -8,4 +8,9 @@ from .permissions import *
 from .encryption import *
 from .rds import *
 
-__version__ = "1.0.0"
+__all__ = [
+    "authenticate_user",
+    "get_current_user",
+    "create_access_token",
+    "SecurityUtils",
+]
