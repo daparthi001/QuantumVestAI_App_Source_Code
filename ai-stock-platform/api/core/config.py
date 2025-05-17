@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "QuantumVestAI"
     VERSION: str = "1.0.0"
     DEBUG: bool = False
+    CREATED_AT: str = "2025-05-17 14:56:36"
+    CREATED_BY: str = "daparthi001"
     
     # Security - Read from Kubernetes secrets
     SECRET_KEY: str
@@ -68,14 +70,18 @@ class Settings(BaseSettings):
     
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+    LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     
     class Config:
         case_sensitive = True
+        env_file = ".env"
 
 @lru_cache()
 def get_settings() -> Settings:
     """
     Get cached settings instance.
+    Created: 2025-05-17 14:56:36 UTC
+    Author: daparthi001
     """
     return Settings()
 
