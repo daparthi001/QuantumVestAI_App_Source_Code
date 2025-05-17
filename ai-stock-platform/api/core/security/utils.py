@@ -8,9 +8,8 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 
-# Use relative import
-from ...db.session import get_db
-from ...core.config import settings
+from api.db.session import get_db  # Changed to absolute import
+from api.core.config import settings  # Changed to absolute import
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
