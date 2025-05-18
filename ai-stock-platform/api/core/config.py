@@ -1,7 +1,10 @@
 """
 Application configuration settings
-Created: 2025-05-17 15:28:06 UTC
+Created: 2025-05-18 16:14:50 UTC
 Author: daparthi001
+
+This module handles all configuration settings for the QuantumVestAI application,
+including database connections, security settings, and external service configurations.
 """
 from typing import Any, Dict, List, Optional, Union
 from pydantic import (
@@ -13,6 +16,7 @@ from pydantic import (
 )
 import os
 from functools import lru_cache
+from datetime import datetime
 
 class Settings(BaseSettings):
     # Application Info
@@ -20,6 +24,10 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "QuantumVestAI"
     VERSION: str = "1.0.0"
     DEBUG: bool = False
+    CREATED_AT: str = "2025-05-18 16:14:50"
+    CREATED_BY: str = "daparthi001"
+    UPDATED_AT: str = "2025-05-18 16:14:50"
+    UPDATED_BY: str = "daparthi001"
     
     # Security - Read from Kubernetes secrets
     SECRET_KEY: str = os.getenv("SECRET_KEY", "")
@@ -31,11 +39,28 @@ class Settings(BaseSettings):
     
     @validator("BACKEND_CORS_ORIGINS", pre=True)
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
+        """
+        Validates and transforms CORS origins input.
+        Created: 2025-05-18 16:14:50 UTC
+        Author: daparthi001
+
+        Args:
+            v (Union[str, List[str]]): CORS origins as string or list
+                Examples:
+                - "http://localhost,http://localhost:8080"
+                - ["http://localhost", "http://localhost:8080"]
+
+        Returns:
+            Union[List[str], str]: Validated list of CORS origins
+
+        Raises:
+            ValueError: If the input format is invalid
+        """
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
         elif isinstance(v, (list, str)):
             return v
-        raise ValueError(v)
+        raise ValueError(f"Invalid CORS origins format: {v}")
     
     # Database - Read from Kubernetes secrets
     POSTGRES_SERVER: str = os.getenv("POSTGRES_SERVER", "")
@@ -47,8 +72,30 @@ class Settings(BaseSettings):
 
     @validator("SQLALCHEMY_DATABASE_URI", pre=True)
     def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
+        """
+        Constructs database URI from components.
+        Created: 2025-05-18 16:14:50 UTC
+        Author: daparthi001
+
+        Args:
+            v (Optional[str]): Existing URI if any
+            values (Dict[str, Any]): Settings values
+
+        Returns:
+            Any: Constructed database URI
+
+        Raises:
+            ValueError: If required database settings are missing
+        """
         if isinstance(v, str):
             return v
+            
+        # Validate required fields
+        required_fields = ["POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_SERVER"]
+        for field in required_fields:
+            if not values.get(field):
+                raise ValueError(f"Missing required database setting: {field}")
+                
         return PostgresDsn.build(
             scheme="postgresql",
             user=values.get("POSTGRES_USER"),
@@ -69,6 +116,7 @@ class Settings(BaseSettings):
     
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+    LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     
     class Config:
         case_sensitive = True
@@ -78,10 +126,20 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """
     Get cached settings instance.
-    Created: 2025-05-17 15:28:06 UTC
+    Created: 2025-05-18 16:14:50 UTC
     Author: daparthi001
+
+    Returns:
+        Settings: Cached settings instance
+    
+    Note:
+        Uses lru_cache to prevent multiple reads of environment variables
     """
     return Settings()
 
 # Create settings instance
 settings = get_settings()
+
+# Update metadata
+settings.UPDATED_AT = "2025-05-18 16:14:50"
+settings.UPDATED_BY = "daparthi001"
