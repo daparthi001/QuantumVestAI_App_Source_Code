@@ -1,7 +1,7 @@
 # Core dependencies
 fastapi==0.95.0
 uvicorn==0.21.1
-pydantic[email]==1.10.7  # Using standard pydantic instead of pydantic-settings
+pydantic[email]~=1.10.7
 
 # Database
 sqlalchemy==2.0.9
