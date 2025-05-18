@@ -1,7 +1,7 @@
 """
 Application configuration.
 """
-from pydantic_settings import BaseSettings
+from pydantic import BaseSettings
 import os
 from functools import lru_cache
 
