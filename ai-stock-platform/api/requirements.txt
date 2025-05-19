@@ -7,16 +7,16 @@ pydantic[email]~=1.10.7
 sqlalchemy==2.0.9
 psycopg2-binary==2.9.6
 alembic==1.10.3
-asyncpg==0.27.0  # Added for async support
-greenlet==2.0.2  # Required by SQLAlchemy
+asyncpg==0.27.0
+greenlet==2.0.2
 
 # Security
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
 
-# Caching
-redis==4.5.4
+# HTTP Client
+aiohttp==3.8.1
 
 # AWS
 boto3==1.26.137

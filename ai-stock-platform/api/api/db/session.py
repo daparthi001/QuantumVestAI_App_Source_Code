@@ -1,34 +1,26 @@
 """
-Database session management module
-Created: 2025-05-18 16:50:32 UTC
+Database session management
+Created: 2025-05-19 03:25:32
 Author: daparthi001
 """
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-from typing import Generator
+from sqlalchemy.orm import sessionmaker
 from api.core.config import settings
+import logging
 
-# Create SQLAlchemy engine
+logger = logging.getLogger(__name__)
+
 engine = create_engine(
     settings.SQLALCHEMY_DATABASE_URI,
     pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20,
-    echo=settings.DEBUG
+    echo=settings.DEBUG,
+    pool_size=5,
+    max_overflow=10
 )
 
-# Create session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-def get_db() -> Generator[Session, None, None]:
-    """
-    Database session dependency.
-    Created: 2025-05-18 16:50:32 UTC
-    Author: daparthi001
-    
-    Yields:
-        Session: SQLAlchemy session
-    """
+def get_db():
     db = SessionLocal()
     try:
         yield db

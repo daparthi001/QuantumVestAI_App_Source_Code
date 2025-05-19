@@ -1,85 +1,63 @@
 """
-Main FastAPI application module.
+FastAPI application entry point
+Created: 2025-05-19 03:29:10
+Author: daparthi001
 """
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-import logging
-from typing import Optional
-
 from api.core.config import settings
-from api.core.logging import setup_logging
-from api.core.middleware import (
-    RequestIDMiddleware,
-    LoggingMiddleware,
-    ErrorHandlerMiddleware
-)
-from api.routers import (
-    auth,
-    users,
-    stocks,
-    forecast,
-    watchlist,
-    admin,
-    sentiment,
-    data,
-    whitepaper
+from api.routers import auth, stocks, users
+import logging
+from datetime import datetime
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO if not settings.DEBUG else logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler(f"{settings.POD_NAME}-{datetime.now().strftime('%Y%m%d')}.log")
+    ]
 )
 
-# Setup logging
-logger = setup_logging()
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title="QuantumVestAI API",
-    description="API for the QuantumVestAI trading platform",
-    version="1.0.0",
+    title=settings.PROJECT_NAME,
+    description="API for QuantumVestAI trading platform",
+    version=settings.VERSION,
     docs_url="/api/docs",
     redoc_url="/api/redoc",
-    openapi_url="/api/openapi.json"
+    openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
 # Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Add custom middleware
-app.add_middleware(RequestIDMiddleware)
-app.add_middleware(LoggingMiddleware)
-app.add_middleware(ErrorHandlerMiddleware)
+if settings.BACKEND_CORS_ORIGINS:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 # Include routers
-app.include_router(auth.router, prefix="/api", tags=["Authentication"])
-app.include_router(users.router, prefix="/api", tags=["Users"])
-app.include_router(stocks.router, prefix="/api", tags=["Stocks"])
-app.include_router(forecast.router, prefix="/api", tags=["Forecasts"])
-app.include_router(watchlist.router, prefix="/api", tags=["Watchlist"])
-app.include_router(admin.router, prefix="/api", tags=["Admin"])
-app.include_router(sentiment.router, prefix="/api", tags=["Sentiment"])
-app.include_router(data.router, prefix="/api", tags=["Data"])
-app.include_router(whitepaper.router, prefix="/api", tags=["Whitepapers"])
+app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
+app.include_router(stocks.router, prefix=f"{settings.API_V1_STR}/stocks", tags=["stocks"])
+app.include_router(users.router, prefix=f"{settings.API_V1_STR}/users", tags=["users"])
 
-@app.on_event("startup")
-async def startup_event():
-    """
-    Run startup tasks.
-    """
-    logger.info("Starting up API server")
-    # Add any startup tasks here
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """
-    Run shutdown tasks.
-    """
-    logger.info("Shutting down API server")
-    # Add any cleanup tasks here
-
-@app.get("/api/health", tags=["Health"])
+@app.get("/api/health")
 async def health_check():
-    """Health check endpoint."""
-    return {"status": "healthy"}
+    """Health check endpoint"""
+    try:
+        return {
+            "status": "healthy",
+            "version": settings.VERSION,
+            "pod": settings.POD_NAME,
+            "namespace": settings.POD_NAMESPACE,
+            "environment": settings.ENVIRONMENT,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Service unhealthy")
