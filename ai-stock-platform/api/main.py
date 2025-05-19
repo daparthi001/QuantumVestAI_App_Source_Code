@@ -1,12 +1,22 @@
 """
 Main FastAPI Application
-Created: 2025-05-19 04:05:44
+Created: 2025-05-19 05:36:25
 Author: daparthi001
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.core.config import settings
-from api.routes import auth, stocks
+from api.routers import (
+    auth,
+    stocks,
+    users,
+    forecast,
+    watchlist,
+    admin,
+    sentiment,
+    data,
+    whitepaper
+)
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -25,21 +35,20 @@ if settings.BACKEND_CORS_ORIGINS:
     )
 
 # Include routers
-app.include_router(auth.router, prefix=settings.API_V1_STR)
-app.include_router(auth_router, prefix="/api", tags=["auth"])
-app.include_router(users_router, prefix="/api", tags=["users"])
-app.include_router(stocks.router, prefix=settings.API_V1_STR)
-app.include_router(forecast_router, prefix="/api", tags=["forecast"])
-app.include_router(watchlist_router, prefix="/api", tags=["watchlist"])
-app.include_router(admin_router, prefix="/api", tags=["admin"])
-app.include_router(sentiment_router, prefix="/api", tags=["sentiment"])
-app.include_router(data_router, prefix="/api", tags=["data"])
-app.include_router(whitepaper_router, prefix="/api", tags=["whitepaper"])
+app.include_router(auth.router, prefix=f"{settings.API_V1_STR}", tags=["auth"])
+app.include_router(users.router, prefix=f"{settings.API_V1_STR}", tags=["users"])
+app.include_router(stocks.router, prefix=f"{settings.API_V1_STR}", tags=["stocks"])
+app.include_router(forecast.router, prefix=f"{settings.API_V1_STR}", tags=["forecast"])
+app.include_router(watchlist.router, prefix=f"{settings.API_V1_STR}", tags=["watchlist"])
+app.include_router(admin.router, prefix=f"{settings.API_V1_STR}", tags=["admin"])
+app.include_router(sentiment.router, prefix=f"{settings.API_V1_STR}", tags=["sentiment"])
+app.include_router(data.router, prefix=f"{settings.API_V1_STR}", tags=["data"])
+app.include_router(whitepaper.router, prefix=f"{settings.API_V1_STR}", tags=["whitepaper"])
 
 @app.get("/health")
 def health_check():
     return {
         "status": "healthy",
         "version": settings.VERSION,
-        "timestamp": "2025-05-19 04:05:44"
+        "timestamp": datetime.utcnow().isoformat()
     }

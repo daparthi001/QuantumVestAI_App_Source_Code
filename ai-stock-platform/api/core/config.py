@@ -1,50 +1,36 @@
 """
-Core Configuration
-Created: 2025-05-19 04:05:44
+Configuration Settings
+Created: 2025-05-19 05:29:26
 Author: daparthi001
 """
-from pydantic_settings import BaseSettings
-from pydantic import SecretStr, PostgresDsn
-from typing import Optional, List
-import os
+from pydantic import BaseSettings, PostgresDsn, validator
+from typing import Optional, Dict, Any
 
 class Settings(BaseSettings):
-    # API Settings
-    PROJECT_NAME: str = "QuantumVestAI"
+    PROJECT_NAME: str = "Order Management API"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
-    DEBUG: bool = False
     
-    # Security
-    SECRET_KEY: SecretStr
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    
-    # Database
     POSTGRES_SERVER: str
     POSTGRES_USER: str
-    POSTGRES_PASSWORD: SecretStr
+    POSTGRES_PASSWORD: str
     POSTGRES_DB: str
-    POSTGRES_PORT: str = "5432"
-    
-    # CORS
-    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000"]
-    
-    # Market Data API
-    ALPHA_VANTAGE_API_KEY: SecretStr
-    
-    @property
-    def DATABASE_URI(self) -> PostgresDsn:
+    SQLALCHEMY_DATABASE_URI: Optional[PostgresDsn] = None
+
+    @validator("SQLALCHEMY_DATABASE_URI", pre=True)
+    def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
+        if isinstance(v, str):
+            return v
         return PostgresDsn.build(
             scheme="postgresql",
-            username=self.POSTGRES_USER,
-            password=self.POSTGRES_PASSWORD.get_secret_value(),
-            host=self.POSTGRES_SERVER,
-            port=self.POSTGRES_PORT,
-            path=self.POSTGRES_DB,
+            user=values.get("POSTGRES_USER"),
+            password=values.get("POSTGRES_PASSWORD"),
+            host=values.get("POSTGRES_SERVER"),
+            path=f"/{values.get('POSTGRES_DB') or ''}",
         )
 
     class Config:
-        env_file = ".env"
         case_sensitive = True
+        env_file = ".env"
 
 settings = Settings()
