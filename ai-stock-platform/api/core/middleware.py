@@ -1,79 +1,122 @@
+"""
+Core Middleware Implementation
+Created: 2025-05-19 03:43:23
+Author: daparthi001
+"""
+import time
+import uuid
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 import logging
 from typing import Callable, Awaitable
+import asyncio
+from datetime import datetime
 
 from api.core.exceptions import RateLimitError
+from api.core.config import settings
+from api.core.cache import cache
 
 logger = logging.getLogger("api")
+
+async def request_id_middleware(
+    request: Request,
+    call_next: Callable[[Request], Awaitable[Response]]
+) -> Response:
+    """Add unique request ID to each request"""
+    request_id = str(uuid.uuid4())
+    request.state.request_id = request_id
+    
+    try:
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+        return response
+    except Exception as e:
+        logger.exception(
+            f"Error processing request: {str(e)}",
+            extra={"request_id": request_id}
+        )
+        return JSONResponse(
+            status_code=500,
+            content={
+                "detail": "Internal server error",
+                "request_id": request_id
+            }
+        )
 
 async def rate_limit_middleware(
     request: Request,
     call_next: Callable[[Request], Awaitable[Response]]
 ) -> Response:
-    """
-    Middleware for rate limiting requests.
-    
-    This is a simplified version. In production, you'd typically use Redis
-    to track request counts and implement proper rate limiting algorithms
-    like token bucket or sliding window.
-    """
-    # Skip rate limiting for certain paths
-    if any(request.url.path.startswith(path) for path in ["/api/docs", "/api/openapi.json", "/health"]):
+    """Rate limiting middleware"""
+    if request.url.path in ["/health", "/metrics", "/docs", "/redoc"]:
         return await call_next(request)
+
+    # Get client identifier
+    client_id = request.headers.get("X-API-Key") or request.client.host
     
-    # Get client IP
-    forwarded_for = request.headers.get("X-Forwarded-For")
-    client_ip = forwarded_for.split(",")[0].strip() if forwarded_for else request.client.host
+    # Rate limit key
+    rate_limit_key = f"ratelimit:{client_id}:{request.url.path}"
     
-    # In a real implementation, check rate limit in Redis
-    # For now, just pass through all requests
+    if cache:
+        try:
+            # Check rate limit
+            requests = int(cache.get(rate_limit_key) or 0)
+            if requests >= settings.RATE_LIMIT_MAX_REQUESTS:
+                raise RateLimitError()
+            
+            # Increment request count
+            cache.set(
+                rate_limit_key,
+                str(requests + 1),
+                ttl_seconds=settings.RATE_LIMIT_WINDOW_SECONDS
+            )
+        except RateLimitError:
+            return JSONResponse(
+                status_code=429,
+                content={
+                    "detail": "Too many requests",
+                    "retry_after": settings.RATE_LIMIT_WINDOW_SECONDS
+                }
+            )
+        except Exception as e:
+            logger.error(f"Rate limit error: {str(e)}")
     
-    try:
-        # Continue with the request
-        response = await call_next(request)
-        return response
-    except Exception as e:
-        logger.exception(
-            f"Error in rate limit middleware: {str(e)}",
-            extra={
-                "client_ip": client_ip,
-                "path": request.url.path,
-            }
-        )
-        return JSONResponse(
-            status_code=500,
-            content={"detail": "Internal server error"}
-        )
+    return await call_next(request)
 
 async def metrics_middleware(
     request: Request,
     call_next: Callable[[Request], Awaitable[Response]]
 ) -> Response:
-    """Middleware for collecting metrics on API requests."""
+    """Collect metrics for each request"""
     start_time = time.time()
     
-    # Get client IP
-    forwarded_for = request.headers.get("X-Forwarded-For")
-    client_ip = forwarded_for.split(",")[0].strip() if forwarded_for else request.client.host
-    
-    # Track metrics
+    # Get client info
+    client_ip = request.headers.get("X-Forwarded-For", request.client.host)
     method = request.method
     path = request.url.path
     
     try:
-        # Process request
         response = await call_next(request)
         
-        # Record response time and status
+        # Calculate metrics
         process_time = time.time() - start_time
         status_code = response.status_code
         
-        # In a real implementation, you'd store these metrics
-        # in Prometheus or another metrics system
+        # Log metrics
+        logger.info(
+            "Request processed",
+            extra={
+                "client_ip": client_ip,
+                "method": method,
+                "path": path,
+                "status_code": status_code,
+                "process_time": process_time,
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        )
         
-        # Add timing header to response
+        # Add timing header
         response.headers["X-Process-Time"] = str(process_time)
         
         return response
@@ -81,12 +124,13 @@ async def metrics_middleware(
         process_time = time.time() - start_time
         
         logger.exception(
-            f"Error in metrics middleware: {str(e)}",
+            f"Request failed: {str(e)}",
             extra={
                 "client_ip": client_ip,
                 "method": method,
                 "path": path,
                 "process_time": process_time,
+                "timestamp": datetime.utcnow().isoformat()
             }
         )
         
