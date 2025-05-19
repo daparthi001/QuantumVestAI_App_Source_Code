@@ -1,63 +1,79 @@
 """
-FastAPI application entry point
-Created: 2025-05-19 03:29:10
+Main Application Module
+Created: 2025-05-19 05:45:27
 Author: daparthi001
 """
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from api.core.config import settings
-from api.routers import auth, stocks, users
-import logging
+from fastapi.responses import JSONResponse
 from datetime import datetime
+import logging
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO if not settings.DEBUG else logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler(f"{settings.POD_NAME}-{datetime.now().strftime('%Y%m%d')}.log")
-    ]
+from api.core.config import settings
+from api.core.logging import setup_logging
+from api.db.session import engine, SessionLocal
+from api.db.init_db import init_db
+from api.routers import (
+    auth,
+    stocks,
+    users,
+    health
 )
 
-logger = logging.getLogger(__name__)
+# Setup logging
+logger = setup_logging()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    description="API for QuantumVestAI trading platform",
     version=settings.VERSION,
-    docs_url="/api/docs",
-    redoc_url="/api/redoc",
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
-# Configure CORS
-if settings.BACKEND_CORS_ORIGINS:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Include routers
-app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
-app.include_router(stocks.router, prefix=f"{settings.API_V1_STR}/stocks", tags=["stocks"])
-app.include_router(users.router, prefix=f"{settings.API_V1_STR}/users", tags=["users"])
+app.include_router(auth.router, prefix=settings.API_V1_STR)
+app.include_router(stocks.router, prefix=settings.API_V1_STR)
+app.include_router(users.router, prefix=settings.API_V1_STR)
+app.include_router(health.router, prefix=settings.API_V1_STR)
 
-@app.get("/api/health")
-async def health_check():
-    """Health check endpoint"""
+@app.on_event("startup")
+async def startup_event():
+    """Initialize application on startup"""
     try:
-        return {
-            "status": "healthy",
-            "version": settings.VERSION,
-            "pod": settings.POD_NAME,
-            "namespace": settings.POD_NAMESPACE,
-            "environment": settings.ENVIRONMENT,
+        # Initialize database
+        db = SessionLocal()
+        init_db(db)
+        db.close()
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {str(e)}")
+        raise
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on application shutdown"""
+    try:
+        await engine.dispose()
+        logger.info("Database connections closed")
+    except Exception as e:
+        logger.error(f"Error during shutdown: {str(e)}")
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Global exception handler"""
+    logger.error(f"Global exception: {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": "Internal server error",
             "timestamp": datetime.utcnow().isoformat()
         }
-    except Exception as e:
-        logger.error(f"Health check failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Service unhealthy")
+    )
