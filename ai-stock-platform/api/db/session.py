@@ -1,24 +1,16 @@
 """
-Database session management
-Created: 2025-05-19 03:08:16
+Database Session Management
+Created: 2025-05-19 04:05:44
 Author: daparthi001
 """
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-from typing import Generator
+from sqlalchemy.orm import sessionmaker
 from api.core.config import settings
-from api.db.base import Base  # Add this import for consistency
 
 engine = create_engine(
-    settings.SQLALCHEMY_DATABASE_URI,
-    echo=settings.DEBUG
+    str(settings.DATABASE_URI),
+    pool_pre_ping=True,
+    pool_size=5,
+    max_overflow=10
 )
-
-SessionLocal = sessionmaker(bind=engine)
-
-def get_db() -> Generator[Session, None, None]:
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
