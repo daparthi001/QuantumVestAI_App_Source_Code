@@ -1,22 +1,42 @@
 """
 Database Connection Test Script
-Created: 2025-05-19 06:19:17
+Created: 2025-05-19 05:56:45
 Author: daparthi001
 """
-import sys
-import os
 import logging
+from sqlalchemy import text
+from api.db.session import SessionLocal
+from api.core.config import settings
 
-# Add parent directory to Python path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-from api.utils.db import test_db_connection
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+def test_database_connection():
+    """Test database connection and configuration"""
+    try:
+        db = SessionLocal()
+        # Test connection
+        result = db.execute(text("SELECT 1"))
+        assert result.scalar() == 1
+        logger.info("Database connection successful!")
+        
+        # Test connection settings
+        result = db.execute(text("""
+            SELECT name, setting 
+            FROM pg_settings 
+            WHERE name LIKE 'tcp_keepalives%'
+        """))
+        settings_data = dict(result.fetchall())
+        logger.info("PostgreSQL TCP Keepalive settings:")
+        for name, value in settings_data.items():
+            logger.info(f"{name}: {value}")
+        
+        db.close()
+        return True
+    except Exception as e:
+        logger.error(f"Database connection test failed: {e}")
+        return False
 
 if __name__ == "__main__":
-    success = test_db_connection()
-    sys.exit(0 if success else 1)
+    logger.info(f"Testing connection to: {settings.POSTGRES_SERVER}")
+    test_database_connection()
