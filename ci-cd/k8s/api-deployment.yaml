@@ -5,16 +5,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: quantumvestai
-  namespace: quantumvestai
+  name: api-deployment
+  namespace: dev
   labels:
     app: quantumvestai
-    version: v1.0.0
+    tier: api
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: quantumvestai
+      tier: api
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -24,85 +25,133 @@ spec:
     metadata:
       labels:
         app: quantumvestai
-        version: v1.0.0
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "8000"
+        tier: api
     spec:
       serviceAccountName: quantumvestai-sa
       containers:
-        - name: api
-          image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:api-dev-latest
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 8000
-              name: http
-          resources:
-            requests:
-              cpu: "250m"
-              memory: "512Mi"
-            limits:
-              cpu: "1000m"
-              memory: "1Gi"
-          env:
-            - name: ENVIRONMENT
-              value: "production"
-            - name: LOG_LEVEL
-              value: "INFO"
-            - name: POSTGRES_SERVER
-              valueFrom:
-                secretKeyRef:
-                  name: quantumvestai-secrets
-                  key: postgres-server
-            - name: POSTGRES_USER
-              valueFrom:
-                secretKeyRef:
-                  name: quantumvestai-secrets
-                  key: postgres-user
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: quantumvestai-secrets
-                  key: postgres-password
-            - name: POSTGRES_DB
-              value: "quantumvestai"
-            - name: JWT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: quantumvestai-secrets
-                  key: jwt-secret
-            - name: REDIS_URL
-              valueFrom:
-                secretKeyRef:
-                  name: quantumvestai-secrets
-                  key: redis-url
-          resources:
-            requests:
-              cpu: "500m"
-              memory: "512Mi"
-            limits:
-              cpu: "1000m"
-              memory: "1Gi"
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: http
-            initialDelaySeconds: 5
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: http
-            initialDelaySeconds: 15
-            periodSeconds: 20
-          volumeMounts:
-            - name: logs
-              mountPath: /app/logs
-            - name: uploads
-              mountPath: /app/uploads
-      volumes:
-        - name: logs
-          emptyDir: {}
+      - name: api
+        image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:api-dev-latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          name: http
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "512Mi"
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        # Database credentials from Terraform-created secret
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: quantumvestai-cluster-rds-credentials
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: quantumvestai-cluster-rds-credentials
+              key: password
+        - name: POSTGRES_SERVER
+          valueFrom:
+            secretKeyRef:
+              name: quantumvestai-cluster-rds-credentials
+              key: host
+        - name: POSTGRES_PORT
+          valueFrom:
+            secretKeyRef:
+              name: quantumvestai-cluster-rds-credentials
+              key: port
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: quantumvestai-cluster-rds-credentials
+              key: dbname
+        # Twitter API credentials from dedicated secret
+        - name: TWITTER_CONSUMER_KEY
+          valueFrom:
+            secretKeyRef:
+              name: twitter-secrets
+              key: TWITTER_CONSUMER_KEY
+        - name: TWITTER_CONSUMER_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: twitter-secrets
+              key: TWITTER_CONSUMER_SECRET
+        - name: TWITTER_ACCESS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: twitter-secrets
+              key: TWITTER_ACCESS_TOKEN
+        - name: TWITTER_ACCESS_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: twitter-secrets
+              key: TWITTER_ACCESS_SECRET
+        # Application secrets from the GitHub Action created secret
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: JWT_SECRET
+        - name: ADMIN_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: ADMIN_USERNAME
+        - name: ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: ADMIN_PASSWORD
+        - name: ADMIN_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: ADMIN_EMAIL
+        - name: ALPHA_VANTAGE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: ALPHA_VANTAGE_API_KEY
+        envFrom:
+        - configMapRef:
+            name: api-configmap
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 2
+          successThreshold: 1
+          failureThreshold: 3
+        volumeMounts:
         - name: uploads
-          persistentVolumeClaim:
-            claimName: quantumvestai-pvc
+          mountPath: /app/uploads
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: uploads
+        persistentVolumeClaim:
+          claimName: quantumvestai-pvc
+      - name: tmp
+        emptyDir: {}
