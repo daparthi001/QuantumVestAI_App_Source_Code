@@ -7,6 +7,8 @@ pydantic[email]~=1.10.7
 sqlalchemy==2.0.9
 psycopg2-binary==2.9.6
 alembic==1.10.3
+asyncpg==0.27.0  # Added for async support
+greenlet==2.0.2  # Required by SQLAlchemy
 
 # Security
 python-jose[cryptography]==3.3.0
