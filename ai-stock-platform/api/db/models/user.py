@@ -3,8 +3,10 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
 
-# Change this line to import Base from the correct location
+# Fix the import to use Base from base.py
 from api.db.base import Base
+# Import TimestampMixin if you want to use it (optional)
+from api.db.base_class import TimestampMixin
 
 # Association table for user watchlists
 user_watchlist = Table(

@@ -7,6 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from typing import Generator
 from api.core.config import settings
+from api.db.base import Base  # Add this import for consistency
 
 engine = create_engine(
     settings.SQLALCHEMY_DATABASE_URI,

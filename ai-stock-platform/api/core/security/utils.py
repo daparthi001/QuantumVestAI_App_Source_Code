@@ -8,8 +8,9 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 
-from api.db.session import get_db  # Changed to absolute import
-from api.core.config import settings  # Changed to absolute import
+from api.db.session import get_db
+from api.core.config import settings
+# Remove the import from api.db.models.user import User which causes circular import
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

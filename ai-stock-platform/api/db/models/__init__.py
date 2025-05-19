@@ -1,29 +1,6 @@
 """
-SQLAlchemy models for the QuantumVestAI database.
-
-This package contains all the database models representing
-tables in the QuantumVestAI application.
+Import all models here to avoid circular imports
 """
-from api.db.base import Base
-
-__all__ = [
-    "User",
-    "Stock",
-    "StockPrice",
-    "Alert",  # Added Alert
-    "Forecast", 
-    "ForecastModel",
-    "Whitepaper",
-    "WhitepaperAnalysis"
-]
-
-# Import all models here
-from .user import User
-from .stock import Stock, StockPrice, Alert
-from .forecast import Forecast, ForecastModel
-from .whitepaper import Whitepaper, WhitepaperAnalysis
-
-# Initialize relationships after all models are imported
-User.watchlists.property
-Stock.prices.property
-Whitepaper.analyses.property
+# Import all models here so they are registered with SQLAlchemy
+from api.db.models.user import User
+# Import other models as needed
