@@ -1,14 +1,11 @@
 """
-SQLAlchemy Base Model
-Created: 2025-05-19 04:05:44
+Database Base Module
+Created: 2025-05-19 05:45:27
 Author: daparthi001
 """
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, DateTime
-from datetime import datetime
+from api.db.base_class import Base, TimestampMixin
+from api.db.models.user import User
 
-Base = declarative_base()
-
-class TimestampMixin:
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+# Import all models here
+# This allows Alembic to detect all models when generating migrations
+__all__ = ["Base", "TimestampMixin", "User"]
