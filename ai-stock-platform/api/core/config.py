@@ -1,38 +1,71 @@
 """
 Application configuration settings
-Created: 2025-05-18 16:24:35 UTC
+Created: 2025-05-19 02:59:42 UTC
 Author: daparthi001
 """
-# CHANGE: Removed pydantic_settings import, using standard pydantic
-from pydantic import BaseSettings, AnyHttpUrl, PostgresDsn, validator, EmailStr
 from typing import Any, Dict, List, Optional, Union
-#from pydantic import (
+from pydantic import (
     BaseSettings,
     AnyHttpUrl,
     PostgresDsn,
     validator,
-    EmailStr
+    EmailStr,
+    Field,
+    SecretStr
 )
 import os
 from functools import lru_cache
 
-class Settings(BaseSettings):  # CHANGE: Using pydantic.BaseSettings directly
+class Settings(BaseSettings):
     # Application Info
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "QuantumVestAI"
     VERSION: str = "1.0.0"
     
+    # Pod Info
+    POD_NAME: str = Field(default="")
+    POD_NAMESPACE: str = Field(default="")
+    
     # Environment
-    DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"  # Added DEBUG setting
-    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
-    CREATED_AT: str = "2025-05-19 02:50:53"
+    DEBUG: bool = Field(default=False)
+    ENVIRONMENT: str = Field(default="development")
+    CREATED_AT: str = "2025-05-19 02:59:42"
     CREATED_BY: str = "daparthi001"
     
-    # Security - Read from Kubernetes secrets
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    ALGORITHM: str = "HS256"
-    
+    # Database Settings
+    POSTGRES_SERVER: str = Field(default="")
+    POSTGRES_USER: str = Field(default="")
+    POSTGRES_PASSWORD: SecretStr = Field(default="")
+    POSTGRES_DB: str = Field(default="")
+    POSTGRES_PORT: str = Field(default="5432")
+    SQLALCHEMY_DATABASE_URI: Optional[PostgresDsn] = None
+    DB_POOL_SIZE: int = Field(default=10)
+    DB_MAX_OVERFLOW: int = Field(default=20)
+    DB_POOL_TIMEOUT: int = Field(default=30)
+
+    # Twitter API Credentials
+    TWITTER_CONSUMER_KEY: SecretStr = Field(default="")
+    TWITTER_CONSUMER_SECRET: SecretStr = Field(default="")
+    TWITTER_ACCESS_TOKEN: SecretStr = Field(default="")
+    TWITTER_ACCESS_SECRET: SecretStr = Field(default="")
+
+    # Application Secrets
+    JWT_SECRET: SecretStr = Field(default="")
+    ADMIN_USERNAME: str = Field(default="admin")
+    ADMIN_PASSWORD: SecretStr = Field(default="")
+    ADMIN_EMAIL: EmailStr = Field(default="admin@example.com")
+    ALPHA_VANTAGE_API_KEY: SecretStr = Field(default="")
+
+    # Resource Limits (from K8s)
+    CPU_REQUEST: str = Field(default="250m")
+    CPU_LIMIT: str = Field(default="1000m")
+    MEMORY_REQUEST: str = Field(default="512Mi")
+    MEMORY_LIMIT: str = Field(default="1Gi")
+
+    # Storage Paths
+    UPLOAD_DIR: str = Field(default="/app/uploads")
+    TMP_DIR: str = Field(default="/tmp")
+
     # CORS
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
     
@@ -44,17 +77,6 @@ class Settings(BaseSettings):  # CHANGE: Using pydantic.BaseSettings directly
             return v
         raise ValueError(v)
     
-    # Database - Read from Kubernetes secrets
-    POSTGRES_SERVER: str = os.getenv("POSTGRES_SERVER", "")
-    POSTGRES_USER: str = os.getenv("POSTGRES_USER", "")
-    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "")
-    POSTGRES_DB: str = os.getenv("POSTGRES_DB", "")
-    POSTGRES_PORT: str = os.getenv("POSTGRES_PORT", "5432")
-    SQLALCHEMY_DATABASE_URI: Optional[PostgresDsn] = None
-    DB_POOL_SIZE: int = int(os.getenv("DB_POOL_SIZE", "10"))
-    DB_MAX_OVERFLOW: int = int(os.getenv("DB_MAX_OVERFLOW", "20"))
-    DB_POOL_TIMEOUT: int = int(os.getenv("DB_POOL_TIMEOUT", "30"))
-
     @validator("SQLALCHEMY_DATABASE_URI", pre=True)
     def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
         if isinstance(v, str):
@@ -62,25 +84,12 @@ class Settings(BaseSettings):  # CHANGE: Using pydantic.BaseSettings directly
         return PostgresDsn.build(
             scheme="postgresql",
             user=values.get("POSTGRES_USER"),
-            password=values.get("POSTGRES_PASSWORD"),
+            password=values.get("POSTGRES_PASSWORD").get_secret_value() if values.get("POSTGRES_PASSWORD") else "",
             host=values.get("POSTGRES_SERVER"),
             port=values.get("POSTGRES_PORT"),
             path=f"/{values.get('POSTGRES_DB') or ''}"
         )
-    
-    # Redis - Read from Kubernetes secrets
-    REDIS_HOST: str = os.getenv("REDIS_HOST", "")
-    REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
-    REDIS_PASSWORD: Optional[str] = os.getenv("REDIS_PASSWORD")
-    
-    # AWS - Using IAM roles, no credentials needed
-    S3_BUCKET: str = os.getenv("S3_BUCKET", "quantumvest-files")
-    AWS_REGION: str = os.getenv("AWS_REGION", "us-east-1")
-    
-    # Logging
-    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
-    LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    
+
     class Config:
         case_sensitive = True
         env_file = ".env"
@@ -89,7 +98,7 @@ class Settings(BaseSettings):  # CHANGE: Using pydantic.BaseSettings directly
 def get_settings() -> Settings:
     """
     Get cached settings instance.
-    Created: 2025-05-19 02:50:53 UTC
+    Created: 2025-05-19 02:59:42 UTC
     Author: daparthi001
     """
     return Settings()

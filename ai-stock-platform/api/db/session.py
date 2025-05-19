@@ -1,6 +1,6 @@
 """
 Database session management module
-Created: 2025-05-19 02:50:53 UTC
+Created: 2025-05-19 02:58:26 UTC
 Author: daparthi001
 """
 from sqlalchemy import create_engine
@@ -18,7 +18,7 @@ engine = create_engine(
     pool_size=settings.DB_POOL_SIZE,
     max_overflow=settings.DB_MAX_OVERFLOW,
     pool_timeout=settings.DB_POOL_TIMEOUT,
-    echo=settings.DEBUG
+    echo=getattr(settings, 'DEBUG', False)  # Using getattr with default value
 )
 
 # Create session factory
@@ -27,17 +27,8 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 def get_db() -> Generator[Session, None, None]:
     """
     Database session dependency.
-    Created: 2025-05-19 02:50:53 UTC
+    Created: 2025-05-19 02:58:26 UTC
     Author: daparthi001
-    
-    Yields:
-        Session: SQLAlchemy session
-    
-    Example:
-        @app.get("/items/")
-        def read_items(db: Session = Depends(get_db)):
-            items = db.query(Item).all()
-            return items
     """
     db = SessionLocal()
     try:
