@@ -6,6 +6,13 @@ Author: daparthi001
 # CHANGE: Removed pydantic_settings import, using standard pydantic
 from pydantic import BaseSettings, AnyHttpUrl, PostgresDsn, validator, EmailStr
 from typing import Any, Dict, List, Optional, Union
+#from pydantic import (
+    BaseSettings,
+    AnyHttpUrl,
+    PostgresDsn,
+    validator,
+    EmailStr
+)
 import os
 from functools import lru_cache
 
@@ -14,7 +21,12 @@ class Settings(BaseSettings):  # CHANGE: Using pydantic.BaseSettings directly
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "QuantumVestAI"
     VERSION: str = "1.0.0"
-    DEBUG: bool = False
+    
+    # Environment
+    DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"  # Added DEBUG setting
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+    CREATED_AT: str = "2025-05-19 02:50:53"
+    CREATED_BY: str = "daparthi001"
     
     # Security - Read from Kubernetes secrets
     SECRET_KEY: str = os.getenv("SECRET_KEY", "")
@@ -39,6 +51,9 @@ class Settings(BaseSettings):  # CHANGE: Using pydantic.BaseSettings directly
     POSTGRES_DB: str = os.getenv("POSTGRES_DB", "")
     POSTGRES_PORT: str = os.getenv("POSTGRES_PORT", "5432")
     SQLALCHEMY_DATABASE_URI: Optional[PostgresDsn] = None
+    DB_POOL_SIZE: int = int(os.getenv("DB_POOL_SIZE", "10"))
+    DB_MAX_OVERFLOW: int = int(os.getenv("DB_MAX_OVERFLOW", "20"))
+    DB_POOL_TIMEOUT: int = int(os.getenv("DB_POOL_TIMEOUT", "30"))
 
     @validator("SQLALCHEMY_DATABASE_URI", pre=True)
     def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
@@ -72,6 +87,11 @@ class Settings(BaseSettings):  # CHANGE: Using pydantic.BaseSettings directly
 
 @lru_cache()
 def get_settings() -> Settings:
+    """
+    Get cached settings instance.
+    Created: 2025-05-19 02:50:53 UTC
+    Author: daparthi001
+    """
     return Settings()
 
 settings = get_settings()
