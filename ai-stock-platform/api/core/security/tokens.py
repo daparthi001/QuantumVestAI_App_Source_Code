@@ -3,7 +3,10 @@ Token handling functionality.
 """
 from datetime import datetime, timedelta
 from typing import Optional
+
 from jose import jwt
+from pydantic import BaseModel
+
 from ..config import settings
 
 class TokenHandler:
@@ -24,8 +27,5 @@ class TokenHandler:
         return encoded_jwt
 
     @classmethod
-    def decode_token(cls, token: str) -> Optional[dict]:
-        try:
-            return jwt.decode(token, cls.SECRET_KEY, algorithms=[cls.ALGORITHM])
-        except jwt.JWTError:
-            return None
+    def decode_token(cls, token: str) -> Optional[BaseModel]:
+        return jwt.decode(token, cls.SECRET_KEY, algorithms=[cls.ALGORITHM])

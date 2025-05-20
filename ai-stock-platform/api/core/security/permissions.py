@@ -3,6 +3,8 @@ Permission management functionality.
 """
 from enum import Enum
 from typing import List, Optional
+
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 class Permission(str, Enum):

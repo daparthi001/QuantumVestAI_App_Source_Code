@@ -1,19 +1,15 @@
 """
 Database Session Management
-Created: 2025-05-19 05:56:45
+Created: 2025-05-19 05:43:23
 Author: daparthi001
 """
 import logging
 from typing import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import SQLAlchemyError
-from tenacity import (
-    retry,
-    stop_after_attempt,
-    wait_exponential,
-    retry_if_exception_type
-)
+from sqlalchemy.exc import OperationalError
+import time
+import backoff
 
 from api.core.config import settings
 
@@ -21,13 +17,11 @@ logger = logging.getLogger(__name__)
 
 def create_engine_with_retry():
     """Create database engine with retry logic for RDS"""
-    @retry(
-        stop=stop_after_attempt(5),
-        wait=wait_exponential(multiplier=1, min=4, max=10),
-        retry=retry_if_exception_type(SQLAlchemyError),
-        before_sleep=lambda retry_state: logger.warning(
-            f"Database connection attempt {retry_state.attempt_number} failed. Retrying..."
-        )
+    @backoff.on_exception(
+        backoff.expo,
+        OperationalError,
+        max_tries=5,
+        max_time=30
     )
     def _create_engine():
         return create_engine(
@@ -35,7 +29,7 @@ def create_engine_with_retry():
             pool_pre_ping=True,
             pool_size=10,
             max_overflow=20,
-            pool_recycle=300,
+            pool_recycle=300,  # Recycle connections every 5 minutes
             connect_args={
                 "keepalives": 1,
                 "keepalives_idle": 30,
@@ -44,11 +38,7 @@ def create_engine_with_retry():
             }
         )
     
-    try:
-        return _create_engine()
-    except Exception as e:
-        logger.error(f"Failed to create database engine: {e}")
-        raise
+    return _create_engine()
 
 # Create engine instance
 engine = create_engine_with_retry()
@@ -59,9 +49,8 @@ def get_db() -> Generator:
     db = SessionLocal()
     try:
         yield db
-    except SQLAlchemyError as e:
-        logger.error(f"Database error: {e}")
-        db.rollback()
+    except OperationalError as e:
+        logger.error(f"Database connection error: {e}")
         raise
     finally:
         db.close()
