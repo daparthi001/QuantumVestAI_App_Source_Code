@@ -1,0 +1,154 @@
+# Database Connections Verification Job
+# Created: 2025-05-20 08:01:02
+# Author: daparthi001
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: verify-db-connections
+  namespace: dev
+  labels:
+    environment: development
+    app: quantumvestai
+    component: connection-verify
+    created-by: daparthi001
+    created-date: "2025-05-20"
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      containers:
+      - name: verify-connections
+        image: postgres:13-alpine
+        command: 
+        - /bin/sh
+        - -c
+        - |
+          echo "=== Starting Database Connection Verification at $(date -u) ==="
+          echo "Timestamp: 2025-05-20 08:01:02"
+          echo "Verifier: daparthi001"
+          
+          # Install necessary tools
+          apk add --no-cache netcat-openbsd curl jq
+          
+          # Function to test TCP connectivity
+          test_tcp_connection() {
+            local host=$1
+            local port=$2
+            echo "Testing TCP connectivity to $host:$port..."
+            nc -zv -w 5 "$host" "$port"
+            return $?
+          }
+          
+          # Function to test database connection
+          test_db_connection() {
+            local host=$1
+            local port=$2
+            local description=$3
+            
+            echo ""
+            echo "=== Testing $description ==="
+            echo "Host: $host"
+            echo "Port: $port"
+            echo "Database: $DB_NAME"
+            echo "User: $DB_USER"
+            
+            # Test TCP connectivity first
+            if ! test_tcp_connection "$host" "$port"; then
+              echo "❌ TCP connection failed to $host:$port"
+              return 1
+            fi
+            
+            # Test PostgreSQL connection using environment variables
+            export PGPASSWORD="$DB_PASSWORD"
+            export PGHOST="$host"
+            export PGPORT="$port"
+            export PGUSER="$DB_USER"
+            export PGDATABASE="$DB_NAME"
+            
+            if psql -w -c '\conninfo' 2>/dev/null; then
+              echo "✅ Successfully connected to $description"
+              return 0
+            else
+              echo "❌ Failed to connect to $description"
+              return 1
+            fi
+          }
+          
+          # Test RDS endpoint connection
+          echo "=== Testing RDS Direct Connection ==="
+          echo "Attempting connection to RDS endpoint..."
+          test_db_connection "$RDS_HOST" "$RDS_PORT" "RDS Direct Connection"
+          rds_status=$?
+          
+          # Test internal service connection
+          echo "=== Testing Internal Service Connection ==="
+          echo "Attempting connection to internal service..."
+          test_db_connection "$INTERNAL_HOST" "$INTERNAL_PORT" "Internal Service"
+          internal_status=$?
+          
+          # Print environment for debugging (masking sensitive data)
+          echo ""
+          echo "=== Environment Variables ==="
+          echo "RDS_HOST: $RDS_HOST"
+          echo "RDS_PORT: $RDS_PORT"
+          echo "INTERNAL_HOST: $INTERNAL_HOST"
+          echo "INTERNAL_PORT: $INTERNAL_PORT"
+          echo "DB_NAME: $DB_NAME"
+          echo "DB_USER: $DB_USER"
+          echo "PGPASSWORD is $(if [ -n "$PGPASSWORD" ]; then echo "set"; else echo "not set"; fi)"
+          
+          # Print connection details
+          echo ""
+          echo "=== Connection Details ==="
+          echo "RDS Connection Status: $([ $rds_status -eq 0 ] && echo "✅ SUCCESS" || echo "❌ FAILED")"
+          echo "Internal Connection Status: $([ $internal_status -eq 0 ] && echo "✅ SUCCESS" || echo "❌ FAILED")"
+          
+          # Exit based on connection results
+          if [ $rds_status -eq 0 ] || [ $internal_status -eq 0 ]; then
+            echo "✅ At least one connection method succeeded"
+            exit 0
+          else
+            echo "❌ All connection methods failed"
+            echo ""
+            echo "=== Troubleshooting Information ==="
+            echo "1. RDS Endpoint Resolution:"
+            getent hosts "$RDS_HOST" || echo "Failed to resolve RDS host"
+            echo ""
+            echo "2. Internal Service Resolution:"
+            getent hosts "$INTERNAL_HOST" || echo "Failed to resolve internal host"
+            echo ""
+            echo "3. Please check:"
+            echo "   - Security group rules"
+            echo "   - Network connectivity"
+            echo "   - Database credentials"
+            echo "   - Database instance status"
+            exit 1
+          fi
+        env:
+          # RDS Connection Variables
+          - name: RDS_HOST
+            value: "quantumvestai-dev.cwbsqsiywwaa.us-east-1.rds.amazonaws.com"
+          - name: RDS_PORT
+            value: "5432"
+          # Internal Service Variables
+          - name: INTERNAL_HOST
+            value: "172.20.234.34"
+          - name: INTERNAL_PORT
+            value: "5432"
+          # Common Variables
+          - name: DB_USER
+            value: "dbadmin"
+          - name: DB_NAME
+            value: "quantumvestaidb"
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: quantumvestai-cluster-rds-credentials
+                key: password
+          # PostgreSQL Environment Variables
+          - name: PGSSLMODE
+            value: "require"
+          - name: PGCONNECT_TIMEOUT
+            value: "10"
+      restartPolicy: OnFailure

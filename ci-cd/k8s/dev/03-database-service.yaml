@@ -21,3 +21,4 @@ spec:
     app: quantumvestai
     tier: database
     environment: development
+  clusterIP: None  # Headless service for StatefulSet

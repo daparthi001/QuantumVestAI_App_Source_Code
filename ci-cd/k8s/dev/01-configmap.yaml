@@ -15,8 +15,6 @@ data:
   VERSION: "1.0.0-dev"
   ENVIRONMENT: "development"
   DEBUG: "true"
-  POSTGRES_DB: "quantumvestai"
-  POSTGRES_PORT: "5432"
   LOG_LEVEL: "DEBUG"
   WORKERS: "1"
   RELOAD: "true"

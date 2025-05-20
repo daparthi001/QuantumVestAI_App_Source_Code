@@ -1,0 +1,38 @@
+#!/bin/bash
+# Database Connection Monitor
+# Created: 2025-05-20 08:03:38
+# Author: daparthi001
+
+# Configuration
+NAMESPACE="dev"
+RDS_HOST="quantumvestai-dev.cwbsqsiywwaa.us-east-1.rds.amazonaws.com"
+RDS_PORT="5432"
+DB_USER="dbadmin"
+DB_NAME="quantumvestaidb"
+
+# Get the password from the secret
+DB_PASSWORD=$(kubectl get secret -n $NAMESPACE quantumvestai-cluster-rds-credentials -o jsonpath='{.data.password}' | base64 -d)
+
+# Test RDS connection and get SSL info
+echo "=== Database Connection Monitor ==="
+echo "Timestamp: $(date -u '+%Y-%m-%d %H:%M:%S')"
+echo "User: daparthi001"
+
+connection_info=$(PGPASSWORD="$DB_PASSWORD" psql \
+  "postgresql://$DB_USER@$RDS_HOST:$RDS_PORT/$DB_NAME?sslmode=require" \
+  -c '\conninfo' 2>&1)
+
+if [ $? -eq 0 ]; then
+    echo "✅ RDS Connection: SUCCESS"
+    echo "Connection Details:"
+    echo "$connection_info"
+    
+    # Extract SSL information
+    ssl_info=$(echo "$connection_info" | grep "SSL connection")
+    echo "SSL Configuration:"
+    echo "$ssl_info"
+else
+    echo "❌ RDS Connection: FAILED"
+    echo "Error:"
+    echo "$connection_info"
+fi

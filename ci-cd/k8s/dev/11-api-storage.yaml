@@ -20,7 +20,7 @@ spec:
   resources:
     requests:
       storage: 10Gi
-  storageClassName: gp3  # Using AWS EBS storage class
+  storageClassName: ebs-sc  # Using AWS EBS storage class
 
 ---
 apiVersion: v1
@@ -40,4 +40,4 @@ spec:
   resources:
     requests:
       storage: 20Gi
-  storageClassName: gp3
+  storageClassName: ebs-sc

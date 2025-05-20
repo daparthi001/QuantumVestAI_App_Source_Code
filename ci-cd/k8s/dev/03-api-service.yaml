@@ -1,0 +1,26 @@
+# Development API Service
+# Created: 2025-05-20 07:29:22
+# Author: daparthi001
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: quantumvestai-dev-api
+  namespace: dev
+  labels:
+    environment: development
+    app: quantumvestai
+    tier: backend
+    created-by: daparthi001
+    created-date: "2025-05-20"
+spec:
+  ports:
+    - port: 8000
+      targetPort: 8000
+      protocol: TCP
+      name: http
+  selector:
+    app: quantumvestai
+    tier: backend
+    environment: development
+  type: ClusterIP
