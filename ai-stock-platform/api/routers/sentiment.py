@@ -1,106 +1,183 @@
+"""
+Sentiment Analysis Router
+Created: 2025-05-20 04:46:38
+Author: daparthi001
+"""
 from fastapi import APIRouter, Depends, Query, Path, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from datetime import datetime
 
-from api.core.security import get_current_user, get_optional_current_user
+from api.core.security import get_current_user
 from api.core.exceptions import ResourceNotFoundError, PermissionDeniedError
 from api.db.session import get_db
 from api.db.models.user import User
-from api.services.data_service import DataService
+from api.services.sentiment_service import SentimentService
+from api.schemas.sentiment import (
+    SentimentResponse,
+    SentimentTrendsResponse,
+    SentimentSourcesResponse,
+    SentimentAlertResponse,
+    NewsSentimentResponse
+)
 
-router = APIRouter(prefix="/sentiment")
+router = APIRouter(
+    prefix="/sentiment",
+    tags=["sentiment"],
+    dependencies=[Depends(get_current_user)]
+)
 
-@router.get("/{ticker}")
+@router.get(
+    "/{ticker}",
+    response_model=SentimentResponse,
+    summary="Get sentiment",
+    description="Get sentiment analysis for a stock"
+)
 async def get_stock_sentiment(
-    ticker: str = Path(..., min_length=1, max_length=10, description="Stock ticker symbol"),
+    ticker: str = Path(..., min_length=1, max_length=10),
+    sources: List[str] = Query(
+        ["news", "twitter", "reddit"],
+        description="Sentiment sources to analyze"
+    ),
+    period: str = Query(
+        "1d",
+        regex="^(1d|1w|1m|3m|6m|1y|all)$",
+        description="Analysis period"
+    ),
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_optional_current_user)
-):
+    current_user: User = Depends(get_current_user)
+) -> SentimentResponse:
     """Get sentiment analysis for a stock."""
-    # If user is not authenticated or free user, check rate limits
-    if not current_user or current_user.role == "free":
-        # In a real implementation, apply stricter rate limits
-        pass
+    if current_user.role == "free":
+        raise PermissionDeniedError("Sentiment analysis requires premium subscription")
     
-    data_service = DataService(db)
-    sentiment = await data_service.get_sentiment_analysis(ticker)
+    service = SentimentService(db)
+    sentiment = await service.get_sentiment(ticker, sources, period)
     
-    if not sentiment.get("success", False):
-        raise ResourceNotFoundError(sentiment.get("error", "Failed to retrieve sentiment data"))
-    
-    # Free users get limited data
-    if not current_user or current_user.role == "free":
-        # Remove detailed news content
-        if "sentiment" in sentiment and "news" in sentiment["sentiment"]:
-            # Limit to just 3 articles and remove descriptions
-            limited_news = []
-            for article in sentiment["sentiment"]["news"][:3]:
-                limited_news.append({
-                    "title": article.get("title", ""),
-                    "source": article.get("source", ""),
-                    "published_at": article.get("published_at", ""),
-                    "sentiment": article.get("sentiment", "")
-                })
-            sentiment["sentiment"]["news"] = limited_news
+    if not sentiment:
+        raise ResourceNotFoundError(f"Sentiment data not found for {ticker}")
     
     return sentiment
 
-@router.get("/compare")
-async def compare_sentiment(
-    tickers: str = Query(..., description="Comma-separated list of ticker symbols"),
+@router.get(
+    "/{ticker}/trends",
+    response_model=SentimentTrendsResponse,
+    summary="Get sentiment trends",
+    description="Get historical sentiment trends"
+)
+async def get_sentiment_trends(
+    ticker: str = Path(..., min_length=1, max_length=10),
+    days: int = Query(30, ge=1, le=365),
+    source: str = Query(
+        "all",
+        regex="^(all|news|twitter|reddit)$",
+        description="Sentiment source"
+    ),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
-):
-    """Compare sentiment analysis for multiple stocks."""
-    # Check user permissions
+) -> SentimentTrendsResponse:
+    """Get sentiment trends."""
     if current_user.role == "free":
-        raise PermissionDeniedError("Sentiment comparison requires a paid subscription")
+        raise PermissionDeniedError("Sentiment trends require premium subscription")
     
-    data_service = DataService(db)
-    ticker_list = [t.strip() for t in tickers.split(',') if t.strip()]
+    service = SentimentService(db)
+    trends = await service.get_trends(ticker, days, source)
     
-    if not ticker_list:
-        return {"error": "No valid tickers provided", "success": False}
+    if not trends:
+        raise ResourceNotFoundError(f"Sentiment trends not found for {ticker}")
     
-    # Limit to 5 tickers
-    ticker_list = ticker_list[:5]
-    
-    results = {}
-    for ticker in ticker_list:
-        sentiment = await data_service.get_sentiment_analysis(ticker)
-        if sentiment.get("success"):
-            results[ticker] = sentiment.get("sentiment", {}).get("summary", {})
-        else:
-            results[ticker] = {"error": sentiment.get("error", "Unknown error")}
-    
-    return {
-        "results": results,
-        "success": True,
-        "tickers": ticker_list
-    }
+    return trends
 
-@router.get("/trending/topics")
-async def get_trending_sentiment_topics(
-    days: int = Query(7, ge=1, le=30, description="Number of days to analyze"),
+@router.get(
+    "/{ticker}/sources",
+    response_model=List[SentimentSourcesResponse],
+    summary="Get sentiment sources",
+    description="Get sentiment analysis by source"
+)
+async def get_sentiment_sources(
+    ticker: str = Path(..., min_length=1, max_length=10),
+    date: str = Query(
+        None,
+        regex=r"^\d{4}-\d{2}-\d{2}$",
+        description="Analysis date (YYYY-MM-DD)"
+    ),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
-):
-    """Get trending topics based on financial news sentiment."""
-    # Check user permissions
+) -> List[SentimentSourcesResponse]:
+    """Get sentiment sources."""
     if current_user.role == "free":
-        raise PermissionDeniedError("Trending topics analysis requires a paid subscription")
+        raise PermissionDeniedError("Source analysis requires premium subscription")
     
-    data_service = DataService(db)
-    trending_topics = await data_service.get_trending_sentiment_topics(days)
+    service = SentimentService(db)
+    sources = await service.get_sources(ticker, date)
     
-    return trending_topics
+    if not sources:
+        raise ResourceNotFoundError(f"Sentiment sources not found for {ticker}")
+    
+    return sources
 
-@router.get("/market/mood")
-async def get_market_sentiment_mood(
-    db: Session = Depends(get_db)
-):
-    """Get overall market sentiment mood."""
-    data_service = DataService(db)
-    market_mood = await data_service.get_market_sentiment_mood()
+@router.post(
+    "/alerts",
+    response_model=SentimentAlertResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create sentiment alert",
+    description="Create a new sentiment alert"
+)
+async def create_sentiment_alert(
+    ticker: str = Query(..., min_length=1, max_length=10),
+    threshold: float = Query(..., ge=-1.0, le=1.0),
+    source: str = Query(
+        "all",
+        regex="^(all|news|twitter|reddit)$",
+        description="Alert source"
+    ),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> SentimentAlertResponse:
+    """Create sentiment alert."""
+    if current_user.role == "free":
+        raise PermissionDeniedError("Sentiment alerts require premium subscription")
     
-    return market_mood
+    service = SentimentService(db)
+    alert = await service.create_alert(
+        user_id=current_user.id,
+        ticker=ticker,
+        threshold=threshold,
+        source=source
+    )
+    
+    return alert
+
+@router.get(
+    "/news/{ticker}",
+    response_model=List[NewsSentimentResponse],
+    summary="Get news sentiment",
+    description="Get sentiment analysis of news articles"
+)
+async def get_news_sentiment(
+    ticker: str = Path(..., min_length=1, max_length=10),
+    days: int = Query(7, ge=1, le=30),
+    min_score: float = Query(
+        0.0,
+        ge=-1.0,
+        le=1.0,
+        description="Minimum sentiment score"
+    ),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> List[NewsSentimentResponse]:
+    """Get news sentiment analysis."""
+    if current_user.role == "free":
+        raise PermissionDeniedError("News sentiment requires premium subscription")
+    
+    service = SentimentService(db)
+    news = await service.get_news_sentiment(
+        ticker=ticker,
+        days=days,
+        min_score=min_score
+    )
+    
+    if not news:
+        raise ResourceNotFoundError(f"News sentiment not found for {ticker}")
+    
+    return news

@@ -1,137 +1,86 @@
 """
-Stock Routes Implementation
-Created: 2025-05-19 03:46:56
+Stocks Router
+Created: 2025-05-20 04:43:53
 Author: daparthi001
 """
-from fastapi import APIRouter, Depends, HTTPException, Query, Path
-from typing import List, Optional, Dict, Any
-from datetime import datetime, timedelta
+from fastapi import APIRouter, Depends, Query, Path
 from sqlalchemy.orm import Session
+from typing import List, Optional
 
-from api.core.deps import (
-    get_db,
-    get_current_user,
-    verify_premium_access,
-    get_stock_service
-)
+from api.core.security import get_current_user
+from api.core.exceptions import ResourceNotFoundError
+from api.db.session import get_db
+from api.db.models.user import User
 from api.services.stock_service import StockService
 from api.schemas.stock import (
-    StockCreate,
-    StockUpdate,
     StockResponse,
+    StockDetailResponse,
     StockPriceResponse,
-    TechnicalIndicatorsResponse
+    StockSearchResponse
 )
-from api.core.logging import logger
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/stocks",
+    tags=["stocks"],
+    responses={404: {"description": "Not found"}}
+)
 
-@router.get("/stocks/{symbol}", response_model=StockResponse)
-async def get_stock_info(
-    symbol: str = Path(..., description="Stock symbol"),
-    stock_service: StockService = Depends(get_stock_service),
-    current_user = Depends(get_current_user)
-):
-    """Get stock information"""
-    try:
-        stock_info = await stock_service.get_stock_info(symbol)
-        if not stock_info:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Stock with symbol {symbol} not found"
-            )
-        return stock_info
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error getting stock info for {symbol}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail="Internal server error"
-        )
-
-@router.get("/stocks/{symbol}/prices", response_model=List[StockPriceResponse])
-async def get_stock_prices(
-    symbol: str = Path(..., description="Stock symbol"),
-    start_date: Optional[datetime] = Query(None),
-    end_date: Optional[datetime] = Query(None),
-    interval: str = Query("1d", regex="^(1d|5d|1wk|1mo|3mo)$"),
-    stock_service: StockService = Depends(get_stock_service),
-    current_user = Depends(get_current_user)
-):
-    """Get historical stock prices"""
-    try:
-        prices = await stock_service.get_historical_prices(
-            symbol,
-            start_date,
-            end_date,
-            interval
-        )
-        return prices
-    except Exception as e:
-        logger.error(f"Error getting prices for {symbol}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to fetch stock prices"
-        )
-
-@router.get("/stocks/{symbol}/indicators", response_model=TechnicalIndicatorsResponse)
-async def get_technical_indicators(
-    symbol: str = Path(..., description="Stock symbol"),
-    indicators: List[str] = Query(
-        ["sma", "rsi", "macd", "bollinger"],
-        description="List of indicators to calculate"
-    ),
-    current_user = Depends(verify_premium_access),
-    stock_service: StockService = Depends(get_stock_service)
-):
-    """Get technical indicators for a stock"""
-    try:
-        result = await stock_service.calculate_technical_indicators(
-            symbol,
-            indicators
-        )
-        return result
-    except Exception as e:
-        logger.error(f"Error calculating indicators for {symbol}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to calculate indicators"
-        )
-
-@router.post("/stocks/watchlist", response_model=Dict[str, Any])
-async def add_to_watchlist(
-    symbol: str = Query(..., description="Stock symbol"),
-    current_user = Depends(get_current_user),
-    stock_service: StockService = Depends(get_stock_service),
+@router.get(
+    "/search",
+    response_model=List[StockSearchResponse],
+    summary="Search stocks",
+    description="Search stocks by symbol or name"
+)
+async def search_stocks(
+    query: str = Query(..., min_length=1, description="Search query"),
+    limit: int = Query(10, ge=1, le=100, description="Results limit"),
     db: Session = Depends(get_db)
-):
-    """Add stock to user's watchlist"""
-    try:
-        # Verify stock exists
-        stock_info = await stock_service.get_stock_info(symbol)
-        if not stock_info:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Stock with symbol {symbol} not found"
-            )
-        
-        # Add to watchlist
-        result = await stock_service.add_to_watchlist(
-            db,
-            current_user.id,
-            symbol
-        )
-        return {
-            "status": "success",
-            "message": f"Added {symbol} to watchlist",
-            "timestamp": datetime.utcnow().isoformat()
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error adding {symbol} to watchlist: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to add stock to watchlist"
-        )
+) -> List[StockSearchResponse]:
+    """Search for stocks."""
+    stock_service = StockService(db)
+    results = await stock_service.search_stocks(query, limit)
+    return results
+
+@router.get(
+    "/{ticker}",
+    response_model=StockDetailResponse,
+    summary="Get stock details",
+    description="Get detailed information for a stock"
+)
+async def get_stock_details(
+    ticker: str = Path(..., min_length=1, max_length=10),
+    db: Session = Depends(get_db)
+) -> StockDetailResponse:
+    """Get stock details."""
+    stock_service = StockService(db)
+    stock = await stock_service.get_stock_details(ticker)
+    
+    if not stock:
+        raise ResourceNotFoundError(f"Stock with ticker {ticker} not found")
+    
+    return stock
+
+@router.get(
+    "/{ticker}/price",
+    response_model=StockPriceResponse,
+    summary="Get stock price",
+    description="Get current and historical prices for a stock"
+)
+async def get_stock_price(
+    ticker: str = Path(..., min_length=1, max_length=10),
+    interval: str = Query("1d", regex="^(1d|1h|15m|5m|1m)$"),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user)
+) -> StockPriceResponse:
+    """Get stock price."""
+    stock_service = StockService(db)
+    price_data = await stock_service.get_stock_price(
+        ticker=ticker,
+        interval=interval,
+        user=current_user
+    )
+    
+    if not price_data:
+        raise ResourceNotFoundError(f"Price data not found for {ticker}")
+    
+    return price_data

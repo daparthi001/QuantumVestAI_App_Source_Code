@@ -1,59 +1,55 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Body, Response, Request
+"""
+Authentication Router
+Created: 2025-05-20 04:43:53
+Author: daparthi001
+"""
+from fastapi import APIRouter, Depends, Body, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 from api.core.config import settings
 from api.core.security import (
-    get_password_hash, verify_password, create_access_token,
+    get_password_hash,
+    verify_password,
+    create_access_token,
     get_current_user
 )
 from api.core.exceptions import AuthenticationError, ValidationError
 from api.db.session import get_db
 from api.db.models.user import User
-from api.schemas.token import Token
-from api.schemas.user import UserCreate, UserPrivate, UserPasswordUpdate
+from api.schemas.auth import (
+    TokenResponse,
+    LoginResponse,
+    RegisterRequest,
+    RegisterResponse,
+    PasswordChangeRequest,
+    PasswordResetRequest
+)
 
-router = APIRouter(prefix="/auth")
+router = APIRouter(
+    prefix="/auth",
+    tags=["authentication"],
+    responses={401: {"description": "Unauthorized"}}
+)
 
-@router.post("/token", response_model=Token)
-async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
-):
-    """Authenticate user and return JWT token."""
-    user = db.query(User).filter(User.username == form_data.username).first()
-    
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise AuthenticationError("Incorrect username or password")
-    
-    if not user.is_active:
-        raise AuthenticationError("Inactive user")
-    
-    # Create access token
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.username, "role": user.role},
-        expires_delta=access_token_expires
-    )
-    
-    # Update last login time
-    user.last_login = datetime.utcnow()
-    db.commit()
-    
-    return {"access_token": access_token, "token_type": "bearer"}
-
-@router.post("/login", response_model=Dict[str, Any])
+@router.post(
+    "/login",
+    response_model=LoginResponse,
+    summary="User login",
+    description="Login endpoint for UI clients"
+)
 async def login(
     response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
-):
-    """Login endpoint for UI clients."""
+) -> LoginResponse:
+    """User login endpoint."""
+    # Find user
     user = db.query(User).filter(User.username == form_data.username).first()
     
+    # Verify credentials
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise AuthenticationError("Incorrect username or password")
     
@@ -67,7 +63,7 @@ async def login(
         expires_delta=access_token_expires
     )
     
-    # Update last login time
+    # Update last login
     user.last_login = datetime.utcnow()
     db.commit()
     
@@ -82,133 +78,111 @@ async def login(
         secure=settings.ENVIRONMENT != "development"
     )
     
-    # Return token and user info
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "user": UserPrivate.from_orm(user).dict()
+        "user": user
     }
 
-@router.post("/register", status_code=status.HTTP_201_CREATED)
-async def register_user(
-    user_data: UserCreate,
+@router.post(
+    "/register",
+    response_model=RegisterResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Register new user",
+    description="Register a new user account"
+)
+async def register(
+    user_data: RegisterRequest,
     db: Session = Depends(get_db)
-):
+) -> RegisterResponse:
     """Register a new user."""
-    # Check if username exists
+    # Check existing username
     if db.query(User).filter(User.username == user_data.username).first():
         raise ValidationError("Username already registered")
     
-    # Check if email exists
+    # Check existing email
     if db.query(User).filter(User.email == user_data.email).first():
         raise ValidationError("Email already registered")
     
-    # Create new user
-    hashed_password = get_password_hash(user_data.password)
+    # Create user
     db_user = User(
         username=user_data.username,
         email=user_data.email,
         full_name=user_data.full_name,
-        hashed_password=hashed_password,
-        role="free"  # Default role
+        hashed_password=get_password_hash(user_data.password),
+        role="free",
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow()
     )
     
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
     
-    return {"success": True, "user_id": db_user.id}
+    return {
+        "success": True,
+        "user_id": db_user.id,
+        "created_at": db_user.created_at.isoformat()
+    }
 
-@router.post("/verify")
-async def verify_token(current_user: User = Depends(get_current_user)):
-    """Verify JWT token and return user info."""
-    return UserPrivate.from_orm(current_user).dict()
-
-@router.post("/logout")
-async def logout(response: Response):
-    """Logout endpoint - clear cookie."""
-    response.delete_cookie(key="access_token")
-    return {"success": True}
-
-@router.post("/password/change")
+@router.post(
+    "/password/change",
+    summary="Change password",
+    description="Change user password"
+)
 async def change_password(
-    password_data: UserPasswordUpdate,
+    password_data: PasswordChangeRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
-):
+) -> Dict[str, bool]:
     """Change user password."""
-    user = db.query(User).filter(User.id == current_user.id).first()
-    
-    if not user or not verify_password(password_data.current_password, user.hashed_password):
+    # Verify current password
+    if not verify_password(password_data.current_password, current_user.hashed_password):
         raise AuthenticationError("Current password is incorrect")
     
     # Update password
-    user.hashed_password = get_password_hash(password_data.new_password)
+    current_user.hashed_password = get_password_hash(password_data.new_password)
+    current_user.updated_at = datetime.utcnow()
     db.commit()
     
     return {"success": True}
 
-@router.post("/password/reset/request")
+@router.post(
+    "/password/reset/request",
+    summary="Request password reset",
+    description="Request a password reset token"
+)
 async def request_password_reset(
-    email: str = Body(..., embed=True),
+    email_data: PasswordResetRequest,
     db: Session = Depends(get_db)
-):
+) -> Dict[str, bool]:
     """Request password reset."""
-    user = db.query(User).filter(User.email == email).first()
+    user = db.query(User).filter(User.email == email_data.email).first()
     
     if not user:
-        # Don't leak information about user existence
+        # Don't leak user existence
         return {"success": True}
     
     # Generate reset token
-    import uuid
     import secrets
-    reset_token = f"{uuid.uuid4()}-{secrets.token_urlsafe(16)}"
+    reset_token = secrets.token_urlsafe(32)
     
-    # Store token and expiry
+    # Store token with expiry
     user.password_reset_token = reset_token
     user.password_reset_expires = datetime.utcnow() + timedelta(hours=24)
+    user.updated_at = datetime.utcnow()
     db.commit()
     
-    # In a real implementation, send email with reset link
-    # For now, just return success
-    return {"success": True}
-
-@router.post("/password/reset/verify")
-async def verify_reset_token(
-    token: str = Body(..., embed=True),
-    db: Session = Depends(get_db)
-):
-    """Verify password reset token."""
-    user = db.query(User).filter(
-        User.password_reset_token == token,
-        User.password_reset_expires > datetime.utcnow()
-    ).first()
-    
-    if not user:
-        raise ValidationError("Invalid or expired reset token")
+    # TODO: Send reset email
     
     return {"success": True}
 
-@router.post("/password/reset/complete")
-async def complete_password_reset(
-    token: str = Body(...),
-    new_password: str = Body(...),
-    db: Session = Depends(get_db)
-):
-    """Complete password reset."""
-    user = db.query(User).filter(
-        User.password_reset_token == token,
-        User.password_reset_expires > datetime.utcnow()
-    ).first()
-    
-    if not user:
-        raise ValidationError("Invalid or expired reset token")
-    
-    # Update password
-    user.hashed_password = get_password_hash(new_password)
-    user.password_reset_token = None
-    user.password_reset_expires = None
-    db.commit()
-    
+@router.post(
+    "/logout",
+    summary="User logout",
+    description="Logout and clear session"
+)
+async def logout(response: Response) -> Dict[str, bool]:
+    """Logout user."""
+    response.delete_cookie(key="access_token")
     return {"success": True}

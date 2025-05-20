@@ -1,165 +1,192 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Path, status, Body
+"""
+Watchlist Router
+Created: 2025-05-20 04:44:57
+Author: daparthi001
+"""
+from fastapi import APIRouter, Depends, Query, Path, status
 from sqlalchemy.orm import Session
 from typing import List
 
 from api.core.security import get_current_user
-from api.core.exceptions import ResourceNotFoundError
+from api.core.exceptions import ResourceNotFoundError, ValidationError
 from api.db.session import get_db
 from api.db.models.user import User
-from api.db.models.stock import Stock
-from api.schemas.watchlist import WatchlistItem, WatchlistItemCreate, WatchlistItemUpdate
-from api.services.stock_service import StockService
+from api.services.watchlist_service import WatchlistService
+from api.schemas.watchlist import (
+    WatchlistCreate,
+    WatchlistUpdate,
+    WatchlistResponse,
+    WatchlistDetailResponse,
+    WatchlistStockAdd,
+    WatchlistPerformanceResponse
+)
 
-router = APIRouter(prefix="/watchlist")
+router = APIRouter(
+    prefix="/watchlists",
+    tags=["watchlists"],
+    dependencies=[Depends(get_current_user)]
+)
 
-@router.get("/", response_model=List[WatchlistItem])
+@router.post(
+    "/",
+    response_model=WatchlistResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create watchlist",
+    description="Create a new watchlist"
+)
+async def create_watchlist(
+    watchlist: WatchlistCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> WatchlistResponse:
+    """Create a new watchlist."""
+    service = WatchlistService(db)
+    return await service.create_watchlist(watchlist, current_user.id)
+
+@router.get(
+    "/",
+    response_model=List[WatchlistResponse],
+    summary="Get watchlists",
+    description="Get all watchlists for current user"
+)
+async def get_watchlists(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> List[WatchlistResponse]:
+    """Get all watchlists."""
+    service = WatchlistService(db)
+    return await service.get_user_watchlists(current_user.id)
+
+@router.get(
+    "/{watchlist_id}",
+    response_model=WatchlistDetailResponse,
+    summary="Get watchlist",
+    description="Get detailed watchlist information"
+)
 async def get_watchlist(
+    watchlist_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
-):
-    """Get user's watchlist."""
-    stock_service = StockService(db)
-    watchlist_items = stock_service.get_watchlist(current_user.id)
+) -> WatchlistDetailResponse:
+    """Get watchlist details."""
+    service = WatchlistService(db)
+    watchlist = await service.get_watchlist(watchlist_id, current_user.id)
     
-    return watchlist_items
+    if not watchlist:
+        raise ResourceNotFoundError(f"Watchlist {watchlist_id} not found")
+    
+    return watchlist
 
-@router.post("/", response_model=WatchlistItem, status_code=status.HTTP_201_CREATED)
-async def add_to_watchlist(
-    item: WatchlistItemCreate,
+@router.put(
+    "/{watchlist_id}",
+    response_model=WatchlistResponse,
+    summary="Update watchlist",
+    description="Update watchlist information"
+)
+async def update_watchlist(
+    watchlist_id: int,
+    watchlist: WatchlistUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> WatchlistResponse:
+    """Update watchlist."""
+    service = WatchlistService(db)
+    updated = await service.update_watchlist(
+        watchlist_id,
+        watchlist,
+        current_user.id
+    )
+    
+    if not updated:
+        raise ResourceNotFoundError(f"Watchlist {watchlist_id} not found")
+    
+    return updated
+
+@router.delete(
+    "/{watchlist_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete watchlist",
+    description="Delete a watchlist"
+)
+async def delete_watchlist(
+    watchlist_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    """Delete watchlist."""
+    service = WatchlistService(db)
+    success = await service.delete_watchlist(watchlist_id, current_user.id)
+    
+    if not success:
+        raise ResourceNotFoundError(f"Watchlist {watchlist_id} not found")
+
+@router.post(
+    "/{watchlist_id}/stocks",
+    response_model=WatchlistDetailResponse,
+    summary="Add stock",
+    description="Add stock to watchlist"
+)
+async def add_stock_to_watchlist(
+    watchlist_id: int,
+    stock: WatchlistStockAdd,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> WatchlistDetailResponse:
     """Add stock to watchlist."""
-    # Check if stock exists
-    stock = db.query(Stock).filter(Stock.ticker == item.ticker).first()
+    service = WatchlistService(db)
+    updated = await service.add_stock(watchlist_id, stock.ticker, current_user.id)
     
-    if not stock:
-        # Try to fetch stock info and create it
-        stock_service = StockService(db)
-        stock_info = stock_service.get_stock_info(item.ticker)
-        
-        if not stock_info:
-            raise ResourceNotFoundError(f"Stock with ticker {item.ticker} not found")
-        
-        # Create stock in database
-        stock = Stock(
-            ticker=item.ticker,
-            name=stock_info.name,
-            exchange=stock_info.exchange,
-            sector=stock_info.sector,
-            industry=stock_info.industry,
-            country=stock_info.country,
-            last_price=stock_info.last_price,
-            last_updated=stock_info.last_updated
-        )
-        db.add(stock)
-        db.commit()
-        db.refresh(stock)
+    if not updated:
+        raise ResourceNotFoundError(f"Watchlist {watchlist_id} not found")
     
-    # Check if stock is already in watchlist
-    if stock in current_user.watchlist:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Stock {item.ticker} is already in watchlist"
-        )
-    
-    # Add to watchlist
-    current_user.watchlist.append(stock)
-    db.commit()
-    
-    # Set notes if provided
-    if item.notes:
-        # Update association table
-        from sqlalchemy import text
-        db.execute(
-            text("""
-                UPDATE user_watchlist 
-                SET notes = :notes 
-                WHERE user_id = :user_id AND stock_id = :stock_id
-            """),
-            {"notes": item.notes, "user_id": current_user.id, "stock_id": stock.id}
-        )
-        db.commit()
-    
-    # Return watchlist item
-    stock_service = StockService(db)
-    watchlist_item = stock_service.get_watchlist_item(current_user.id, item.ticker)
-    
-    return watchlist_item
+    return updated
 
-@router.delete("/{ticker}")
-async def remove_from_watchlist(
-    ticker: str = Path(..., min_length=1, max_length=10, description="Stock ticker symbol"),
+@router.delete(
+    "/{watchlist_id}/stocks/{ticker}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Remove stock",
+    description="Remove stock from watchlist"
+)
+async def remove_stock_from_watchlist(
+    watchlist_id: int,
+    ticker: str = Path(..., min_length=1, max_length=10),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Remove stock from watchlist."""
-    # Get stock
-    stock = db.query(Stock).filter(Stock.ticker == ticker).first()
+    service = WatchlistService(db)
+    success = await service.remove_stock(watchlist_id, ticker, current_user.id)
     
-    if not stock:
-        raise ResourceNotFoundError(f"Stock with ticker {ticker} not found")
-    
-    # Check if stock is in watchlist
-    if stock not in current_user.watchlist:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Stock {ticker} is not in watchlist"
+    if not success:
+        raise ResourceNotFoundError(
+            f"Stock {ticker} not found in watchlist {watchlist_id}"
         )
-    
-    # Remove from watchlist
-    current_user.watchlist.remove(stock)
-    db.commit()
-    
-    return {"success": True}
 
-@router.put("/{ticker}", response_model=WatchlistItem)
-async def update_watchlist_item(
-    ticker: str = Path(..., min_length=1, max_length=10, description="Stock ticker symbol"),
-    item: WatchlistItemUpdate = Body(...),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Update watchlist item."""
-    # Get stock
-    stock = db.query(Stock).filter(Stock.ticker == ticker).first()
-    
-    if not stock:
-        raise ResourceNotFoundError(f"Stock with ticker {ticker} not found")
-    
-    # Check if stock is in watchlist
-    if stock not in current_user.watchlist:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Stock {ticker} is not in watchlist"
-        )
-    
-    # Update notes
-    from sqlalchemy import text
-    db.execute(
-        text("""
-            UPDATE user_watchlist 
-            SET notes = :notes 
-            WHERE user_id = :user_id AND stock_id = :stock_id
-        """),
-        {"notes": item.notes, "user_id": current_user.id, "stock_id": stock.id}
-    )
-    db.commit()
-    
-    # Return updated watchlist item
-    stock_service = StockService(db)
-    watchlist_item = stock_service.get_watchlist_item(current_user.id, ticker)
-    
-    return watchlist_item
-
-@router.get("/performance")
+@router.get(
+    "/{watchlist_id}/performance",
+    response_model=WatchlistPerformanceResponse,
+    summary="Get performance",
+    description="Get watchlist performance metrics"
+)
 async def get_watchlist_performance(
-    period: str = Query("1mo", regex=r"^(1d|5d|1mo|3mo|6mo|1y|2y|5y|max)$", description="Time period"),
+    watchlist_id: int,
+    period: str = Query(
+        "1d",
+        regex="^(1d|1w|1m|3m|6m|1y|ytd|all)$",
+        description="Performance period"
+    ),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
-):
-    """Get performance of stocks in watchlist."""
-    stock_service = StockService(db)
-    performance = stock_service.get_watchlist_performance(current_user.id, period)
+) -> WatchlistPerformanceResponse:
+    """Get watchlist performance."""
+    service = WatchlistService(db)
+    performance = await service.get_performance(
+        watchlist_id,
+        period,
+        current_user.id
+    )
+    
+    if not performance:
+        raise ResourceNotFoundError(f"Watchlist {watchlist_id} not found")
     
     return performance

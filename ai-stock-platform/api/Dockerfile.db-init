@@ -1,37 +1,65 @@
+# Base image
 FROM postgres:13-alpine AS db-tools
 
-# Install system packages
-RUN apk add --no-cache python3 py3-pip curl jq aws-cli \
-    # Install Python packages from Alpine package repository when available
-    py3-psycopg2 py3-sqlalchemy py3-pydantic py3-passlib \
-    # Create a virtual environment for other packages
-    && python3 -m venv /venv \
-    && /venv/bin/pip install --no-cache-dir alembic boto3
+# Set metadata
+LABEL maintainer="daparthi001"
+LABEL created="2025-05-20 04:32:43"
+LABEL description="Database initialization container for QuantumVestAI"
 
-# Working directory
+# Install system packages and Python dependencies
+RUN apk add --no-cache \
+    # System packages
+    python3 \
+    py3-pip \
+    curl \
+    jq \
+    aws-cli \
+    # Python packages from Alpine
+    py3-psycopg2 \
+    py3-sqlalchemy \
+    py3-pydantic \
+    py3-passlib \
+    # Clean up
+    && rm -rf /var/cache/apk/* \
+    # Create virtual environment
+    && python3 -m venv /venv \
+    && /venv/bin/pip install --no-cache-dir \
+        alembic==1.7.5 \
+        boto3==1.26.137
+
+# Set working directory
 WORKDIR /db-init
 
-# Create necessary directories
-RUN mkdir -p /db-init/api/db/models /db-init/api/core
+# Create directory structure
+RUN mkdir -p /db-init/api/db/models /db-init/api/core /db-init/logs
 
-# Copy database initialization scripts
-COPY db_init/ /db-init/
-COPY alembic/ /db-init/alembic/
-COPY alembic.ini /db-init/
-# Use correct paths for your project structure
-COPY db/models/ /db-init/api/db/models/
-COPY db/base_class.py /db-init/api/db/
-COPY core/config.py /db-init/api/core/
+# Copy files with proper permissions
+COPY --chown=postgres:postgres db_init/ /db-init/
+COPY --chown=postgres:postgres alembic/ /db-init/alembic/
+COPY --chown=postgres:postgres alembic.ini /db-init/
+COPY --chown=postgres:postgres db/models/ /db-init/api/db/models/
+COPY --chown=postgres:postgres db/base_class.py /db-init/api/db/
+COPY --chown=postgres:postgres core/config.py /db-init/api/core/
 
-# Make scripts executable
-RUN find /db-init -name "*.py" -exec chmod +x {} \;
+# Make scripts executable and set permissions
+RUN find /db-init -type f -name "*.py" -exec chmod 644 {} \; && \
+    find /db-init -type f -name "*.sh" -exec chmod 755 {} \;
 
-# Entry point script
-COPY scripts/run_db_init.sh /db-init/
-RUN chmod +x /db-init/run_db_init.sh
+# Copy and set up entry point script
+COPY --chown=postgres:postgres scripts/run_db_init.sh /db-init/
+RUN chmod 755 /db-init/run_db_init.sh
 
-# Set Python path and virtual environment
-ENV PYTHONPATH=/db-init
-ENV PATH="/venv/bin:$PATH"
+# Set environment variables
+ENV PYTHONPATH=/db-init \
+    PATH="/venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Create health check
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+    CMD pg_isready -U postgres || exit 1
+
+# Switch to postgres user for security
+USER postgres
 
 ENTRYPOINT ["/db-init/run_db_init.sh"]
