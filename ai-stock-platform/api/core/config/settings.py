@@ -4,7 +4,7 @@ Created: 2025-05-20 19:13:15
 Author: daparthi001
 """
 from typing import List
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import BaseSettings, AnyHttpUrl
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "QuantumVestAI API"

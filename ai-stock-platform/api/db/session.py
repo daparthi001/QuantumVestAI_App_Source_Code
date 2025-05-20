@@ -9,8 +9,7 @@ from sqlalchemy.pool import QueuePool
 from typing import Generator
 
 from core.config import settings
-
-logger = logging.getLogger(__name__)
+from core.logging import logger
 
 # Configure backoff parameters
 MAX_TRIES = 5

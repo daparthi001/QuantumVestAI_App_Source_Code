@@ -1,6 +1,6 @@
 """
-Main FastAPI Application
-Created: 2025-05-20 18:08:37
+Main API Module
+Created: 2025-05-20 20:41:24
 Author: daparthi001
 """
 from fastapi import FastAPI
@@ -11,8 +11,8 @@ from pathlib import Path
 # Add the parent directory to Python path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from core import settings
-from core.middleware import setup_middleware
+from core import settings, setup_middleware, logger
+from db.session import engine, SessionLocal
 
 from routers import (
     auth,
