@@ -10,7 +10,7 @@ from datetime import datetime
 
 from core.security import get_current_user, verify_webhook_signature
 from core.exceptions import ResourceNotFoundError, PermissionDeniedError, IntegrationError
-from api.db.session import get_db
+from db.session import get_db
 from api.db.models.user import User
 from api.services.integration_service import IntegrationService
 from api.schemas.integration import (

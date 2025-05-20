@@ -2,7 +2,7 @@ from fastapi import Depends, HTTPException, status, Query
 from typing import Optional, List, Dict, Any, Generator, Annotated
 from sqlalchemy.orm import Session
 
-from api.db.session import get_db
+from db.session import get_db
 from core.security import (
     get_current_user, get_current_active_user, get_current_admin_user, oauth2_scheme
 )

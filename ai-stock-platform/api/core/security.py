@@ -12,7 +12,7 @@ from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from core.config import settings
-from api.db.session import get_db
+from db.session import get_db
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")

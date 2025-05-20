@@ -9,7 +9,7 @@ from datetime import datetime
 import psutil
 import os
 
-from api.db.session import get_db
+from db.session import get_db
 from core.config import settings
 
 router = APIRouter()

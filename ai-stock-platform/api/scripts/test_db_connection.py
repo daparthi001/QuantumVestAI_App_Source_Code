@@ -5,7 +5,7 @@ Author: daparthi001
 """
 import logging
 from sqlalchemy import text
-from api.db.session import SessionLocal
+from db.session import SessionLocal
 from core.config import settings
 
 logging.basicConfig(level=logging.INFO)

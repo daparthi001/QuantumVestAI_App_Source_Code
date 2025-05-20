@@ -7,7 +7,7 @@ from fastapi import Depends, Query
 from typing import Optional, Dict, Any, Annotated
 from sqlalchemy.orm import Session
 
-from api.db.session import get_db
+from db.session import get_db
 from core.security import (
     get_current_user,
     get_current_active_user,

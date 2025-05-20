@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from typing import Generator, Optional
 
 from core.security import decode_token
-from api.db.session import SessionLocal
+from db.session import SessionLocal
 from core.exceptions import AuthenticationError
 from api.models.user import User
 

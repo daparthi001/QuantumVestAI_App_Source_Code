@@ -4,7 +4,7 @@ Created: 2025-05-20 05:58:02
 Author: daparthi001
 """
 
-from api.db.session import SessionLocal, engine
+from db.session import SessionLocal, engine
 from api.db.base import Base
 
 # Import all models to ensure they are registered

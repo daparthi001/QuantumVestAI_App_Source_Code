@@ -12,7 +12,7 @@ import logging
 from typing import Generator, Optional
 from datetime import datetime
 
-from api.db.session import Base, get_db
+from db.session import Base, get_db
 from core.config import settings
 from core.logger import setup_logger
 

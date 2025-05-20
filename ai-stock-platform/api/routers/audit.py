@@ -10,7 +10,7 @@ from datetime import datetime
 
 from core.security import get_current_user
 from core.exceptions import ResourceNotFoundError, PermissionDeniedError
-from api.db.session import get_db
+from db.session import get_db
 from api.db.models.user import User
 from api.services.audit_service import AuditService
 from api.schemas.audit import (

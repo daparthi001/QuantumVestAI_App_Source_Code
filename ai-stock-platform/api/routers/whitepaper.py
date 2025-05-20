@@ -14,7 +14,7 @@ from core.exceptions import (
     ValidationError,
     PermissionDeniedError
 )
-from api.db.session import get_db
+from db.session import get_db
 from api.db.models.user import User
 from api.services.whitepaper_service import WhitepaperService
 from api.schemas.whitepaper import (

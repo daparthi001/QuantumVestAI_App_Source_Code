@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisco
 from typing import List, Optional
 from datetime import datetime
 from sqlalchemy.orm import Session
-from api.db.session import get_db
+from db.session import get_db
 from api.services.order_management import OrderManagementService
 from api.services.order_history import OrderHistoryService
 from api.services.order_websocket import OrderWebSocketService

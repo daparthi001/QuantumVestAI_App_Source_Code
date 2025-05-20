@@ -11,7 +11,7 @@ from api.services.market_data_service import MarketDataService
 from api.services.risk_management import RiskManagementService
 from api.services.trading_execution import TradingExecutionService
 from api.models.orders import Order, OrderStatus, OrderType, TimeInForce
-from api.db.session import get_test_db
+from db.session import get_test_db
 
 @pytest.fixture(scope="module")
 def event_loop():

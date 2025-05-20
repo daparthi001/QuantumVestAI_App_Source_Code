@@ -11,7 +11,7 @@ from datetime import datetime
 from core.security import get_optional_current_user, get_current_user
 from core.config import settings
 from core.exceptions import ResourceNotFoundError, PermissionDeniedError
-from api.db.session import get_db
+from db.session import get_db
 from api.db.models.user import User
 from api.services.forecast_service import ForecastService
 from api.services.stock_service import StockService
