@@ -1,9 +1,8 @@
 """
-Core Package
+Middleware Package
 Created: 2025-05-20 20:04:12
 Author: daparthi001
 """
-from .config import settings
 from .middleware import setup_middleware
 
-__all__ = ['settings', 'setup_middleware']
+__all__ = ['setup_middleware']

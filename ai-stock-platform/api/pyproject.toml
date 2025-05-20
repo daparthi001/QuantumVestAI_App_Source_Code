@@ -40,3 +40,9 @@ include = '\.pyi?$'
 [tool.isort]
 profile = "black"
 multi_line_output = 3
+
+packages = [
+    { include = "core" },
+    { include = "core.middleware" },
+    { include = "api" }
+]

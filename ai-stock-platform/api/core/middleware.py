@@ -9,6 +9,9 @@ from starlette.responses import JSONResponse
 import logging
 from core import settings
 
+
+from core.config import settings
+
 logger = logging.getLogger(__name__)
 
 class RequestIDMiddleware(BaseHTTPMiddleware):
