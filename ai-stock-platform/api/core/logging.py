@@ -1,6 +1,6 @@
 """
-Logging Configuration
-Created: 2025-05-20 20:41:24
+Logging Configuration Module
+Created: 2025-05-20 21:42:17
 Author: daparthi001
 """
 import logging
@@ -30,8 +30,7 @@ def setup_logging(
     log_dir.mkdir(exist_ok=True)
     
     # Set up default log file
-    default_log_file = log_dir / "app.log"
-    log_file = log_file or str(default_log_file)
+    log_file = log_file or settings.LOG_FILE
     
     # Determine log level
     log_level = log_level or settings.LOG_LEVEL
@@ -39,15 +38,15 @@ def setup_logging(
     
     # Configure logging format
     log_format = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        settings.LOG_FORMAT,
+        datefmt=settings.LOG_DATE_FORMAT
     )
     
     # Create file handler
     file_handler = RotatingFileHandler(
         log_file,
-        maxBytes=10_000_000,  # 10MB
-        backupCount=5,
+        maxBytes=settings.LOG_FILE_MAX_BYTES,
+        backupCount=settings.LOG_FILE_BACKUP_COUNT,
         encoding='utf-8'
     )
     file_handler.setFormatter(log_format)
@@ -57,17 +56,24 @@ def setup_logging(
     console_handler.setFormatter(log_format)
     
     # Get root logger
-    logger = logging.getLogger()
+    logger = logging.getLogger("quantumvest")
     logger.setLevel(numeric_level)
     
-    # Remove existing handlers
+    # Remove existing handlers to avoid duplicates
     logger.handlers.clear()
     
     # Add handlers
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
     
+    # Log startup message
+    logger.info(
+        "Initialized logging - Level: %s, File: %s",
+        log_level,
+        log_file
+    )
+    
     return logger
 
-# Create a global logger instance
+# Create the logger instance
 logger = setup_logging()
