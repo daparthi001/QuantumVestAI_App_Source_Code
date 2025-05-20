@@ -12,6 +12,8 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 from core import settings
+from core.middleware import setup_middleware
+
 from routers import (
     auth,
     stocks,
