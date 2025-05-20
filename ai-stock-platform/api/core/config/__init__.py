@@ -1,6 +1,6 @@
 """
-Core Config Package
-Created: 2025-05-20 19:13:15
+Config Package
+Created: 2025-05-20 19:38:38
 Author: daparthi001
 """
 from .settings import Settings
