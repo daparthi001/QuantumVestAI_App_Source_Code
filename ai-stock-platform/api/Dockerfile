@@ -47,7 +47,7 @@ RUN apt-get update && apt-get install -y \
 RUN mkdir -p /app/logs /app/data
 
 # Simply copy the entire api directory
-COPY ../api/ /app/api/
+COPY . /app/api/
 
 # Set proper permissions
 RUN chmod -R 755 /app/api/scripts && \
