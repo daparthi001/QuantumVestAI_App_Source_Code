@@ -1,6 +1,8 @@
 """
-QuantumVestAI API
-Created: 2025-05-20 17:36:23
+API Package
+Created: 2025-05-20 21:12:19
 Author: daparthi001
 """
-# Leave this empty to avoid circular imports
+from .main import app
+
+__all__ = ['app']

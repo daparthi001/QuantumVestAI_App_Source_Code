@@ -5,6 +5,4 @@ Author: daparthi001
 """
 from .settings import Settings
 
-settings = Settings()
-
-__all__ = ['settings']
+__all__ = ['Settings']

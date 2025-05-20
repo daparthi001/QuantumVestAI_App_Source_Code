@@ -29,9 +29,11 @@ from routers import (
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    description="QuantumVestAI Stock Market Analysis Platform",
+    docs_url=f"{settings.API_V1_STR}/docs",
+    redoc_url=f"{settings.API_V1_STR}/redoc",
 )
-
+setup_middleware(app)
 # Set up CORS
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
