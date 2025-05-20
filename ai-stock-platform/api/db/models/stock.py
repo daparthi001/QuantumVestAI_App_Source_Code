@@ -1,9 +1,9 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Table, Boolean
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from sqlalchemy.sql import func
 
-from ..base import Base  # Fix: import Base from correct location
-from .user import user_watchlist
+from db.base import Base
+from db.models.associations import user_watchlist, user_portfolio
 
 class Stock(Base):
     """Stock model for basic stock information."""

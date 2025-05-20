@@ -1,15 +1,12 @@
 """
-Database Session Module
-Created: 2025-05-20 19:13:15
+Database Session
+Created: 2025-05-20 20:31:25
 Author: daparthi001
 """
-import logging
-from typing import Generator
-import backoff
 from sqlalchemy import create_engine
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import QueuePool
+from typing import Generator
 
 from core.config import settings
 

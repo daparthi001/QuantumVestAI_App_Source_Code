@@ -1,11 +1,14 @@
 """
 User Model
-Created: 2025-05-19 05:45:27
+Created: 2025-05-20 20:31:25
 Author: daparthi001
 """
-from sqlalchemy import Boolean, Column, String, Integer
-from sqlalchemy.orm import Mapped, relationship
-from db.base_class import Base, TimestampMixin
+from sqlalchemy import Boolean, Column, Integer, String, DateTime
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+
+from db.base import Base
+from db.models.associations import user_watchlist, user_portfolio
 
 class User(Base, TimestampMixin):
     """User model for authentication and authorization"""
