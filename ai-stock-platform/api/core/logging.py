@@ -7,7 +7,7 @@ from pathlib import Path
 import json
 from typing import Any, Dict
 from pythonjsonlogger import jsonlogger
-from api.core.config import settings
+from core.config import settings
 
 class CustomJsonFormatter(jsonlogger.JsonFormatter):
     """Custom JSON formatter for logs."""

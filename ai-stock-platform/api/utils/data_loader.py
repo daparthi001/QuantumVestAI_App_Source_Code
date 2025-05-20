@@ -16,9 +16,9 @@ from datetime import datetime, timedelta
 import os
 from sqlalchemy.orm import Session
 
-from api.core.config import settings
+from core.config import settings
 from api.db.models.stock import Stock, StockPrice
-from api.core.exceptions import ExternalAPIError
+from core.exceptions import ExternalAPIError
 
 logger = logging.getLogger("api")
 

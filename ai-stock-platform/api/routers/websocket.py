@@ -9,10 +9,10 @@ import logging
 import json
 from datetime import datetime
 
-from api.core.security import get_current_user
+from core.security import get_current_user
 from api.db.models.user import User
 from api.services.stock_service import StockService
-from api.core.config import settings
+from core.config import settings
 
 logger = logging.getLogger("api")
 

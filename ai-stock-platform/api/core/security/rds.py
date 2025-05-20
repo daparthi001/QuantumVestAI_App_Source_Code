@@ -7,7 +7,7 @@ This module provides security utilities for working with Amazon RDS.
 import boto3
 import logging
 from botocore.exceptions import ClientError
-from api.core.config import settings
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 

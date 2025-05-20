@@ -6,7 +6,7 @@ Author: daparthi001
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from sqlalchemy.sql import func
 from api.db.base_class import Base
-from api.core.security import get_password_hash
+from core.security import get_password_hash
 
 class User(Base):
     __tablename__ = "users"

@@ -10,7 +10,7 @@ from alembic.runtime.environment import EnvironmentContext
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from api.core.config import settings
+from core.config import settings
 
 def test_migrations_can_run():
     """Test that migrations can run successfully."""

@@ -7,11 +7,11 @@ from fastapi import APIRouter, Depends, File, UploadFile
 from sqlalchemy.orm import Session
 from typing import Any
 
-from api.core.dependencies import get_db, get_current_user
+from core.dependencies import get_db, get_current_user
 from api.schemas.user import UserUpdate, UserProfile
 from api.models.user import User
 from api.services.storage import upload_file
-from api.core.exceptions import NotFoundError
+from core.exceptions import NotFoundError
 
 router = APIRouter(prefix="/users", tags=["Users"])
 

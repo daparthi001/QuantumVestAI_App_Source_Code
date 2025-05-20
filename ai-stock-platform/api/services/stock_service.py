@@ -8,7 +8,7 @@ import asyncio
 from typing import Optional, List, Dict, Any
 from sqlalchemy.orm import Session
 from api.models.stock import Stock, WatchList
-from api.core.config import settings
+from core.config import settings
 import logging
 
 logger = logging.getLogger(__name__)

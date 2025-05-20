@@ -5,8 +5,8 @@ Author: daparthi001
 """
 
 from .settings import Settings
-from api.core.exceptions import APIException
-from api.core.dependencies import get_current_user, get_db
+from core.exceptions import APIException
+from core.dependencies import get_current_user, get_db
 
 __all__ = [
     "settings",

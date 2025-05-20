@@ -12,7 +12,7 @@ import logging
 import redis
 from datetime import timedelta
 
-from api.core.config import settings
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 

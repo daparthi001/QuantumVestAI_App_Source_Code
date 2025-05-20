@@ -4,7 +4,7 @@ import time
 import logging
 from typing import Callable, Awaitable
 
-from api.core.exceptions import RateLimitError
+from core.exceptions import RateLimitError
 
 logger = logging.getLogger("api")
 

@@ -6,7 +6,7 @@ Author: daparthi001
 import pytest
 from fastapi.testclient import TestClient
 from api.main import app
-from api.core.security import create_access_token
+from core.security import create_access_token
 
 client = TestClient(app)
 

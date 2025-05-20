@@ -9,14 +9,14 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from typing import Dict, Any
 
-from api.core.config import settings
-from api.core.security import (
+from core.config import settings
+from core.security import (
     get_password_hash,
     verify_password,
     create_access_token,
     get_current_user
 )
-from api.core.exceptions import AuthenticationError, ValidationError
+from core.exceptions import AuthenticationError, ValidationError
 from api.db.session import get_db
 from api.db.models.user import User
 from api.schemas.auth import (

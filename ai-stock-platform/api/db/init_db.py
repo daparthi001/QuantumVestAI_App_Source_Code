@@ -5,8 +5,8 @@ Author: daparthi001
 """
 import logging
 from sqlalchemy.orm import Session
-from api.core.config import settings
-from api.core.security.utils import SecurityUtils
+from core.config import settings
+from core.security.utils import SecurityUtils
 from api.db.base import Base
 from api.db.models.user import User
 

@@ -11,7 +11,7 @@ from sqlalchemy.exc import OperationalError
 import time
 import backoff
 
-from api.core.config import settings
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 

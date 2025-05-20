@@ -8,8 +8,8 @@ import aiohttp
 from abc import ABC, abstractmethod
 
 from api.models.finbert_sentiment import FinBertSentiment
-from api.core.cache import cache
-from api.core.config import settings
+from core.cache import cache
+from core.config import settings
 
 logger = logging.getLogger("api")
 

@@ -8,7 +8,7 @@ from typing import Optional, Dict, Any, Annotated
 from sqlalchemy.orm import Session
 
 from api.db.session import get_db
-from api.core.security import (
+from core.security import (
     get_current_user,
     get_current_active_user,
     get_current_admin_user,
@@ -16,7 +16,7 @@ from api.core.security import (
 )
 from api.db.models.user import User
 from api.services.stock_service import StockService
-from api.core.exceptions import ResourceNotFoundError, PermissionDeniedError
+from core.exceptions import ResourceNotFoundError, PermissionDeniedError
 
 def get_stock_service(db: Session = Depends(get_db)) -> StockService:
     """Dependency for StockService."""

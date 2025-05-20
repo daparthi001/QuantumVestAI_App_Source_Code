@@ -8,9 +8,9 @@ from sqlalchemy.orm import Session
 from typing import Optional, Dict, Any
 from datetime import datetime
 
-from api.core.security import get_optional_current_user, get_current_user
-from api.core.config import settings
-from api.core.exceptions import ResourceNotFoundError, PermissionDeniedError
+from core.security import get_optional_current_user, get_current_user
+from core.config import settings
+from core.exceptions import ResourceNotFoundError, PermissionDeniedError
 from api.db.session import get_db
 from api.db.models.user import User
 from api.services.forecast_service import ForecastService

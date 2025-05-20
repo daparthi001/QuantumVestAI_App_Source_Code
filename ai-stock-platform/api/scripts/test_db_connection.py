@@ -6,7 +6,7 @@ Author: daparthi001
 import logging
 from sqlalchemy import text
 from api.db.session import SessionLocal
-from api.core.config import settings
+from core.config import settings
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

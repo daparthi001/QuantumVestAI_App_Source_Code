@@ -13,8 +13,8 @@ from typing import Generator, Optional
 from datetime import datetime
 
 from api.db.session import Base, get_db
-from api.core.config import settings
-from api.core.logger import setup_logger
+from core.config import settings
+from core.logger import setup_logger
 
 # Setup logging
 logger = setup_logger(__name__)

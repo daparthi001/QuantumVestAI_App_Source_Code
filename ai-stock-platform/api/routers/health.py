@@ -10,7 +10,7 @@ import psutil
 import os
 
 from api.db.session import get_db
-from api.core.config import settings
+from core.config import settings
 
 router = APIRouter()
 

@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
 
-from api.core.security import get_current_user
-from api.core.exceptions import ResourceNotFoundError, ValidationError
+from core.security import get_current_user
+from core.exceptions import ResourceNotFoundError, ValidationError
 from api.db.session import get_db
 from api.db.models.user import User
 from api.services.portfolio_service import PortfolioService

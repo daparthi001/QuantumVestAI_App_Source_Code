@@ -11,7 +11,7 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from scipy import stats
 
-from api.core.exceptions import ResourceNotFoundError, ValidationError
+from core.exceptions import ResourceNotFoundError, ValidationError
 from api.utils.market_data import MarketDataClient
 from api.utils.time_series import TimeSeriesAnalyzer
 from api.utils.statistical import StatisticalAnalyzer

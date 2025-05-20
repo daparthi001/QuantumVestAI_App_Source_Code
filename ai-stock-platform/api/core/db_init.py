@@ -14,7 +14,7 @@ import argparse
 import sys
 from pathlib import Path
 from api.db.session import get_db, engine
-from api.core.config import settings
+from core.config import settings
 from api.db.models.user import User
 
 logger = logging.getLogger(__name__)
