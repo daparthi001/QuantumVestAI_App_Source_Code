@@ -1,19 +1,60 @@
 #!/bin/bash
 # Database Connection Check Script
-# Created: 2025-05-20 06:19:05
+# Created: 2025-05-20 08:53:27
 # Author: daparthi001
 
 set -e
 
-host="${POSTGRES_HOST:-localhost}"
-port="${POSTGRES_PORT:-5432}"
-user="${POSTGRES_USER}"
-password="${POSTGRES_PASSWORD}"
-db="${POSTGRES_DB}"
+# Get current timestamp
+TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S')
+echo "=== Database Connection Check ==="
+echo "Timestamp: $TIMESTAMP"
+echo "User: daparthi001"
 
-until PGPASSWORD=$password psql -h "$host" -U "$user" -d "$db" -c '\q'; do
-  >&2 echo "Database is unavailable - sleeping"
-  sleep 2
+# Database connection parameters with proper fallbacks
+host="${DB_HOST:-${POSTGRES_HOST:-quantumvestai-dev-db.dev.svc.cluster.local}}"
+port="${DB_PORT:-${POSTGRES_PORT:-5432}}"
+user="${DB_USER:-${POSTGRES_USER:-dbadmin}}"
+password="${DB_PASSWORD:-${POSTGRES_PASSWORD}}"
+db="${DB_NAME:-${POSTGRES_DB:-quantumvestaidb}}"
+
+# Print connection details (without password)
+echo "Connection Details:"
+echo "Host: $host"
+echo "Port: $port"
+echo "User: $user"
+echo "Database: $db"
+echo "Password is $(if [ -n "$password" ]; then echo "set"; else echo "not set"; fi)"
+
+# Check if password is set
+if [ -z "$password" ]; then
+    echo "❌ Error: Database password not set"
+    echo "Please set DB_PASSWORD or POSTGRES_PASSWORD environment variable"
+    exit 1
+fi
+
+# Function to test connection
+test_connection() {
+    PGPASSWORD=$password psql -h "$host" -U "$user" -d "$db" -c '\q' >/dev/null 2>&1
+}
+
+# Wait for database with timeout
+max_attempts=30
+counter=0
+echo "Waiting for database to become available..."
+
+until test_connection; do
+    counter=$((counter + 1))
+    if [ $counter -ge $max_attempts ]; then
+        echo "❌ Error: Maximum attempts ($max_attempts) reached"
+        echo "Database connection failed after $((counter * 2)) seconds"
+        exit 1
+    fi
+    
+    >&2 echo "Database is unavailable - sleeping (Attempt $counter/$max_attempts)"
+    sleep 2
 done
 
->&2 echo "Database is up - executing command"
+echo "✅ Database is up - executing command"
+echo "Successfully connected after $counter attempts"
+echo "Timestamp: $(date -u '+%Y-%m-%d %H:%M:%S')"

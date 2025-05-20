@@ -1,27 +1,7 @@
-# QuantumVestAI API Deployment
-# Created: 2025-05-20 08:40:06
+# API Deployment Configuration
+# Created: 2025-05-20 08:53:27
 # Author: daparthi001
 
-apiVersion: v1
-kind: Service
-metadata:
-  name: quantumvestai-dev-api
-  namespace: dev
-  labels:
-    app: quantumvestai
-    tier: backend
-    environment: development
-spec:
-  ports:
-    - port: 8000
-      targetPort: 8000
-      protocol: TCP
-      name: http
-  selector:
-    app: quantumvestai
-    tier: backend
-    environment: development
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -31,8 +11,6 @@ metadata:
     app: quantumvestai
     tier: backend
     environment: development
-    created-by: daparthi001
-    created-date: "2025-05-20"
 spec:
   replicas: 1
   selector:
@@ -46,47 +24,54 @@ spec:
         app: quantumvestai
         tier: backend
         environment: development
-      annotations:
-        timestamp: "2025-05-20-084006"
     spec:
+      initContainers:
+      - name: wait-for-db
+        image: postgres:13-alpine
+        command:
+        - /bin/sh
+        - -c
+        - |
+          chmod +x /scripts/wait-for-db.sh
+          /scripts/wait-for-db.sh
+        env:
+        - name: DB_HOST
+          value: "quantumvestai-dev-db.dev.svc.cluster.local"
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_USER
+          value: "dbadmin"
+        - name: DB_NAME
+          value: "quantumvestaidb"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: quantumvestai-cluster-rds-credentials
+              key: password
+        volumeMounts:
+        - name: db-check-scripts
+          mountPath: /scripts
       containers:
       - name: api
-        image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:api-dev-latest
-        imagePullPolicy: Always
+        image: quantumvest-api:dev
         env:
-          # Database Configuration
-          - name: DB_HOST
-            value: "quantumvestai-dev-db.dev.svc.cluster.local"
-          - name: DB_PORT
-            value: "5432"
-          - name: DB_NAME
-            value: "quantumvestaidb"
-          - name: DB_USER
-            value: "dbadmin"
-          - name: DB_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: quantumvestai-cluster-rds-credentials
-                key: password
+        - name: DB_HOST
+          value: "quantumvestai-dev-db.dev.svc.cluster.local"
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_USER
+          value: "dbadmin"
+        - name: DB_NAME
+          value: "quantumvestaidb"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: quantumvestai-cluster-rds-credentials
+              key: password
         ports:
         - containerPort: 8000
-          name: http
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 8000
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8000
-          initialDelaySeconds: 15
-          periodSeconds: 20
-        resources:
-          requests:
-            cpu: "250m"
-            memory: "512Mi"
-          limits:
-            cpu: "500m"
-            memory: "1Gi"
+      volumes:
+      - name: db-check-scripts
+        configMap:
+          name: db-check-scripts
+          defaultMode: 0777
