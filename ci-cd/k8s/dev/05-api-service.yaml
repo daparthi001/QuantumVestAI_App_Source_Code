@@ -1,0 +1,24 @@
+# Development API Service
+# Created: 2025-05-20 06:12:45
+# Author: daparthi001
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: quantumvest-dev-api
+  namespace: quantumvest-dev
+  labels:
+    environment: development
+    app: quantumvest
+    tier: backend
+spec:
+  ports:
+    - port: 8000
+      targetPort: 8000
+      protocol: TCP
+      name: http
+  selector:
+    app: quantumvest
+    tier: backend
+    environment: development
+  type: ClusterIP

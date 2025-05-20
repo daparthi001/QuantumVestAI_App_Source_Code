@@ -1,0 +1,13 @@
+# Development Namespace Configuration
+# Created: 2025-05-20 06:14:34
+# Author: daparthi001
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dev
+  labels:
+    environment: development
+    app: quantumvest
+    created-by: daparthi001
+    created-date: "2025-05-20"

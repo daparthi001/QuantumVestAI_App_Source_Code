@@ -1,0 +1,44 @@
+# Database Seed Job
+# Created: 2025-05-20 06:15:55
+# Author: daparthi001
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-seed
+  namespace: dev
+  labels:
+    environment: development
+    app: quantumvest
+    component: db-seed
+spec:
+  ttlSecondsAfterFinished: 100
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        environment: development
+        app: quantumvest
+        component: db-seed
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: db-seed
+          image: quantumvest-api:dev
+          command: ['python', 'scripts/seed_db.py']
+          envFrom:
+            - configMapRef:
+                name: quantumvest-config
+            - secretRef:
+                name: quantumvestai-cluster-rds-credentials
+          volumeMounts:
+            - name: seed-data
+              mountPath: /app/seed_data.json
+              subPath: seed-data.json
+      volumes:
+        - name: seed-data
+          configMap:
+            name: db-init-config
+            items:
+              - key: seed-data.json
+                path: seed-data.json

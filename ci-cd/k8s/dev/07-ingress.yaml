@@ -1,0 +1,26 @@
+# Development Ingress
+# Created: 2025-05-20 06:12:45
+# Author: daparthi001
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: quantumvest-dev-ingress
+  namespace: quantumvest-dev
+  labels:
+    environment: development
+    app: quantumvest
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - host: dev.quantumvest.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: quantumvest-dev-api
+                port:
+                  number: 8000

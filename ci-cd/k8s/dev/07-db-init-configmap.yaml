@@ -1,0 +1,46 @@
+# Database Initialization ConfigMap
+# Created: 2025-05-20 06:15:55
+# Author: daparthi001
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-init-config
+  namespace: dev
+  labels:
+    environment: development
+    app: quantumvest
+    component: db-init
+data:
+  alembic.ini: |
+    [alembic]
+    script_location = alembic
+    sqlalchemy.url = postgresql://%(POSTGRES_USER)s:%(POSTGRES_PASSWORD)s@%(POSTGRES_HOST)s:%(POSTGRES_PORT)s/%(POSTGRES_DB)s
+    file_template = %%(year)d%%(month).2d%%(day).2d_%%(hour).2d%%(minute).2d%%(second).2d_%%(rev)s_%%(slug)s
+    timezone = UTC
+
+  wait-for-db.sh: |
+    #!/bin/sh
+    echo "Waiting for database..."
+    until PGPASSWORD=$POSTGRES_PASSWORD psql -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c '\q'; do
+      echo "Database is unavailable - sleeping"
+      sleep 2
+    done
+    echo "Database is up"
+
+  seed-data.json: |
+    {
+      "initial_data": {
+        "roles": [
+          {"name": "admin", "description": "Administrator"},
+          {"name": "user", "description": "Regular user"}
+        ],
+        "settings": {
+          "max_portfolio_size": 100,
+          "default_currency": "USD",
+          "trading_hours_start": "09:30",
+          "trading_hours_end": "16:00",
+          "timezone": "America/New_York"
+        }
+      }
+    }

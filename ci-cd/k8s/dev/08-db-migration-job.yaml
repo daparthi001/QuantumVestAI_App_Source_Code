@@ -1,0 +1,61 @@
+# Database Migration Job
+# Created: 2025-05-20 06:15:55
+# Author: daparthi001
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migration
+  namespace: dev
+  labels:
+    environment: development
+    app: quantumvest
+    component: db-migration
+spec:
+  ttlSecondsAfterFinished: 100
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        environment: development
+        app: quantumvest
+        component: db-migration
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-for-db
+          image: postgres:13-alpine
+          command: ['sh', '/scripts/wait-for-db.sh']
+          envFrom:
+            - secretRef:
+                name: quantumvestai-cluster-rds-credentials
+          volumeMounts:
+            - name: db-init-scripts
+              mountPath: /scripts
+      containers:
+        - name: alembic
+          image: quantumvest-api:dev
+          command: ['alembic', 'upgrade', 'head']
+          envFrom:
+            - configMapRef:
+                name: quantumvest-config
+            - secretRef:
+                name: quantumvestai-cluster-rds-credentials
+          volumeMounts:
+            - name: alembic-config
+              mountPath: /app/alembic.ini
+              subPath: alembic.ini
+      volumes:
+        - name: db-init-scripts
+          configMap:
+            name: db-init-config
+            defaultMode: 0755
+            items:
+              - key: wait-for-db.sh
+                path: wait-for-db.sh
+        - name: alembic-config
+          configMap:
+            name: db-init-config
+            items:
+              - key: alembic.ini
+                path: alembic.ini

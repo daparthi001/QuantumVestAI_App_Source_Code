@@ -1,0 +1,44 @@
+# Database Update CronJob
+# Created: 2025-05-20 06:15:55
+# Author: daparthi001
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: db-update
+  namespace: dev
+  labels:
+    environment: development
+    app: quantumvest
+    component: db-update
+spec:
+  schedule: "0 0 * * *"  # Run daily at midnight UTC
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            environment: development
+            app: quantumvest
+            component: db-update
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: db-update
+              image: quantumvest-api:dev
+              command: ['python', 'scripts/update_market_data.py']
+              envFrom:
+                - configMapRef:
+                    name: quantumvest-config
+                - secretRef:
+                    name: quantumvestai-cluster-rds-credentials
+              resources:
+                requests:
+                  memory: "256Mi"
+                  cpu: "250m"
+                limits:
+                  memory: "512Mi"
+                  cpu: "500m"

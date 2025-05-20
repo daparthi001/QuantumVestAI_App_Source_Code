@@ -1,0 +1,23 @@
+# Development Database Service
+# Created: 2025-05-20 06:12:45
+# Author: daparthi001
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: quantumvest-dev-db
+  namespace: quantumvest-dev
+  labels:
+    environment: development
+    app: quantumvest
+    tier: database
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+      name: postgres
+  selector:
+    app: quantumvest
+    tier: database
+    environment: development
