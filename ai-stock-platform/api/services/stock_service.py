@@ -7,7 +7,7 @@ import aiohttp
 import asyncio
 from typing import Optional, List, Dict, Any
 from sqlalchemy.orm import Session
-from api.models.stock import Stock, WatchList
+from models.stock import Stock, WatchList
 from core.config import settings
 import logging
 

@@ -21,7 +21,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Import models
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from api.db.models import User, Stock, Watchlist, WatchlistStock
+from db.models import User, Stock, Watchlist, WatchlistStock
 
 def seed_data():
     """Seed initial data into the database"""

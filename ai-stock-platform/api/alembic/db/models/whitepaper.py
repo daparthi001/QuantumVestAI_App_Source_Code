@@ -3,7 +3,7 @@ from sqlalchemy.dialects.postgresql import ARRAY  # If using PostgreSQL
 from sqlalchemy.orm import relationship
 from uuid import uuid4
 
-from api.db.base_class import Base
+from db.base_class import Base
 
 class Whitepaper(Base):
     """Whitepaper model for storing uploaded documents."""

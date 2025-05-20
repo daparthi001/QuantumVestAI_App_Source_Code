@@ -18,8 +18,8 @@ from core.security import (
 )
 from core.exceptions import AuthenticationError, ValidationError
 from db.session import get_db
-from api.db.models.user import User
-from api.schemas.auth import (
+from db.models.user import User
+from schemas.auth import (
     TokenResponse,
     LoginResponse,
     RegisterRequest,

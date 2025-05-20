@@ -7,7 +7,7 @@ import asyncio
 import aiohttp
 from abc import ABC, abstractmethod
 
-from api.models.finbert_sentiment import FinBertSentiment
+from models.finbert_sentiment import FinBertSentiment
 from core.cache import cache
 from core.config import settings
 

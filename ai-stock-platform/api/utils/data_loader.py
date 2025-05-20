@@ -17,7 +17,7 @@ import os
 from sqlalchemy.orm import Session
 
 from core.config import settings
-from api.db.models.stock import Stock, StockPrice
+from db.models.stock import Stock, StockPrice
 from core.exceptions import ExternalAPIError
 
 logger = logging.getLogger("api")

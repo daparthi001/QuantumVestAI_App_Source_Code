@@ -10,8 +10,8 @@ import json
 from datetime import datetime
 
 from core.security import get_current_user
-from api.db.models.user import User
-from api.services.stock_service import StockService
+from db.models.user import User
+from services.stock_service import StockService
 from core.config import settings
 
 logger = logging.getLogger("api")

@@ -7,7 +7,7 @@ from enum import Enum
 from datetime import datetime
 from typing import Optional
 from sqlalchemy import Column, Integer, String, Float, DateTime, Enum as SQLEnum
-from api.db.base import Base
+from db.base import Base
 
 class OrderStatus(str, Enum):
     PENDING = "PENDING"

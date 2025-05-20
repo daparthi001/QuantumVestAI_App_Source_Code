@@ -11,9 +11,9 @@ from datetime import datetime
 from core.security import get_current_user
 from core.exceptions import ResourceNotFoundError, PermissionDeniedError
 from db.session import get_db
-from api.db.models.user import User
-from api.services.risk_service import RiskService
-from api.schemas.risk import (
+from db.models.user import User
+from services.risk_service import RiskService
+from schemas.risk import (
     PortfolioRiskResponse,
     MarketRiskResponse,
     RiskFactorResponse,

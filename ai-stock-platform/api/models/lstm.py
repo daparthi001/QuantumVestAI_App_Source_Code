@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import os
 from pathlib import Path
 
-from api.models.base import BaseModel
+from models.base import BaseModel
 
 logger = logging.getLogger("api")
 

@@ -26,7 +26,7 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 def authenticate_user(db: Session, username: str, password: str):
-    from api.models.user import User
+    from models.user import User
     user = db.query(User).filter(User.username == username).first()
     if not user:
         return False
@@ -69,7 +69,7 @@ async def get_current_user(
     except JWTError:
         raise credentials_exception
     
-    from api.models.user import User
+    from models.user import User
     user = db.query(User).filter(User.username == username).first()
     if user is None:
         raise credentials_exception

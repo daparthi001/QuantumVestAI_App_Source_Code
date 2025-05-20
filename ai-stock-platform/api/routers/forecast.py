@@ -12,10 +12,10 @@ from core.security import get_optional_current_user, get_current_user
 from core.config import settings
 from core.exceptions import ResourceNotFoundError, PermissionDeniedError
 from db.session import get_db
-from api.db.models.user import User
-from api.services.forecast_service import ForecastService
-from api.services.stock_service import StockService
-from api.schemas.forecast import (
+from db.models.user import User
+from services.forecast_service import ForecastService
+from services.stock_service import StockService
+from schemas.forecast import (
     ForecastResponse,
     ModelComparisonResponse,
     PredictabilityResponse,

@@ -18,7 +18,7 @@ def validate_rds_connection():
     try:
         from sqlalchemy import create_engine, text
         from sqlalchemy.exc import SQLAlchemyError
-        from api.db.rds_session import get_connection_url
+        from db.rds_session import get_connection_url
 
         connection_url = get_connection_url()
         # Create a temporary engine just for testing

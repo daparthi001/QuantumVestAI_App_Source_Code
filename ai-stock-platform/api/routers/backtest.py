@@ -11,9 +11,9 @@ from datetime import datetime
 from core.security import get_current_user
 from core.exceptions import ResourceNotFoundError, PermissionDeniedError
 from db.session import get_db
-from api.db.models.user import User
-from api.services.backtest_service import BacktestService
-from api.schemas.backtest import (
+from db.models.user import User
+from services.backtest_service import BacktestService
+from schemas.backtest import (
     BacktestCreate,
     BacktestResponse,
     BacktestResultResponse,

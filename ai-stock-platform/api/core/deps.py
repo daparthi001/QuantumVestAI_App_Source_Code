@@ -14,8 +14,8 @@ from core.security import (
     get_current_admin_user,
     oauth2_scheme
 )
-from api.db.models.user import User
-from api.services.stock_service import StockService
+from db.models.user import User
+from services.stock_service import StockService
 from core.exceptions import ResourceNotFoundError, PermissionDeniedError
 
 def get_stock_service(db: Session = Depends(get_db)) -> StockService:

@@ -5,7 +5,7 @@ Author: daparthi001
 """
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import relationship
-from api.db.base import Base, TimestampMixin
+from db.base import Base, TimestampMixin
 import enum
 
 class TransactionType(str, enum.Enum):

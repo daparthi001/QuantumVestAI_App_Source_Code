@@ -12,11 +12,11 @@ from sklearn.preprocessing import StandardScaler
 from scipy import stats
 
 from core.exceptions import ResourceNotFoundError, ValidationError
-from api.utils.market_data import MarketDataClient
-from api.utils.time_series import TimeSeriesAnalyzer
-from api.utils.statistical import StatisticalAnalyzer
-from api.utils.ml_models import PredictiveModels
-from api.utils.sentiment import SentimentAnalyzer
+from utils.market_data import MarketDataClient
+from utils.time_series import TimeSeriesAnalyzer
+from utils.statistical import StatisticalAnalyzer
+from utils.ml_models import PredictiveModels
+from utils.sentiment import SentimentAnalyzer
 
 class AnalyticsService:
     def __init__(self, db: Session):

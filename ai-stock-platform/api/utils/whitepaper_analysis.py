@@ -32,7 +32,7 @@ from gensim import corpora
 from gensim.models import LdaModel
 from gensim.utils import simple_preprocess
 
-from api.models.finbert_sentiment import FinBertSentiment
+from models.finbert_sentiment import FinBertSentiment
 
 logger = logging.getLogger("api")
 

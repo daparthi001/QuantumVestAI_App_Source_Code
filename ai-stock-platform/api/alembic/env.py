@@ -14,7 +14,7 @@ from alembic import context
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 # Import the SQLAlchemy metadata
-from api.db.base import Base
+from db.base import Base
 from core.config import settings
 
 # this is the Alembic Config object

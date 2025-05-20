@@ -5,7 +5,7 @@ Author: daparthi001
 """
 
 from fastapi import APIRouter
-from api.routers.v1 import router as v1_router
+from routers.v1 import router as v1_router
 
 # Create main router
 router = APIRouter()

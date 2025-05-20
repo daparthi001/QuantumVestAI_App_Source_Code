@@ -5,7 +5,7 @@ Author: daparthi001
 """
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
 from sqlalchemy.sql import func
-from api.db.base_class import Base
+from db.base_class import Base
 
 class Stock(Base):
     __tablename__ = "stocks"

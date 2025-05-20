@@ -6,11 +6,11 @@ Author: daparthi001
 import pytest
 import asyncio
 from datetime import datetime
-from api.services.order_management import OrderManagementService
-from api.services.market_data_service import MarketDataService
-from api.services.risk_management import RiskManagementService
-from api.services.trading_execution import TradingExecutionService
-from api.models.orders import Order, OrderStatus, OrderType, TimeInForce
+from services.order_management import OrderManagementService
+from services.market_data_service import MarketDataService
+from services.risk_management import RiskManagementService
+from services.trading_execution import TradingExecutionService
+from models.orders import Order, OrderStatus, OrderType, TimeInForce
 from db.session import get_test_db
 
 @pytest.fixture(scope="module")

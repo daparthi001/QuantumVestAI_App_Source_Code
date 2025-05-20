@@ -5,7 +5,7 @@ Author: daparthi001
 """
 from sqlalchemy import Boolean, Column, String, Integer
 from sqlalchemy.orm import Mapped, relationship
-from api.db.base_class import Base, TimestampMixin
+from db.base_class import Base, TimestampMixin
 
 class User(Base, TimestampMixin):
     """User model for authentication and authorization"""

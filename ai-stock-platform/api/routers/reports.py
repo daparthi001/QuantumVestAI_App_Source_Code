@@ -11,9 +11,9 @@ from datetime import datetime
 from core.security import get_current_user
 from core.exceptions import ResourceNotFoundError, PermissionDeniedError
 from db.session import get_db
-from api.db.models.user import User
-from api.services.report_service import ReportService
-from api.schemas.reports import (
+from db.models.user import User
+from services.report_service import ReportService
+from schemas.reports import (
     ReportCreate,
     ReportResponse,
     ReportTemplateResponse,

@@ -15,9 +15,9 @@ from core.exceptions import (
     PermissionDeniedError
 )
 from db.session import get_db
-from api.db.models.user import User
-from api.services.whitepaper_service import WhitepaperService
-from api.schemas.whitepaper import (
+from db.models.user import User
+from services.whitepaper_service import WhitepaperService
+from schemas.whitepaper import (
     WhitepaperResponse,
     WhitepaperAnalysisResponse,
     WhitepaperComparisonResponse,

@@ -4,11 +4,11 @@ from typing import Dict, Any, Optional, List
 import logging
 from datetime import datetime, timedelta
 
-from api.models.base import BaseModel
-from api.models.lstm import LSTMModel
-from api.models.prophet import ProphetModel
-from api.models.xgboost_model import XGBoostModel
-from api.models.arima import ARIMAModel
+from models.base import BaseModel
+from models.lstm import LSTMModel
+from models.prophet import ProphetModel
+from models.xgboost_model import XGBoostModel
+from models.arima import ARIMAModel
 
 logger = logging.getLogger("api")
 

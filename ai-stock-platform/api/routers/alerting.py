@@ -11,9 +11,9 @@ from datetime import datetime
 from core.security import get_current_user
 from core.exceptions import ResourceNotFoundError, PermissionDeniedError
 from db.session import get_db
-from api.db.models.user import User
-from api.services.alerting_service import AlertingService
-from api.schemas.alerting import (
+from db.models.user import User
+from services.alerting_service import AlertingService
+from schemas.alerting import (
     AlertCreate,
     AlertResponse,
     AlertRuleResponse,

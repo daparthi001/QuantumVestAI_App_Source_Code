@@ -7,8 +7,8 @@ import logging
 from sqlalchemy.orm import Session
 from core.config import settings
 from core.security.utils import SecurityUtils
-from api.db.base import Base
-from api.db.models.user import User
+from db.base import Base
+from db.models.user import User
 
 logger = logging.getLogger(__name__)
 

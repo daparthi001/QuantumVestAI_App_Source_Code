@@ -9,7 +9,7 @@ from typing import Generator, Optional
 from core.security import decode_token
 from db.session import SessionLocal
 from core.exceptions import AuthenticationError
-from api.models.user import User
+from models.user import User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 

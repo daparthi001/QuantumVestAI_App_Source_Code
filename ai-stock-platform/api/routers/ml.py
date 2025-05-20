@@ -11,9 +11,9 @@ from datetime import datetime
 from core.security import get_current_user
 from core.exceptions import ResourceNotFoundError, PermissionDeniedError
 from db.session import get_db
-from api.db.models.user import User
-from api.services.ml_service import MLService
-from api.schemas.ml import (
+from db.models.user import User
+from services.ml_service import MLService
+from schemas.ml import (
     ModelResponse,
     ModelTrainingResponse,
     ModelEvaluationResponse,

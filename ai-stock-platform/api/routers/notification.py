@@ -11,9 +11,9 @@ from datetime import datetime
 from core.security import get_current_user
 from core.exceptions import ResourceNotFoundError
 from db.session import get_db
-from api.db.models.user import User
-from api.services.notification_service import NotificationService
-from api.schemas.notification import (
+from db.models.user import User
+from services.notification_service import NotificationService
+from schemas.notification import (
     NotificationResponse,
     NotificationSettingsUpdate,
     NotificationSettingsResponse,

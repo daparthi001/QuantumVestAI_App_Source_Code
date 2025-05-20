@@ -1,7 +1,7 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
-from api.db.base_class import Base, TimestampMixin
+from db.base_class import Base, TimestampMixin
 
 
 class Watchlist(Base, TimestampMixin):

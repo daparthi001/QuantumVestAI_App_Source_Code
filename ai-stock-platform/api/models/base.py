@@ -7,7 +7,7 @@ from sqlalchemy import Column, Integer, DateTime, String
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.sql import func
 from datetime import datetime
-from api.db.base import Base
+from db.base import Base
 
 class TimestampMixin:
     """Mixin for timestamp columns"""

@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 from db.session import get_db, engine
 from core.config import settings
-from api.db.models.user import User
+from db.models.user import User
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +146,7 @@ def initialize_database():
         # Create admin user if none exists
         if not verify_admin_exists() and settings.ADMIN_PASSWORD:
             logger.info("Creating default admin user")
-            from api.models.user import create_admin_user
+            from models.user import create_admin_user
             create_admin_user(
                 username=settings.ADMIN_USERNAME,
                 email=settings.ADMIN_EMAIL,

@@ -11,9 +11,9 @@ from datetime import datetime
 from core.security import get_current_admin_user
 from core.exceptions import ResourceNotFoundError, ValidationError
 from db.session import get_db
-from api.db.models.user import User
-from api.services.admin_service import AdminService
-from api.schemas.admin import (
+from db.models.user import User
+from services.admin_service import AdminService
+from schemas.admin import (
     SystemStatusResponse,
     UserManagementResponse,
     APIKeyResponse,

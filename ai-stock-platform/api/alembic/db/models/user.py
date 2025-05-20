@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
 
-from api.db.base import Base
+from db.base import Base
 
 # Association table for user watchlists
 user_watchlist = Table(

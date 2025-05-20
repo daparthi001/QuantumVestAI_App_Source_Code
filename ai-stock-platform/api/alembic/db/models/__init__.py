@@ -6,7 +6,7 @@ tables in the QuantumVestAI application.
 """
 
 # Import all models to ensure they are registered with SQLAlchemy
-from api.db.models.user import User
-from api.db.models.stock import Stock, StockPrice
-from api.db.models.forecast import Forecast, ForecastModel
-from api.db.models.whitepaper import Whitepaper, WhitepaperAnalysis
+from db.models.user import User
+from db.models.stock import Stock, StockPrice
+from db.models.forecast import Forecast, ForecastModel
+from db.models.whitepaper import Whitepaper, WhitepaperAnalysis

@@ -4,7 +4,7 @@ from typing import Dict, Any, Optional, List
 import logging
 from datetime import datetime, timedelta
 
-from api.models.base import BaseModel
+from models.base import BaseModel
 
 logger = logging.getLogger("api")
 
