@@ -1,0 +1,43 @@
+# API Persistent Storage Configuration
+# Created: 2025-05-20 06:24:48
+# Author: daparthi001
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: api-logs-pvc
+  namespace: dev
+  labels:
+    environment: development
+    app: quantumvest
+    component: api
+    created-by: daparthi001
+    created-date: "2025-05-20"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: gp2  # Using AWS EBS storage class
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: api-data-pvc
+  namespace: dev
+  labels:
+    environment: development
+    app: quantumvest
+    component: api
+    created-by: daparthi001
+    created-date: "2025-05-20"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: gp2

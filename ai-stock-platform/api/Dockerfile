@@ -2,7 +2,7 @@
 FROM python:3.10-slim AS builder
 
 # Set build arguments and metadata
-ARG BUILD_DATE="2025-05-20 06:19:05"
+ARG BUILD_DATE="2025-05-20 06:31:20"
 ARG VERSION="1.0.0"
 ARG MAINTAINER="daparthi001"
 
@@ -43,17 +43,19 @@ RUN apt-get update && apt-get install -y \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy application code
-COPY . .
-
 # Create necessary directories
-RUN mkdir -p /app/logs /app/data \
-    && chmod 755 /app/logs /app/data
+RUN mkdir -p /app/logs /app/data /app/api /app/scripts
 
-# Copy scripts
-COPY scripts/wait-for-db.sh /app/scripts/
-COPY scripts/entrypoint.sh /app/scripts/
-RUN chmod +x /app/scripts/*.sh
+# Copy application code
+COPY api/ /app/api/
+COPY scripts/ /app/scripts/
+COPY alembic/ /app/alembic/
+COPY alembic.ini .
+
+# Set permissions
+RUN chmod -R 755 /app/scripts && \
+    chmod -R 644 /app/api /app/alembic && \
+    chmod 755 /app/api /app/alembic /app/logs /app/data
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -62,7 +64,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app \
     TZ=UTC \
     CREATED_BY="daparthi001" \
-    CREATED_DATE="2025-05-20 06:19:05"
+    CREATED_DATE="2025-05-20 06:31:20"
 
 # Set up a non-root user
 RUN adduser --disabled-password --gecos "" appuser && \

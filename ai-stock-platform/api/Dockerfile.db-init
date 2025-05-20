@@ -2,7 +2,7 @@
 FROM python:3.10-slim
 
 # Set build arguments and metadata
-ARG BUILD_DATE="2025-05-20 06:19:05"
+ARG BUILD_DATE="2025-05-20 06:31:20"
 ARG VERSION="1.0.0"
 ARG MAINTAINER="daparthi001"
 
@@ -19,22 +19,29 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
+# Create necessary directories
+RUN mkdir -p /app/api/models \
+    /app/api/core \
+    /app/api/db \
+    /app/scripts \
+    /app/alembic
+
+# Copy requirements and configuration files first (for better layer caching)
 COPY requirements.txt .
 COPY alembic.ini .
-COPY alembic/ /app/alembic/
-COPY scripts/ /app/scripts/
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code needed for migrations
-COPY api/models/ /app/api/models/
-COPY api/core/ /app/api/core/
-COPY api/db/ /app/api/db/
+# Copy application code
+COPY api/ /app/api/
+COPY alembic/ /app/alembic/
+COPY scripts/ /app/scripts/
 
 # Make scripts executable
-RUN chmod +x /app/scripts/*.sh
+RUN chmod +x /app/scripts/*.sh && \
+    chmod -R 644 /app/api /app/alembic && \
+    chmod 755 /app/api /app/alembic /app/scripts
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -42,11 +49,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app \
     TZ=UTC \
     CREATED_BY="daparthi001" \
-    CREATED_DATE="2025-05-20 06:19:05"
+    CREATED_DATE="2025-05-20 06:31:20"
 
 # Set up a non-root user
 RUN adduser --disabled-password --gecos "" dbuser && \
     chown -R dbuser:dbuser /app
 USER dbuser
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+    CMD pg_isready -h $POSTGRES_HOST -U $POSTGRES_USER -d $POSTGRES_DB || exit 1
 
 ENTRYPOINT ["/app/scripts/db-init-entrypoint.sh"]
