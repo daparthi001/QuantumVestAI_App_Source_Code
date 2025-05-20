@@ -8,7 +8,7 @@ set -e
 echo "[$(date -u '+%Y-%m-%d %H:%M:%S')] Starting QuantumVestAI API..."
 
 # Wait for database
-/app/scripts/wait-for-db.sh
+#/app/scripts/wait-for-db.sh
 
 # Start the application
 if [ "$ENVIRONMENT" = "development" ]; then

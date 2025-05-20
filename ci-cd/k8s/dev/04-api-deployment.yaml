@@ -1,16 +1,36 @@
-# API Deployment Configuration
-# Created: 2025-05-20 08:03:38
+# QuantumVestAI API Deployment
+# Created: 2025-05-20 08:40:06
 # Author: daparthi001
 
+apiVersion: v1
+kind: Service
+metadata:
+  name: quantumvestai-dev-api
+  namespace: dev
+  labels:
+    app: quantumvestai
+    tier: backend
+    environment: development
+spec:
+  ports:
+    - port: 8000
+      targetPort: 8000
+      protocol: TCP
+      name: http
+  selector:
+    app: quantumvestai
+    tier: backend
+    environment: development
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: quantumvestai-dev-api
   namespace: dev
   labels:
-    environment: development
     app: quantumvestai
     tier: backend
+    environment: development
     created-by: daparthi001
     created-date: "2025-05-20"
 spec:
@@ -27,56 +47,46 @@ spec:
         tier: backend
         environment: development
       annotations:
-        timestamp: "2025-05-20-080338"
+        timestamp: "2025-05-20-084006"
     spec:
       containers:
-        - name: api
-          image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:api-dev-latest
-          imagePullPolicy: Always
-          env:
-            # Database Configuration
-            - name: DB_HOST
-              value: "quantumvestai-dev.cwbsqsiywwaa.us-east-1.rds.amazonaws.com"
-            - name: DB_PORT
-              value: "5432"
-            - name: DB_USER
-              value: "dbadmin"
-            - name: DB_NAME
-              value: "quantumvestaidb"
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: quantumvestai-cluster-rds-credentials
-                  key: password
-            # PostgreSQL Specific Settings
-            - name: PGSSLMODE
-              value: "require"
-            - name: PGCONNECT_TIMEOUT
-              value: "10"
-          # Health Checks
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 5
-            periodSeconds: 5
-            timeoutSeconds: 3
-          # Resource Limits
-          resources:
-            requests:
-              cpu: "250m"
-              memory: "512Mi"
-            limits:
-              cpu: "500m"
-              memory: "1Gi"
-          # Port Configuration
-          ports:
-            - containerPort: 8000
-              name: http
+      - name: api
+        image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:api-dev-latest
+        imagePullPolicy: Always
+        env:
+          # Database Configuration
+          - name: DB_HOST
+            value: "quantumvestai-dev-db.dev.svc.cluster.local"
+          - name: DB_PORT
+            value: "5432"
+          - name: DB_NAME
+            value: "quantumvestaidb"
+          - name: DB_USER
+            value: "dbadmin"
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: quantumvestai-cluster-rds-credentials
+                key: password
+        ports:
+        - containerPort: 8000
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "512Mi"
+          limits:
+            cpu: "500m"
+            memory: "1Gi"
