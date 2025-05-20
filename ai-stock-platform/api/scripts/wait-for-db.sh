@@ -1,75 +1,109 @@
 #!/bin/bash
 # Database Connection Check Script
-# Created: 2025-05-20 13:55:45
+# Created: 2025-05-20 14:14:14
 # Author: daparthi001
 
-set -e
+# Disable exit on error to handle errors gracefully
+set +e
 
-echo "=== Starting Database Connection Check ==="
-echo "Timestamp: $(date -u '+%Y-%m-%d %H:%M:%S')"
-echo "User: daparthi001"
+echo "[$(date -u '+%Y-%m-%d %H:%M:%S')] Starting database connection check"
 
-# Force use of DB_* variables, no fallback to POSTGRES_* variables
-host="${DB_HOST}"
-port="${DB_PORT}"
-user="${DB_USER}"
-password="${DB_PASSWORD}"
-db="${DB_NAME}"
+# Function to log messages with timestamp
+log() {
+    echo "[$(date -u '+%Y-%m-%d %H:%M:%S')] $1"
+}
 
-# Print current environment for debugging
-echo "Current Environment:"
-env | grep -i "DB_"
+# Function to check if a variable is set
+check_var() {
+    local var_name="$1"
+    local var_value="$2"
+    if [ -z "$var_value" ]; then
+        log "❌ Error: $var_name is not set"
+        return 1
+    fi
+    return 0
+}
 
-# Validate required environment variables
-if [ -z "$host" ]; then
-    echo "❌ Error: DB_HOST is not set"
-    exit 1
-fi
+# Initialize connection variables
+DB_HOST="${DB_HOST:-quantumvestai-dev.cwbsqsiywwaa.us-east-1.rds.amazonaws.com}"
+DB_PORT="${DB_PORT:-5432}"
+DB_USER="${DB_USER:-dbadmin}"
+DB_PASSWORD="${DB_PASSWORD}"
+DB_NAME="${DB_NAME:-quantumvestaidb}"
 
-if [ -z "$port" ]; then
-    echo "❌ Error: DB_PORT is not set"
-    exit 1
-fi
+# Validate environment variables
+log "Validating environment variables..."
 
-if [ -z "$user" ]; then
-    echo "❌ Error: DB_USER is not set"
-    exit 1
-fi
+check_var "DB_HOST" "$DB_HOST" || exit 1
+check_var "DB_PORT" "$DB_PORT" || exit 1
+check_var "DB_USER" "$DB_USER" || exit 1
+check_var "DB_PASSWORD" "$DB_PASSWORD" || exit 1
+check_var "DB_NAME" "$DB_NAME" || exit 1
 
-if [ -z "$password" ]; then
-    echo "❌ Error: DB_PASSWORD is not set"
-    exit 1
-fi
+# Log connection details
+log "Connection Details:"
+log "Host: $DB_HOST"
+log "Port: $DB_PORT"
+log "User: $DB_USER"
+log "Database: $DB_NAME"
+log "Password is $(if [ -n "$DB_PASSWORD" ]; then echo "set"; else echo "not set"; fi)"
 
-if [ -z "$db" ]; then
-    echo "❌ Error: DB_NAME is not set"
-    exit 1
-fi
+# Function to test database connection
+test_connection() {
+    PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c '\q' >/dev/null 2>&1
+    return $?
+}
 
-echo "Connection Details:"
-echo "Host: $host"
-echo "Port: $port"
-echo "User: $user"
-echo "Database: $db"
-echo "Password is $(if [ -n "$password" ]; then echo "set"; else echo "not set"; fi)"
+# Function to check DNS resolution
+check_dns() {
+    if ! nslookup "$DB_HOST" >/dev/null 2>&1; then
+        log "❌ DNS resolution failed for $DB_HOST"
+        return 1
+    fi
+    return 0
+}
 
-# Wait for database connection
+# Function to check TCP connection
+check_tcp() {
+    if ! nc -z -w 5 "$DB_HOST" "$DB_PORT" >/dev/null 2>&1; then
+        log "❌ TCP connection failed to $DB_HOST:$DB_PORT"
+        return 1
+    fi
+    return 0
+}
+
+# Main connection loop
 max_attempts=30
 counter=0
-echo "Waiting for database to become available..."
+log "Starting connection attempts..."
 
-until PGPASSWORD="$password" psql -h "$host" -U "$user" -d "$db" -c '\q' 2>/dev/null; do
+while [ $counter -lt $max_attempts ]; do
     counter=$((counter + 1))
-    if [ $counter -ge $max_attempts ]; then
-        echo "❌ Error: Maximum attempts ($max_attempts) reached"
-        echo "Database connection failed after $((counter * 2)) seconds"
-        exit 1
+    log "Attempt $counter of $max_attempts"
+
+    # Check DNS
+    if ! check_dns; then
+        log "Waiting for DNS resolution..."
+        sleep 2
+        continue
     fi
-    
-    echo "Database is unavailable - sleeping (Attempt $counter/$max_attempts)"
-    sleep 2
+
+    # Check TCP
+    if ! check_tcp; then
+        log "Waiting for TCP connection..."
+        sleep 2
+        continue
+    fi
+
+    # Test database connection
+    if test_connection; then
+        log "✅ Database connection successful!"
+        exit 0
+    else
+        log "Database connection failed, retrying..."
+        sleep 2
+    fi
 done
 
-echo "✅ Database is up - executing command"
-echo "Successfully connected after $counter attempts"
-echo "Timestamp: $(date -u '+%Y-%m-%d %H:%M:%S')"
+log "❌ Failed to connect to database after $max_attempts attempts"
+exit 1
