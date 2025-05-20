@@ -25,7 +25,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for caching
-COPY api/requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Runtime stage
@@ -66,7 +66,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     TZ=UTC \
     CREATED_BY="daparthi001" \
     CREATED_DATE="2025-05-20 15:58:56" \
-    API_ENV=${ENVIRONMENT} \
+    API_ENV=${ENVIRONMENT}\
     API_V1_STR="/api/v1" \
     PROJECT_NAME="QuantumVestAI API" \
     VERSION="1.0.0"
