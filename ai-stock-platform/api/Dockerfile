@@ -61,8 +61,7 @@ RUN chmod -R 755 \
         services \
         tests \
         utils \
-        websocket \
-        api && \
+        websocket && \
     chmod +x \
         build-db-init.sh \
         deploy-to-eks.sh \
