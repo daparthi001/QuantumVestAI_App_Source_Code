@@ -75,12 +75,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app \
     TZ=UTC \
     CREATED_BY="daparthi001" \
-    CREATED_DATE="2025-05-20 18:20:52" \
+    CREATED_DATE="2025-05-20 19:20:40" \
     API_ENV="development" \
     API_V1_STR="/api/v1" \
     PROJECT_NAME="QuantumVestAI API" \
     VERSION="1.0.0"
-
+    
 # Set up a non-root user
 RUN adduser --disabled-password --gecos "" appuser && \
     chown -R appuser:appuser /app
