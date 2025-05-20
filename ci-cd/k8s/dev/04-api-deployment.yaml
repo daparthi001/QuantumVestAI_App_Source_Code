@@ -1,5 +1,5 @@
 # API Deployment Configuration
-# Created: 2025-05-20 13:55:45
+# Created: 2025-05-20 14:46:05
 # Author: daparthi001
 
 apiVersion: apps/v1
@@ -17,34 +17,16 @@ spec:
     matchLabels:
       app: quantumvestai
       tier: backend
-      environment: development
   template:
     metadata:
       labels:
         app: quantumvestai
         tier: backend
-        environment: development
-      annotations:
-        timestamp: "2025-05-20-135545"
     spec:
       initContainers:
       - name: wait-for-db
         image: postgres:13-alpine
-        command:
-        - /bin/sh
-        - -c
-        - |
-          set -e
-          echo "=== Database Connection Check ==="
-          echo "Current directory: $(pwd)"
-          echo "Script location: /scripts/wait-for-db.sh"
-          echo "Script contents:"
-          cat /scripts/wait-for-db.sh
-          echo "=== Environment Variables ==="
-          env | grep -E 'DB_|POSTGRES_'
-          echo "=== Starting Check ==="
-          chmod +x /scripts/wait-for-db.sh
-          /scripts/wait-for-db.sh
+        command: ["/scripts/wait-for-db.sh"]
         env:
         - name: DB_HOST
           value: "quantumvestai-dev.cwbsqsiywwaa.us-east-1.rds.amazonaws.com"
@@ -82,16 +64,8 @@ spec:
               key: password
         ports:
         - containerPort: 8000
-          name: http
-        resources:
-          requests:
-            cpu: "250m"
-            memory: "512Mi"
-          limits:
-            cpu: "500m"
-            memory: "1Gi"
       volumes:
       - name: db-check-scripts
         configMap:
           name: db-check-scripts
-          defaultMode: 0777
+          defaultMode: 0755
