@@ -1,12 +1,13 @@
 """
 Main FastAPI Application
-Created: 2025-05-20 17:12:19
+Created: 2025-05-20 17:36:23
 Author: daparthi001
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from core.config import settings
+# Update imports to use absolute paths
+import core.config as config_module
 from routers import (
     auth,
     stocks,
@@ -18,6 +19,8 @@ from routers import (
     data,
     whitepaper
 )
+
+settings = config_module.settings
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -52,6 +55,6 @@ async def health_check():
     return {
         "status": "healthy",
         "version": settings.VERSION,
-        "timestamp": "2025-05-20 17:12:19",
+        "timestamp": "2025-05-20 17:36:23",
         "user": "daparthi001"
     }

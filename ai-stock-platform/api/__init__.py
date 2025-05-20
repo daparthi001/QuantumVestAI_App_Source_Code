@@ -1,9 +1,6 @@
 """
 QuantumVestAI API
-Created: 2025-05-20 17:12:19
+Created: 2025-05-20 17:36:23
 Author: daparthi001
 """
-from fastapi import FastAPI
-app = FastAPI()
-
-from . import main  # noqa
+# Leave this empty to avoid circular imports

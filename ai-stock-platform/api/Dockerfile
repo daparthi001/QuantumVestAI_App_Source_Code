@@ -2,7 +2,7 @@
 FROM python:3.10-slim AS builder
 
 # Set build arguments and metadata
-ARG BUILD_DATE="2025-05-20 17:12:19"
+ARG BUILD_DATE="2025-05-20 17:36:23"
 ARG VERSION="1.0.0"
 ARG MAINTAINER="daparthi001"
 
@@ -43,46 +43,30 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the entire current directory
-COPY . /app/
+COPY . .
 
 # Set proper permissions
-RUN chmod 644 \
-        /app/__init__.py \
-        /app/alembic.ini \
-        /app/api.py \
-        /app/api_safe_setup_Version2.py \
-        /app/build-db-init.sh \
-        /app/deploy-to-eks.sh \
-        /app/docker-compose.yml \
-        /app/docker-entrypoint.sh \
-        /app/iam-policy.json \
-        /app/main.py \
-        /app/pyproject.toml \
-        /app/rds_connect_policy.json \
-        /app/requirements.txt \
-        /app/setup.py \
-        /app/test_db_connection.py \
-        /app/update-script.py && \
-    chmod -R 755 \
-        /app/alembic \
-        /app/config \
-        /app/core \
-        /app/db \
-        /app/db_init \
-        /app/ml \
-        /app/models \
-        /app/policies \
-        /app/routers \
-        /app/schemas \
-        /app/scripts \
-        /app/services \
-        /app/tests \
-        /app/utils \
-        /app/websocket && \
+RUN chmod -R 755 \
+        alembic \
+        config \
+        core \
+        db \
+        db_init \
+        ml \
+        models \
+        policies \
+        routers \
+        schemas \
+        scripts \
+        services \
+        tests \
+        utils \
+        websocket \
+        api && \
     chmod +x \
-        /app/build-db-init.sh \
-        /app/deploy-to-eks.sh \
-        /app/docker-entrypoint.sh
+        build-db-init.sh \
+        deploy-to-eks.sh \
+        docker-entrypoint.sh
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -91,7 +75,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app \
     TZ=UTC \
     CREATED_BY="daparthi001" \
-    CREATED_DATE="2025-05-20 17:12:19" \
+    CREATED_DATE="2025-05-20 17:36:23" \
     API_ENV="development" \
     API_V1_STR="/api/v1" \
     PROJECT_NAME="QuantumVestAI API" \
@@ -112,4 +96,4 @@ EXPOSE ${PORT}
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
 
 # Start the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
