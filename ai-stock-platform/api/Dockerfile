@@ -2,7 +2,7 @@
 FROM python:3.10-slim AS builder
 
 # Set build arguments and metadata
-ARG BUILD_DATE="2025-05-20 06:31:20"
+ARG BUILD_DATE="2025-05-20 06:39:14"
 ARG VERSION="1.0.0"
 ARG MAINTAINER="daparthi001"
 
@@ -44,18 +44,20 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Create necessary directories
-RUN mkdir -p /app/logs /app/data /app/api /app/scripts
+RUN mkdir -p /app/logs /app/data /app/models /app/core /app/db /app/scripts
 
 # Copy application code
-COPY api/ /app/api/
+COPY models/ /app/models/
+COPY core/ /app/core/
+COPY db/ /app/db/
 COPY scripts/ /app/scripts/
 COPY alembic/ /app/alembic/
 COPY alembic.ini .
 
 # Set permissions
 RUN chmod -R 755 /app/scripts && \
-    chmod -R 644 /app/api /app/alembic && \
-    chmod 755 /app/api /app/alembic /app/logs /app/data
+    chmod -R 644 /app/models /app/core /app/db /app/alembic && \
+    chmod 755 /app/models /app/core /app/db /app/alembic /app/logs /app/data
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -64,7 +66,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app \
     TZ=UTC \
     CREATED_BY="daparthi001" \
-    CREATED_DATE="2025-05-20 06:31:20"
+    CREATED_DATE="2025-05-20 06:39:14"
 
 # Set up a non-root user
 RUN adduser --disabled-password --gecos "" appuser && \
