@@ -4,7 +4,7 @@ Created: 2025-05-20 18:08:37
 Author: daparthi001
 """
 from typing import List
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "QuantumVestAI API"

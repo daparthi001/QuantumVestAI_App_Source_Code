@@ -2,7 +2,7 @@
 FROM python:3.10-slim AS builder
 
 # Set build arguments and metadata
-ARG BUILD_DATE="2025-05-20 18:08:37"
+ARG BUILD_DATE="2025-05-20 18:20:52"
 ARG VERSION="1.0.0"
 ARG MAINTAINER="daparthi001"
 
@@ -25,7 +25,8 @@ RUN apt-get update && apt-get install -y \
 
 # Copy requirements first for caching
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir pydantic-settings>=2.0.0
 
 # Runtime stage
 FROM python:3.10-slim
@@ -74,7 +75,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app \
     TZ=UTC \
     CREATED_BY="daparthi001" \
-    CREATED_DATE="2025-05-20 18:08:37" \
+    CREATED_DATE="2025-05-20 18:20:52" \
     API_ENV="development" \
     API_V1_STR="/api/v1" \
     PROJECT_NAME="QuantumVestAI API" \
