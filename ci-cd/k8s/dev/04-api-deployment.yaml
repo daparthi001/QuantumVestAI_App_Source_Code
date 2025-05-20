@@ -1,5 +1,5 @@
 # API Deployment Configuration
-# Created: 2025-05-20 08:53:27
+# Created: 2025-05-20 13:55:45
 # Author: daparthi001
 
 apiVersion: apps/v1
@@ -24,6 +24,8 @@ spec:
         app: quantumvestai
         tier: backend
         environment: development
+      annotations:
+        timestamp: "2025-05-20-135545"
     spec:
       initContainers:
       - name: wait-for-db
@@ -32,6 +34,15 @@ spec:
         - /bin/sh
         - -c
         - |
+          set -e
+          echo "=== Database Connection Check ==="
+          echo "Current directory: $(pwd)"
+          echo "Script location: /scripts/wait-for-db.sh"
+          echo "Script contents:"
+          cat /scripts/wait-for-db.sh
+          echo "=== Environment Variables ==="
+          env | grep -E 'DB_|POSTGRES_'
+          echo "=== Starting Check ==="
           chmod +x /scripts/wait-for-db.sh
           /scripts/wait-for-db.sh
         env:
@@ -53,10 +64,11 @@ spec:
           mountPath: /scripts
       containers:
       - name: api
-        image: quantumvest-api:dev
+        image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:api-dev-latest
+        imagePullPolicy: Always
         env:
         - name: DB_HOST
-          value: "quantumvestai-dev-db.dev.svc.cluster.local"
+          value: "quantumvestai-dev.cwbsqsiywwaa.us-east-1.rds.amazonaws.com"
         - name: DB_PORT
           value: "5432"
         - name: DB_USER
@@ -70,6 +82,14 @@ spec:
               key: password
         ports:
         - containerPort: 8000
+          name: http
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "512Mi"
+          limits:
+            cpu: "500m"
+            memory: "1Gi"
       volumes:
       - name: db-check-scripts
         configMap:

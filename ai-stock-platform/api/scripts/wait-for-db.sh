@@ -1,24 +1,51 @@
 #!/bin/bash
 # Database Connection Check Script
-# Created: 2025-05-20 08:53:27
+# Created: 2025-05-20 13:55:45
 # Author: daparthi001
 
 set -e
 
-# Get current timestamp
-TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S')
-echo "=== Database Connection Check ==="
-echo "Timestamp: $TIMESTAMP"
+echo "=== Starting Database Connection Check ==="
+echo "Timestamp: $(date -u '+%Y-%m-%d %H:%M:%S')"
 echo "User: daparthi001"
 
-# Database connection parameters with proper fallbacks
-host="${DB_HOST:-${POSTGRES_HOST:-quantumvestai-dev-db.dev.svc.cluster.local}}"
-port="${DB_PORT:-${POSTGRES_PORT:-5432}}"
-user="${DB_USER:-${POSTGRES_USER:-dbadmin}}"
-password="${DB_PASSWORD:-${POSTGRES_PASSWORD}}"
-db="${DB_NAME:-${POSTGRES_DB:-quantumvestaidb}}"
+# Force use of DB_* variables, no fallback to POSTGRES_* variables
+host="${DB_HOST}"
+port="${DB_PORT}"
+user="${DB_USER}"
+password="${DB_PASSWORD}"
+db="${DB_NAME}"
 
-# Print connection details (without password)
+# Print current environment for debugging
+echo "Current Environment:"
+env | grep -i "DB_"
+
+# Validate required environment variables
+if [ -z "$host" ]; then
+    echo "❌ Error: DB_HOST is not set"
+    exit 1
+fi
+
+if [ -z "$port" ]; then
+    echo "❌ Error: DB_PORT is not set"
+    exit 1
+fi
+
+if [ -z "$user" ]; then
+    echo "❌ Error: DB_USER is not set"
+    exit 1
+fi
+
+if [ -z "$password" ]; then
+    echo "❌ Error: DB_PASSWORD is not set"
+    exit 1
+fi
+
+if [ -z "$db" ]; then
+    echo "❌ Error: DB_NAME is not set"
+    exit 1
+fi
+
 echo "Connection Details:"
 echo "Host: $host"
 echo "Port: $port"
@@ -26,24 +53,12 @@ echo "User: $user"
 echo "Database: $db"
 echo "Password is $(if [ -n "$password" ]; then echo "set"; else echo "not set"; fi)"
 
-# Check if password is set
-if [ -z "$password" ]; then
-    echo "❌ Error: Database password not set"
-    echo "Please set DB_PASSWORD or POSTGRES_PASSWORD environment variable"
-    exit 1
-fi
-
-# Function to test connection
-test_connection() {
-    PGPASSWORD=$password psql -h "$host" -U "$user" -d "$db" -c '\q' >/dev/null 2>&1
-}
-
-# Wait for database with timeout
+# Wait for database connection
 max_attempts=30
 counter=0
 echo "Waiting for database to become available..."
 
-until test_connection; do
+until PGPASSWORD="$password" psql -h "$host" -U "$user" -d "$db" -c '\q' 2>/dev/null; do
     counter=$((counter + 1))
     if [ $counter -ge $max_attempts ]; then
         echo "❌ Error: Maximum attempts ($max_attempts) reached"
@@ -51,7 +66,7 @@ until test_connection; do
         exit 1
     fi
     
-    >&2 echo "Database is unavailable - sleeping (Attempt $counter/$max_attempts)"
+    echo "Database is unavailable - sleeping (Attempt $counter/$max_attempts)"
     sleep 2
 done
 
