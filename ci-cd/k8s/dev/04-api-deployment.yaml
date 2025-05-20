@@ -1,5 +1,5 @@
 # API Deployment Configuration
-# Created: 2025-05-20 14:46:05
+# Created: 2025-05-20 15:00:45
 # Author: daparthi001
 
 apiVersion: apps/v1
@@ -7,10 +7,6 @@ kind: Deployment
 metadata:
   name: quantumvestai-dev-api
   namespace: dev
-  labels:
-    app: quantumvestai
-    tier: backend
-    environment: development
 spec:
   replicas: 1
   selector:
@@ -23,31 +19,51 @@ spec:
         app: quantumvestai
         tier: backend
     spec:
-      initContainers:
-      - name: wait-for-db
-        image: postgres:13-alpine
-        command: ["/scripts/wait-for-db.sh"]
-        env:
-        - name: DB_HOST
-          value: "quantumvestai-dev.cwbsqsiywwaa.us-east-1.rds.amazonaws.com"
-        - name: DB_PORT
-          value: "5432"
-        - name: DB_USER
-          value: "dbadmin"
-        - name: DB_NAME
-          value: "quantumvestaidb"
-        - name: DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: quantumvestai-cluster-rds-credentials
-              key: password
-        volumeMounts:
-        - name: db-check-scripts
-          mountPath: /scripts
       containers:
       - name: api
         image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:api-dev-latest
         imagePullPolicy: Always
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            echo "=== Creating API Structure ==="
+            # Create api directory and main.py
+            mkdir -p /app/api
+            cat > /app/api/__init__.py << 'EOF'
+            from .main import app
+            EOF
+            
+            cat > /app/api/main.py << 'EOF'
+            from fastapi import FastAPI
+            from core.config import settings
+            from core.middleware import setup_middleware
+            from db.session import engine, SessionLocal
+            from db.init_db import init_db
+            
+            app = FastAPI(
+                title="QuantumVestAI API",
+                description="AI-Powered Investment Platform API",
+                version="1.0.0"
+            )
+            
+            # Setup middleware
+            setup_middleware(app)
+            
+            @app.on_event("startup")
+            async def startup_event():
+                # Initialize database if needed
+                init_db(SessionLocal())
+            
+            @app.get("/health")
+            async def health_check():
+                return {"status": "healthy", "database": "connected"}
+            
+            # Import and include routers here
+            # from api.routers import stocks, users, etc.
+            EOF
+            
+            echo "=== Starting FastAPI Application ==="
+            cd /app && uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
         env:
         - name: DB_HOST
           value: "quantumvestai-dev.cwbsqsiywwaa.us-east-1.rds.amazonaws.com"
@@ -62,10 +78,18 @@ spec:
             secretKeyRef:
               name: quantumvestai-cluster-rds-credentials
               key: password
+        - name: PYTHONPATH
+          value: "/app"
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: API_ENV
+          value: "development"
         ports:
         - containerPort: 8000
-      volumes:
-      - name: db-check-scripts
-        configMap:
-          name: db-check-scripts
-          defaultMode: 0755
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "512Mi"
+          limits:
+            cpu: "500m"
+            memory: "1Gi"

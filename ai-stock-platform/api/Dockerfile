@@ -46,11 +46,15 @@ RUN apt-get update && apt-get install -y \
 # Create necessary directories
 RUN mkdir -p /app/logs /app/data /app/models /app/core /app/db /app/scripts
 
+
 # Copy application code
-COPY models/ /app/models/
-COPY core/ /app/core/
-COPY db/ /app/db/
-COPY scripts/ /app/scripts/
+COPY . .
+
+# Copy application code
+# COPY models/ /app/models/
+# COPY core/ /app/core/
+# COPY db/ /app/db/
+# COPY scripts/ /app/scripts/
 COPY alembic/ /app/alembic/
 COPY alembic.ini .
 
