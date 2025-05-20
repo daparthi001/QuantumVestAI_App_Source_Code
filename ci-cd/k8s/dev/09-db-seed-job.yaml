@@ -9,7 +9,7 @@ metadata:
   namespace: dev
   labels:
     environment: development
-    app: quantumvest
+    app: quantumvestai
     component: db-seed
 spec:
   ttlSecondsAfterFinished: 100
@@ -18,17 +18,17 @@ spec:
     metadata:
       labels:
         environment: development
-        app: quantumvest
+        app: quantumvestai
         component: db-seed
     spec:
       restartPolicy: OnFailure
       containers:
         - name: db-seed
-          image: quantumvest-api:dev
+          image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:db-init-dev-latest
           command: ['python', 'scripts/seed_db.py']
           envFrom:
             - configMapRef:
-                name: quantumvest-config
+                name: quantumvestai-config
             - secretRef:
                 name: quantumvestai-cluster-rds-credentials
           volumeMounts:

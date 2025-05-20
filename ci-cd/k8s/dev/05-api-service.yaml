@@ -5,11 +5,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: quantumvest-dev-api
-  namespace: quantumvest-dev
+  name: quantumvestai-dev-api
+  namespace: dev
   labels:
     environment: development
-    app: quantumvest
+    app: quantumvestai
     tier: backend
 spec:
   ports:
@@ -18,7 +18,7 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app: quantumvest
+    app: quantumvestai
     tier: backend
     environment: development
   type: ClusterIP

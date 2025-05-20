@@ -8,6 +8,6 @@ metadata:
   name: dev
   labels:
     environment: development
-    app: quantumvest
+    app: quantumvestai
     created-by: daparthi001
     created-date: "2025-05-20"

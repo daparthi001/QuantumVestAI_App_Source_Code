@@ -9,7 +9,7 @@ metadata:
   namespace: dev
   labels:
     environment: development
-    app: quantumvest
+    app: quantumvestai
     component: db-update
 spec:
   schedule: "0 0 * * *"  # Run daily at midnight UTC
@@ -22,17 +22,17 @@ spec:
         metadata:
           labels:
             environment: development
-            app: quantumvest
+            app: quantumvestai
             component: db-update
         spec:
           restartPolicy: OnFailure
           containers:
             - name: db-update
-              image: quantumvest-api:dev
+              image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:db-init-dev-latest
               command: ['python', 'scripts/update_market_data.py']
               envFrom:
                 - configMapRef:
-                    name: quantumvest-config
+                    name: quantumvestai-config
                 - secretRef:
                     name: quantumvestai-cluster-rds-credentials
               resources:

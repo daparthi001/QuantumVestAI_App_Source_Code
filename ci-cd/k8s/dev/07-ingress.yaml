@@ -5,11 +5,11 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: quantumvest-dev-ingress
-  namespace: quantumvest-dev
+  name: quantumvestai-dev-ingress
+  namespace: dev
   labels:
     environment: development
-    app: quantumvest
+    app: quantumvestai
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
@@ -21,6 +21,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: quantumvest-dev-api
+                name: quantumvestai-dev-api
                 port:
                   number: 8000

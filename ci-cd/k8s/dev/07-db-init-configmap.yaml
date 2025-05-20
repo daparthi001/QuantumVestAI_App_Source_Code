@@ -9,7 +9,7 @@ metadata:
   namespace: dev
   labels:
     environment: development
-    app: quantumvest
+    app: quantumvestai
     component: db-init
 data:
   alembic.ini: |

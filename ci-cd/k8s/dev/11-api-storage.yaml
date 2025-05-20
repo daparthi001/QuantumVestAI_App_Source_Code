@@ -10,7 +10,7 @@ metadata:
   namespace: dev
   labels:
     environment: development
-    app: quantumvest
+    app: quantumvestai
     component: api
     created-by: daparthi001
     created-date: "2025-05-20"
@@ -20,7 +20,7 @@ spec:
   resources:
     requests:
       storage: 10Gi
-  storageClassName: gp2  # Using AWS EBS storage class
+  storageClassName: gp3  # Using AWS EBS storage class
 
 ---
 apiVersion: v1
@@ -30,7 +30,7 @@ metadata:
   namespace: dev
   labels:
     environment: development
-    app: quantumvest
+    app: quantumvestai
     component: api
     created-by: daparthi001
     created-date: "2025-05-20"

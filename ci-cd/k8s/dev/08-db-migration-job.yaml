@@ -9,7 +9,7 @@ metadata:
   namespace: dev
   labels:
     environment: development
-    app: quantumvest
+    app: quantumvestai
     component: db-migration
 spec:
   ttlSecondsAfterFinished: 100
@@ -18,7 +18,7 @@ spec:
     metadata:
       labels:
         environment: development
-        app: quantumvest
+        app: quantumvestai
         component: db-migration
     spec:
       restartPolicy: OnFailure
@@ -34,11 +34,11 @@ spec:
               mountPath: /scripts
       containers:
         - name: alembic
-          image: quantumvest-api:dev
+          image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:db-init-dev-latest
           command: ['alembic', 'upgrade', 'head']
           envFrom:
             - configMapRef:
-                name: quantumvest-config
+                name: quantumvestai-config
             - secretRef:
                 name: quantumvestai-cluster-rds-credentials
           volumeMounts:

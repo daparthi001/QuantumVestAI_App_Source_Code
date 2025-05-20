@@ -1,28 +1,30 @@
 # Development Database StatefulSet
-# Created: 2025-05-20 06:12:45
+# Created: 2025-05-20 06:58:40
 # Author: daparthi001
 
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: quantumvest-dev-db
-  namespace: quantumvest-dev
+  name: quantumvestai-dev-db
+  namespace: dev
   labels:
     environment: development
-    app: quantumvest
+    app: quantumvestai
     tier: database
+    created-by: daparthi001
+    created-date: "2025-05-20"
 spec:
-  serviceName: quantumvest-dev-db
+  serviceName: quantumvestai-dev-db
   replicas: 1
   selector:
     matchLabels:
-      app: quantumvest
+      app: quantumvestai
       tier: database
       environment: development
   template:
     metadata:
       labels:
-        app: quantumvest
+        app: quantumvestai
         tier: database
         environment: development
     spec:
@@ -31,11 +33,12 @@ spec:
           image: postgres:13-alpine
           ports:
             - containerPort: 5432
+              name: postgres
           envFrom:
             - configMapRef:
-                name: quantumvest-dev-config
+                name: quantumvest-config
             - secretRef:
-                name: quantumvest-dev-secrets
+                name: quantumvestai-cluster-rds-credentials
           resources:
             requests:
               memory: "256Mi"
@@ -51,14 +54,29 @@ spec:
               command:
                 - pg_isready
                 - -U
-                - quantumvest
+                - postgres
             initialDelaySeconds: 30
             periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - postgres
+            initialDelaySeconds: 5
+            periodSeconds: 5
   volumeClaimTemplates:
     - metadata:
         name: postgres-data
+        labels:
+          environment: development
+          app: quantumvestai
+          tier: database
+          created-by: daparthi001
+          created-date: "2025-05-20"
       spec:
         accessModes: [ "ReadWriteOnce" ]
+        storageClassName: gp3
         resources:
           requests:
-            storage: 1Gi
+            storage: 10Gi

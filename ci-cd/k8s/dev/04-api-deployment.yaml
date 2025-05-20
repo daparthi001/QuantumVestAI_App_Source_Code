@@ -1,27 +1,29 @@
 # Development API Deployment
-# Created: 2025-05-20 06:14:34
+# Created: 2025-05-20 07:24:47
 # Author: daparthi001
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: quantumvest-api
+  name: quantumvestai-dev-api
   namespace: dev
   labels:
     environment: development
-    app: quantumvest
+    app: quantumvestai
     tier: backend
+    created-by: daparthi001
+    created-date: "2025-05-20"
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: quantumvest
+      app: quantumvestai
       tier: backend
       environment: development
   template:
     metadata:
       labels:
-        app: quantumvest
+        app: quantumvestai
         tier: backend
         environment: development
     spec:
@@ -29,37 +31,29 @@ spec:
         - name: api
           image: quantumvest-api:dev
           imagePullPolicy: Always
-          ports:
-            - containerPort: 8000
-          envFrom:
-            - configMapRef:
-                name: quantumvest-config
-            - secretRef:
-                name: quantumvest-secrets
-            - secretRef:
-                name: quantumvestai-cluster-rds-credentials
-          resources:
-            requests:
-              memory: "256Mi"
-              cpu: "250m"
-            limits:
-              memory: "512Mi"
-              cpu: "500m"
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 30
-            periodSeconds: 10
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 5
-            periodSeconds: 5
-          volumeMounts:
-            - name: api-logs
-              mountPath: /app/logs
-      volumes:
-        - name: api-logs
-          emptyDir: {}
+          env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: quantumvestai-cluster-rds-credentials
+                  key: POSTGRES_HOST
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: quantumvestai-cluster-rds-credentials
+                  key: POSTGRES_PORT
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: quantumvestai-cluster-rds-credentials
+                  key: POSTGRES_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: quantumvestai-cluster-rds-credentials
+                  key: POSTGRES_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: quantumvestai-cluster-rds-credentials
+                  key: POSTGRES_DB
