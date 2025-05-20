@@ -2,15 +2,14 @@
 FROM python:3.10-slim AS builder
 
 # Set build arguments and metadata
-ARG BUILD_DATE="2025-05-20 15:58:56"
+ARG BUILD_DATE="2025-05-20 17:12:19"
 ARG VERSION="1.0.0"
 ARG MAINTAINER="daparthi001"
-ARG ENVIRONMENT="development"
 
 LABEL maintainer="${MAINTAINER}" \
       created="${BUILD_DATE}" \
       version="${VERSION}" \
-      environment="${ENVIRONMENT}" \
+      environment="development" \
       description="QuantumVestAI API Service" \
       repository="ai-stock-platform/api"
 
@@ -43,20 +42,47 @@ RUN apt-get update && apt-get install -y \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Create logs and data directories
-RUN mkdir -p /app/logs /app/data
-
-# Simply copy the entire api directory
-COPY . /app/api/
+# Copy the entire current directory
+COPY . /app/
 
 # Set proper permissions
-RUN chmod -R 755 /app/api/scripts && \
-    chmod +x /app/api/docker-entrypoint.sh \
-            /app/api/build-db-init.sh \
-            /app/api/deploy-to-eks.sh && \
-    chmod -R 644 /app/api && \
-    chmod -R +X /app/api && \
-    chmod 755 /app/logs /app/data
+RUN chmod 644 \
+        /app/__init__.py \
+        /app/alembic.ini \
+        /app/api.py \
+        /app/api_safe_setup_Version2.py \
+        /app/build-db-init.sh \
+        /app/deploy-to-eks.sh \
+        /app/docker-compose.yml \
+        /app/docker-entrypoint.sh \
+        /app/iam-policy.json \
+        /app/main.py \
+        /app/pyproject.toml \
+        /app/rds_connect_policy.json \
+        /app/requirements.txt \
+        /app/setup.py \
+        /app/test_db_connection.py \
+        /app/update-script.py && \
+    chmod -R 755 \
+        /app/alembic \
+        /app/config \
+        /app/core \
+        /app/db \
+        /app/db_init \
+        /app/ml \
+        /app/models \
+        /app/policies \
+        /app/routers \
+        /app/schemas \
+        /app/scripts \
+        /app/services \
+        /app/tests \
+        /app/utils \
+        /app/websocket && \
+    chmod +x \
+        /app/build-db-init.sh \
+        /app/deploy-to-eks.sh \
+        /app/docker-entrypoint.sh
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -65,8 +91,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app \
     TZ=UTC \
     CREATED_BY="daparthi001" \
-    CREATED_DATE="2025-05-20 15:58:56" \
-    API_ENV=${ENVIRONMENT}\
+    CREATED_DATE="2025-05-20 17:12:19" \
+    API_ENV="development" \
     API_V1_STR="/api/v1" \
     PROJECT_NAME="QuantumVestAI API" \
     VERSION="1.0.0"
@@ -83,7 +109,7 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
 EXPOSE ${PORT}
 
 # Use the entrypoint script
-ENTRYPOINT ["/app/api/docker-entrypoint.sh"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 
 # Start the application
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,12 +1,9 @@
 """
 QuantumVestAI API
-Created: 2025-05-20 05:58:02
+Created: 2025-05-20 17:12:19
 Author: daparthi001
-Version: 1.0.0
 """
+from fastapi import FastAPI
+app = FastAPI()
 
-from api.core.settings import Settings
-
-settings = Settings()
-__version__ = settings.VERSION
-__author__ = "daparthi001"
+from . import main  # noqa

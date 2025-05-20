@@ -1,14 +1,13 @@
 """
 Main FastAPI Application
-Created: 2025-05-20 04:19:09
+Created: 2025-05-20 17:12:19
 Author: daparthi001
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime
 
-from api.core.config import settings
-from api.routers import (
+from core.config import settings
+from routers import (
     auth,
     stocks,
     users,
@@ -20,7 +19,6 @@ from api.routers import (
     whitepaper
 )
 
-# Create FastAPI instance
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
@@ -38,51 +36,15 @@ if settings.BACKEND_CORS_ORIGINS:
     )
 
 # Include routers with tags
-app.include_router(
-    auth.router,
-    prefix=f"{settings.API_V1_STR}",
-    tags=["auth"]
-)
-app.include_router(
-    users.router,
-    prefix=f"{settings.API_V1_STR}",
-    tags=["users"]
-)
-app.include_router(
-    stocks.router,
-    prefix=f"{settings.API_V1_STR}",
-    tags=["stocks"]
-)
-app.include_router(
-    forecast.router,
-    prefix=f"{settings.API_V1_STR}",
-    tags=["forecast"]
-)
-app.include_router(
-    watchlist.router,
-    prefix=f"{settings.API_V1_STR}",
-    tags=["watchlist"]
-)
-app.include_router(
-    admin.router,
-    prefix=f"{settings.API_V1_STR}",
-    tags=["admin"]
-)
-app.include_router(
-    sentiment.router,
-    prefix=f"{settings.API_V1_STR}",
-    tags=["sentiment"]
-)
-app.include_router(
-    data.router,
-    prefix=f"{settings.API_V1_STR}",
-    tags=["data"]
-)
-app.include_router(
-    whitepaper.router,
-    prefix=f"{settings.API_V1_STR}",
-    tags=["whitepaper"]
-)
+app.include_router(auth.router, prefix=f"{settings.API_V1_STR}", tags=["auth"])
+app.include_router(users.router, prefix=f"{settings.API_V1_STR}", tags=["users"])
+app.include_router(stocks.router, prefix=f"{settings.API_V1_STR}", tags=["stocks"])
+app.include_router(forecast.router, prefix=f"{settings.API_V1_STR}", tags=["forecast"])
+app.include_router(watchlist.router, prefix=f"{settings.API_V1_STR}", tags=["watchlist"])
+app.include_router(admin.router, prefix=f"{settings.API_V1_STR}", tags=["admin"])
+app.include_router(sentiment.router, prefix=f"{settings.API_V1_STR}", tags=["sentiment"])
+app.include_router(data.router, prefix=f"{settings.API_V1_STR}", tags=["data"])
+app.include_router(whitepaper.router, prefix=f"{settings.API_V1_STR}", tags=["whitepaper"])
 
 @app.get("/health")
 async def health_check():
@@ -90,7 +52,6 @@ async def health_check():
     return {
         "status": "healthy",
         "version": settings.VERSION,
-        "timestamp": datetime.utcnow().isoformat(),
-        "user": "daparthi001",
-        "created": "2025-05-20 04:19:09"
+        "timestamp": "2025-05-20 17:12:19",
+        "user": "daparthi001"
     }
