@@ -47,7 +47,7 @@ spec:
           /scripts/wait-for-db.sh
         env:
         - name: DB_HOST
-          value: "quantumvestai-dev-db.dev.svc.cluster.local"
+          value: "quantumvestai-dev.cwbsqsiywwaa.us-east-1.rds.amazonaws.com"
         - name: DB_PORT
           value: "5432"
         - name: DB_USER
