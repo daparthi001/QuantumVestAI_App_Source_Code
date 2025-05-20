@@ -2,7 +2,7 @@
 FROM python:3.10-slim AS builder
 
 # Set build arguments and metadata
-ARG BUILD_DATE="2025-05-20 15:21:00"
+ARG BUILD_DATE="2025-05-20 15:30:14"
 ARG VERSION="1.0.0"
 ARG MAINTAINER="daparthi001"
 
@@ -60,71 +60,63 @@ COPY models/ /app/models/
 COPY scripts/ /app/scripts/
 COPY alembic/ /app/alembic/
 COPY alembic.ini /app/
-COPY main.py /app/
 
 # Create updated main.py with correct imports
-RUN cat > /app/main.py << 'EOF'
-"""
-Main FastAPI Application
-Created: 2025-05-20 15:21:00
-Author: daparthi001
-"""
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime
-
-from core.config import settings
-from routers import (
-    auth,
-    stocks,
-    users,
-    forecast,
-    watchlist,
-    admin,
-    sentiment,
-    data,
-    whitepaper
-)
-
-# Create FastAPI instance
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    version=settings.VERSION,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
-)
-
-# Set up CORS
-if settings.BACKEND_CORS_ORIGINS:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
-# Include routers with tags
-app.include_router(auth.router, prefix=f"{settings.API_V1_STR}", tags=["auth"])
-app.include_router(users.router, prefix=f"{settings.API_V1_STR}", tags=["users"])
-app.include_router(stocks.router, prefix=f"{settings.API_V1_STR}", tags=["stocks"])
-app.include_router(forecast.router, prefix=f"{settings.API_V1_STR}", tags=["forecast"])
-app.include_router(watchlist.router, prefix=f"{settings.API_V1_STR}", tags=["watchlist"])
-app.include_router(admin.router, prefix=f"{settings.API_V1_STR}", tags=["admin"])
-app.include_router(sentiment.router, prefix=f"{settings.API_V1_STR}", tags=["sentiment"])
-app.include_router(data.router, prefix=f"{settings.API_V1_STR}", tags=["data"])
-app.include_router(whitepaper.router, prefix=f"{settings.API_V1_STR}", tags=["whitepaper"])
-
-@app.get("/health")
-async def health_check():
-    """Health check endpoint"""
-    return {
-        "status": "healthy",
-        "version": settings.VERSION,
-        "timestamp": datetime.utcnow().isoformat(),
-        "user": "daparthi001",
-        "created": "2025-05-20 15:21:00"
-    }
-EOF
+RUN echo 'from fastapi import FastAPI' > /app/main.py && \
+    echo 'from fastapi.middleware.cors import CORSMiddleware' >> /app/main.py && \
+    echo 'from datetime import datetime' >> /app/main.py && \
+    echo '' >> /app/main.py && \
+    echo 'from core.config import settings' >> /app/main.py && \
+    echo 'from routers import (' >> /app/main.py && \
+    echo '    auth,' >> /app/main.py && \
+    echo '    stocks,' >> /app/main.py && \
+    echo '    users,' >> /app/main.py && \
+    echo '    forecast,' >> /app/main.py && \
+    echo '    watchlist,' >> /app/main.py && \
+    echo '    admin,' >> /app/main.py && \
+    echo '    sentiment,' >> /app/main.py && \
+    echo '    data,' >> /app/main.py && \
+    echo '    whitepaper' >> /app/main.py && \
+    echo ')' >> /app/main.py && \
+    echo '' >> /app/main.py && \
+    echo '# Create FastAPI instance' >> /app/main.py && \
+    echo 'app = FastAPI(' >> /app/main.py && \
+    echo '    title=settings.PROJECT_NAME,' >> /app/main.py && \
+    echo '    version=settings.VERSION,' >> /app/main.py && \
+    echo '    openapi_url=f"{settings.API_V1_STR}/openapi.json"' >> /app/main.py && \
+    echo ')' >> /app/main.py && \
+    echo '' >> /app/main.py && \
+    echo '# Set up CORS' >> /app/main.py && \
+    echo 'if settings.BACKEND_CORS_ORIGINS:' >> /app/main.py && \
+    echo '    app.add_middleware(' >> /app/main.py && \
+    echo '        CORSMiddleware,' >> /app/main.py && \
+    echo '        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],' >> /app/main.py && \
+    echo '        allow_credentials=True,' >> /app/main.py && \
+    echo '        allow_methods=["*"],' >> /app/main.py && \
+    echo '        allow_headers=["*"],' >> /app/main.py && \
+    echo '    )' >> /app/main.py && \
+    echo '' >> /app/main.py && \
+    echo '# Include routers with tags' >> /app/main.py && \
+    echo 'app.include_router(auth.router, prefix=f"{settings.API_V1_STR}", tags=["auth"])' >> /app/main.py && \
+    echo 'app.include_router(users.router, prefix=f"{settings.API_V1_STR}", tags=["users"])' >> /app/main.py && \
+    echo 'app.include_router(stocks.router, prefix=f"{settings.API_V1_STR}", tags=["stocks"])' >> /app/main.py && \
+    echo 'app.include_router(forecast.router, prefix=f"{settings.API_V1_STR}", tags=["forecast"])' >> /app/main.py && \
+    echo 'app.include_router(watchlist.router, prefix=f"{settings.API_V1_STR}", tags=["watchlist"])' >> /app/main.py && \
+    echo 'app.include_router(admin.router, prefix=f"{settings.API_V1_STR}", tags=["admin"])' >> /app/main.py && \
+    echo 'app.include_router(sentiment.router, prefix=f"{settings.API_V1_STR}", tags=["sentiment"])' >> /app/main.py && \
+    echo 'app.include_router(data.router, prefix=f"{settings.API_V1_STR}", tags=["data"])' >> /app/main.py && \
+    echo 'app.include_router(whitepaper.router, prefix=f"{settings.API_V1_STR}", tags=["whitepaper"])' >> /app/main.py && \
+    echo '' >> /app/main.py && \
+    echo '@app.get("/health")' >> /app/main.py && \
+    echo 'async def health_check():' >> /app/main.py && \
+    echo '    """Health check endpoint"""' >> /app/main.py && \
+    echo '    return {' >> /app/main.py && \
+    echo '        "status": "healthy",' >> /app/main.py && \
+    echo '        "version": settings.VERSION,' >> /app/main.py && \
+    echo '        "timestamp": datetime.utcnow().isoformat(),' >> /app/main.py && \
+    echo '        "user": "daparthi001",' >> /app/main.py && \
+    echo '        "created": "2025-05-20 15:30:14"' >> /app/main.py && \
+    echo '    }' >> /app/main.py
 
 # Set permissions
 RUN chmod -R 755 /app/scripts && \
@@ -139,7 +131,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app \
     TZ=UTC \
     CREATED_BY="daparthi001" \
-    CREATED_DATE="2025-05-20 15:21:00" \
+    CREATED_DATE="2025-05-20 15:30:14" \
     API_ENV=development \
     API_V1_STR="/api/v1" \
     PROJECT_NAME="QuantumVestAI API" \
