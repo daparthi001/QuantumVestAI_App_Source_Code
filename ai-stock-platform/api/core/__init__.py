@@ -4,7 +4,7 @@ Created: 2025-05-20 04:40:55
 Author: daparthi001
 """
 
-from api.core.settings import Settings
+from .settings import Settings
 from api.core.exceptions import APIException
 from api.core.dependencies import get_current_user, get_db
 

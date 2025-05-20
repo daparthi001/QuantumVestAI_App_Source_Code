@@ -2,7 +2,7 @@
 FROM python:3.10-slim AS builder
 
 # Set build arguments and metadata
-ARG BUILD_DATE="2025-05-20 17:36:23"
+ARG BUILD_DATE="2025-05-20 18:08:37"
 ARG VERSION="1.0.0"
 ARG MAINTAINER="daparthi001"
 
@@ -74,7 +74,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app \
     TZ=UTC \
     CREATED_BY="daparthi001" \
-    CREATED_DATE="2025-05-20 17:36:23" \
+    CREATED_DATE="2025-05-20 18:08:37" \
     API_ENV="development" \
     API_V1_STR="/api/v1" \
     PROJECT_NAME="QuantumVestAI API" \
@@ -94,5 +94,5 @@ EXPOSE ${PORT}
 # Use the entrypoint script
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
 
-# Start the application
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start the application with debug logging
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "debug"]
