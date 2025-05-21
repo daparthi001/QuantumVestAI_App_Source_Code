@@ -1,18 +1,23 @@
 """
-Portfolio Models
+Portfolio Models Module
 Created: 2025-05-19 04:28:10
+Updated: 2025-05-21 15:48:25
 Author: daparthi001
 """
+from datetime import datetime
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import relationship
-from db.base import Base, TimestampMixin
+from db.base_class import Base
+from db.models.mixins import TimestampMixin
 import enum
 
 class TransactionType(str, enum.Enum):
+    """Transaction type enumeration"""
     BUY = "BUY"
     SELL = "SELL"
 
 class Position(Base, TimestampMixin):
+    """Portfolio position model"""
     __tablename__ = "positions"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -21,20 +26,13 @@ class Position(Base, TimestampMixin):
     shares = Column(Float, nullable=False)
     average_cost = Column(Float, nullable=False)
     cost_basis = Column(Float, nullable=False)
-    
-    # Virtual fields (not stored in database)
-    current_price: float = None
-    market_value: float = None
-    gain_loss: float = None
-    gain_loss_percent: float = None
-    day_change: float = None
-    day_change_percent: float = None
 
     # Relationships
     user = relationship("User", back_populates="positions")
     transactions = relationship("Transaction", back_populates="position")
 
 class Transaction(Base, TimestampMixin):
+    """Portfolio transaction model"""
     __tablename__ = "transactions"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -52,6 +50,7 @@ class Transaction(Base, TimestampMixin):
     position = relationship("Position", back_populates="transactions")
 
 class PortfolioSummary:
+    """Portfolio summary value object"""
     def __init__(
         self,
         total_value: float,

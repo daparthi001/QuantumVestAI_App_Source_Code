@@ -1,16 +1,20 @@
 """
-User models
+User Model Module
 Created: 2025-05-19 03:27:22
+Updated: 2025-05-21 15:48:25
 Author: daparthi001
 """
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
-from sqlalchemy.sql import func
+from sqlalchemy import Column, Integer, String, Boolean, Float
+from sqlalchemy.orm import relationship
 from db.base_class import Base
+from db.models.mixins import TimestampMixin
 from core.security import get_password_hash
 
-class User(Base):
+class User(Base, TimestampMixin):
+    """User model for authentication and profile"""
     __tablename__ = "users"
 
+    # Authentication fields
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     username = Column(String, unique=True, index=True, nullable=False)
@@ -18,8 +22,15 @@ class User(Base):
     full_name = Column(String)
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    def set_password(self, password: str):
+    # Relationships
+    positions = relationship("Position", back_populates="user", cascade="all, delete-orphan")
+    transactions = relationship("Transaction", back_populates="user", cascade="all, delete-orphan")
+    watchlists = relationship("WatchList", back_populates="user", cascade="all, delete-orphan")
+
+    def set_password(self, password: str) -> None:
+        """Set encrypted password"""
         self.hashed_password = get_password_hash(password)
+
+    def __repr__(self) -> str:
+        return f"<User {self.username}>"
