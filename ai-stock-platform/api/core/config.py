@@ -1,11 +1,16 @@
 """
 Configuration Module
-Created: 2025-05-21 18:44:09
+Created: 2025-05-21 18:56:12
 Author: daparthi001
 """
 import os
+import logging
 from typing import Any, Dict, Optional
-from pydantic import BaseSettings, PostgresDsn, validator
+from pydantic import BaseSettings, validator
+
+# Configure logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 class Settings(BaseSettings):
     """Application settings"""
@@ -14,31 +19,26 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     
-    # Database settings from environment variables
-    DB_HOST: str = os.getenv("DB_HOST", "localhost")
-    DB_PORT: str = os.getenv("DB_PORT", "5432")
-    DB_NAME: str = os.getenv("DB_NAME", "quantumvestaidb")
-    DB_USER: str = os.getenv("DB_USER", "dbadmin")
-    DB_PASSWORD: str = os.getenv("DB_PASSWORD", "")
-    SQLALCHEMY_DATABASE_URI: Optional[PostgresDsn] = None
-
-    @validator("SQLALCHEMY_DATABASE_URI", pre=True)
-    def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
+    # Database settings - read directly from environment
+    DB_HOST: str
+    DB_PORT: str
+    DB_NAME: str
+    DB_USER: str
+    DB_PASSWORD: str
+    
+    @property
+    def SQLALCHEMY_DATABASE_URI(self) -> str:
         """Construct database URI from components"""
-        if isinstance(v, str):
-            return v
-        
         # Log the connection details (excluding password)
-        print(f"Connecting to database at {values.get('DB_HOST')}:{values.get('DB_PORT')}/{values.get('DB_NAME')} as {values.get('DB_USER')}")
-        
-        return PostgresDsn.build(
-            scheme="postgresql",
-            user=values.get("DB_USER"),
-            password=values.get("DB_PASSWORD"),
-            host=values.get("DB_HOST"),
-            port=values.get("DB_PORT"),
-            path=f"/{values.get('DB_NAME') or ''}"
+        logger.info(
+            "Database configuration - Host: %s, Port: %s, DB: %s, User: %s",
+            self.DB_HOST,
+            self.DB_PORT,
+            self.DB_NAME,
+            self.DB_USER
         )
+        
+        return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
     # Environment
     API_ENV: str = os.getenv("API_ENV", "development")
@@ -46,4 +46,15 @@ class Settings(BaseSettings):
     class Config:
         case_sensitive = True
 
-settings = Settings()
+# Create settings instance
+settings = Settings(
+    # Explicitly read from environment variables
+    DB_HOST=os.environ["DB_HOST"],
+    DB_PORT=os.environ["DB_PORT"],
+    DB_NAME=os.environ["DB_NAME"],
+    DB_USER=os.environ["DB_USER"],
+    DB_PASSWORD=os.environ["DB_PASSWORD"],
+)
+
+# Log the configuration (excluding sensitive data)
+logger.info("Configuration loaded with database host: %s", settings.DB_HOST)
