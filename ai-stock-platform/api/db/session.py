@@ -1,6 +1,6 @@
 """
 Database Session Module
-Created: 2025-05-21 19:19:45
+Created: 2025-05-21 20:15:43
 Author: daparthi001
 """
 import os
@@ -80,10 +80,10 @@ logger.info(
     "Max overflow: %d\n"
     "Pool timeout: %d\n"
     "Pool recycle: %d",
-    engine.pool.size(),
-    engine.pool.overflow(),
-    engine.pool.timeout(),
-    engine.pool.recycle()
+    engine.pool._pool.maxsize,  # Access internal pool attributes
+    engine.pool._overflow_capacity,
+    engine.pool._timeout,
+    engine.pool._recycle
 )
 
 # Verify environment variables are set
