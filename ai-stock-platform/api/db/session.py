@@ -1,6 +1,6 @@
 """
 Database Session Module
-Created: 2025-05-21 21:12:20
+Created: 2025-05-21 21:24:47
 Author: daparthi001
 """
 import os
@@ -12,12 +12,28 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine import Engine
 from sqlalchemy.pool import QueuePool
 from sqlalchemy.exc import OperationalError
+import urllib.parse
 
 from core.config import settings
 
 # Configure logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+def verify_credentials() -> bool:
+    """Verify that all database credentials are present"""
+    required_vars = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD']
+    missing_vars = [var for var in required_vars if not os.getenv(var)]
+    
+    if missing_vars:
+        logger.error("Missing required environment variables: %s", ', '.join(missing_vars))
+        return False
+    
+    if not settings.DB_PASSWORD or not settings.DB_PASSWORD.get_secret_value():
+        logger.error("Database password is not set or is empty")
+        return False
+    
+    return True
 
 def create_db_engine(retries: int = 3, delay: int = 5) -> Optional[Engine]:
     """
@@ -30,6 +46,17 @@ def create_db_engine(retries: int = 3, delay: int = 5) -> Optional[Engine]:
     Returns:
         SQLAlchemy Engine instance or None if all retries fail
     """
+    # Verify credentials before attempting connection
+    if not verify_credentials():
+        raise ValueError("Database credentials verification failed")
+
+    # Create the connection URL with properly escaped password
+    password = urllib.parse.quote_plus(settings.DB_PASSWORD.get_secret_value())
+    db_url = (
+        f"postgresql+psycopg2://{settings.DB_USER}:{password}"
+        f"@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
+    )
+    
     for attempt in range(retries):
         try:
             logger.info(
@@ -40,9 +67,9 @@ def create_db_engine(retries: int = 3, delay: int = 5) -> Optional[Engine]:
                 settings.DB_PORT
             )
             
-            # Create engine with explicit driver and host
+            # Create engine with explicit configuration
             engine = create_engine(
-                settings.SQLALCHEMY_DATABASE_URI,
+                db_url,
                 poolclass=QueuePool,
                 pool_size=5,
                 max_overflow=10,
@@ -53,8 +80,7 @@ def create_db_engine(retries: int = 3, delay: int = 5) -> Optional[Engine]:
                 connect_args={
                     "connect_timeout": 10,
                     "application_name": f"quantumvestai_{settings.API_ENV}",
-                    # Explicitly set the host
-                    "host": settings.DB_HOST
+                    "sslmode": "require"  # Enable SSL for RDS
                 }
             )
             
@@ -91,7 +117,7 @@ if not engine:
 def on_connect(dbapi_con, connection_record):
     """Log new database connections"""
     logger.info("New database connection established")
-    # Set the host explicitly on the connection
+    # Set session parameters
     dbapi_con.set_session(
         application_name=f"quantumvestai_{settings.API_ENV}"
     )
@@ -117,20 +143,15 @@ def get_db() -> Generator:
     finally:
         db.close()
 
-# Verify environment variables are set
-required_vars = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD']
-missing_vars = [var for var in required_vars if not os.getenv(var)]
-if missing_vars:
-    raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
-
-# Log configuration summary
+# Log final configuration (excluding sensitive data)
 logger.info(
     "Database configuration summary:\n"
     "Host: %s\n"
     "Port: %s\n"
     "Database: %s\n"
     "User: %s\n"
-    "Environment: %s",
+    "Environment: %s\n"
+    "SSL Mode: require",
     settings.DB_HOST,
     settings.DB_PORT,
     settings.DB_NAME,
