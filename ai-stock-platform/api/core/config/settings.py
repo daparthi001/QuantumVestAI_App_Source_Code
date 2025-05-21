@@ -56,3 +56,9 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=True
     )
+
+# Create a global settings instance
+settings = Settings()
+
+# Export settings
+__all__ = ['settings']

@@ -1,10 +1,8 @@
 """
-Core Package
-Created: 2025-05-20 22:13:01
+API Package
+Created: 2025-05-21 13:57:49
 Author: daparthi001
 """
-from core.config.settings import settings
-from core.logging import logger, setup_logging
-from core.middleware import setup_middleware
+from api.main import app
 
-__all__ = ['settings', 'logger', 'setup_logging', 'setup_middleware']
+__all__ = ['app']

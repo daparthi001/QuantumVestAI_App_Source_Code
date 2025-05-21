@@ -1,8 +1,8 @@
 """
-Config Package
-Created: 2025-05-20 19:38:38
+Core Package
+Created: 2025-05-21 13:57:49
 Author: daparthi001
 """
-from .settings import Settings
+from core.config import settings
 
-__all__ = ['Settings']
+__all__ = ['settings']

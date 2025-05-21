@@ -2,6 +2,7 @@
 Settings Module
 Created: 2025-05-20 22:13:01
 Author: daparthi001
+Updated: 2025-05-21 14:00:01
 """
 import os
 from typing import List, Dict, Any
@@ -64,3 +65,6 @@ class Settings(BaseSettings):
 
 # Create a global settings instance
 settings = Settings()
+
+# Export settings
+__all__ = ['settings']
