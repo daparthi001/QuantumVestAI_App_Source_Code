@@ -1,6 +1,6 @@
 """
 Database Session Module
-Created: 2025-05-21 18:56:12
+Created: 2025-05-21 19:07:45
 Author: daparthi001
 """
 import os
@@ -17,21 +17,22 @@ from core.config import settings
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-# Log all environment variables (excluding sensitive ones)
-logger.info("Environment variables for database connection:")
-logger.info("DB_HOST: %s", os.environ.get("DB_HOST"))
-logger.info("DB_PORT: %s", os.environ.get("DB_PORT"))
-logger.info("DB_NAME: %s", os.environ.get("DB_NAME"))
-logger.info("DB_USER: %s", os.environ.get("DB_USER"))
-
-# Create database URL directly
-database_url = settings.SQLALCHEMY_DATABASE_URI
-
-logger.info("Connecting to database at: %s", database_url.replace(settings.DB_PASSWORD, "********"))
+# Log database connection info (excluding sensitive data)
+logger.info(
+    "Configuring database connection:\n"
+    "Host: %s\n"
+    "Port: %s\n"
+    "Database: %s\n"
+    "User: %s",
+    settings.DB_HOST,
+    settings.DB_PORT,
+    settings.DB_NAME,
+    settings.DB_USER
+)
 
 # Create database engine with RDS-optimized settings
 engine: Engine = create_engine(
-    database_url,
+    settings.DATABASE_URL,
     poolclass=QueuePool,
     pool_size=5,
     max_overflow=10,
@@ -81,3 +82,9 @@ logger.info(
     engine.pool.timeout(),
     engine.pool.recycle()
 )
+
+# Verify environment variables are set
+required_vars = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD']
+missing_vars = [var for var in required_vars if not os.getenv(var)]
+if missing_vars:
+    raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
