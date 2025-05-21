@@ -1,10 +1,10 @@
 """
 Database Session Module
-Created: 2025-05-21 18:24:40
+Created: 2025-05-21 18:44:09
 Author: daparthi001
 """
-from typing import Generator
 import logging
+from typing import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine import Engine
@@ -14,19 +14,30 @@ from core.config import settings
 
 # Configure logging
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Log database connection details (excluding password)
+logger.info(
+    "Configuring database connection to %s:%s/%s as %s",
+    settings.DB_HOST,
+    settings.DB_PORT,
+    settings.DB_NAME,
+    settings.DB_USER
+)
 
 # Create database engine with RDS-optimized settings
 engine: Engine = create_engine(
     str(settings.SQLALCHEMY_DATABASE_URI),
     poolclass=QueuePool,
-    pool_size=5,  # Start with smaller pool for dev environment
-    max_overflow=10,  # Allow up to 15 total connections
-    pool_timeout=30,  # Seconds to wait before giving up on getting a connection
-    pool_recycle=1800,  # Recycle connections after 30 minutes
-    pool_pre_ping=True,  # Enable connection health checks
+    pool_size=5,
+    max_overflow=10,
+    pool_timeout=30,
+    pool_recycle=1800,
+    pool_pre_ping=True,
+    echo=True,  # Enable SQL logging for debugging
     connect_args={
-        "connect_timeout": 10,  # Connection timeout in seconds
-        "application_name": f"quantumvestai_{settings.API_ENV}"  # Identify application in RDS logs
+        "connect_timeout": 10,
+        "application_name": f"quantumvestai_{settings.API_ENV}"
     }
 )
 

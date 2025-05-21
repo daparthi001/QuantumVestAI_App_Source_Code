@@ -1,11 +1,11 @@
 """
 Configuration Module
-Created: 2025-05-21 18:24:40
+Created: 2025-05-21 18:44:09
 Author: daparthi001
 """
+import os
 from typing import Any, Dict, Optional
 from pydantic import BaseSettings, PostgresDsn, validator
-from pydantic.validators import str_validator
 
 class Settings(BaseSettings):
     """Application settings"""
@@ -14,22 +14,22 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     
-    # Database settings from deployment configuration
-    DB_HOST: str = "quantumvestai-dev.cwbsqsiywwaa.us-east-1.rds.amazonaws.com"
-    DB_PORT: str = "5432"
-    DB_NAME: str = "quantumvestaidb"
-    DB_USER: str = "dbadmin"
-    DB_PASSWORD: str
+    # Database settings from environment variables
+    DB_HOST: str = os.getenv("DB_HOST", "localhost")
+    DB_PORT: str = os.getenv("DB_PORT", "5432")
+    DB_NAME: str = os.getenv("DB_NAME", "quantumvestaidb")
+    DB_USER: str = os.getenv("DB_USER", "dbadmin")
+    DB_PASSWORD: str = os.getenv("DB_PASSWORD", "")
     SQLALCHEMY_DATABASE_URI: Optional[PostgresDsn] = None
-    
-    # Environment
-    API_ENV: str = "development"
 
     @validator("SQLALCHEMY_DATABASE_URI", pre=True)
     def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
         """Construct database URI from components"""
         if isinstance(v, str):
             return v
+        
+        # Log the connection details (excluding password)
+        print(f"Connecting to database at {values.get('DB_HOST')}:{values.get('DB_PORT')}/{values.get('DB_NAME')} as {values.get('DB_USER')}")
         
         return PostgresDsn.build(
             scheme="postgresql",
@@ -40,13 +40,10 @@ class Settings(BaseSettings):
             path=f"/{values.get('DB_NAME') or ''}"
         )
 
-    # Security settings
-    SECRET_KEY: str
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    # Environment
+    API_ENV: str = os.getenv("API_ENV", "development")
 
     class Config:
         case_sensitive = True
-        env_file = ".env"
 
 settings = Settings()
