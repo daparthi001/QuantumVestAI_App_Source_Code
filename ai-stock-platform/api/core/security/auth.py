@@ -1,6 +1,6 @@
 """
 Authentication Module
-Created: 2025-05-21 16:53:29
+Created: 2025-05-21 17:07:45
 Author: daparthi001
 """
 from datetime import datetime, timedelta
@@ -8,7 +8,7 @@ from typing import Optional
 from jose import jwt
 
 from core.config import settings
-from core.utils.password import verify_password
+from core.utils.password_utils import verify_password
 from db.models.user import User
 
 def authenticate_user(db_session, username: str, password: str) -> Optional[User]:

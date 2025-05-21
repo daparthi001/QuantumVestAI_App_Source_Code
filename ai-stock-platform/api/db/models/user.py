@@ -1,13 +1,13 @@
 """
 User Model Module
-Created: 2025-05-21 16:53:29
+Created: 2025-05-21 17:07:45
 Author: daparthi001
 """
 from sqlalchemy import Column, Integer, String, Boolean
 from sqlalchemy.orm import relationship
 
 from db.base import Base, TimestampMixin
-from core.utils.password import get_password_hash
+from core.utils.password_utils import get_password_hash
 
 class User(Base, TimestampMixin):
     """User model for authentication and profile"""

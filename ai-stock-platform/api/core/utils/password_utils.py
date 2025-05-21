@@ -1,10 +1,11 @@
 """
 Password Utilities Module
-Created: 2025-05-21 16:53:29
+Created: 2025-05-21 17:07:45
 Author: daparthi001
 """
 from passlib.context import CryptContext
 
+# Configure password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_password_hash(password: str) -> str:
