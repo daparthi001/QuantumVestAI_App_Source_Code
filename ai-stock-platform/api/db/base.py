@@ -1,28 +1,34 @@
 """
 Database Base Module
-Created: 2025-05-21 14:28:57
+Created: 2025-05-21 16:40:40
 Author: daparthi001
 """
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import declared_attr
+from typing import Any
+from sqlalchemy import Column, DateTime
+from sqlalchemy.ext.declarative import as_declarative, declared_attr
+from sqlalchemy.sql import func
 
-class CustomBase:
+@as_declarative()
+class Base:
+    """Base class for all database models"""
+    id: Any
+    __name__: str
+    
     @declared_attr
     def __tablename__(cls) -> str:
-        """Generate __tablename__ automatically from class name"""
+        """Generate __tablename__ automatically"""
         return cls.__name__.lower()
-    
-    # Common columns that should be in all tables
-    id: int
-    created_at: str
-    updated_at: str
-    
-    def dict(self):
-        """Convert model instance to dictionary"""
-        return {
-            col.name: getattr(self, col.name)
-            for col in self.__table__.columns
-        }
 
-# Create declarative base model
-Base = declarative_base(cls=CustomBase)
+class TimestampMixin:
+    """Mixin for adding timestamp columns to models"""
+    created_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False
+    )

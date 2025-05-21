@@ -1,13 +1,12 @@
 """
 User Model Module
-Created: 2025-05-19 03:27:22
-Updated: 2025-05-21 16:32:45
+Created: 2025-05-21 16:40:40
 Author: daparthi001
 """
 from sqlalchemy import Column, Integer, String, Boolean
 from sqlalchemy.orm import relationship
 
-from db.base import Base, TimestampMixin
+from ..base import Base, TimestampMixin
 from core.security import get_password_hash
 
 class User(Base, TimestampMixin):
