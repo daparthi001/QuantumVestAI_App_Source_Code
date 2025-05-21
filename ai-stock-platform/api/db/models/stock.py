@@ -1,6 +1,6 @@
 """
 Stock Models Module
-Created: 2025-05-21 17:22:14
+Created: 2025-05-21 17:31:58
 Author: daparthi001
 """
 from datetime import datetime
@@ -61,6 +61,34 @@ class Stock(Base, TimestampMixin):
     
     def __repr__(self) -> str:
         return f"<Stock {self.ticker}>"
+
+class WatchList(Base, TimestampMixin):
+    """User's stock watchlist."""
+    __tablename__ = "watchlists"
+    
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    user_id: Mapped[int] = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False
+    )
+    stock_id: Mapped[int] = Column(
+        Integer,
+        ForeignKey("stocks.id", ondelete="CASCADE"),
+        nullable=False
+    )
+    
+    # Additional fields
+    notes: Mapped[Optional[str]] = Column(String, nullable=True)
+    price_target: Mapped[Optional[float]] = Column(Float, nullable=True)
+    is_favorite: Mapped[bool] = Column(Boolean, default=False)
+    
+    # Relationships
+    user: Mapped["User"] = relationship("User", back_populates="watchlist_entries")
+    stock: Mapped["Stock"] = relationship("Stock", back_populates="watchlist_entries")
+    
+    def __repr__(self) -> str:
+        return f"<WatchList {self.user.username} - {self.stock.ticker}>"
 
 class StockPrice(Base, TimestampMixin):
     """Historical stock price data."""
