@@ -1,32 +1,31 @@
 """
-Simple Log Handler Module
-Created: 2025-05-21 13:37:56
+Logger Module
+Created: 2025-05-21 14:16:44
 Author: daparthi001
 """
+import os
 import sys
 import logging
 from pathlib import Path
+from logging.handlers import RotatingFileHandler
 from typing import Optional
 
 from core.config.settings import settings
 
-def get_logger(
-    name: str = "quantumvestai",
-    level: Optional[str] = None
+def setup_logger(
+    name: str = "app",
+    level: Optional[str] = None,
 ) -> logging.Logger:
     """
-    Get a configured logger instance
+    Configure and return a logger instance
     
     Args:
         name: Logger name
-        level: Log level (defaults to settings.LOG_LEVEL)
+        level: Optional log level override
     
     Returns:
         logging.Logger: Configured logger instance
     """
-    # Create logs directory
-    Path("logs").mkdir(exist_ok=True)
-    
     # Get or create logger
     logger = logging.getLogger(name)
     
@@ -38,8 +37,8 @@ def get_logger(
         
         # Create formatter
         formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
+            fmt=settings.LOG_FORMAT,
+            datefmt=settings.LOG_DATE_FORMAT
         )
         
         # Add console handler
@@ -47,12 +46,21 @@ def get_logger(
         console_handler.setFormatter(formatter)
         logger.addHandler(console_handler)
         
-        # Add file handler (simple file, no rotation)
-        file_handler = logging.FileHandler("logs/app.log")
+        # Create logs directory if it doesn't exist
+        log_dir = Path(settings.LOG_FILE).parent
+        log_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Add rotating file handler
+        file_handler = RotatingFileHandler(
+            filename=settings.LOG_FILE,
+            maxBytes=settings.LOG_FILE_MAX_BYTES,
+            backupCount=settings.LOG_FILE_BACKUP_COUNT,
+            encoding='utf-8'
+        )
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
         
-        logger.info(
+        logger.debug(
             "Logger initialized - Name: %s, Level: %s",
             name,
             log_level
@@ -61,6 +69,9 @@ def get_logger(
     return logger
 
 # Create default logger instance
-logger = get_logger()
+logger = setup_logger(
+    name=settings.PROJECT_NAME.lower().replace(' ', '_'),
+    level=settings.LOG_LEVEL
+)
 
-__all__ = ['logger', 'get_logger']
+__all__ = ['logger', 'setup_logger']

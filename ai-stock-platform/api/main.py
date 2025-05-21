@@ -1,6 +1,6 @@
 """
 Main API Module
-Created: 2025-05-21 13:57:49
+Created: 2025-05-21 14:14:38
 Author: daparthi001
 """
 import sys
@@ -11,10 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 # Add parent directory to Python path
 sys.path.append(str(Path(__file__).parent.parent))
 
-# Import settings first
 from core.config import settings
-
-# Then import other modules
 from core.logger import logger
 from core.middleware import setup_middleware
 
@@ -75,7 +72,7 @@ async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "timestamp": "2025-05-21 13:57:49",
+        "timestamp": "2025-05-21 14:14:38",
         "version": settings.VERSION
     }
 

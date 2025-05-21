@@ -1,13 +1,12 @@
 """
 Core Package
-Created: 2025-05-21 05:17:43
+Created: 2025-05-21 14:16:44
 Author: daparthi001
 """
-# First import settings as other modules depend on it
+# Import settings first to avoid circular imports
 from core.config.settings import settings
 
-# Then import other core modules
+# Then import logger
 from core.logger import logger, setup_logger
-from core.middleware import setup_middleware
 
-__all__ = ['settings', 'logger', 'setup_logger', 'setup_middleware']
+__all__ = ['settings', 'logger', 'setup_logger']
