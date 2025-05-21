@@ -1,12 +1,11 @@
 """
 Configuration Module
-Created: 2025-05-21 19:19:45
+Created: 2025-05-21 21:12:20
 Author: daparthi001
 """
 import os
 import logging
-from typing import Any
-from pydantic import BaseSettings, Field, validator
+from pydantic import BaseSettings, Field
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -20,28 +19,23 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # Database settings with environment variable mapping
-    DB_HOST: str = Field(..., env='DB_HOST')
-    DB_PORT: str = Field("5432", env='DB_PORT')
-    DB_NAME: str = Field(..., env='DB_NAME')
-    DB_USER: str = Field(..., env='DB_USER')
-    DB_PASSWORD: str = Field(..., env='DB_PASSWORD')
-    
-    # Computed database URL
-    SQLALCHEMY_DATABASE_URI: str = ""
-
-    @validator("SQLALCHEMY_DATABASE_URI", pre=True, always=True)
-    def assemble_db_connection(cls, v: str, values: dict[str, Any]) -> str:
-        """Assemble database connection string"""
-        if isinstance(v, str) and v:
-            return v
-            
-        return (
-            f"postgresql://{values.get('DB_USER')}:{values.get('DB_PASSWORD')}"
-            f"@{values.get('DB_HOST')}:{values.get('DB_PORT')}/{values.get('DB_NAME')}"
-        )
+    DB_HOST: str = Field(env='DB_HOST')
+    DB_PORT: str = Field(env='DB_PORT', default="5432")
+    DB_NAME: str = Field(env='DB_NAME')
+    DB_USER: str = Field(env='DB_USER')
+    DB_PASSWORD: str = Field(env='DB_PASSWORD')
     
     # Environment
-    API_ENV: str = Field("development", env='API_ENV')
+    API_ENV: str = Field(env='API_ENV', default="development")
+
+    @property
+    def SQLALCHEMY_DATABASE_URI(self) -> str:
+        """Construct database URI"""
+        # Explicitly use postgresql+psycopg2 driver
+        return (
+            f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}"
+            f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        )
 
     class Config:
         env_file = ".env"
@@ -52,22 +46,23 @@ def get_settings() -> Settings:
     """Get settings instance with logging"""
     try:
         settings = Settings()
-        logger.info(
-            "Loaded configuration:\n"
-            "Host: %s\n"
-            "Port: %s\n"
-            "Database: %s\n"
-            "User: %s\n"
-            "Environment: %s",
-            settings.DB_HOST,
-            settings.DB_PORT,
-            settings.DB_NAME,
-            settings.DB_USER,
-            settings.API_ENV
-        )
+        # Log all environment variables for debugging
+        logger.info("Environment variables:")
+        for key, value in os.environ.items():
+            if key.startswith('DB_'):
+                if 'PASSWORD' in key:
+                    logger.info("%s: %s", key, '*' * 8)
+                else:
+                    logger.info("%s: %s", key, value)
+        
+        # Log the constructed database URL (without password)
+        db_url = settings.SQLALCHEMY_DATABASE_URI
+        masked_url = db_url.replace(settings.DB_PASSWORD, "********")
+        logger.info("Database URL: %s", masked_url)
+        
         return settings
     except Exception as e:
-        logger.error("Failed to load configuration: %s", str(e))
+        logger.error("Failed to load settings: %s", str(e))
         raise
 
 # Create settings instance
