@@ -1,18 +1,16 @@
 """
 Main API Module
-Created: 2025-05-20 20:41:24
+Created: 2025-05-21 05:17:43
 Author: daparthi001
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import sys
-from pathlib import Path
 
 # Add the parent directory to Python path
 sys.path.append(str(Path(__file__).parent.parent))
 
 from core.config.settings import settings
-from core.logging import logger
+from core.logger import logger
 from core.middleware import setup_middleware
 
 
@@ -35,17 +33,9 @@ app = FastAPI(
     docs_url=f"{settings.API_V1_STR}/docs",
     redoc_url=f"{settings.API_V1_STR}/redoc",
 )
-setup_middleware(app)
-# Set up CORS
-if settings.BACKEND_CORS_ORIGINS:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
 
+# Setup middleware
+setup_middleware(app)
 
 logger.info(
     "Starting %s version %s",
@@ -69,7 +59,6 @@ async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "version": settings.VERSION,
-        "timestamp": "2025-05-20 18:08:37",
-        "user": "daparthi001"
+        "timestamp": "2025-05-21 05:17:43",
+        "version": settings.VERSION
     }
