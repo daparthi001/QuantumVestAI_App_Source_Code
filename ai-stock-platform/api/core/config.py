@@ -1,11 +1,11 @@
 """
 Configuration Module
-Created: 2025-05-21 19:07:45
+Created: 2025-05-21 19:19:45
 Author: daparthi001
 """
 import os
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 from pydantic import BaseSettings, Field, validator
 
 # Configure logging
@@ -20,33 +20,33 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # Database settings with environment variable mapping
-    DB_HOST: str = Field(env='DB_HOST')
-    DB_PORT: str = Field(env='DB_PORT', default="5432")
-    DB_NAME: str = Field(env='DB_NAME')
-    DB_USER: str = Field(env='DB_USER')
-    DB_PASSWORD: str = Field(env='DB_PASSWORD')
+    DB_HOST: str = Field(..., env='DB_HOST')
+    DB_PORT: str = Field("5432", env='DB_PORT')
+    DB_NAME: str = Field(..., env='DB_NAME')
+    DB_USER: str = Field(..., env='DB_USER')
+    DB_PASSWORD: str = Field(..., env='DB_PASSWORD')
     
-    @property
-    def DATABASE_URL(self) -> str:
-        """Construct database URL"""
+    # Computed database URL
+    SQLALCHEMY_DATABASE_URI: str = ""
+
+    @validator("SQLALCHEMY_DATABASE_URI", pre=True, always=True)
+    def assemble_db_connection(cls, v: str, values: dict[str, Any]) -> str:
+        """Assemble database connection string"""
+        if isinstance(v, str) and v:
+            return v
+            
         return (
-            f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}"
-            f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+            f"postgresql://{values.get('DB_USER')}:{values.get('DB_PASSWORD')}"
+            f"@{values.get('DB_HOST')}:{values.get('DB_PORT')}/{values.get('DB_NAME')}"
         )
     
     # Environment
-    API_ENV: str = Field(env='API_ENV', default="development")
+    API_ENV: str = Field("development", env='API_ENV')
 
     class Config:
         env_file = ".env"
         env_file_encoding = 'utf-8'
         case_sensitive = True
-
-        # Additional environment variable names
-        env_prefix = ""
-        
-        # Allow environment variables to override .env file
-        env_priority = True
 
 def get_settings() -> Settings:
     """Get settings instance with logging"""

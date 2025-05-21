@@ -1,6 +1,6 @@
 """
 Database Session Module
-Created: 2025-05-21 19:07:45
+Created: 2025-05-21 19:19:45
 Author: daparthi001
 """
 import os
@@ -32,7 +32,7 @@ logger.info(
 
 # Create database engine with RDS-optimized settings
 engine: Engine = create_engine(
-    settings.DATABASE_URL,
+    settings.SQLALCHEMY_DATABASE_URI,
     poolclass=QueuePool,
     pool_size=5,
     max_overflow=10,
@@ -49,14 +49,17 @@ engine: Engine = create_engine(
 # Add engine event listeners for debugging
 @event.listens_for(engine, "connect")
 def on_connect(dbapi_con, connection_record):
+    """Log new database connections"""
     logger.info("New database connection established")
 
 @event.listens_for(engine, "checkout")
 def on_checkout(dbapi_con, connection_record, connection_proxy):
+    """Log connection checkouts from pool"""
     logger.info("Database connection checked out from pool")
 
 @event.listens_for(engine, "checkin")
 def on_checkin(dbapi_con, connection_record):
+    """Log connection returns to pool"""
     logger.info("Database connection returned to pool")
 
 # Create session factory
