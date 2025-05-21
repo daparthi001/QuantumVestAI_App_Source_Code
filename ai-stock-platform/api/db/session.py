@@ -1,9 +1,10 @@
 """
 Database Session Module
-Created: 2025-05-21 18:19:56
+Created: 2025-05-21 18:24:40
 Author: daparthi001
 """
 from typing import Generator
+import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine import Engine
@@ -11,18 +12,21 @@ from sqlalchemy.pool import QueuePool
 
 from core.config import settings
 
-# Create database engine with optimal RDS connection settings
+# Configure logging
+logger = logging.getLogger(__name__)
+
+# Create database engine with RDS-optimized settings
 engine: Engine = create_engine(
     str(settings.SQLALCHEMY_DATABASE_URI),
     poolclass=QueuePool,
-    pool_size=10,  # Number of connections to maintain
-    max_overflow=20,  # Maximum number of connections to allow above pool_size
+    pool_size=5,  # Start with smaller pool for dev environment
+    max_overflow=10,  # Allow up to 15 total connections
     pool_timeout=30,  # Seconds to wait before giving up on getting a connection
     pool_recycle=1800,  # Recycle connections after 30 minutes
     pool_pre_ping=True,  # Enable connection health checks
     connect_args={
         "connect_timeout": 10,  # Connection timeout in seconds
-        "application_name": "stock_portfolio_api"  # Identify application in RDS logs
+        "application_name": f"quantumvestai_{settings.API_ENV}"  # Identify application in RDS logs
     }
 )
 

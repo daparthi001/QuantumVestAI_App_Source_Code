@@ -1,6 +1,6 @@
 """
 Database Initialization Module
-Created: 2025-05-21 18:19:56
+Created: 2025-05-21 18:24:40
 Author: daparthi001
 """
 import logging
@@ -31,31 +31,24 @@ logger = logging.getLogger(__name__)
     after=before_log(logger, logging.INFO)
 )
 def init_db(db: Session) -> None:
-    """
-    Initialize database schema with retry logic
-    
-    Args:
-        db: SQLAlchemy session
-        
-    Raises:
-        Exception: If database initialization fails after all retries
-    """
+    """Initialize database schema with retry logic"""
     try:
         # Try to create database tables
         Base.metadata.create_all(bind=engine)
         logger.info(
-            "Successfully connected to RDS database at %s and created tables",
-            settings.RDS_HOST
+            "Successfully connected to RDS database at %s (%s environment)",
+            settings.DB_HOST,
+            settings.API_ENV
         )
         
-        # Verify connection by executing a simple query
+        # Verify connection
         db.execute("SELECT 1")
         logger.info("Database connection verified")
         
     except OperationalError as e:
         logger.error(
             "Failed to connect to RDS database at %s: %s",
-            settings.RDS_HOST,
+            settings.DB_HOST,
             str(e)
         )
         raise
@@ -63,7 +56,7 @@ def init_db(db: Session) -> None:
     except ProgrammingError as e:
         logger.error(
             "Database schema error at %s: %s",
-            settings.RDS_HOST,
+            settings.DB_HOST,
             str(e)
         )
         raise
@@ -78,8 +71,9 @@ def init_db(db: Session) -> None:
 def main() -> None:
     """Main initialization function"""
     logger.info(
-        "Initializing database connection to RDS at %s",
-        settings.RDS_HOST
+        "Initializing database connection to RDS at %s (%s environment)",
+        settings.DB_HOST,
+        settings.API_ENV
     )
     init_db(db=SessionLocal())
     logger.info("Database initialization completed")
