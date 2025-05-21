@@ -1,8 +1,9 @@
 """
 Settings Module
-Created: 2025-05-21 14:37:39
+Created: 2025-05-21 15:04:55
 Author: daparthi001
 """
+from functools import cached_property
 from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, AnyHttpUrl, validator
@@ -43,9 +44,14 @@ class Settings(BaseSettings):
     ALGORITHM: str = Field(default="HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=30)
     
-    @property
+    @cached_property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
-        """Generate database URI from components"""
+        """
+        Generate database URI from components
+        
+        Returns:
+            str: PostgreSQL connection URI
+        """
         return (
             f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
@@ -53,21 +59,57 @@ class Settings(BaseSettings):
     
     @validator("BACKEND_CORS_ORIGINS", pre=True)
     def assemble_cors_origins(cls, v: str | List[str]) -> List[str]:
-        """Validate CORS origins"""
+        """
+        Validate and process CORS origins
+        
+        Args:
+            v: String or list of origins
+            
+        Returns:
+            List[str]: Processed list of origins
+            
+        Raises:
+            ValueError: If format is invalid
+        """
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
         elif isinstance(v, (list, str)):
             return v
         raise ValueError(v)
     
+    @validator("DB_POOL_SIZE", "DB_MAX_OVERFLOW", "DB_POOL_RECYCLE")
+    def validate_positive(cls, v: int, field: str) -> int:
+        """
+        Validate positive integer values
+        
+        Args:
+            v: Value to validate
+            field: Field name
+            
+        Returns:
+            int: Validated value
+            
+        Raises:
+            ValueError: If value is invalid
+        """
+        if v < 0:
+            raise ValueError(f"{field} must be positive")
+        if field == "DB_POOL_SIZE" and v < 1:
+            raise ValueError("DB_POOL_SIZE must be at least 1")
+        return v
+    
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        case_sensitive=True
+        case_sensitive=True,
+        validate_assignment=True
     )
 
-# Create a global settings instance
-settings = Settings()
+# Create a global settings instance with env file support
+settings = Settings(_env_file='.env', _env_file_encoding='utf-8')
+
+# Ensure SQLALCHEMY_DATABASE_URI is properly initialized
+settings.SQLALCHEMY_DATABASE_URI  # Access once to cache the property
 
 # Export settings
 __all__ = ['settings']
