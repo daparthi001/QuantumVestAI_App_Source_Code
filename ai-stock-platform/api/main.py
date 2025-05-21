@@ -1,6 +1,6 @@
 """
 Main API Module
-Created: 2025-05-21 14:14:38
+Created: 2025-05-21 14:26:28
 Author: daparthi001
 """
 import sys
@@ -11,10 +11,15 @@ from fastapi.middleware.cors import CORSMiddleware
 # Add parent directory to Python path
 sys.path.append(str(Path(__file__).parent.parent))
 
+# Import settings and logger first
 from core.config import settings
 from core.logger import logger
-from core.middleware import setup_middleware
 
+# Then import database
+from db.session import engine, SessionLocal
+
+# Import middleware and routers
+from core.middleware import setup_middleware
 from routers import (
     auth,
     stocks,
@@ -72,9 +77,22 @@ async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "timestamp": "2025-05-21 14:14:38",
+        "timestamp": "2025-05-21 14:26:28",
         "version": settings.VERSION
     }
+
+# Add startup event to verify database connection
+@app.on_event("startup")
+async def startup_event():
+    """Verify database connection on startup"""
+    try:
+        # Test database connection
+        with engine.connect() as conn:
+            conn.execute("SELECT 1")
+        logger.info("Database connection verified")
+    except Exception as e:
+        logger.error("Database connection failed: %s", str(e))
+        raise
 
 # Log application startup complete
 logger.info(
