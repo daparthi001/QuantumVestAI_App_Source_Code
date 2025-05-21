@@ -1,6 +1,6 @@
 """
 Database Session Module
-Created: 2025-05-21 20:15:43
+Created: 2025-05-21 20:53:56
 Author: daparthi001
 """
 import os
@@ -23,27 +23,34 @@ logger.info(
     "Host: %s\n"
     "Port: %s\n"
     "Database: %s\n"
-    "User: %s",
+    "User: %s\n"
+    "Environment: %s",
     settings.DB_HOST,
     settings.DB_PORT,
     settings.DB_NAME,
-    settings.DB_USER
+    settings.DB_USER,
+    settings.API_ENV
 )
+
+# Database engine configuration
+pool_settings = {
+    "pool_size": 5,
+    "max_overflow": 10,
+    "pool_timeout": 30,
+    "pool_recycle": 1800,
+    "pool_pre_ping": True
+}
 
 # Create database engine with RDS-optimized settings
 engine: Engine = create_engine(
     settings.SQLALCHEMY_DATABASE_URI,
     poolclass=QueuePool,
-    pool_size=5,
-    max_overflow=10,
-    pool_timeout=30,
-    pool_recycle=1800,
-    pool_pre_ping=True,
     echo=True,  # Enable SQL logging for debugging
     connect_args={
         "connect_timeout": 10,
         "application_name": f"quantumvestai_{settings.API_ENV}"
-    }
+    },
+    **pool_settings
 )
 
 # Add engine event listeners for debugging
@@ -73,21 +80,40 @@ def get_db() -> Generator:
     finally:
         db.close()
 
-# Verify engine configuration
+# Log pool configuration
 logger.info(
-    "Database engine configured with:\n"
+    "Database connection pool configured with:\n"
     "Pool size: %d\n"
     "Max overflow: %d\n"
-    "Pool timeout: %d\n"
-    "Pool recycle: %d",
-    engine.pool._pool.maxsize,  # Access internal pool attributes
-    engine.pool._overflow_capacity,
-    engine.pool._timeout,
-    engine.pool._recycle
+    "Pool timeout: %d seconds\n"
+    "Pool recycle: %d seconds",
+    pool_settings["pool_size"],
+    pool_settings["max_overflow"],
+    pool_settings["pool_timeout"],
+    pool_settings["pool_recycle"]
 )
+
+# Add connection status check
+def check_connection() -> bool:
+    """Check database connection status"""
+    try:
+        with engine.connect() as connection:
+            connection.execute("SELECT 1")
+            logger.info("Database connection test successful")
+            return True
+    except Exception as e:
+        logger.error("Database connection test failed: %s", str(e))
+        return False
 
 # Verify environment variables are set
 required_vars = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD']
 missing_vars = [var for var in required_vars if not os.getenv(var)]
 if missing_vars:
     raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
+
+# Perform initial connection test
+if not check_connection():
+    logger.warning(
+        "Initial database connection failed. "
+        "The application will continue to retry connections."
+    )
