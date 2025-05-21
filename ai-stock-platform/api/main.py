@@ -1,8 +1,10 @@
 """
 Main API Module
-Created: 2025-05-21 05:17:43
+Created: 2025-05-21 13:37:56
 Author: daparthi001
 """
+import sys
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -12,7 +14,6 @@ sys.path.append(str(Path(__file__).parent.parent))
 from core.config.settings import settings
 from core.logger import logger
 from core.middleware import setup_middleware
-
 
 from routers import (
     auth,
@@ -26,6 +27,7 @@ from routers import (
     whitepaper
 )
 
+# Create FastAPI application
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
@@ -44,21 +46,39 @@ logger.info(
 )
 
 # Include routers with tags
-app.include_router(auth.router, prefix=f"{settings.API_V1_STR}", tags=["auth"])
-app.include_router(users.router, prefix=f"{settings.API_V1_STR}", tags=["users"])
-app.include_router(stocks.router, prefix=f"{settings.API_V1_STR}", tags=["stocks"])
-app.include_router(forecast.router, prefix=f"{settings.API_V1_STR}", tags=["forecast"])
-app.include_router(watchlist.router, prefix=f"{settings.API_V1_STR}", tags=["watchlist"])
-app.include_router(admin.router, prefix=f"{settings.API_V1_STR}", tags=["admin"])
-app.include_router(sentiment.router, prefix=f"{settings.API_V1_STR}", tags=["sentiment"])
-app.include_router(data.router, prefix=f"{settings.API_V1_STR}", tags=["data"])
-app.include_router(whitepaper.router, prefix=f"{settings.API_V1_STR}", tags=["whitepaper"])
+ROUTERS = [
+    (auth.router, "auth"),
+    (users.router, "users"),
+    (stocks.router, "stocks"),
+    (forecast.router, "forecast"),
+    (watchlist.router, "watchlist"),
+    (admin.router, "admin"),
+    (sentiment.router, "sentiment"),
+    (data.router, "data"),
+    (whitepaper.router, "whitepaper")
+]
+
+# Register all routers
+for router, tag in ROUTERS:
+    app.include_router(
+        router,
+        prefix=f"{settings.API_V1_STR}",
+        tags=[tag]
+    )
+    logger.debug(f"Registered router: {tag}")
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "timestamp": "2025-05-21 05:17:43",
+        "timestamp": "2025-05-21 13:37:56",
         "version": settings.VERSION
     }
+
+# Log application startup complete
+logger.info(
+    "Application startup complete - %s v%s",
+    settings.PROJECT_NAME,
+    settings.VERSION
+)
