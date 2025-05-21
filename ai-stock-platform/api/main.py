@@ -11,8 +11,10 @@ from pathlib import Path
 # Add the parent directory to Python path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from core import settings, setup_middleware, logger
-from db.session import engine, SessionLocal
+from core.config.settings import settings
+from core.logging import logger
+from core.middleware import setup_middleware
+
 
 from routers import (
     auth,
@@ -43,6 +45,13 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+
+logger.info(
+    "Starting %s version %s",
+    settings.PROJECT_NAME,
+    settings.VERSION
+)
 
 # Include routers with tags
 app.include_router(auth.router, prefix=f"{settings.API_V1_STR}", tags=["auth"])
