@@ -1,11 +1,11 @@
 """
 Settings Module
-Created: 2025-05-20 21:42:17
+Created: 2025-05-21 14:37:39
 Author: daparthi001
 """
 from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field, AnyHttpUrl
+from pydantic import Field, AnyHttpUrl, validator
 
 class Settings(BaseSettings):
     # Project Metadata
@@ -50,6 +50,15 @@ class Settings(BaseSettings):
             f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         )
+    
+    @validator("BACKEND_CORS_ORIGINS", pre=True)
+    def assemble_cors_origins(cls, v: str | List[str]) -> List[str]:
+        """Validate CORS origins"""
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",")]
+        elif isinstance(v, (list, str)):
+            return v
+        raise ValueError(v)
     
     model_config = SettingsConfigDict(
         env_file=".env",
