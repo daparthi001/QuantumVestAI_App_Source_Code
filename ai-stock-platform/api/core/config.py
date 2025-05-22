@@ -1,11 +1,12 @@
 """
 Configuration Module
-Created: 2025-05-21 21:24:47
+Created: 2025-05-21 21:41:33
 Author: daparthi001
 """
 import os
 import logging
-from pydantic import BaseSettings, Field, SecretStr
+from typing import Optional
+from pydantic import BaseSettings, validator
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -18,54 +19,81 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     
-    # Database settings with environment variable mapping
-    DB_HOST: str = Field(env='DB_HOST')
-    DB_PORT: str = Field(env='DB_PORT', default="5432")
-    DB_NAME: str = Field(env='DB_NAME')
-    DB_USER: str = Field(env='DB_USER')
-    # Use SecretStr for password
-    DB_PASSWORD: SecretStr = Field(env='DB_PASSWORD')
+    # Database settings
+    DB_HOST: Optional[str] = None
+    DB_PORT: Optional[str] = None
+    DB_NAME: Optional[str] = None
+    DB_USER: Optional[str] = None
+    DB_PASSWORD: Optional[str] = None
     
     # Environment
-    API_ENV: str = Field(env='API_ENV', default="development")
-    
+    API_ENV: str = "development"
+
+    @validator("DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD", pre=True)
+    def validate_db_settings(cls, v: Optional[str], field: str) -> str:
+        """Validate database settings"""
+        if not v:
+            env_val = os.getenv(field.name)
+            if not env_val:
+                raise ValueError(f"{field.name} must be provided")
+            return env_val
+        return v
+
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
-        """Construct database URI with proper password handling"""
+        """Construct database URI"""
+        if not all([self.DB_HOST, self.DB_PORT, self.DB_NAME, self.DB_USER, self.DB_PASSWORD]):
+            raise ValueError("Database configuration is incomplete")
+        
         return (
-            f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD.get_secret_value()}"
+            f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}"
             f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         )
 
     class Config:
-        env_file = ".env"
-        env_file_encoding = 'utf-8'
         case_sensitive = True
-
-def get_settings() -> Settings:
-    """Get settings instance with logging"""
-    try:
-        settings = Settings()
-        # Log configuration (excluding password)
-        logger.info(
-            "Database configuration loaded:\n"
-            "Host: %s\n"
-            "Port: %s\n"
-            "Database: %s\n"
-            "User: %s\n"
-            "Password: %s\n"
-            "Environment: %s",
-            settings.DB_HOST,
-            settings.DB_PORT,
-            settings.DB_NAME,
-            settings.DB_USER,
-            "********" if settings.DB_PASSWORD else "NOT SET",
-            settings.API_ENV
-        )
-        return settings
-    except Exception as e:
-        logger.error("Failed to load settings: %s", str(e))
-        raise
+        env_prefix = ""
 
 # Create settings instance
-settings = get_settings()
+settings = Settings(
+    DB_HOST=os.getenv("DB_HOST"),
+    DB_PORT=os.getenv("DB_PORT", "5432"),
+    DB_NAME=os.getenv("DB_NAME"),
+    DB_USER=os.getenv("DB_USER"),
+    DB_PASSWORD=os.getenv("DB_PASSWORD"),
+    API_ENV=os.getenv("API_ENV", "development")
+)
+
+# Log configuration (excluding sensitive data)
+logger.info(
+    "Configuration loaded:\n"
+    "Host: %s\n"
+    "Port: %s\n"
+    "Database: %s\n"
+    "User: %s\n"
+    "Environment: %s",
+    settings.DB_HOST,
+    settings.DB_PORT,
+    settings.DB_NAME,
+    settings.DB_USER,
+    settings.API_ENV
+)
+
+# Verify database configuration
+if not all([
+    settings.DB_HOST,
+    settings.DB_PORT,
+    settings.DB_NAME,
+    settings.DB_USER,
+    settings.DB_PASSWORD
+]):
+    missing_vars = [
+        var for var, val in {
+            "DB_HOST": settings.DB_HOST,
+            "DB_PORT": settings.DB_PORT,
+            "DB_NAME": settings.DB_NAME,
+            "DB_USER": settings.DB_USER,
+            "DB_PASSWORD": settings.DB_PASSWORD
+        }.items() if not val
+    ]
+    raise ValueError(f"Missing required database configuration: {', '.join(missing_vars)}")
