@@ -1,14 +1,13 @@
 """
 Database Session Module
-Created: 2025-05-22 04:09:50
+Created: 2025-05-22 04:20:10
 Author: daparthi001
 """
 import logging
 import time
-from typing import Generator, Optional
+from typing import Generator
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.engine import Engine
 from sqlalchemy.pool import QueuePool
 from sqlalchemy.exc import OperationalError
 
@@ -21,17 +20,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def create_db_engine(retries: int = 3, delay: int = 5) -> Optional[Engine]:
-    """
-    Create database engine with retry logic
-    
-    Args:
-        retries: Number of connection retries
-        delay: Delay between retries in seconds
-    
-    Returns:
-        SQLAlchemy Engine instance or None if all retries fail
-    """
+def create_db_engine(retries: int = 3, delay: int = 5):
+    """Create database engine with retry logic"""
     for attempt in range(retries):
         try:
             logger.info(
@@ -44,18 +34,17 @@ def create_db_engine(retries: int = 3, delay: int = 5) -> Optional[Engine]:
             
             # Create engine with explicit configuration
             engine = create_engine(
-                settings.DATABASE_URL,
+                settings.SQLALCHEMY_DATABASE_URI,  # Changed from DATABASE_URL
                 poolclass=QueuePool,
                 pool_size=5,
                 max_overflow=10,
                 pool_timeout=30,
                 pool_recycle=1800,
                 pool_pre_ping=True,
-                echo=False,  # Set to True for SQL debugging
                 connect_args={
                     "connect_timeout": 10,
                     "application_name": f"quantumvestai_{settings.API_ENV}",
-                    "sslmode": "require"  # Enable SSL for RDS
+                    "sslmode": "require"
                 }
             )
             
@@ -79,8 +68,9 @@ def create_db_engine(retries: int = 3, delay: int = 5) -> Optional[Engine]:
             else:
                 logger.error("All connection attempts failed")
                 raise
-    
-    return None
+        except Exception as e:
+            logger.error("Unexpected error during database connection: %s", str(e))
+            raise
 
 # Create database engine
 try:
@@ -123,7 +113,7 @@ def get_db() -> Generator:
     finally:
         db.close()
 
-# Log final configuration (excluding sensitive data)
+# Log final configuration
 logger.info(
     "Database configuration summary:\n"
     "Host: %s\n"

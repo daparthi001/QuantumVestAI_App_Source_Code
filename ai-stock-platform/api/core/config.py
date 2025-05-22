@@ -1,6 +1,6 @@
 """
 Configuration Module
-Created: 2025-05-22 04:08:10
+Created: 2025-05-22 04:20:10
 Author: daparthi001
 """
 import os
@@ -22,82 +22,40 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # Database settings with explicit environment variable mapping
-    DB_HOST: str = Field(
-        default=...,  # ... means required
-        env='DB_HOST',
-        description="Database host address"
-    )
-    DB_PORT: str = Field(
-        default="5432",
-        env='DB_PORT',
-        description="Database port"
-    )
-    DB_NAME: str = Field(
-        default=...,
-        env='DB_NAME',
-        description="Database name"
-    )
-    DB_USER: str = Field(
-        default=...,
-        env='DB_USER',
-        description="Database username"
-    )
-    DB_PASSWORD: str = Field(
-        default=...,
-        env='DB_PASSWORD',
-        description="Database password"
-    )
+    DB_HOST: str = Field(..., env='DB_HOST')
+    DB_PORT: str = Field(default="5432", env='DB_PORT')
+    DB_NAME: str = Field(..., env='DB_NAME')
+    DB_USER: str = Field(..., env='DB_USER')
+    DB_PASSWORD: str = Field(..., env='DB_PASSWORD')
     
     # Environment
-    API_ENV: str = Field(
-        default="development",
-        env='API_ENV',
-        description="API environment (development/production)"
-    )
+    API_ENV: str = Field(default="development", env='API_ENV')
 
     @property
-    def DATABASE_URL(self) -> str:
-        """Construct database URL"""
+    def SQLALCHEMY_DATABASE_URI(self) -> str:
+        """Construct database URI"""
         return (
             f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}"
             f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         )
 
     class Config:
-        env_file = ".env"
         case_sensitive = True
 
-def get_settings() -> Settings:
-    """Get settings instance with validation"""
-    try:
-        # Create settings instance
-        settings = Settings()
-        
-        # Log configuration (excluding sensitive data)
-        logger.info(
-            "Database configuration loaded:\n"
-            "Host: %s\n"
-            "Port: %s\n"
-            "Database: %s\n"
-            "User: %s\n"
-            "Environment: %s",
-            settings.DB_HOST,
-            settings.DB_PORT,
-            settings.DB_NAME,
-            settings.DB_USER,
-            settings.API_ENV
-        )
-        
-        return settings
-        
-    except Exception as e:
-        logger.error("Failed to load settings: %s", str(e))
-        # Log environment variables for debugging (excluding password)
-        logger.debug("Environment variables:")
-        for key, value in os.environ.items():
-            if key.startswith('DB_') and 'PASSWORD' not in key:
-                logger.debug("%s: %s", key, value)
-        raise
-
 # Create settings instance
-settings = get_settings()
+settings = Settings()
+
+# Log configuration (excluding sensitive data)
+logger.info(
+    "Configuration loaded:\n"
+    "Host: %s\n"
+    "Port: %s\n"
+    "Database: %s\n"
+    "User: %s\n"
+    "Environment: %s",
+    settings.DB_HOST,
+    settings.DB_PORT,
+    settings.DB_NAME,
+    settings.DB_USER,
+    settings.API_ENV
+)
