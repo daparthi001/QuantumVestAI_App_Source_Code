@@ -1,6 +1,6 @@
 """
 Database Session Module
-Created: 2025-05-22 04:54:08
+Created: 2025-05-22 05:06:41
 Author: daparthi001
 """
 import logging
@@ -33,14 +33,8 @@ def create_db_engine(retries: int = 3, delay: int = 5):
                 settings.DB_PORT
             )
             
-            # Properly escape special characters in password
-            password = quote_plus(settings.DB_PASSWORD)
-            
-            # Construct database URL
-            db_url = (
-                f"postgresql://{settings.DB_USER}:{password}"
-                f"@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
-            )
+            # Get database URL with proper password handling
+            db_url = settings.get_db_url()
             
             # Create engine with explicit configuration
             engine = create_engine(
@@ -53,15 +47,13 @@ def create_db_engine(retries: int = 3, delay: int = 5):
                 pool_pre_ping=True,
                 connect_args={
                     "connect_timeout": 10,
-                    "application_name": "quantumvestai_api",
-                    "sslmode": "require",
-                    "options": "-c timezone=UTC"
+                    "application_name": f"quantumvestai_{settings.API_ENV}",
+                    "sslmode": "require"
                 }
             )
             
-            # Test connection with proper SQLAlchemy text() wrapper
+            # Test connection
             with engine.connect() as conn:
-                # Use text() to create a proper SQL expression
                 result = conn.execute(text("SELECT version()")).scalar()
                 logger.info("Database connection successful: %s", result)
                 return engine
@@ -90,17 +82,6 @@ try:
     if not engine:
         raise RuntimeError("Failed to create database engine")
 
-    # Add engine event listeners for debugging
-    @event.listens_for(engine, "connect")
-    def on_connect(dbapi_con, connection_record):
-        """Log new database connections"""
-        logger.info("New database connection established")
-        # Set session parameters
-        dbapi_con.set_session(
-            application_name="quantumvestai_api",
-            timezone="UTC"
-        )
-
     # Create session factory
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -115,22 +96,3 @@ def get_db() -> Generator:
         yield db
     finally:
         db.close()
-
-# Log final configuration (excluding password)
-logger.info(
-    "Database configuration summary:\n"
-    "Host: %s\n"
-    "Port: %s\n"
-    "Database: %s\n"
-    "User: %s\n"
-    "Environment: %s\n"
-    "SSL Mode: require\n"
-    "Pool Size: 5\n"
-    "Max Overflow: 10\n"
-    "Pool Recycle: 1800s",
-    settings.DB_HOST,
-    settings.DB_PORT,
-    settings.DB_NAME,
-    settings.DB_USER,
-    settings.API_ENV
-)
