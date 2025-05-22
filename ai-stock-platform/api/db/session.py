@@ -1,6 +1,6 @@
 """
 Database Session Module
-Created: 2025-05-22 04:42:10
+Created: 2025-05-22 04:45:11
 Author: daparthi001
 """
 import logging
@@ -33,14 +33,17 @@ def create_db_engine(retries: int = 3, delay: int = 5):
                 settings.DB_PORT
             )
             
-            # Construct database URL with properly escaped password
-            db_url = "postgresql://{user}:{password}@{host}:{port}/{db}".format(
-                user=quote_plus(settings.DB_USER),
-                password=quote_plus(settings.DB_PASSWORD),
-                host=settings.DB_HOST,
-                port=settings.DB_PORT,
-                db=settings.DB_NAME
+            # Properly escape special characters in password
+            password = quote_plus('75LerK%0_J<t$H}Z')
+            
+            # Construct database URL with exact values
+            db_url = (
+                f"postgresql://{settings.DB_USER}:{password}"
+                f"@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
             )
+            
+            logger.debug("Connection string (without password): %s", 
+                db_url.replace(password, "********"))
             
             # Create engine with explicit configuration
             engine = create_engine(
@@ -53,14 +56,9 @@ def create_db_engine(retries: int = 3, delay: int = 5):
                 pool_pre_ping=True,
                 connect_args={
                     "connect_timeout": 10,
-                    "application_name": f"quantumvestai_{settings.API_ENV}",
+                    "application_name": "quantumvestai_api",
                     "sslmode": "require",
-                    # Explicitly set the host to prevent localhost resolution
-                    "host": settings.DB_HOST,
-                    "port": settings.DB_PORT,
-                    "dbname": settings.DB_NAME,
-                    "user": settings.DB_USER,
-                    "password": settings.DB_PASSWORD
+                    "options": "-c timezone=UTC"
                 }
             )
             
@@ -76,6 +74,18 @@ def create_db_engine(retries: int = 3, delay: int = 5):
                 attempt + 1,
                 retries,
                 str(e)
+            )
+            # Log connection details for debugging (excluding password)
+            logger.debug(
+                "Connection details:\n"
+                "Host: %s\n"
+                "Port: %s\n"
+                "Database: %s\n"
+                "User: %s",
+                settings.DB_HOST,
+                settings.DB_PORT,
+                settings.DB_NAME,
+                settings.DB_USER
             )
             if attempt < retries - 1:
                 logger.info("Retrying in %d seconds...", delay)
@@ -94,16 +104,6 @@ try:
     if not engine:
         raise RuntimeError("Failed to create database engine")
 
-    # Add engine event listeners for debugging
-    @event.listens_for(engine, "connect")
-    def on_connect(dbapi_con, connection_record):
-        """Log new database connections"""
-        logger.info("New database connection established")
-        # Set session parameters
-        dbapi_con.set_session(
-            application_name=f"quantumvestai_{settings.API_ENV}"
-        )
-
     # Create session factory
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -118,22 +118,3 @@ def get_db() -> Generator:
         yield db
     finally:
         db.close()
-
-# Log final configuration
-logger.info(
-    "Database configuration summary:\n"
-    "Host: %s\n"
-    "Port: %s\n"
-    "Database: %s\n"
-    "User: %s\n"
-    "Environment: %s\n"
-    "SSL Mode: require\n"
-    "Pool Size: 5\n"
-    "Max Overflow: 10\n"
-    "Pool Recycle: 1800s",
-    settings.DB_HOST,
-    settings.DB_PORT,
-    settings.DB_NAME,
-    settings.DB_USER,
-    settings.API_ENV
-)
