@@ -1,6 +1,6 @@
 """
 Database Session Module
-Created: 2025-05-22 04:20:10
+Created: 2025-05-22 04:42:10
 Author: daparthi001
 """
 import logging
@@ -10,6 +10,7 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 from sqlalchemy.exc import OperationalError
+from urllib.parse import quote_plus
 
 from core.config import settings
 
@@ -32,9 +33,18 @@ def create_db_engine(retries: int = 3, delay: int = 5):
                 settings.DB_PORT
             )
             
+            # Construct database URL with properly escaped password
+            db_url = "postgresql://{user}:{password}@{host}:{port}/{db}".format(
+                user=quote_plus(settings.DB_USER),
+                password=quote_plus(settings.DB_PASSWORD),
+                host=settings.DB_HOST,
+                port=settings.DB_PORT,
+                db=settings.DB_NAME
+            )
+            
             # Create engine with explicit configuration
             engine = create_engine(
-                settings.SQLALCHEMY_DATABASE_URI,  # Changed from DATABASE_URL
+                db_url,
                 poolclass=QueuePool,
                 pool_size=5,
                 max_overflow=10,
@@ -44,7 +54,13 @@ def create_db_engine(retries: int = 3, delay: int = 5):
                 connect_args={
                     "connect_timeout": 10,
                     "application_name": f"quantumvestai_{settings.API_ENV}",
-                    "sslmode": "require"
+                    "sslmode": "require",
+                    # Explicitly set the host to prevent localhost resolution
+                    "host": settings.DB_HOST,
+                    "port": settings.DB_PORT,
+                    "dbname": settings.DB_NAME,
+                    "user": settings.DB_USER,
+                    "password": settings.DB_PASSWORD
                 }
             )
             
@@ -87,16 +103,6 @@ try:
         dbapi_con.set_session(
             application_name=f"quantumvestai_{settings.API_ENV}"
         )
-
-    @event.listens_for(engine, "checkout")
-    def on_checkout(dbapi_con, connection_record, connection_proxy):
-        """Log connection checkouts from pool"""
-        logger.debug("Database connection checked out from pool")
-
-    @event.listens_for(engine, "checkin")
-    def on_checkin(dbapi_con, connection_record):
-        """Log connection returns to pool"""
-        logger.debug("Database connection returned to pool")
 
     # Create session factory
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
