@@ -6,7 +6,8 @@ Author: daparthi001
 import os
 import logging
 from typing import Optional
-from pydantic import BaseSettings, Field, SecretStr
+from pydantic import BaseModel, Field, SecretStr, PostgresDsn
+from pydantic_settings import BaseSettings
 
 # Configure logging
 logging.basicConfig(
@@ -24,31 +25,41 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # Database settings
-    DB_HOST: str = Field(env='DB_HOST')
+    DB_HOST: str = Field(default="localhost", env='DB_HOST')
     DB_PORT: str = Field(default="5432", env='DB_PORT')
-    DB_NAME: str = Field(env='DB_NAME')
-    DB_USER: str = Field(env='DB_USER')
-    DB_PASSWORD: SecretStr = Field(env='DB_PASSWORD')
+    DB_NAME: str = Field(default="quantumvestaidb", env='DB_NAME')
+    DB_USER: str = Field(default="dbadmin", env='DB_USER')
+    DB_PASSWORD: Optional[SecretStr] = Field(default=None, env='DB_PASSWORD')
     
     # Environment
     API_ENV: str = Field(default="development", env='API_ENV')
     
     class Config:
-        case_sensitive = True
         env_file = ".env"
+        case_sensitive = True
 
     def get_db_url(self) -> str:
         """Get database URL with proper password handling"""
+        # Use default values if not set
+        host = self.DB_HOST or 'quantumvestai-dev.cwbsqsiywwaa.us-east-1.rds.amazonaws.com'
+        port = self.DB_PORT or '5432'
+        name = self.DB_NAME or 'quantumvestaidb'
+        user = self.DB_USER or 'dbadmin'
+        
+        # Handle password
         if not self.DB_PASSWORD:
-            raise ValueError("Database password is not set")
+            password = os.getenv('DB_PASSWORD', '75LerK%0_J<t$H}Z')
+        else:
+            password = self.DB_PASSWORD.get_secret_value()
         
-        # Get the raw password string
-        password = self.DB_PASSWORD.get_secret_value()
-        
-        return (
-            f"postgresql://{self.DB_USER}:{password}"
-            f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
-        )
+        return str(PostgresDsn.build(
+            scheme="postgresql",
+            username=user,
+            password=password,
+            host=host,
+            port=int(port),
+            path=name
+        ))
 
 def get_settings() -> Settings:
     """Get settings with validation"""
