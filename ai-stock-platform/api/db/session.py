@@ -11,7 +11,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 from sqlalchemy.exc import OperationalError
 from urllib.parse import quote_plus
-
+from core.config.settings import settings, get_db_url
 from core.config import settings
 
 # Configure logging

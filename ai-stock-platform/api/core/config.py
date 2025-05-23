@@ -8,6 +8,7 @@ import logging
 from typing import Optional
 from pydantic import BaseModel, Field, SecretStr, PostgresDsn
 from pydantic_settings import BaseSettings
+from core.config.settings import settings, get_db_url
 
 # Configure logging
 logging.basicConfig(

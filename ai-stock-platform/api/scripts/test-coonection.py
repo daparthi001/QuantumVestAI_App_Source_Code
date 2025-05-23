@@ -6,6 +6,7 @@ Author: daparthi001
 import os
 import logging
 from core.config import Settings
+from core.config.settings import settings, get_db_url
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
