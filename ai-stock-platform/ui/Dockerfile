@@ -8,7 +8,8 @@ WORKDIR /app
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONPATH=/app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -17,15 +18,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first
-COPY requirements.txt .
+# Create app structure and set permissions
+RUN mkdir -p /app/ui /app/static /app/templates /app/logs \
+    && chmod 755 /app/ui /app/static /app/templates /app/logs
+
+# Copy requirements first for better caching
+COPY --chown=app:app requirements.txt .
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Create app structure
-RUN mkdir -p /app/ui /app/static /app/templates /app/logs
-
 # Copy application code
-COPY . /app/
+COPY --chown=app:app . /app/
 
 # Make scripts executable
 RUN chmod +x /app/scripts/*.sh
@@ -33,12 +37,13 @@ RUN chmod +x /app/scripts/*.sh
 # Create non-root user
 RUN useradd -m -u 1000 app && \
     chown -R app:app /app
+
+# Switch to non-root user
 USER app
 
-# Set environment variables
+# Set runtime environment variables
 ENV PORT=3000 \
-    HOST=0.0.0.0 \
-    PYTHONPATH=/app
+    HOST=0.0.0.0
 
 # Expose port
 EXPOSE 3000
