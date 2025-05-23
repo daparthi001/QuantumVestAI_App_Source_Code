@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional, Dict, Any
 from ui.routes.auth import get_current_user
-from ui.config.settings import settings
+from core.config.settings import settings
 from ui.services.api_client import APIClient
 from ui.services.yahoo_finance import YahooFinanceService
 

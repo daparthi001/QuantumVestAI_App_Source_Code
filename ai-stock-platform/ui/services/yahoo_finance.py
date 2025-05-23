@@ -5,8 +5,8 @@ import time
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Union, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from ui.config.settings import settings
-from ui.config.constants import (
+from core.config.settings import settings
+from core.config.constants import (
     DATE_FORMAT, MARKET_INDICES, DEFAULT_TICKERS, 
     TIMEFRAME_1D, TIMEFRAME_1Y, TIMEFRAME_MAX
 )

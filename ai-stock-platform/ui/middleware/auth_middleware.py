@@ -2,8 +2,8 @@ from fastapi import Request, HTTPException, status
 from jose import JWTError, jwt
 from typing import Optional, Dict, Any, Callable
 from starlette.middleware.base import BaseHTTPMiddleware
-from ui.config.settings import settings
-from ui.config.constants import USER_ROLE_ADMIN
+from core.config.settings import settings
+from core.config.constants import USER_ROLE_ADMIN
 
 async def verify_token(token: str) -> Optional[Dict[str, Any]]:
     """

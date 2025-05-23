@@ -4,8 +4,8 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional, List
 from ui.routes.auth import get_current_user
-from ui.config.settings import settings
-from ui.config.constants import (
+from core.config.settings import settings
+from core.config.constants import (
     MODEL_ENSEMBLE, DEFAULT_FORECAST_DAYS, DEFAULT_TICKERS,
     MAX_FORECAST_DAYS, TECHNICAL_INDICATORS
 )

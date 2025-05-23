@@ -9,7 +9,7 @@ from unittest.mock import patch, MagicMock
 
 from ui.main import app as ui_app
 from ui.services.api_client import APIClient
-from ui.config.settings import settings
+from core.config.settings import settings
 
 @pytest.fixture
 def app() -> FastAPI:

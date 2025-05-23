@@ -3,7 +3,7 @@ from typing import Optional, Dict, Any, Tuple
 from datetime import datetime
 from ui.routes.auth import get_current_user as auth_get_current_user
 from ui.services.api_client import APIClient
-from ui.config.constants import (
+from core.config.constants import (
     USER_ROLE_ADMIN,
     DEFAULT_PAGE_SIZE,
     MAX_PAGE_SIZE

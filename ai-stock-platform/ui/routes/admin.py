@@ -2,8 +2,8 @@ from fastapi import APIRouter, Request, Depends, HTTPException, Form, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from ui.routes.auth import get_current_user
-from ui.config.settings import settings
-from ui.config.constants import USER_ROLE_ADMIN
+from core.config.settings import settings
+from core.config.constants import USER_ROLE_ADMIN
 from ui.services.api_client import APIClient
 
 # Templates setup

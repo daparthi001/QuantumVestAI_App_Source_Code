@@ -3,7 +3,7 @@ import json
 import logging
 from typing import Dict, Any, Optional, Union
 from requests.exceptions import RequestException, Timeout, ConnectionError
-from ui.config.settings import settings
+from core.config.settings import settings
 
 class APIClient:
     """Client for interacting with the QuantumVestAI backend API"""

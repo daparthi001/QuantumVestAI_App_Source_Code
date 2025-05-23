@@ -46,7 +46,7 @@ async def get_market_indices(
 ):
     """Get current market indices data"""
     try:
-        from ui.config.constants import MARKET_INDICES
+        from core.config.constants import MARKET_INDICES
         
         # If specific indices are requested, use those
         index_tickers = indices.split(",") if indices else list(MARKET_INDICES.values())

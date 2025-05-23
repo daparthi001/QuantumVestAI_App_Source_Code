@@ -7,7 +7,7 @@ import requests
 import json
 
 from ui.services.api_client import APIClient
-from ui.config.settings import settings
+from core.config.settings import settings
 
 def test_api_client_initialization():
     """Test API client initializes with correct values."""

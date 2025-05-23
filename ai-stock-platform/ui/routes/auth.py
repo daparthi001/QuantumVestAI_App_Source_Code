@@ -5,8 +5,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.templating import Jinja2Templates
 from jose import JWTError, jwt
-from ui.config.settings import settings
-from ui.config.constants import USER_ROLE_BASIC
+from core.config.settings import settings
+from core.config.constants import USER_ROLE_BASIC
 from typing import Optional, Dict, Any
 from ui.services.api_client import APIClient
 
