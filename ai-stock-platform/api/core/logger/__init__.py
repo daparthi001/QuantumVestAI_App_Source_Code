@@ -71,7 +71,7 @@ def setup_logger(
 # Create default logger instance
 logger = setup_logger(
     name=settings.PROJECT_NAME.lower().replace(' ', '_'),
-    level=settings.LOG_LEVEL
+    level=getattr(settings, 'LOG_LEVEL', 'INFO')
 )
 
 __all__ = ['logger', 'setup_logger']

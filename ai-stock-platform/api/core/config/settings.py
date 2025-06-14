@@ -62,6 +62,9 @@ class Settings(BaseSettings):
     TWITTER_BEARER_TOKEN: Optional[str] = Field(default=None, env='TWITTER_BEARER_TOKEN')
     SLACK_WEBHOOK_URL: Optional[str] = Field(default=None, env='SLACK_WEBHOOK_URL')
     
+    # Logging
+    LOG_LEVEL: str = Field(default="INFO", env='LOG_LEVEL')
+    
     class Config:
         env_file = ".env"
         case_sensitive = True
