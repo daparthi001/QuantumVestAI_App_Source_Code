@@ -2,6 +2,7 @@
 Configuration Module
 Created: 2025-05-22 05:06:41
 Author: daparthi001
+Updated: 2025-06-14 20:28:31 by daparthi001
 """
 import logging
 import os
@@ -22,8 +23,6 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = Field(default="INFO", env='LOG_LEVEL')
     LOG_FORMAT: str = Field(default="%(asctime)s - %(name)s - %(levelname)s - %(message)s", env='LOG_FORMAT')
     LOG_DATE_FORMAT: str = Field(default="%Y-%m-%d %H:%M:%S", env='LOG_DATE_FORMAT')
-    
-    # Log file settings
     LOG_FILE: str = Field(default="logs/app.log", env='LOG_FILE')
     LOG_FILE_MAX_BYTES: int = Field(default=10 * 1024 * 1024, env='LOG_FILE_MAX_BYTES')  # 10 MB
     LOG_FILE_BACKUP_COUNT: int = Field(default=5, env='LOG_FILE_BACKUP_COUNT')
