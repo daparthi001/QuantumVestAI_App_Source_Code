@@ -4,6 +4,7 @@ Created: 2025-05-22 05:06:41
 Author: daparthi001
 """
 import logging
+import os
 from typing import Optional
 from pydantic import Field, SecretStr, validator
 from pydantic_settings import BaseSettings
@@ -19,6 +20,13 @@ class Settings(BaseSettings):
     
     # Logging settings
     LOG_LEVEL: str = Field(default="INFO", env='LOG_LEVEL')
+    LOG_FORMAT: str = Field(default="%(asctime)s - %(name)s - %(levelname)s - %(message)s", env='LOG_FORMAT')
+    LOG_DATE_FORMAT: str = Field(default="%Y-%m-%d %H:%M:%S", env='LOG_DATE_FORMAT')
+    
+    # Log file settings
+    LOG_FILE: str = Field(default="logs/app.log", env='LOG_FILE')
+    LOG_FILE_MAX_BYTES: int = Field(default=10 * 1024 * 1024, env='LOG_FILE_MAX_BYTES')  # 10 MB
+    LOG_FILE_BACKUP_COUNT: int = Field(default=5, env='LOG_FILE_BACKUP_COUNT')
     
     # Database settings
     DB_HOST: str = Field(default="localhost", env='DB_HOST')
