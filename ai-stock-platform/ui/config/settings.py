@@ -1,5 +1,5 @@
 import os
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 from pydantic import validator  # validator is still in pydantic
 from typing import Optional
 
