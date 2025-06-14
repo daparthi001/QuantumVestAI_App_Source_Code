@@ -28,11 +28,8 @@ COPY --chown=app:app requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application code - since you've already fixed the imports in your repo
 COPY --chown=app:app . /app/
-
-# Create symbolic link to fix import path issues
-RUN  ln -s /app/services /app/ui/services
 
 # Make scripts executable
 RUN chmod +x /app/scripts/*.sh
