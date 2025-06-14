@@ -1,9 +1,10 @@
-# ui/services/cache_service.py
 from functools import wraps
 from cachetools import TTLCache
 import hashlib
 import json
-from typing import Any, Callable
+from typing import Any, Callable, Dict, Optional
+
+from services.api_client import APIClient
 
 # Cache with a 5-minute TTL and max of 1000 items
 cache = TTLCache(maxsize=1000, ttl=300)
