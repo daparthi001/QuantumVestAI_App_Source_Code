@@ -7,9 +7,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from pydantic import BaseModel
-from config.settings import get_settings
-
-settings = get_settings()
+from config.settings import settings
 
 # Authentication models
 class UserCredentials(BaseModel):

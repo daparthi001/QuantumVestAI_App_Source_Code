@@ -1,7 +1,15 @@
+"""
+Configuration settings for the UI application.
+
+This module handles environment-specific settings, secrets, and configuration
+parameters used throughout the application.
+"""
+
 import os
 from pydantic_settings import BaseSettings
 from pydantic import validator  # validator is still in pydantic
 from typing import Optional
+from functools import lru_cache
 
 class Settings(BaseSettings):
     """Application settings for QuantumVestAI"""
@@ -16,7 +24,7 @@ class Settings(BaseSettings):
     # Authentication settings
     JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "")
     JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
     
     # Yahoo Finance settings
     YAHOO_FINANCE_API_KEY: str = os.getenv("YAHOO_FINANCE_API_KEY", "")
@@ -74,3 +82,13 @@ class Settings(BaseSettings):
 
 # Create a settings instance
 settings = Settings()
+
+@lru_cache()
+def get_settings() -> Settings:
+    """
+    Get settings instance with caching for better performance.
+    
+    Returns:
+        Settings: Application settings
+    """
+    return settings
