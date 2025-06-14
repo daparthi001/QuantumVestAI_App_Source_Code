@@ -31,6 +31,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY --chown=app:app . /app/
 
+# Create symbolic link to fix import path issues
+RUN  ln -s /app/services /app/ui/services
+
 # Make scripts executable
 RUN chmod +x /app/scripts/*.sh
 
