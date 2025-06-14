@@ -2,7 +2,7 @@
 Database Session Module
 Created: 2025-05-22 05:06:41
 Author: daparthi001
-Updated: 2025-06-14 23:01:21 by daparthi001
+Updated: 2025-06-14 23:14:45 by daparthi001
 """
 import logging
 import time
@@ -145,4 +145,4 @@ def get_db() -> Generator:
     try:
         yield db
     finally:
-    
+        db.close()  # Make sure this line is properly indented
