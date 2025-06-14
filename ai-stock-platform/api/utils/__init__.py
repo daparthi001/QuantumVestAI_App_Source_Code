@@ -9,6 +9,7 @@ from utils.date_utils import (
     format_date,
     get_date_range
 )
+
 from utils.validation import validate_ticker
 from utils.market_data import get_market_data
 from utils.ml_utils import prepare_features
