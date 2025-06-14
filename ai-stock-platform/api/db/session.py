@@ -2,6 +2,7 @@
 Database Session Module
 Created: 2025-05-22 05:06:41
 Author: daparthi001
+Updated: 2025-06-14 21:58:14 by daparthi001
 """
 import logging
 import time
@@ -11,8 +12,9 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 from sqlalchemy.exc import OperationalError
 from urllib.parse import quote_plus
-from core.config.settings import settings, get_db_url
-from core.config import settings
+
+# Fix: Import settings from only one place
+from core.config.settings import settings
 
 # Configure logging
 logging.basicConfig(
