@@ -8,7 +8,7 @@ from jose import JWTError, jwt
 from core.config.settings import settings
 from core.config.constants import USER_ROLE_BASIC
 from typing import Optional, Dict, Any
-from ui.services.api_client import APIClient
+from services.api_client import APIClient
 
 # API base URL
 API_BASE_URL = settings.API_BASE_URL
