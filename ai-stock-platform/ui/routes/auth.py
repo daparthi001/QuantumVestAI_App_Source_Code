@@ -5,10 +5,14 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.templating import Jinja2Templates
 from jose import JWTError, jwt
-from core.config.settings import settings
-from core.config.constants import USER_ROLE_BASIC
+from config.settings import settings
+# Change this import to the local namespace
+# from core.config.constants import USER_ROLE_BASIC
 from typing import Optional, Dict, Any
 from services.api_client import APIClient
+
+# Define USER_ROLE_BASIC constant if it doesn't exist in this context
+USER_ROLE_BASIC = "basic"
 
 # API base URL
 API_BASE_URL = settings.API_BASE_URL
@@ -97,9 +101,9 @@ async def login(
         access_token = auth_response.get("access_token")
         
         # Set token expiration based on remember checkbox
-        expiration = settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+        expiration = settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60
         if remember:
-            expiration = settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60 * 24 * 7  # 7 days
+            expiration = settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60 * 24 * 7  # 7 days
         
         # Set cookie with token
         response = RedirectResponse(url=next_url, status_code=status.HTTP_303_SEE_OTHER)

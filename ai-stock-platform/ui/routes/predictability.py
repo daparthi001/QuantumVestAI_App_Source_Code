@@ -2,10 +2,12 @@ from fastapi import APIRouter, Request, Query, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional, Dict, Any
-from ui.routes.auth import get_current_user
-from core.config.settings import settings
-from ui.services.api_client import APIClient
-from ui.services.yahoo_finance import YahooFinanceService
+# Fix the import to use the local namespace
+from routes.auth import get_current_user
+from config.settings import settings
+# Fix the import to use the local namespace
+from services.api_client import APIClient
+from services.yahoo_finance import YahooFinanceService
 
 # Templates setup
 templates = Jinja2Templates(directory="templates")
