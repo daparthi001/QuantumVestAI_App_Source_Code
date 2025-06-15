@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import logging
 from datetime import datetime
-
+from config.settings_wrapper import wrapped_settings as settings
 from api.core.config import settings
 from api.core.logging import setup_logging
 from api.core.middleware import (
