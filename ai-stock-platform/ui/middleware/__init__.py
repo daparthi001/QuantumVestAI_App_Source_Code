@@ -1,20 +1,16 @@
-# This file makes the middleware directory a proper Python package.
-# It allows for easier imports of middleware components throughout the application.
+"""
+Middleware Module Initialization
+Created: 2025-05-22 05:06:41
+Author: daparthi001
+Updated: 2025-06-15 02:44:55 by daparthi001
+"""
+# Replace this incorrect import
+# from ui.middleware.auth_middleware import (
+#     # whatever imports were here
+# )
 
-from ui.middleware.auth_middleware import (
-    verify_token, 
-    get_authenticated_user,
-    require_auth,
-    require_admin
-)
+# With a proper relative import
+from .auth_middleware import AuthMiddleware, get_current_user
 
-from ui.middleware.error_handlers import (
-    register_exception_handlers,
-    handle_http_exception,
-    handle_validation_exception,
-    handle_not_found_exception,
-    handle_internal_server_error
-)
-
-# This allows importing these functions directly from the middleware package
-# For example: from ui.middleware import require_auth, handle_http_exception
+# Add any other middleware components you need
+__all__ = ['AuthMiddleware', 'get_current_user']
