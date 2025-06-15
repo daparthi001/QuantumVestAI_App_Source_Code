@@ -2,12 +2,12 @@
 Configuration Settings Module
 Created: 2025-05-22 05:06:41
 Author: daparthi001
-Updated: 2025-06-15 03:07:32 by daparthi001
+Updated: 2025-06-15 03:16:55 by daparthi001
 """
 from pydantic_settings import BaseSettings
-from pydantic import Field, SecretStr, validator
+from pydantic import Field, SecretStr, validator, AnyHttpUrl
 import logging
-from typing import Optional, List
+from typing import Optional, List, Union
 from urllib.parse import quote
 
 class Settings(BaseSettings):
@@ -17,6 +17,12 @@ class Settings(BaseSettings):
     DESCRIPTION: str = "AI-Powered Investment Platform API"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
+    
+    # API URLs
+    API_BASE_URL: str = Field(
+        default="https://api.quantumvestai.com",
+        env='API_BASE_URL'
+    )
     
     # CORS settings
     CORS_ORIGINS: List[str] = Field(
