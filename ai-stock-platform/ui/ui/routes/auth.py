@@ -5,7 +5,7 @@ This module provides backward compatibility for code importing from ui.routes.au
 New code should import directly from routes.auth.
 """
 
-# Import all auth routes directly
-from routes.auth import *
+# Import directly from the module to avoid circular imports
+from routes.auth import get_current_user, router
 
-__all__ = []
+__all__ = ['get_current_user', 'router']

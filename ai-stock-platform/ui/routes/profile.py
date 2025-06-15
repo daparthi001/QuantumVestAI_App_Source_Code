@@ -92,7 +92,7 @@ async def update_profile(
         # Handle profile image upload
         if profile_image and profile_image.filename:
             # Create uploads directory if it doesn't exist
-            upload_dir = Path(settings.UPLOAD_DIR) / "profile_images"
+            upload_dir = Path("static/uploads/profile_images")
             upload_dir.mkdir(exist_ok=True, parents=True)
             
             # Generate filename based on username
@@ -106,7 +106,7 @@ async def update_profile(
                 shutil.copyfileobj(profile_image.file, buffer)
                 
             # Add profile image path to update data
-            update_data["profile_image"] = f"/uploads/profile_images/{filename}"
+            update_data["profile_image"] = f"/static/uploads/profile_images/{filename}"
         
         # Update profile
         api_client.put("/api/users/profile", data=update_data)
