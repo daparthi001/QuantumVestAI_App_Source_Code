@@ -5,11 +5,25 @@ import time
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Union, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from core.config.settings import settings
-from core.config.constants import (
-    DATE_FORMAT, MARKET_INDICES, DEFAULT_TICKERS, 
-    TIMEFRAME_1D, TIMEFRAME_1Y, TIMEFRAME_MAX
-)
+from config.settings import settings
+
+# Define constants locally that are missing from core.config.constants
+DATE_FORMAT = "%Y-%m-%d"
+TIMEFRAME_1D = "1d"
+TIMEFRAME_1Y = "1y"
+TIMEFRAME_MAX = "max"
+
+# Define market indices
+MARKET_INDICES = {
+    "S&P 500": "^GSPC",
+    "Dow Jones": "^DJI",
+    "Nasdaq": "^IXIC",
+    "Russell 2000": "^RUT",
+    "VIX": "^VIX"
+}
+
+# Default tickers
+DEFAULT_TICKERS = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
 
 class YahooFinanceService:
     """Service for interacting with Yahoo Finance API"""
