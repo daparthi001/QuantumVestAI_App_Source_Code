@@ -1,94 +1,104 @@
 """
-Configuration settings for the UI application.
-
-This module handles environment-specific settings, secrets, and configuration
-parameters used throughout the application.
+Configuration Settings Module
+Created: 2025-05-22 05:06:41
+Author: daparthi001
+Updated: 2025-06-15 03:07:32 by daparthi001
 """
-
-import os
 from pydantic_settings import BaseSettings
-from pydantic import validator  # validator is still in pydantic
-from typing import Optional
-from functools import lru_cache
+from pydantic import Field, SecretStr, validator
+import logging
+from typing import Optional, List
+from urllib.parse import quote
 
 class Settings(BaseSettings):
-    """Application settings for QuantumVestAI"""
-    # Application settings
-    APP_NAME: str = "QuantumVestAI"
-    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
-    DEBUG: bool = os.getenv("DEBUG", "True").lower() in ("true", "1", "t")
+    """Application settings"""
+    # API Information
+    PROJECT_NAME: str = "QuantumVestAI API"
+    DESCRIPTION: str = "AI-Powered Investment Platform API"
+    VERSION: str = "1.0.0"
+    API_V1_STR: str = "/api/v1"
     
-    # API settings
-    API_BASE_URL: str = os.getenv("API_BASE_URL", "http://quantumvestai-api:5000")
+    # CORS settings
+    CORS_ORIGINS: List[str] = Field(
+        default=["http://localhost:3000", "https://app.quantumvestai.com"],
+        env='CORS_ORIGINS'
+    )
+    CORS_ALLOW_CREDENTIALS: bool = Field(default=True, env='CORS_ALLOW_CREDENTIALS')
+    CORS_ALLOW_METHODS: List[str] = Field(
+        default=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+        env='CORS_ALLOW_METHODS'
+    )
+    CORS_ALLOW_HEADERS: List[str] = Field(
+        default=["Authorization", "Content-Type"],
+        env='CORS_ALLOW_HEADERS'
+    )
     
-    # Authentication settings
-    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "")
-    JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
+    # Logging settings
+    LOG_LEVEL: str = Field(default="INFO", env='LOG_LEVEL')
+    LOG_FORMAT: str = Field(default="%(asctime)s - %(name)s - %(levelname)s - %(message)s", env='LOG_FORMAT')
+    LOG_DATE_FORMAT: str = Field(default="%Y-%m-%d %H:%M:%S", env='LOG_DATE_FORMAT')
+    LOG_FILE: str = Field(default="logs/app.log", env='LOG_FILE')
+    LOG_FILE_MAX_BYTES: int = Field(default=10 * 1024 * 1024, env='LOG_FILE_MAX_BYTES')  # 10 MB
+    LOG_FILE_BACKUP_COUNT: int = Field(default=5, env='LOG_FILE_BACKUP_COUNT')
     
-    # Yahoo Finance settings
-    YAHOO_FINANCE_API_KEY: str = os.getenv("YAHOO_FINANCE_API_KEY", "")
+    # Database settings
+    DB_HOST: str = Field(default="localhost", env='DB_HOST')
+    DB_PORT: str = Field(default="5432", env='DB_PORT')
+    DB_NAME: str = Field(default="quantumvestaidb", env='DB_NAME')
+    DB_USER: str = Field(default="dbadmin", env='DB_USER')
+    DB_PASSWORD: Optional[SecretStr] = Field(default=None, env='DB_PASSWORD')
     
-    # Twitter API settings
-    TWITTER_API_KEY: str = os.getenv("TWITTER_API_KEY", "")
-    TWITTER_API_SECRET: str = os.getenv("TWITTER_API_SECRET", "")
-    TWITTER_ACCESS_TOKEN: str = os.getenv("TWITTER_ACCESS_TOKEN", "")
-    TWITTER_ACCESS_SECRET: str = os.getenv("TWITTER_ACCESS_SECRET", "")
+    # Environment
+    API_ENV: str = Field(default="development", env='API_ENV')
     
-    # UI settings
-    THEME_COLOR: str = os.getenv("THEME_COLOR", "primary")  # primary, dark, light
-    ENABLE_ANIMATIONS: bool = os.getenv("ENABLE_ANIMATIONS", "True").lower() in ("true", "1", "t")
-    CACHE_DURATION: int = int(os.getenv("CACHE_DURATION", "3600"))  # in seconds
-    
-    # Database settings - for direct DB access if needed
-    DB_HOST: Optional[str] = os.getenv("DB_HOST")
-    DB_PORT: Optional[int] = int(os.getenv("DB_PORT", "5432"))
-    DB_USER: Optional[str] = os.getenv("DB_USER")
-    DB_PASSWORD: Optional[str] = os.getenv("DB_PASSWORD")
-    DB_NAME: Optional[str] = os.getenv("DB_NAME")
-    
-    # Security validators
-    @validator("JWT_SECRET_KEY")
-    def validate_jwt_secret(cls, v, values):
-        if values.get("ENVIRONMENT") != "development" and not v:
-            raise ValueError("JWT_SECRET_KEY must be set in production")
-        return v
-    
-    @validator("YAHOO_FINANCE_API_KEY")
-    def validate_yahoo_api_key(cls, v, values):
-        if values.get("ENVIRONMENT") != "development" and not v:
-            raise ValueError("YAHOO_FINANCE_API_KEY must be set in production")
+    # Security settings
+    SECRET_KEY: Optional[str] = Field(default=None, env='SECRET_KEY')
+    JWT_ALGORITHM: str = Field(default="HS256", env='JWT_ALGORITHM')
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=30, env='ACCESS_TOKEN_EXPIRE_MINUTES')
+
+    @validator("LOG_LEVEL")
+    def validate_log_level(cls, v):
+        valid_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
+        v = v.upper()
+        if v not in valid_levels:
+            logging.warning(f"Invalid log level {v}. Defaulting to INFO.")
+            return "INFO"
         return v
 
-    # Helper methods
-    @property
-    def is_production(self):
-        return self.ENVIRONMENT.lower() == "production"
-    
-    @property
-    def is_development(self):
-        return self.ENVIRONMENT.lower() == "development"
-    
-    @property
-    def database_url(self):
-        """Dynamically build the database URL if needed"""
-        if all([self.DB_HOST, self.DB_USER, self.DB_PASSWORD, self.DB_NAME]):
-            return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
-        return None
+    def get_db_url(self) -> str:
+        """Get database URL with proper password handling and encoding"""
+        host = self.DB_HOST
+        port = self.DB_PORT
+        name = self.DB_NAME
+        user = self.DB_USER
+        password = self.DB_PASSWORD.get_secret_value() if self.DB_PASSWORD else "75LerK%0_J<t$H}Z"
+        encoded_password = quote(password)
+        return f"postgresql://{user}:{encoded_password}@{host}:{port}/{name}"
 
     class Config:
         env_file = ".env"
         case_sensitive = True
 
-# Create a settings instance
+# Instantiate settings
 settings = Settings()
 
-@lru_cache()
-def get_settings() -> Settings:
-    """
-    Get settings instance with caching for better performance.
-    
-    Returns:
-        Settings: Application settings
-    """
+# Set up logging
+logging.basicConfig(
+    level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+logger.info(
+    "Configuration loaded: Host=%s, Port=%s, Database=%s, User=%s, Environment=%s, Log Level=%s",
+    settings.DB_HOST,
+    settings.DB_PORT,
+    settings.DB_NAME,
+    settings.DB_USER,
+    settings.API_ENV,
+    settings.LOG_LEVEL
+)
+
+def get_settings():
+    """Get settings instance"""
     return settings
