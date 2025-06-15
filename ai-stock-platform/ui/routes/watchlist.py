@@ -2,9 +2,9 @@ from fastapi import APIRouter, Request, Depends, Form, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional
-from ui.routes.auth import get_current_user
-from ui.services.api_client import APIClient
-from ui.services.yahoo_finance import YahooFinanceService
+from routes.auth import get_current_user
+from services.api_client import APIClient
+from services.yahoo_finance import YahooFinanceService
 
 # Templates setup
 templates = Jinja2Templates(directory="templates")
