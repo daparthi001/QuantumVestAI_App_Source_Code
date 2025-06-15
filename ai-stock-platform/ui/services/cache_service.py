@@ -2,12 +2,33 @@ from functools import wraps
 from cachetools import TTLCache
 import hashlib
 import json
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, List
 
 from services.api_client import APIClient
 
 # Cache with a 5-minute TTL and max of 1000 items
 cache = TTLCache(maxsize=1000, ttl=300)
+
+class CacheService:
+    """Service for handling data caching and retrieval"""
+    
+    def __init__(self, api_client=None):
+        """Initialize the cache service with an optional API client"""
+        self.api_client = api_client or APIClient()
+    
+    def clear_cache(self):
+        """Clear all caches"""
+        cache.clear()
+
+    def get_stock_info(self, ticker: str, token: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        """Get stock information with caching using the class instance method"""
+        return get_stock_info(ticker, token=token)
+
+    def get_stock_history(self, ticker: str, period: str = "1y", token: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Get stock price history with caching"""
+        # This would typically use a cache decorator, but we're calling the module function for now
+        client = self.api_client if self.api_client else APIClient(token=token)
+        return client.get(f"/stocks/{ticker}/history", params={"period": period})
 
 def cached(key_prefix: str):
     """
