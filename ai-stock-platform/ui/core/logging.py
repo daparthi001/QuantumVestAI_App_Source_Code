@@ -1,6 +1,7 @@
 """
 Logging Configuration Module
-Created: 2025-06-15 02:56:18
+Created: 2025-05-19 03:44:39
+Updated: 2025-06-15 03:42:15
 Author: daparthi001
 """
 import logging
@@ -10,15 +11,14 @@ from pathlib import Path
 from logging.handlers import RotatingFileHandler
 from typing import Optional
 
+from core.config import settings
+
 def setup_logging(
     name: str = "app",
-    level: str = "INFO",
+    level: Optional[str] = None,
     log_to_file: bool = True,
-    log_file: str = "logs/app.log",
-    log_format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    date_format: str = "%Y-%m-%d %H:%M:%S",
-    max_bytes: int = 10 * 1024 * 1024,  # 10 MB
-    backup_count: int = 5
+    log_file: Optional[str] = None,
+    log_format: Optional[str] = None,
 ) -> logging.Logger:
     """
     Configure and return a logger instance
@@ -29,13 +29,15 @@ def setup_logging(
         log_to_file: Whether to log to a file
         log_file: Path to log file
         log_format: Log message format
-        date_format: Date format for timestamps
-        max_bytes: Maximum size for log file before rotation
-        backup_count: Number of backup log files to keep
     
     Returns:
         logging.Logger: Configured logger instance
     """
+    # Get settings values or use defaults
+    level = level or settings.LOG_LEVEL
+    log_file = log_file or settings.LOG_FILE
+    log_format = log_format or settings.LOG_FORMAT
+    
     # Get or create logger
     logger = logging.getLogger(name)
     
@@ -45,10 +47,7 @@ def setup_logging(
         logger.setLevel(getattr(logging, level.upper(), logging.INFO))
         
         # Create formatter
-        formatter = logging.Formatter(
-            fmt=log_format,
-            datefmt=date_format
-        )
+        formatter = logging.Formatter(fmt=log_format)
         
         # Add console handler
         console_handler = logging.StreamHandler(sys.stdout)
@@ -56,7 +55,7 @@ def setup_logging(
         logger.addHandler(console_handler)
         
         # Add file handler if requested
-        if log_to_file:
+        if log_to_file and log_file:
             # Create logs directory if it doesn't exist
             log_dir = Path(log_file).parent
             log_dir.mkdir(parents=True, exist_ok=True)
@@ -64,8 +63,8 @@ def setup_logging(
             # Add rotating file handler
             file_handler = RotatingFileHandler(
                 filename=log_file,
-                maxBytes=max_bytes,
-                backupCount=backup_count,
+                maxBytes=10 * 1024 * 1024,  # 10 MB
+                backupCount=5,
                 encoding='utf-8'
             )
             file_handler.setFormatter(formatter)
