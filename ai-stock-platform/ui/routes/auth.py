@@ -1,18 +1,24 @@
 """
-Authentication Routes
+Authentication Routes for QuantumVestAI
 Created: 2025-05-19 03:44:39
 Author: daparthi001
-Updated: 2025-06-16 03:34:45 by daparthi001
+Updated: 2025-06-16 22:11:00 by daparthi001
 """
-from fastapi import APIRouter, Request, HTTPException, Depends, Form, Response, status
+from fastapi import APIRouter, Request, HTTPException, Depends, Form, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 import logging
 from pathlib import Path
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+# Create router
+router = APIRouter()
 
 # Try to import settings safely
 try:
@@ -26,19 +32,19 @@ except ImportError:
         TEMPLATES_DIR = "templates"
     
     settings = Settings()
-
-# Set up logging
-logger = logging.getLogger(__name__)
-
-# Create router
-router = APIRouter()
+    logger.warning("Using fallback settings in auth routes")
 
 # Set up templates
-templates_dir = Path(settings.TEMPLATES_DIR)
-templates = Jinja2Templates(directory=templates_dir)
+try:
+    templates_dir = Path(settings.TEMPLATES_DIR)
+    templates = Jinja2Templates(directory=templates_dir)
+except Exception as e:
+    logger.error(f"Error setting up templates: {e}")
+    # Fallback to a basic path
+    templates = Jinja2Templates(directory="templates")
 
 # OAuth2 scheme for token handling
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 # Mock user database - replace with actual database in production
 USERS_DB = {
@@ -49,7 +55,9 @@ USERS_DB = {
         "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW", # "password123"
         "disabled": False,
         "role": "user",
-        "status": "active"
+        "status": "active",
+        "created_at": "2025-01-01 00:00:00",
+        "last_login": "2025-06-15 12:30:00"
     },
     "daparthi001": {
         "email": "daparthi001@quantumvestai.com",
@@ -58,7 +66,9 @@ USERS_DB = {
         "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW", # "password123"
         "disabled": False,
         "role": "admin",
-        "status": "active"
+        "status": "active",
+        "created_at": "2024-12-15 00:00:00",
+        "last_login": "2025-06-16 02:55:00"
     }
 }
 
@@ -77,11 +87,6 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 # Function to verify password - replace with proper password hashing in production
 def verify_password(plain_password, hashed_password):
-    # In production, use proper password verification like:
-    # from passlib.context import CryptContext
-    # pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    # return pwd_context.verify(plain_password, hashed_password)
-    
     # This is just a mock for demonstration
     return plain_password == "password123" and hashed_password == "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW"
 
@@ -99,6 +104,28 @@ def authenticate_user(username: str, password: str) -> Optional[Dict[str, Any]]:
     if not verify_password(password, user["hashed_password"]):
         return None
     return user
+
+# Function to get current user from token
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        
+        user = get_user(username)
+        if user is None:
+            raise credentials_exception
+            
+        return user
+    except JWTError:
+        raise credentials_exception
 
 # Route to display login page
 @router.get("/login", response_class=HTMLResponse)
@@ -126,7 +153,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     
     return {"access_token": access_token, "token_type": "bearer"}
 
-# Route to handle form-based login
+# Route to handle form-based login from the UI
 @router.post("/login")
 async def login_post(
     request: Request,
@@ -137,6 +164,7 @@ async def login_post(
 ):
     user = authenticate_user(username, password)
     if not user:
+        logger.warning(f"Failed login attempt for username: {username}")
         return templates.TemplateResponse(
             "login.html",
             {
@@ -171,6 +199,7 @@ async def login_post(
         secure=request.url.scheme == "https"
     )
     
+    logger.info(f"User {username} successfully logged in")
     return response
 
 # Route for logout
@@ -179,3 +208,25 @@ async def logout():
     response = RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
     response.delete_cookie(key="access_token")
     return response
+
+# Route for password reset request
+@router.get("/password-reset", response_class=HTMLResponse)
+async def password_reset_page(request: Request):
+    return templates.TemplateResponse(
+        "password_reset.html", 
+        {"request": request}
+    )
+
+# Route for password reset request submission
+@router.post("/password-reset")
+async def password_reset_post(request: Request, email: str = Form(...)):
+    # In a real app, this would send an email with a reset link
+    # For now just show a success message
+    return templates.TemplateResponse(
+        "password_reset.html",
+        {
+            "request": request,
+            "msg": "If an account with that email exists, we've sent password reset instructions.",
+            "msg_type": "success"
+        }
+    )
