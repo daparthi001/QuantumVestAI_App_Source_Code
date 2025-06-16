@@ -1,13 +1,14 @@
 """
 Authentication Router
 Created: 2025-05-20 04:43:53
+Updated: 2025-06-16 23:54:39
 Author: daparthi001
 """
-from fastapi import APIRouter, Depends, Body, Response, status
+from fastapi import APIRouter, Depends, Body, Response, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from core.config import settings
 from core.security import (
@@ -35,7 +36,7 @@ router = APIRouter(
 )
 
 @router.post(
-    "/auth/login",
+    "/login",
     response_model=LoginResponse,
     summary="User login",
     description="Login endpoint for UI clients"
@@ -92,6 +93,7 @@ async def login(
     description="Register a new user account"
 )
 async def register(
+    request: Request,
     user_data: RegisterRequest,
     db: Session = Depends(get_db)
 ) -> RegisterResponse:
@@ -119,70 +121,28 @@ async def register(
     db.commit()
     db.refresh(db_user)
     
+    # Handle next parameter if present in request
+    next_url = request.query_params.get("next", "/")
+    
     return {
         "success": True,
         "user_id": db_user.id,
-        "created_at": db_user.created_at.isoformat()
+        "created_at": db_user.created_at.isoformat(),
+        "redirect_url": next_url
     }
 
 @router.post(
-    "/password/change",
-    summary="Change password",
-    description="Change user password"
+    "/signup",
+    response_model=RegisterResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Sign up new user",
+    description="Alternative endpoint for user registration"
 )
-async def change_password(
-    password_data: PasswordChangeRequest,
-    current_user: User = Depends(get_current_user),
+async def signup(
+    request: Request,
+    user_data: RegisterRequest,
     db: Session = Depends(get_db)
-) -> Dict[str, bool]:
-    """Change user password."""
-    # Verify current password
-    if not verify_password(password_data.current_password, current_user.hashed_password):
-        raise AuthenticationError("Current password is incorrect")
-    
-    # Update password
-    current_user.hashed_password = get_password_hash(password_data.new_password)
-    current_user.updated_at = datetime.utcnow()
-    db.commit()
-    
-    return {"success": True}
-
-@router.post(
-    "/password/reset/request",
-    summary="Request password reset",
-    description="Request a password reset token"
-)
-async def request_password_reset(
-    email_data: PasswordResetRequest,
-    db: Session = Depends(get_db)
-) -> Dict[str, bool]:
-    """Request password reset."""
-    user = db.query(User).filter(User.email == email_data.email).first()
-    
-    if not user:
-        # Don't leak user existence
-        return {"success": True}
-    
-    # Generate reset token
-    import secrets
-    reset_token = secrets.token_urlsafe(32)
-    
-    # Store token with expiry
-    user.password_reset_token = reset_token
-    user.password_reset_expires = datetime.utcnow() + timedelta(hours=24)
-    user.updated_at = datetime.utcnow()
-    db.commit()
-    
-    # TODO: Send reset email
-    
-    return {"success": True}
-
-@router.post(
-    "/logout",
-    summary="User logout",
-    description="Logout and clear session"
-)
-async def logout(response: Response) -> Dict[str, bool]:
-    """Logout user."""
-    response.delete_cookie(key="access_token")
-    return {"success": True}
+) -> RegisterResponse:
+    """Sign up a new user (alias for register)."""
+    # Reuse the registration logic
+    return await register(request, user_data, db)
