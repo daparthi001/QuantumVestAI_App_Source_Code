@@ -1,13 +1,14 @@
 """
 Main API Module
 Created: 2025-05-21 14:26:28
-Updated: 2025-06-16 23:40:22
+Updated: 2025-06-16 23:50:03
 Author: daparthi001
 """
 import sys
 from pathlib import Path
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 
 # Add parent directory to Python path
 sys.path.append(str(Path(__file__).parent.parent))
@@ -69,12 +70,20 @@ for router in [
     )
     logger.debug(f"Registered router: {router.prefix}")
 
+# Add root route handler
+@app.get("/")
+async def root():
+    """
+    Root endpoint - redirects to API documentation
+    """
+    return RedirectResponse(url=f"{settings.API_V1_STR}/docs")
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "timestamp": "2025-06-16 23:40:22",
+        "timestamp": "2025-06-16 23:50:03",
         "version": settings.VERSION
     }
 
