@@ -1,6 +1,7 @@
 """
 Main API Module
 Created: 2025-05-21 14:26:28
+Updated: 2025-06-16 23:40:22
 Author: daparthi001
 """
 import sys
@@ -50,34 +51,30 @@ logger.info(
     settings.VERSION
 )
 
-# Include routers with tags
-ROUTERS = [
-    (auth.router, "auth"),
-    (users.router, "users"),
-    (stocks.router, "stocks"),
-    (forecast.router, "forecast"),
-    (watchlist.router, "watchlist"),
-    (admin.router, "admin"),
-    (sentiment.router, "sentiment"),
-    (data.router, "data"),
-    (whitepaper.router, "whitepaper")
-]
-
 # Register all routers
-for router, tag in ROUTERS:
+for router in [
+    auth.router,
+    users.router,
+    stocks.router,
+    forecast.router,
+    watchlist.router,
+    admin.router,
+    sentiment.router,
+    data.router,
+    whitepaper.router
+]:
     app.include_router(
         router,
-        prefix=f"{settings.API_V1_STR}",
-        tags=[tag]
+        prefix=f"{settings.API_V1_STR}"
     )
-    logger.debug(f"Registered router: {tag}")
+    logger.debug(f"Registered router: {router.prefix}")
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "timestamp": "2025-05-21 14:26:28",
+        "timestamp": "2025-06-16 23:40:22",
         "version": settings.VERSION
     }
 

@@ -35,7 +35,7 @@ router = APIRouter(
 )
 
 @router.post(
-    "/login",
+    "/auth/login",
     response_model=LoginResponse,
     summary="User login",
     description="Login endpoint for UI clients"
