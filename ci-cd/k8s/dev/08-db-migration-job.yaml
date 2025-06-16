@@ -1,6 +1,7 @@
-# Database Migration Job
+# Database Migration Job - Production Version
 # Created: 2025-05-20 06:15:55
 # Author: daparthi001
+# Updated: 2025-06-15 05:05:10 by daparthi001
 
 apiVersion: batch/v1
 kind: Job
@@ -33,18 +34,224 @@ spec:
             - name: db-init-scripts
               mountPath: /scripts
       containers:
-        - name: alembic
-          image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:db-init-dev-latest
-          command: ['alembic', 'upgrade', 'head']
+        - name: db-migrator
+          image: postgres:13-alpine
+          command:
+            - /bin/sh
+            - -c
+            - |
+              # Set up database connection
+              export PGHOST=${host}
+              export PGPORT=${port}
+              export PGDATABASE=${dbname}
+              export PGUSER=${username}
+              export PGPASSWORD=${password}
+              
+              # Test database connection
+              echo "Testing database connection..."
+              if pg_isready -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -t 5; then
+                echo "Database connection successful!"
+              else
+                echo "Failed to connect to database. Exiting."
+                exit 1
+              fi
+              
+              # Create properly formatted migration script
+              cat > /tmp/migration.sql << 'EOF'
+              -- QuantumVestAI Database Migration
+              -- Created: 2025-06-15 05:05:10
+              -- Author: daparthi001
+              
+              -- Create version tracking table
+              CREATE TABLE IF NOT EXISTS schema_migrations (
+                  version VARCHAR(50) PRIMARY KEY,
+                  applied_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                  description TEXT
+              );
+              
+              -- Check which migrations have been applied
+              SELECT version FROM schema_migrations;
+              
+              -- Migration: Initial Schema
+              DO $migration$
+              BEGIN
+                  -- Check if this migration has been applied
+                  IF NOT EXISTS (SELECT 1 FROM schema_migrations WHERE version = '20250615_initial') THEN
+                      RAISE NOTICE 'Applying migration: 20250615_initial';
+                      
+                      -- Create users table
+                      CREATE TABLE IF NOT EXISTS users (
+                          id SERIAL PRIMARY KEY,
+                          username VARCHAR(50) UNIQUE NOT NULL,
+                          email VARCHAR(100) UNIQUE NOT NULL,
+                          password_hash VARCHAR(100) NOT NULL,
+                          is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                          created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+                      );
+                      
+                      -- Create roles table
+                      CREATE TABLE IF NOT EXISTS roles (
+                          id SERIAL PRIMARY KEY,
+                          name VARCHAR(50) UNIQUE NOT NULL,
+                          description TEXT
+                      );
+                      
+                      -- Create user_roles table
+                      CREATE TABLE IF NOT EXISTS user_roles (
+                          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                          role_id INTEGER REFERENCES roles(id) ON DELETE CASCADE,
+                          PRIMARY KEY (user_id, role_id)
+                      );
+                      
+                      -- Insert initial roles
+                      INSERT INTO roles (name, description) 
+                      VALUES 
+                          ('admin', 'Administrator'),
+                          ('user', 'Regular user')
+                      ON CONFLICT (name) DO NOTHING;
+                      
+                      -- Record that this migration has been applied
+                      INSERT INTO schema_migrations (version, description)
+                      VALUES ('20250615_initial', 'Initial schema with users and roles');
+                      
+                      RAISE NOTICE 'Migration 20250615_initial completed';
+                  ELSE
+                      RAISE NOTICE 'Migration 20250615_initial already applied';
+                  END IF;
+              END $migration$;
+              
+              -- Migration: Portfolio Tables
+              DO $migration$
+              BEGIN
+                  -- Check if this migration has been applied
+                  IF NOT EXISTS (SELECT 1 FROM schema_migrations WHERE version = '20250615_portfolios') THEN
+                      RAISE NOTICE 'Applying migration: 20250615_portfolios';
+                      
+                      -- Create portfolios table
+                      CREATE TABLE IF NOT EXISTS portfolios (
+                          id SERIAL PRIMARY KEY,
+                          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                          name VARCHAR(100) NOT NULL,
+                          description TEXT,
+                          created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                          updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+                      );
+                      
+                      -- Create assets table
+                      CREATE TABLE IF NOT EXISTS assets (
+                          id SERIAL PRIMARY KEY,
+                          symbol VARCHAR(20) UNIQUE NOT NULL,
+                          name VARCHAR(100) NOT NULL,
+                          asset_type VARCHAR(50) NOT NULL,
+                          description TEXT,
+                          created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+                      );
+                      
+                      -- Create portfolio_assets table
+                      CREATE TABLE IF NOT EXISTS portfolio_assets (
+                          portfolio_id INTEGER REFERENCES portfolios(id) ON DELETE CASCADE,
+                          asset_id INTEGER REFERENCES assets(id) ON DELETE CASCADE,
+                          quantity DECIMAL(20, 8) NOT NULL,
+                          purchase_price DECIMAL(20, 8) NOT NULL,
+                          purchase_date TIMESTAMP WITH TIME ZONE NOT NULL,
+                          PRIMARY KEY (portfolio_id, asset_id, purchase_date)
+                      );
+                      
+                      -- Record that this migration has been applied
+                      INSERT INTO schema_migrations (version, description)
+                      VALUES ('20250615_portfolios', 'Portfolio and asset tables');
+                      
+                      RAISE NOTICE 'Migration 20250615_portfolios completed';
+                  ELSE
+                      RAISE NOTICE 'Migration 20250615_portfolios already applied';
+                  END IF;
+              END $migration$;
+              
+              -- Migration: Settings Table
+              DO $migration$
+              BEGIN
+                  -- Check if this migration has been applied
+                  IF NOT EXISTS (SELECT 1 FROM schema_migrations WHERE version = '20250615_settings') THEN
+                      RAISE NOTICE 'Applying migration: 20250615_settings';
+                      
+                      -- Create settings table
+                      CREATE TABLE IF NOT EXISTS settings (
+                          id SERIAL PRIMARY KEY,
+                          key VARCHAR(50) UNIQUE NOT NULL,
+                          value TEXT,
+                          description TEXT
+                      );
+                      
+                      -- Insert default settings
+                      INSERT INTO settings (key, value, description)
+                      VALUES
+                          ('max_portfolio_size', '100', 'Maximum number of items in a portfolio'),
+                          ('default_currency', 'USD', 'Default currency for new accounts'),
+                          ('trading_hours_start', '09:30', 'Trading hours start time'),
+                          ('trading_hours_end', '16:00', 'Trading hours end time'),
+                          ('timezone', 'America/New_York', 'Default timezone for trading')
+                      ON CONFLICT (key) DO NOTHING;
+                      
+                      -- Record that this migration has been applied
+                      INSERT INTO schema_migrations (version, description)
+                      VALUES ('20250615_settings', 'Settings table with default values');
+                      
+                      RAISE NOTICE 'Migration 20250615_settings completed';
+                  ELSE
+                      RAISE NOTICE 'Migration 20250615_settings already applied';
+                  END IF;
+              END $migration$;
+              
+              -- Migration: Add Alembic Version for compatibility
+              DO $migration$
+              BEGIN
+                  -- Check if this migration has been applied
+                  IF NOT EXISTS (SELECT 1 FROM schema_migrations WHERE version = '20250615_alembic_compat') THEN
+                      RAISE NOTICE 'Applying migration: 20250615_alembic_compat';
+                      
+                      -- Create alembic_version table for compatibility
+                      CREATE TABLE IF NOT EXISTS alembic_version (
+                          version_num VARCHAR(32) NOT NULL, 
+                          CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num)
+                      );
+                      
+                      -- Insert current version
+                      INSERT INTO alembic_version (version_num)
+                      VALUES ('20250615_initial')
+                      ON CONFLICT (version_num) DO NOTHING;
+                      
+                      -- Record that this migration has been applied
+                      INSERT INTO schema_migrations (version, description)
+                      VALUES ('20250615_alembic_compat', 'Alembic compatibility');
+                      
+                      RAISE NOTICE 'Migration 20250615_alembic_compat completed';
+                  ELSE
+                      RAISE NOTICE 'Migration 20250615_alembic_compat already applied';
+                  END IF;
+              END $migration$;
+              
+              -- Future migrations should be added here
+              
+              -- List all applied migrations
+              SELECT version, applied_at, description FROM schema_migrations ORDER BY applied_at;
+              EOF
+              
+              # Execute migration script
+              echo "Running database migrations..."
+              psql -f /tmp/migration.sql
+              
+              if [ $? -eq 0 ]; then
+                echo "Database migrations completed successfully!"
+                exit 0
+              else
+                echo "Database migrations failed."
+                exit 1
+              fi
           envFrom:
             - configMapRef:
                 name: quantumvestai-config
             - secretRef:
                 name: quantumvestai-cluster-rds-credentials
-          volumeMounts:
-            - name: alembic-config
-              mountPath: /app/alembic.ini
-              subPath: alembic.ini
       volumes:
         - name: db-init-scripts
           configMap:
@@ -53,9 +260,3 @@ spec:
             items:
               - key: wait-for-db.sh
                 path: wait-for-db.sh
-        - name: alembic-config
-          configMap:
-            name: db-init-config
-            items:
-              - key: alembic.ini
-                path: alembic.ini

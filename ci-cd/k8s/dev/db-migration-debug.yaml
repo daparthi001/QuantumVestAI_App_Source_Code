@@ -1,0 +1,119 @@
+# Database Migration Job - Debug Version
+# Created: 2025-05-20 06:15:55
+# Author: daparthi001
+# Updated: 2025-06-15 04:45:22 by daparthi001
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migration
+  namespace: dev
+  labels:
+    environment: development
+    app: quantumvestai
+    component: db-migration
+spec:
+  ttlSecondsAfterFinished: 100
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        environment: development
+        app: quantumvestai
+        component: db-migration
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-for-db
+          image: postgres:13-alpine
+          command: ['sh', '/scripts/wait-for-db.sh']
+          envFrom:
+            - secretRef:
+                name: quantumvestai-cluster-rds-credentials
+          volumeMounts:
+            - name: db-init-scripts
+              mountPath: /scripts
+      containers:
+        - name: alembic
+          image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:db-init-dev-latest
+          command:
+            - /bin/bash
+            - -c
+            - |
+              echo "==== ENVIRONMENT DEBUGGING ===="
+              echo "Current directory: $(pwd)"
+              echo "Directory contents:"
+              ls -la /app
+              echo "Python path: $PYTHONPATH"
+              echo "Python version: $(python --version)"
+              echo "Installed packages:"
+              pip list
+              
+              echo "==== ALEMBIC MODULE CHECK ===="
+              # Try to import alembic to see if it's available
+              python -c "import alembic; print('Alembic version:', alembic.__version__)"
+              
+              if [ $? -ne 0 ]; then
+                echo "==== INSTALLING ALEMBIC ===="
+                pip install --no-cache-dir alembic==1.12.0 sqlalchemy==2.0.20 psycopg2-binary==2.9.7
+                
+                echo "==== VERIFYING INSTALLATION ===="
+                pip list | grep alembic
+                python -c "import alembic; print('Alembic version:', alembic.__version__)"
+              fi
+              
+              echo "==== ALEMBIC DIRECTORY CHECK ===="
+              if [ -d "/app/alembic" ]; then
+                echo "Alembic directory exists"
+                ls -la /app/alembic
+              else
+                echo "ERROR: Alembic directory not found!"
+              fi
+              
+              echo "==== ALEMBIC.INI CHECK ===="
+              if [ -f "/app/alembic.ini" ]; then
+                echo "alembic.ini exists"
+                cat /app/alembic.ini
+              else
+                echo "ERROR: alembic.ini not found!"
+              fi
+              
+              echo "==== DATABASE CONNECTION INFO ===="
+              echo "Host: ${host}"
+              echo "Port: ${port}"
+              echo "Database: ${dbname}"
+              echo "User: ${username}"
+              
+              echo "==== RUNNING ALEMBIC UPGRADE ===="
+              # Use the full path to alembic to avoid PATH issues
+              if command -v alembic >/dev/null 2>&1; then
+                alembic_path=$(which alembic)
+                echo "Using alembic at: $alembic_path"
+                $alembic_path upgrade head
+              else
+                echo "Alembic command not found in PATH, trying Python module"
+                python -m alembic upgrade head
+              fi
+          envFrom:
+            - configMapRef:
+                name: quantumvestai-config
+            - secretRef:
+                name: quantumvestai-cluster-rds-credentials
+          volumeMounts:
+            - name: alembic-config
+              mountPath: /app/alembic.ini
+              subPath: alembic.ini
+      volumes:
+        - name: db-init-scripts
+          configMap:
+            name: db-init-config
+            defaultMode: 0755
+            items:
+              - key: wait-for-db.sh
+                path: wait-for-db.sh
+        - name: alembic-config
+          configMap:
+            name: db-init-config
+            items:
+              - key: alembic.ini
+                path: alembic.ini

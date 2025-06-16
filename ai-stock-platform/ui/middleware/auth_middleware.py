@@ -2,13 +2,13 @@
 Authentication Middleware
 Created: 2025-05-19 03:44:39
 Author: daparthi001
-Updated: 2025-06-15 03:52:21 by daparthi001
+Updated: 2025-06-16 02:39:06 by daparthi001
 """
 import logging
 from fastapi import Request, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-from starlette.responses import Response
+from starlette.responses import Response, JSONResponse
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List, Union
@@ -80,8 +80,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "/static",
         ]
     
-    # This is the correct signature for the __call__ method
-    # Overriding dispatch instead of __call__ in BaseHTTPMiddleware
+    # This is the correct signature for the dispatch method
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
     ) -> Response:
@@ -93,9 +92,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         # Check for authorization header
         authorization = request.headers.get("Authorization")
         if not authorization:
-            # For excluded paths, just continue without auth
-            if self._is_path_excluded(request.url.path):
-                return await call_next(request)
+            # Return proper response instead of raising exception
             return self._handle_no_auth()
 
         # Validate token
@@ -113,9 +110,6 @@ class AuthMiddleware(BaseHTTPMiddleware):
         
         except Exception as e:
             logger.error(f"Auth middleware error: {e}")
-            # For excluded paths, just continue without auth even if there's an error
-            if self._is_path_excluded(request.url.path):
-                return await call_next(request)
             return self._handle_auth_error()
 
     def _should_skip_auth(self, path: str) -> bool:
@@ -137,31 +131,32 @@ class AuthMiddleware(BaseHTTPMiddleware):
             return payload
         except Exception as e:
             logger.error(f"Token validation error: {e}")
-            raise HTTPException(
-                status_code=401, 
-                detail="Invalid authentication token"
-            )
+            # Return response instead of raising exception
+            return self._handle_auth_error()
     
     def _handle_no_auth(self):
         """Handle request with no auth header"""
-        raise HTTPException(
-            status_code=401, 
-            detail="Authorization header not found",
+        # Return JSONResponse instead of raising HTTPException
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "Authorization header not found"},
             headers={"WWW-Authenticate": "Bearer"}
         )
     
     def _handle_invalid_token_type(self):
         """Handle invalid token type"""
-        raise HTTPException(
-            status_code=401, 
-            detail="Invalid token type. Bearer token required",
+        # Return JSONResponse instead of raising HTTPException
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "Invalid token type. Bearer token required"},
             headers={"WWW-Authenticate": "Bearer"}
         )
     
     def _handle_auth_error(self):
         """Handle general auth error"""
-        raise HTTPException(
-            status_code=401, 
-            detail="Authentication failed",
+        # Return JSONResponse instead of raising HTTPException
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "Authentication failed"},
             headers={"WWW-Authenticate": "Bearer"}
         )

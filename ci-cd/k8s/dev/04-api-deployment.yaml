@@ -3,17 +3,30 @@ kind: Deployment
 metadata:
   name: quantumvestai-dev-api
   namespace: dev
+  labels:
+    app: quantumvestai
+    tier: backend
+    environment: development
+    created-by: daparthi001
+    created-date: "2025-06-15"
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: quantumvestai
       tier: backend
+      environment: development
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   template:
     metadata:
       labels:
         app: quantumvestai
         tier: backend
+        environment: development
     spec:
       containers:
       - name: api

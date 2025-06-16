@@ -2,12 +2,14 @@
 QuantumVestAI UI - Main Application
 Created: 2025-05-19 03:44:39
 Author: daparthi001
-Updated: 2025-06-15 03:50:31 by daparthi001
+Updated: 2025-06-16 02:42:13 by daparthi001
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.errors import ServerErrorMiddleware
 from pathlib import Path
 import logging
 import os
@@ -117,7 +119,29 @@ app = FastAPI(
     redoc_url="/redoc" if safe_settings.DEBUG else None
 )
 
-# Configure CORS with safe values
+# Add global exception handlers - IMPORTANT: Add these before any middleware
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    logger.info(f"HTTP Exception: {exc.status_code} - {exc.detail}")
+    headers = getattr(exc, "headers", None)
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers=headers
+    )
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled exception: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"}
+    )
+
+# Add middleware in the correct order - IMPORTANT: Server error middleware must be first
+app.add_middleware(ServerErrorMiddleware, debug=safe_settings.DEBUG)
+
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Always allow all origins for stability
@@ -126,15 +150,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Safely add middleware
+# Add custom middleware - ORDER MATTERS! AuthMiddleware should be last
 try:
-    app.add_middleware(AuthMiddleware)
+    # MetricsMiddleware should be added before AuthMiddleware
     app.add_middleware(MetricsMiddleware)
+    app.add_middleware(AuthMiddleware)
     logger.info("Successfully added middleware")
 except Exception as e:
     logger.error(f"Error adding middleware: {e}")
 
-# Safely set up error handlers
+# Safely set up error handlers from imported module (if it exists)
 try:
     setup_error_handlers(app)
     logger.info("Successfully set up error handlers")
@@ -183,7 +208,7 @@ async def health_check():
     return {
         "status": "healthy",
         "version": safe_settings.VERSION,
-        "timestamp": "2025-06-15 03:50:31",
+        "timestamp": "2025-06-16 02:42:13",
         "author": "daparthi001",
         "environment": safe_settings.ENVIRONMENT
     }

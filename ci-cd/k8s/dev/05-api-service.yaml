@@ -1,24 +1,26 @@
-# Development API Service
-# Created: 2025-05-20 06:12:45
-# Author: daparthi001
-
 apiVersion: v1
 kind: Service
 metadata:
   name: quantumvestai-dev-api
   namespace: dev
   labels:
-    environment: development
     app: quantumvestai
     tier: backend
+    environment: development
+    created-by: daparthi001
+    created-date: "2025-06-15"
+  annotations:
+    alb.ingress.kubernetes.io/target-group-attributes: deregistration_delay.timeout_seconds=30
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "http"
+    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "60"
 spec:
-  ports:
-    - port: 8000
-      targetPort: 8000
-      protocol: TCP
-      name: http
   selector:
     app: quantumvestai
     tier: backend
     environment: development
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000
+    protocol: TCP
   type: ClusterIP

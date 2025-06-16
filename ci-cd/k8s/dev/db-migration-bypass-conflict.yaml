@@ -1,0 +1,172 @@
+# Database Migration Job - Bypass Import Conflict
+# Created: 2025-05-20 06:15:55
+# Author: daparthi001
+# Updated: 2025-06-15 05:05:33 by daparthi001
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migration
+  namespace: dev
+  labels:
+    environment: development
+    app: quantumvestai
+    component: db-migration
+spec:
+  ttlSecondsAfterFinished: 100
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        environment: development
+        app: quantumvestai
+        component: db-migration
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-for-db
+          image: postgres:13-alpine
+          command: ['sh', '/scripts/wait-for-db.sh']
+          envFrom:
+            - secretRef:
+                name: quantumvestai-cluster-rds-credentials
+          volumeMounts:
+            - name: db-init-scripts
+              mountPath: /scripts
+        - name: extract-migrations
+          # Use your original image to extract migrations
+          image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:db-init-dev-latest
+          command:
+            - /bin/bash
+            - -c
+            - |
+              # Create a directory for migrations
+              mkdir -p /migrations/versions
+              
+              # Copy alembic files
+              cp -r /app/alembic/versions/* /migrations/versions/
+              cp /app/alembic/env.py /migrations/
+              cp /app/alembic/script.py.mako /migrations/
+              
+              # Create __init__.py for the alembic module
+              echo "# Alembic migrations" > /migrations/__init__.py
+              echo "# Extracted: $(date)" >> /migrations/__init__.py
+          volumeMounts:
+            - name: migrations
+              mountPath: /migrations
+      containers:
+        - name: alembic
+          # Use a standard Python image to avoid import conflicts
+          image: python:3.10-slim
+          command:
+            - /bin/bash
+            - -c
+            - |
+              # Install system dependencies
+              apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
+              
+              # Create a temporary directory for migration
+              mkdir -p /tmp/migration/alembic
+              
+              # Install Python dependencies
+              pip install --no-cache-dir alembic==1.12.0 sqlalchemy==2.0.20 psycopg2-binary==2.9.7
+              
+              # Create environment variables from Secret
+              export PGHOST=${host}
+              export PGPORT=${port}
+              export PGDATABASE=${dbname}
+              export PGUSER=${username}
+              export PGPASSWORD=${password}
+              
+              # Create a minimal alembic.ini
+              cat > /tmp/migration/alembic.ini << 'EOF'
+              [alembic]
+              script_location = alembic
+              sqlalchemy.url = postgresql://%(PGUSER)s:%(PGPASSWORD)s@%(PGHOST)s:%(PGPORT)s/%(PGDATABASE)s
+              file_template = %%(year)d%%(month).2d%%(day).2d_%%(hour).2d%%(minute).2d%%(second).2d_%%(rev)s_%%(slug)s
+              timezone = UTC
+              EOF
+              
+              # Create a test script to verify connection
+              cat > /tmp/migration/test_connection.py << 'EOF'
+              import os
+              import sys
+              from sqlalchemy import create_engine, text
+              
+              # Get connection details from environment
+              host = os.environ.get('PGHOST')
+              port = os.environ.get('PGPORT')
+              db = os.environ.get('PGDATABASE')
+              user = os.environ.get('PGUSER')
+              password = os.environ.get('PGPASSWORD')
+              
+              print(f"Connecting to PostgreSQL at {host}:{port}/{db} as {user}")
+              
+              # Create connection string
+              conn_string = f"postgresql://{user}:{password}@{host}:{port}/{db}"
+              
+              try:
+                  # Create engine and connect
+                  engine = create_engine(conn_string)
+                  with engine.connect() as conn:
+                      result = conn.execute(text("SELECT 1 as test"))
+                      row = result.fetchone()
+                      print(f"Connection successful: {row}")
+                  
+                  print("Database connection verified!")
+                  sys.exit(0)
+              except Exception as e:
+                  print(f"Error connecting to database: {e}")
+                  sys.exit(1)
+              EOF
+              
+              # Test database connection
+              echo "Testing database connection..."
+              python /tmp/migration/test_connection.py
+              
+              if [ $? -ne 0 ]; then
+                  echo "Failed to connect to database. Exiting."
+                  exit 1
+              fi
+              
+              # Create alembic directory structure
+              mkdir -p /tmp/migration/alembic/versions
+              
+              # Copy migrations
+              cp -r /migrations/* /tmp/migration/alembic/
+              cp -r /migrations/versions/* /tmp/migration/alembic/versions/
+              
+              # Print directory structure for debugging
+              echo "Migration directory structure:"
+              find /tmp/migration -type f | sort
+              
+              # Run migrations
+              echo "Running migrations..."
+              cd /tmp/migration
+              alembic upgrade head
+              
+              if [ $? -eq 0 ]; then
+                  echo "Database migrations completed successfully!"
+                  exit 0
+              else
+                  echo "Database migrations failed."
+                  exit 1
+              fi
+          envFrom:
+            - configMapRef:
+                name: quantumvestai-config
+            - secretRef:
+                name: quantumvestai-cluster-rds-credentials
+          volumeMounts:
+            - name: migrations
+              mountPath: /migrations
+      volumes:
+        - name: db-init-scripts
+          configMap:
+            name: db-init-config
+            defaultMode: 0755
+            items:
+              - key: wait-for-db.sh
+                path: wait-for-db.sh
+        - name: migrations
+          emptyDir: {}

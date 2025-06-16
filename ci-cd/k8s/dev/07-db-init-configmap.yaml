@@ -1,6 +1,7 @@
 # Database Initialization ConfigMap
 # Created: 2025-05-20 06:15:55
 # Author: daparthi001
+# Updated: 2025-06-15 04:30:45 by daparthi001
 
 apiVersion: v1
 kind: ConfigMap
@@ -15,18 +16,60 @@ data:
   alembic.ini: |
     [alembic]
     script_location = alembic
-    sqlalchemy.url = postgresql://%(POSTGRES_USER)s:%(POSTGRES_PASSWORD)s@%(POSTGRES_HOST)s:%(POSTGRES_PORT)s/%(POSTGRES_DB)s
+    sqlalchemy.url = postgresql://%(username)s:%(password)s@%(host)s:%(port)s/%(dbname)s
     file_template = %%(year)d%%(month).2d%%(day).2d_%%(hour).2d%%(minute).2d%%(second).2d_%%(rev)s_%%(slug)s
     timezone = UTC
 
   wait-for-db.sh: |
     #!/bin/sh
-    echo "Waiting for database..."
-    until PGPASSWORD=$POSTGRES_PASSWORD psql -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c '\q'; do
-      echo "Database is unavailable - sleeping"
-      sleep 2
+    # wait-for-db.sh - Script to check RDS PostgreSQL availability
+    # Updated: 2025-06-15 04:30:45
+    # Author: daparthi001
+    
+    set -e
+    
+    # Log function for clarity
+    log() {
+      echo "[$(date +'%Y-%m-%d %H:%M:%S')] $*"
+    }
+    
+    # Map secret keys to PostgreSQL environment variables
+    export PGHOST=${host}
+    export PGPORT=${port}
+    export PGDATABASE=${dbname}
+    export PGUSER=${username}
+    export PGPASSWORD=${password}
+    
+    log "Waiting for RDS PostgreSQL to be available at ${PGHOST}:${PGPORT}..."
+    
+    # Maximum number of attempts
+    MAX_ATTEMPTS=30
+    # Delay between attempts in seconds
+    DELAY=5
+    
+    # Loop to check database availability
+    for i in $(seq 1 $MAX_ATTEMPTS); do
+      log "Attempt $i of $MAX_ATTEMPTS"
+      
+      # Try connecting to the database
+      if pg_isready -t 5; then
+        log "Database server is available!"
+        
+        # Try a simple query to verify credentials and database access
+        if psql -c "SELECT 1" >/dev/null 2>&1; then
+          log "Database connection successful!"
+          exit 0
+        else
+          log "Connected to database server but could not execute query. Checking credentials..."
+        fi
+      fi
+      
+      log "Database is unavailable - sleeping for ${DELAY}s"
+      sleep $DELAY
     done
-    echo "Database is up"
+    
+    log "Could not connect to database after $MAX_ATTEMPTS attempts"
+    exit 1
 
   seed-data.json: |
     {

@@ -1,0 +1,25 @@
+from starlette.responses import JSONResponse
+
+def _handle_no_auth(self):
+    """Handle request with no auth header"""
+    return JSONResponse(
+        status_code=401,
+        content={"detail": "Authorization header not found"},
+        headers={"WWW-Authenticate": "Bearer"}
+    )
+    
+def _handle_invalid_token_type(self):
+    """Handle invalid token type"""
+    return JSONResponse(
+        status_code=401,
+        content={"detail": "Invalid token type. Bearer token required"},
+        headers={"WWW-Authenticate": "Bearer"}
+    )
+    
+def _handle_auth_error(self):
+    """Handle general auth error"""
+    return JSONResponse(
+        status_code=401,
+        content={"detail": "Authentication failed"},
+        headers={"WWW-Authenticate": "Bearer"}
+    )
