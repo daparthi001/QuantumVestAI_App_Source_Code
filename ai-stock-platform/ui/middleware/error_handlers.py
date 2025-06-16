@@ -1,119 +1,108 @@
-from fastapi import FastAPI, Request, status
-from fastapi.responses import JSONResponse, HTMLResponse
-from fastapi.exceptions import RequestValidationError
-from fastapi.templating import Jinja2Templates
-from starlette.exceptions import HTTPException as StarletteHTTPException
+"""
+Error Handlers
+Created: 2025-06-16 03:41:30
+Author: daparthi001
+"""
 import logging
-import traceback
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.templating import Jinja2Templates
+from pathlib import Path
 
-# Set up logger
+# Set up logging
 logger = logging.getLogger(__name__)
 
-# Templates setup - used for HTML error pages
-templates = Jinja2Templates(directory="templates")
+# Set up templates
+try:
+    from core.config import settings
+    templates_dir = Path(settings.TEMPLATES_DIR)
+except ImportError:
+    # Fallback settings
+    templates_dir = Path("templates")
+    logger.warning("Using fallback template directory")
 
-async def handle_http_exception(request: Request, exc: StarletteHTTPException) -> HTMLResponse:
-    status_code = getattr(exc, "status_code", 500)
-    detail = getattr(exc, "detail", str(exc))
+try:
+    templates = Jinja2Templates(directory=templates_dir)
+except Exception as e:
+    logger.error(f"Error setting up templates: {e}")
+    templates = None
 
-    # Handle redirects
-    if status_code in (301, 302, 303, 307, 308):
-        headers = getattr(exc, "headers", {})
-        return HTMLResponse(
-            status_code=status_code,
-            headers=headers
-        )
-    # For API routes, return JSON response
-    if request.url.path.startswith("/api/"):
-        return JSONResponse(
-            status_code=status_code,
-            content={"detail": detail}
-        )
-    # For UI routes, render error template
-    error_template = "errors/404.html" if status_code == 404 else "errors/500.html"
-    if status_code == 401:
-        error_template = "errors/401.html"
-    elif status_code == 403:
-        error_template = "errors/403.html"
-
-    return templates.TemplateResponse(
-        error_template,
-        {
-            "request": request,
-            "status_code": status_code,
-            "detail": detail
-        },
-        status_code=status_code
-    )
-
-async def handle_validation_exception(request: Request, exc: RequestValidationError) -> HTMLResponse:
-    errors = exc.errors()
-    error_messages = []
-    for error in errors:
-        loc = " -> ".join([str(x) for x in error.get("loc", [])])
-        msg = error.get("msg", "")
-        error_messages.append(f"{loc}: {msg}")
-    detail = "\n".join(error_messages)
-
-    if request.url.path.startswith("/api/"):
-        return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            content={"detail": detail, "errors": errors}
-        )
-    return templates.TemplateResponse(
-        "errors/400.html",
-        {
-            "request": request,
-            "status_code": status.HTTP_422_UNPROCESSABLE_ENTITY,
-            "detail": detail,
-            "errors": errors
-        },
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
-    )
-
-async def handle_not_found_exception(request: Request, exc: Exception) -> HTMLResponse:
-    if request.url.path.startswith("/api/"):
-        return JSONResponse(
-            status_code=status.HTTP_404_NOT_FOUND,
-            content={"detail": "The requested resource was not found"}
-        )
-    return templates.TemplateResponse(
-        "errors/404.html",
-        {
-            "request": request,
-            "status_code": status.HTTP_404_NOT_FOUND,
-            "path": request.url.path
-        },
-        status_code=status.HTTP_404_NOT_FOUND
-    )
-
-async def handle_internal_server_error(request: Request, exc: Exception) -> HTMLResponse:
-    logger.error(
-        f"Internal Server Error: {str(exc)}\n"
-        f"Path: {request.url.path}\n"
-        f"Method: {request.method}\n"
-        f"Traceback: {traceback.format_exc()}"
-    )
-    if request.url.path.startswith("/api/"):
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"detail": "Internal server error"}
-        )
-    return templates.TemplateResponse(
-        "errors/500.html",
-        {
-            "request": request,
-            "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR
-        },
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-    )
-
-def setup_error_handlers(app: FastAPI) -> None:
-    app.add_exception_handler(StarletteHTTPException, handle_http_exception)
-    app.add_exception_handler(RequestValidationError, handle_validation_exception)
-    app.add_exception_handler(404, handle_not_found_exception)
-    app.add_exception_handler(500, handle_internal_server_error)
-    app.add_exception_handler(Exception, handle_internal_server_error)
-
-# Alias for backward/forward compatibility
-register_exception_handlers = setup_error_handlers
+def setup_error_handlers(app: FastAPI):
+    """Set up error handlers for the application"""
+    logger.info("Setting up error handlers")
+    
+    @app.exception_handler(401)
+    async def unauthorized_handler(request: Request, exc: HTTPException):
+        accept = request.headers.get("Accept", "")
+        
+        if "text/html" in accept and templates:
+            # Return HTML response for browser requests
+            return templates.TemplateResponse(
+                "errors/401.html",
+                {"request": request, "detail": exc.detail},
+                status_code=401
+            )
+        else:
+            # Return JSON response for API requests
+            return JSONResponse(
+                status_code=401,
+                content={"detail": exc.detail or "Unauthorized"},
+                headers=getattr(exc, "headers", None)
+            )
+    
+    @app.exception_handler(403)
+    async def forbidden_handler(request: Request, exc: HTTPException):
+        accept = request.headers.get("Accept", "")
+        
+        if "text/html" in accept and templates:
+            # Return HTML response for browser requests
+            return templates.TemplateResponse(
+                "errors/403.html",
+                {"request": request, "detail": exc.detail},
+                status_code=403
+            )
+        else:
+            # Return JSON response for API requests
+            return JSONResponse(
+                status_code=403,
+                content={"detail": exc.detail or "Forbidden"},
+                headers=getattr(exc, "headers", None)
+            )
+    
+    @app.exception_handler(404)
+    async def not_found_handler(request: Request, exc: HTTPException):
+        accept = request.headers.get("Accept", "")
+        
+        if "text/html" in accept and templates:
+            # Return HTML response for browser requests
+            return templates.TemplateResponse(
+                "errors/404.html",
+                {"request": request, "detail": exc.detail},
+                status_code=404
+            )
+        else:
+            # Return JSON response for API requests
+            return JSONResponse(
+                status_code=404,
+                content={"detail": exc.detail or "Not Found"},
+                headers=getattr(exc, "headers", None)
+            )
+    
+    @app.exception_handler(500)
+    async def server_error_handler(request: Request, exc: Exception):
+        logger.error(f"Server error: {exc}", exc_info=True)
+        accept = request.headers.get("Accept", "")
+        
+        if "text/html" in accept and templates:
+            # Return HTML response for browser requests
+            return templates.TemplateResponse(
+                "errors/500.html",
+                {"request": request},
+                status_code=500
+            )
+        else:
+            # Return JSON response for API requests
+            return JSONResponse(
+                status_code=500,
+                content={"detail": "Internal Server Error"}
+            )

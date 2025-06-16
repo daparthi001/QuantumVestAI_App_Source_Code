@@ -1,15 +1,30 @@
-from fastapi import Request
-from starlette.middleware.base import BaseHTTPMiddleware
-import time
+"""
+Metrics Middleware
+Created: 2025-05-19 03:44:39
+Author: daparthi001
+Updated: 2025-06-16 03:41:30 by daparthi001
+"""
 import logging
+import time
+from fastapi import Request
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from starlette.responses import Response
 
+# Configure logging
 logger = logging.getLogger(__name__)
 
 class MetricsMiddleware(BaseHTTPMiddleware):
     """
-    Middleware for collecting basic metrics on requests.
+    Middleware to collect metrics on request/response cycle
     """
-    async def dispatch(self, request: Request, call_next):
+    def __init__(self, app):
+        super().__init__(app)
+        logger.info("Metrics middleware initialized")
+    
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
+        # Record start time
         start_time = time.time()
         
         # Process the request
@@ -18,14 +33,10 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         # Calculate processing time
         process_time = time.time() - start_time
         
-        # Add metrics to response headers for debugging
-        response.headers["X-Process-Time"] = str(process_time)
+        # Log performance data
+        logger.debug(f"Path: {request.url.path} | Method: {request.method} | Time: {process_time:.4f}s")
         
-        # Log metrics data (can be extended to push to a metrics system)
-        logger.debug(
-            f"Request: {request.method} {request.url.path} - "
-            f"Time: {process_time:.4f}s - "
-            f"Status: {response.status_code}"
-        )
+        # Add processing time header
+        response.headers["X-Process-Time"] = str(process_time)
         
         return response

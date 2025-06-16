@@ -1,236 +1,121 @@
 """
-QuantumVestAI UI - Main Application
+QuantumVestAI - FastAPI Application
 Created: 2025-05-19 03:44:39
 Author: daparthi001
-Updated: 2025-06-16 02:42:13 by daparthi001
+Updated: 2025-06-16 03:37:20 by daparthi001
 """
-from fastapi import FastAPI, HTTPException, Request
+import logging
+from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.errors import ServerErrorMiddleware
-from pathlib import Path
-import logging
-import os
+import traceback
+from contextlib import asynccontextmanager
 
-# Configure basic logging first
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(levelname)s - %(message)s',
 )
 logger = logging.getLogger(__name__)
 
-# Create safe settings wrapper to handle missing attributes
-class SafeSettings:
-    def __init__(self, original_settings=None):
-        self._original = original_settings
-        self._defaults = {
-            'PROJECT_NAME': 'QuantumVestAI',
-            'VERSION': '1.0.0',
-            'DEBUG': False,
-            'CORS_ORIGINS': ['*'],
-            'STATIC_DIR': 'static',
-            'TEMPLATES_DIR': 'templates',
-            'UPLOAD_DIR': 'uploads',
-            'HOST': '0.0.0.0',
-            'PORT': 3000,
-            'LOG_LEVEL': 'INFO',
-            'ENVIRONMENT': 'production'
-        }
-        
-    def __getattr__(self, name):
-        if self._original is not None:
-            try:
-                return getattr(self._original, name)
-            except (AttributeError, Exception) as e:
-                logger.warning(f"Setting {name} not found in original settings: {e}")
-        
-        # Return default value if exists
-        if name in self._defaults:
-            logger.info(f"Using default value for {name}: {self._defaults[name]}")
-            return self._defaults[name]
-        
-        # For any other attribute, return a safe default
-        logger.warning(f"No default found for {name}, returning empty string")
-        return ""
-
-# Safely import routes and middleware
-try:
-    # Import routes
-    from routes.admin import router as admin_router
-    from routes.auth import router as auth_router
-    from routes.forecast import router as forecast_router
-    from routes.watchlist import router as watchlist_router
-    from routes.predictability import router as predictability_router
-    from routes.settings import router as settings_router
-    from routes.dashboard import router as dashboard_router
-    from routes.profile import router as profile_router
-    
-    # Import middleware
-    from middleware.auth_middleware import AuthMiddleware
-    from middleware.error_handlers import setup_error_handlers
-    from middleware.metrics_middleware import MetricsMiddleware
-    
-    logger.info("Successfully imported all routes and middleware")
-except ImportError as e:
-    logger.error(f"Error importing routes or middleware: {e}")
-    raise
-
-# Safely import settings and logging
+# Import settings
 try:
     from core.config import settings
-    from core.logging import setup_logging
-    logger = setup_logging()
-    logger.info("Successfully imported settings and logging")
-except ImportError as e:
-    logger.error(f"Error importing settings or logging: {e}")
-    logger.warning("Using fallback settings")
-    
-    # Create fallback settings
-    class FallbackSettings:
+except ImportError:
+    # Fallback settings
+    class Settings:
+        API_PREFIX = ""
+        DEBUG = True
         PROJECT_NAME = "QuantumVestAI"
         VERSION = "1.0.0"
-        DEBUG = False
-        CORS_ORIGINS = ["*"]
-        STATIC_DIR = "static"
-        TEMPLATES_DIR = "templates"
-        UPLOAD_DIR = "uploads"
-        HOST = "0.0.0.0"
-        PORT = 3000
-        LOG_LEVEL = "INFO"
-        ENVIRONMENT = "production"
     
-    settings = FallbackSettings()
-    
-    # Create fallback setup_logging
-    def setup_logging():
-        return logging.getLogger(__name__)
+    settings = Settings()
 
-# Wrap settings with SafeSettings to handle missing attributes
-safe_settings = SafeSettings(settings)
+# Setup middleware and routes
+try:
+    # Import middleware - only import AuthMiddleware, not get_current_user
+    from middleware import AuthMiddleware, MetricsMiddleware, setup_error_handlers
+    
+    # Import routes
+    from routes.auth import router as auth_router
+    from routes.auth import get_current_user  # Import from routes.auth, not middleware
+    
+    # Import other routes as needed
+    from routes.dashboard import router as dashboard_router
+    from routes.api import router as api_router
+    from routes.health import router as health_router
+except ImportError as e:
+    logger.error(f"Error importing routes or middleware: {e}")
+    traceback.print_exc()
+
+# Lifespan context manager for startup/shutdown events
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: add any async startup code here
+    logger.info("Starting QuantumVestAI application")
+    yield
+    # Shutdown: add any async shutdown code here
+    logger.info("Shutting down QuantumVestAI application")
 
 # Create FastAPI app
 app = FastAPI(
-    title=safe_settings.PROJECT_NAME,
-    description="QuantumVestAI Web Interface",
-    version=safe_settings.VERSION,
-    docs_url="/docs" if safe_settings.DEBUG else None,
-    redoc_url="/redoc" if safe_settings.DEBUG else None
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    debug=settings.DEBUG,
+    lifespan=lifespan,
 )
 
-# Add global exception handlers - IMPORTANT: Add these before any middleware
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
-    logger.info(f"HTTP Exception: {exc.status_code} - {exc.detail}")
-    headers = getattr(exc, "headers", None)
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": exc.detail},
-        headers=headers
-    )
-
-@app.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Unhandled exception: {exc}", exc_info=True)
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Internal server error"}
-    )
-
-# Add middleware in the correct order - IMPORTANT: Server error middleware must be first
-app.add_middleware(ServerErrorMiddleware, debug=safe_settings.DEBUG)
-
-# Configure CORS
+# Set up CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Always allow all origins for stability
+    allow_origins=["*"],  # In production, specify exact domains
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Add custom middleware - ORDER MATTERS! AuthMiddleware should be last
-try:
-    # MetricsMiddleware should be added before AuthMiddleware
-    app.add_middleware(MetricsMiddleware)
-    app.add_middleware(AuthMiddleware)
-    logger.info("Successfully added middleware")
-except Exception as e:
-    logger.error(f"Error adding middleware: {e}")
+# Add custom middleware
+# Note: Order matters - middleware executes in reverse order (last added, first executed)
+app.add_middleware(MetricsMiddleware)  # Add first, executed last
+app.add_middleware(AuthMiddleware)     # Add second, executed first
 
-# Safely set up error handlers from imported module (if it exists)
-try:
-    setup_error_handlers(app)
-    logger.info("Successfully set up error handlers")
-except Exception as e:
-    logger.error(f"Error setting up error handlers: {e}")
+# Set up error handlers
+setup_error_handlers(app)
 
-# Ensure static and template directories exist
-for directory in [safe_settings.STATIC_DIR, safe_settings.TEMPLATES_DIR, safe_settings.UPLOAD_DIR]:
-    try:
-        Path(directory).mkdir(parents=True, exist_ok=True)
-        logger.info(f"Directory created or verified: {directory}")
-    except Exception as e:
-        logger.error(f"Error creating directory {directory}: {e}")
+# Add global exception handler
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Global exception handler caught: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An unexpected error occurred"},
+    )
 
-# Mount static files safely
-try:
-    app.mount("/static", StaticFiles(directory=safe_settings.STATIC_DIR), name="static")
-    logger.info(f"Successfully mounted static files from {safe_settings.STATIC_DIR}")
-except Exception as e:
-    logger.error(f"Error mounting static files: {e}")
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Configure templates safely
-try:
-    templates = Jinja2Templates(directory=safe_settings.TEMPLATES_DIR)
-    logger.info(f"Successfully configured templates from {safe_settings.TEMPLATES_DIR}")
-except Exception as e:
-    logger.error(f"Error configuring templates: {e}")
+# Add routes
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
+app.include_router(health_router, prefix="/health", tags=["health"])
+app.include_router(dashboard_router, prefix="/dashboard", tags=["dashboard"])
+app.include_router(api_router, prefix="/api", tags=["api"])
 
-# Include routers with proper prefixes safely
-try:
-    app.include_router(dashboard_router, prefix="", tags=["Dashboard"])
-    app.include_router(admin_router, prefix="/admin", tags=["Admin"])
-    app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
-    app.include_router(forecast_router, prefix="/forecast", tags=["Forecasting"])
-    app.include_router(watchlist_router, prefix="/watchlist", tags=["Watchlist"])
-    app.include_router(predictability_router, prefix="/predictability", tags=["Predictability"])
-    app.include_router(settings_router, prefix="/settings", tags=["Settings"])
-    app.include_router(profile_router, prefix="/profile", tags=["Profile"])
-    logger.info("Successfully included all routers")
-except Exception as e:
-    logger.error(f"Error including routers: {e}")
+# Root endpoint
+@app.get("/")
+async def root(current_user = Depends(get_current_user)):
+    return {"message": f"Welcome to QuantumVestAI, {current_user['username']}!"}
 
-@app.get("/health")
+# Health check endpoint (publicly accessible)
+@app.get("/health", tags=["health"])
 async def health_check():
-    """Health check endpoint"""
-    return {
-        "status": "healthy",
-        "version": safe_settings.VERSION,
-        "timestamp": "2025-06-16 02:42:13",
-        "author": "daparthi001",
-        "environment": safe_settings.ENVIRONMENT
-    }
+    return {"status": "ok"}
 
-@app.on_event("startup")
-async def startup_event():
-    """Startup tasks"""
-    logger.info(f"Starting {safe_settings.PROJECT_NAME} UI v{safe_settings.VERSION}")
-    # Initialize services here
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup tasks"""
-    logger.info(f"Shutting down {safe_settings.PROJECT_NAME} UI")
-    # Cleanup services here
+# Version endpoint
+@app.get("/version", tags=["system"])
+async def version():
+    return {"version": settings.VERSION}
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(
-        "main:app",
-        host=safe_settings.HOST,
-        port=safe_settings.PORT,
-        reload=safe_settings.DEBUG,
-        log_level=safe_settings.LOG_LEVEL.lower()
-    )
+    uvicorn.run(app, host="0.0.0.0", port=8000)
