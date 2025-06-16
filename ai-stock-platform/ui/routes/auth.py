@@ -2,7 +2,7 @@
 Authentication Routes for QuantumVestAI
 Created: 2025-05-19 03:44:39
 Author: daparthi001
-Updated: 2025-06-16 22:11:00 by daparthi001
+Updated: 2025-06-16 22:34:00 by daparthi001
 """
 from fastapi import APIRouter, Request, HTTPException, Depends, Form, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -43,8 +43,8 @@ except Exception as e:
     # Fallback to a basic path
     templates = Jinja2Templates(directory="templates")
 
-# OAuth2 scheme for token handling
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+# OAuth2 scheme for token handling - FIXED: Changed the tokenUrl to match the actual route
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # Mock user database - replace with actual database in production
 USERS_DB = {

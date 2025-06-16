@@ -2,7 +2,7 @@
 QuantumVestAI UI - Main Application
 Created: 2025-05-19 03:44:39
 Author: daparthi001
-Updated: 2025-06-16 22:11:00 by daparthi001
+Updated: 2025-06-16 22:34:00 by daparthi001
 """
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
@@ -186,7 +186,7 @@ def safe_import_router(module_path, router_name="router"):
 # Safely include routers - IMPORT THEM INDEPENDENTLY to avoid circular imports
 routers_config = [
     {"module": "routes.dashboard", "prefix": "", "tags": ["Dashboard"]},
-    {"module": "routes.auth", "prefix": "/auth", "tags": ["Authentication"]},
+    {"module": "routes.auth", "prefix": "", "tags": ["Authentication"]},  # FIXED: Removed /auth prefix to match URL
     {"module": "routes.admin", "prefix": "/admin", "tags": ["Admin"]},
     {"module": "routes.forecast", "prefix": "/forecast", "tags": ["Forecasting"]},
     {"module": "routes.watchlist", "prefix": "/watchlist", "tags": ["Watchlist"]},
@@ -211,7 +211,7 @@ async def health_check():
     return {
         "status": "healthy",
         "version": safe_settings.VERSION,
-        "timestamp": "2025-06-16 22:11:00",
+        "timestamp": "2025-06-16 22:34:00",
         "author": "daparthi001",
         "environment": safe_settings.ENVIRONMENT
     }
