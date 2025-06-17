@@ -1,16 +1,18 @@
 """
 Main Application Entry Point
 Created: 2025-06-17 00:07:14
+Updated: 2025-06-17 02:30:15
 Author: daparthi001
 """
 import sys
 import os
 from pathlib import Path
 from fastapi import FastAPI, Request, Form, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import uvicorn
+import httpx
 
 # Add API directory to Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), "api"))
@@ -97,6 +99,42 @@ async def register_submit(
             status_code=400
         )
 
+# Add a simple proxy route for /auth/register
+@app.post("/auth/register")
+async def auth_register_proxy(request: Request):
+    """Proxy to the API's /auth/register endpoint"""
+    try:
+        # Extract the request body
+        body = await request.json()
+        
+        # Forward to API endpoint - using direct internal URL
+        # This assumes both UI and API are running in the same process
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"http://localhost:{settings.PORT}/api/auth/register", 
+                json=body,
+                headers={k: v for k, v in request.headers.items() 
+                        if k.lower() not in ["host", "content-length"]}
+            )
+            
+            # Log the proxy operation
+            logger.info(f"Proxied /auth/register request to API - Status: {response.status_code}")
+            
+            # Return the API response directly
+            return Response(
+                content=response.content,
+                status_code=response.status_code,
+                headers=dict(response.headers)
+            )
+    except Exception as e:
+        logger.error(f"Proxy to /auth/register failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Registration proxy failed: {str(e)}")
+
+@app.get("/auth/register")
+async def auth_register_get_proxy(request: Request):
+    """Handle GET requests to /auth/register by redirecting to /register"""
+    return RedirectResponse(url="/register")
+
 @app.get("/signup")
 async def signup_redirect(request: Request):
     """Redirect signup to register"""
@@ -113,9 +151,11 @@ async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "timestamp": "2025-06-17 00:07:14",
+        "timestamp": "2025-06-17 02:30:15",
         "version": settings.VERSION
     }
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
+    # Use the PORT from settings
+    port = getattr(settings, "PORT", 8000)
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)

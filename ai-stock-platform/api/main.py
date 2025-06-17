@@ -1,7 +1,7 @@
 """
 Main API Module
 Created: 2025-05-21 14:26:28
-Updated: 2025-06-17 01:50:11
+Updated: 2025-06-17 02:27:16
 Author: daparthi001
 """
 import sys
@@ -62,9 +62,13 @@ logger.info(
     settings.VERSION
 )
 
-# Register all routers with API prefix
+# IMPORTANT: Register auth router WITHOUT the API prefix first
+# This ensures /auth/register is accessible directly
+app.include_router(auth.router)
+logger.debug(f"Registered auth router without API prefix")
+
+# Register remaining routers with API prefix
 API_ROUTERS = [
-    auth.router,
     users.router,
     stocks.router,
     forecast.router,
@@ -98,7 +102,7 @@ async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "timestamp": "2025-06-17 01:50:11",
+        "timestamp": "2025-06-17 02:27:16",
         "version": settings.VERSION
     }
 
@@ -111,7 +115,7 @@ async def not_found_exception_handler(request: Request, exc: HTTPException):
         content={
             "message": "The requested API resource was not found",
             "path": request.url.path,
-            "timestamp": "2025-06-17 01:50:11"
+            "timestamp": "2025-06-17 02:27:16"
         }
     )
 
