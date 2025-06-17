@@ -1,8 +1,8 @@
 /**
  * Authentication utilities for QuantumVestAI UI
  * Created: 2025-06-16
- * Updated: 2025-06-17 16:20:02
- * Author: daparthi001yes
+ * Updated: 2025-06-17 17:03:55
+ * Author: daparthi001
  */
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -95,7 +95,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const formData = new FormData();
                 formData.append('username', username);
                 formData.append('password', password);
-                
                 if (remember) {
                     formData.append('remember', 'true');
                 }
@@ -114,7 +113,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Otherwise parse the JSON response
                 const data = await response.json();
                 
-                if (response.ok && data.access_token) {
+                if (data.access_token) {
                     this.setToken(data.access_token);
                     return { 
                         success: true, 
@@ -149,17 +148,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 const data = await response.json();
                 
-                if (response.ok) {
-                    return {
-                        success: true,
-                        userId: data.user_id,
-                        redirectUrl: data.redirect_url
-                    };
-                }
-                
                 return {
-                    success: false,
-                    error: data.detail || 'Registration failed'
+                    success: data.success === true,
+                    userId: data.user_id,
+                    redirectUrl: data.redirect_url,
+                    error: data.detail || null
                 };
             } catch (error) {
                 console.error('Registration error:', error);
@@ -173,55 +166,52 @@ document.addEventListener('DOMContentLoaded', function() {
         // Logout helper
         logout: function() {
             this.removeToken();
-            window.location.href = '/login';
+            window.location.href = '/logout';
+        },
+        
+        // Check auth token and redirect if not authenticated
+        requireAuth: function() {
+            if (!this.isAuthenticated()) {
+                const currentPath = window.location.pathname + window.location.search;
+                window.location.href = `/login?next=${encodeURIComponent(currentPath)}`;
+                return false;
+            }
+            return true;
         }
     };
 
-    // Auto-initialize any login forms
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm && loginForm.getAttribute('data-auto-init') !== 'false') {
-        loginForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const remember = document.getElementById('remember')?.checked || false;
-            
-            const submitButton = this.querySelector('button[type="submit"]');
-            if (submitButton) {
-                submitButton.disabled = true;
-                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Signing in...';
-            }
-            
-            const result = await window.authUtils.login(username, password, remember);
-            
-            if (result.success) {
-                const urlParams = new URLSearchParams(window.location.search);
-                const nextUrl = urlParams.get('next') || '/dashboard';
-                window.location.href = nextUrl;
-            } else {
-                const alertDiv = document.createElement('div');
-                alertDiv.className = 'alert alert-danger alert-dismissible fade show';
-                alertDiv.role = 'alert';
-                alertDiv.innerHTML = result.error;
-                
-                const closeButton = document.createElement('button');
-                closeButton.type = 'button';
-                closeButton.className = 'btn-close';
-                closeButton.setAttribute('data-bs-dismiss', 'alert');
-                closeButton.setAttribute('aria-label', 'Close');
-                
-                alertDiv.appendChild(closeButton);
-                
-                // Find where to insert the alert
-                const firstElement = loginForm.firstElementChild;
-                loginForm.insertBefore(alertDiv, firstElement);
-                
-                if (submitButton) {
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = 'Sign In';
-                }
-            }
+    // Auto-initialize any auth forms with data-auto-init attribute
+    const initializeForms = () => {
+        // Login form initialization
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm && loginForm.getAttribute('data-auto-init') !== 'false') {
+            // Login form is being handled directly in login.html
+            console.log('Login form found - initialization handled in page script');
+        }
+        
+        // Register form initialization
+        const registerForm = document.getElementById('registerForm');
+        if (registerForm && registerForm.getAttribute('data-auto-init') !== 'false') {
+            // Register form is being handled directly in register.html
+            console.log('Registration form found - initialization handled in page script');
+        }
+        
+        // Auto logout links
+        const logoutLinks = document.querySelectorAll('[data-auth="logout"]');
+        logoutLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.authUtils.logout();
+            });
         });
+    };
+    
+    // Initialize forms
+    initializeForms();
+    
+    // Check protected pages
+    const bodyElement = document.body;
+    if (bodyElement && bodyElement.getAttribute('data-auth-required') === 'true') {
+        window.authUtils.requireAuth();
     }
 });

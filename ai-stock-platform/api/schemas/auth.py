@@ -1,55 +1,66 @@
 """
 Authentication Schemas
 Created: 2025-05-20 04:43:53
+Updated: 2025-06-17 17:03:55
 Author: daparthi001
 """
-from pydantic import BaseModel, EmailStr, constr
-from typing import Optional
-from datetime import datetime
+from pydantic import BaseModel, Field, EmailStr, validator
+from typing import Optional, List, Dict, Any
+import re
 
 class TokenResponse(BaseModel):
-    """Token response schema."""
     access_token: str
     token_type: str
 
-class UserResponse(BaseModel):
-    """User response schema."""
-    id: int
+class UserBase(BaseModel):
     username: str
-    email: EmailStr
-    full_name: Optional[str]
+    email: str
+    full_name: Optional[str] = None
     role: str
-    last_login: Optional[datetime]
-    created_at: datetime
-    updated_at: datetime
+    is_active: bool
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 class LoginResponse(BaseModel):
-    """Login response schema."""
     access_token: str
     token_type: str
-    user: UserResponse
+    user: UserBase
 
 class RegisterRequest(BaseModel):
-    """Register request schema."""
-    username: constr(min_length=3, max_length=50)
+    username: str = Field(..., min_length=3, max_length=20)
     email: EmailStr
-    password: constr(min_length=8)
-    full_name: Optional[str]
+    password: str = Field(..., min_length=8)
+    full_name: Optional[str] = None
+    
+    @validator('username')
+    def username_alphanumeric(cls, v):
+        if not re.match(r'^[A-Za-z0-9_]+$', v):
+            raise ValueError('Username must contain only letters, numbers, and underscores')
+        return v
+    
+    @validator('password')
+    def password_strength(cls, v):
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters')
+        # You can add more password strength checks here
+        return v
 
 class RegisterResponse(BaseModel):
-    """Register response schema."""
     success: bool
     user_id: int
     created_at: str
+    redirect_url: str
 
 class PasswordChangeRequest(BaseModel):
-    """Password change request schema."""
     current_password: str
-    new_password: constr(min_length=8)
+    new_password: str = Field(..., min_length=8)
+    
+    @validator('new_password')
+    def password_strength(cls, v):
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters')
+        return v
 
 class PasswordResetRequest(BaseModel):
-    """Password reset request schema."""
     email: EmailStr

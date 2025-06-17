@@ -1,13 +1,12 @@
 """
-Main API Module
+Main API Module - Updated with Authentication Fixes
 Created: 2025-05-21 14:26:28
-Updated: 2025-06-17 02:27:16
+Updated: 2025-06-17 17:55:08
 Author: daparthi001
 """
 import sys
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, Request, Depends
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from datetime import datetime
 
@@ -17,7 +16,8 @@ sys.path.append(str(Path(__file__).parent.parent))
 # Import settings and logger first
 from core.config import settings
 from core.logger import logger
-
+from core.middleware.cors import configure_cors
+from core.middleware.exception_handlers import configure_exception_handlers
 # Then import database
 from db.session import engine, SessionLocal, get_db
 
@@ -44,17 +44,14 @@ app = FastAPI(
     redoc_url=f"{settings.API_V1_STR}/redoc",
 )
 
-# Setup middleware including CORS for cross-container communication
+# Setup middleware including basic middleware
 setup_middleware(app)
 
-# Add explicit CORS middleware with more permissive settings for UI container
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # In production, specify the actual UI domain
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Configure CORS with our standardized configuration
+app = configure_cors(app)
+
+# Configure exception handlers for consistent error responses
+app = configure_exception_handlers(app)
 
 logger.info(
     "Starting API %s version %s",
@@ -62,8 +59,8 @@ logger.info(
     settings.VERSION
 )
 
-# IMPORTANT: Register auth router WITHOUT the API prefix first
-# This ensures /auth/register is accessible directly
+# Register auth router WITHOUT the API prefix
+# This ensures /auth/* endpoints are accessible directly
 app.include_router(auth.router)
 logger.debug(f"Registered auth router without API prefix")
 
@@ -102,22 +99,9 @@ async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "timestamp": "2025-06-17 02:27:16",
+        "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
         "version": settings.VERSION
     }
-
-# Error handling
-@app.exception_handler(404)
-async def not_found_exception_handler(request: Request, exc: HTTPException):
-    """Handle 404 errors"""
-    return JSONResponse(
-        status_code=404,
-        content={
-            "message": "The requested API resource was not found",
-            "path": request.url.path,
-            "timestamp": "2025-06-17 02:27:16"
-        }
-    )
 
 # Add startup event to verify database connection
 @app.on_event("startup")
@@ -128,6 +112,13 @@ async def startup_event():
         with engine.connect() as conn:
             conn.execute("SELECT 1")
         logger.info("Database connection verified")
+        
+        # Log authentication routes
+        logger.info("Authentication routes registered:")
+        auth_paths = [route.path for route in auth.router.routes]
+        for path in auth_paths:
+            logger.info(f" - {path}")
+            
     except Exception as e:
         logger.error("Database connection failed: %s", str(e))
         raise
@@ -138,3 +129,18 @@ logger.info(
     settings.PROJECT_NAME,
     settings.VERSION
 )
+
+# Special handling for OPTIONS requests to support CORS preflight
+@app.options("/{full_path:path}")
+async def options_handler(request: Request, full_path: str):
+    """Handle OPTIONS requests for CORS preflight"""
+    response = JSONResponse(content={})
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "POST, GET, DELETE, PUT, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Max-Age"] = "86400"
+    return response
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -14,23 +14,23 @@
         </div>
         
         {% if msg %}
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div class="alert alert-{% if 'success' in msg %}success{% else %}danger{% endif %} alert-dismissible fade show" role="alert">
             {{ msg }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
         {% endif %}
         
         <div class="auth-body">
-            <form method="post" action="/register">
+            <form method="post" action="/auth/register" id="registerForm">
                 <div class="mb-3">
                     <label for="username" class="form-label">Username</label>
-                    <input type="text" class="form-control" id="username" name="username" required autofocus>
+                    <input type="text" class="form-control" id="username" name="username" required autofocus value="{{ username or '' }}">
                     <div class="form-text">Username must be between 3-20 characters and contain only letters, numbers, and underscores.</div>
                 </div>
                 
                 <div class="mb-3">
                     <label for="email" class="form-label">Email Address</label>
-                    <input type="email" class="form-control" id="email" name="email" required>
+                    <input type="email" class="form-control" id="email" name="email" required value="{{ email or '' }}">
                 </div>
                 
                 <div class="mb-3">
@@ -65,7 +65,7 @@
                 </div>
                 
                 <div class="d-grid">
-                    <button type="submit" class="btn btn-primary">Create Account</button>
+                    <button type="submit" class="btn btn-primary" id="submitButton">Create Account</button>
                 </div>
             </form>
         </div>
@@ -106,7 +106,7 @@
             passwordInput.addEventListener('input', function() {
                 const password = this.value;
                 let strength = 0;
-                let message = "";
+                let message = "Password must be at least 8 characters";
                 
                 if (password.length >= 8) {
                     strength += 25;
@@ -124,15 +124,13 @@
                     strength += 25;
                 }
                 
-                // Update progress bar
                 progressBar.style.width = strength + '%';
                 
-                // Update color based on strength
-                if (strength <= 25) {
+                if (strength < 50) {
                     progressBar.classList.remove('bg-warning', 'bg-success');
                     progressBar.classList.add('bg-danger');
                     message = "Password is weak";
-                } else if (strength <= 75) {
+                } else if (strength < 75) {
                     progressBar.classList.remove('bg-danger', 'bg-success');
                     progressBar.classList.add('bg-warning');
                     message = "Password is moderate";
@@ -151,6 +149,93 @@
                     this.setCustomValidity("Passwords don't match");
                 } else {
                     this.setCustomValidity("");
+                }
+            });
+        }
+        
+        // Form submission handling
+        const form = document.getElementById('registerForm');
+        const submitButton = document.getElementById('submitButton');
+        
+        if (form) {
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                // Basic validation
+                const username = document.getElementById('username').value;
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirm_password').value;
+                const terms = document.getElementById('terms').checked;
+                
+                // Show loading state
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating Account...';
+                
+                // Clear previous alerts
+                const previousAlerts = document.querySelectorAll('.alert');
+                previousAlerts.forEach(alert => alert.remove());
+                
+                try {
+                    // Check if passwords match
+                    if (password !== confirmPassword) {
+                        throw new Error("Passwords don't match");
+                    }
+                    
+                    // Check terms acceptance
+                    if (!terms) {
+                        throw new Error("You must agree to the Terms of Service and Privacy Policy");
+                    }
+                    
+                    // Create registration data
+                    const registerData = {
+                        username: username,
+                        email: email,
+                        password: password,
+                        full_name: ""
+                    };
+                    
+                    // Send registration request
+                    const response = await fetch('/auth/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(registerData)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Show success message
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = 'alert alert-success';
+                        alertDiv.textContent = 'Account created successfully! Redirecting to login...';
+                        
+                        // Insert before the form
+                        form.parentNode.insertBefore(alertDiv, form);
+                        
+                        // Redirect after a brief delay
+                        setTimeout(() => {
+                            window.location.href = '/login?registered=true';
+                        }, 2000);
+                    } else {
+                        // Show error from server
+                        throw new Error(data.detail || 'Registration failed. Please try again.');
+                    }
+                } catch (error) {
+                    // Show error message
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-danger';
+                    alertDiv.textContent = error.message;
+                    
+                    // Insert at the top of form
+                    const authHeader = document.querySelector('.auth-header');
+                    authHeader.insertAdjacentElement('afterend', alertDiv);
+                    
+                    // Reset button state
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Create Account';
                 }
             });
         }
