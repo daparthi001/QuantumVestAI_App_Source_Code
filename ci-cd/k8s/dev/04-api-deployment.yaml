@@ -7,8 +7,6 @@ metadata:
     app: quantumvestai
     tier: backend
     environment: development
-    created-by: daparthi001
-    created-date: "2025-06-15"
 spec:
   replicas: 1
   selector:
@@ -31,87 +29,303 @@ spec:
       containers:
       - name: api
         image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:api-dev-latest
-        imagePullPolicy: Always
-        command: ["/bin/sh", "-c"]
+        ports:
+        - containerPort: 8000
+        command:
+        - /bin/sh
+        - -c
         args:
-          - |
-            echo "=== Creating API Structure ==="
-            # Create api directory and main.py
-            mkdir -p /app/api
-            
-            # Create __init__.py
-            cat > /app/api/__init__.py << 'EOF'
-            from .main import app
-            EOF
-            
-            # Create main.py with updated configuration
-            cat > /app/api/main.py << 'EOF'
-            """
-            Main Application Module
-            Created: 2025-05-22 04:11:37
-            Author: daparthi001
-            """
-            import logging
-            from fastapi import FastAPI, Depends
-            from sqlalchemy.orm import Session
-            from core.config import settings
-            from core.middleware import setup_middleware
-            from db.session import get_db
-
-            # Configure logging
-            logging.basicConfig(
-                level=logging.INFO,
-                format='%(asctime)s - %(levelname)s - %(message)s'
-            )
-            logger = logging.getLogger(__name__)
-
-            app = FastAPI(
-                title=settings.PROJECT_NAME,
-                description=settings.DESCRIPTION,
-                version=settings.VERSION
-            )
-
-            # Setup middleware
-            setup_middleware(app)
-
-            @app.on_event("startup")
-            async def startup_event():
-                """Startup event handler"""
-                logger.info("Starting QuantumVestAI API...")
-
-            @app.get("/health")
-            async def health_check(db: Session = Depends(get_db)):
-                """Health check endpoint"""
-                try:
-                    # Test database connection
-                    result = db.execute("SELECT version()").scalar()
-                    return {
-                        "status": "healthy",
-                        "database": {
-                            "status": "connected",
-                            "version": result
-                        },
-                        "environment": settings.API_ENV
-                    }
-                except Exception as e:
-                    logger.error("Health check failed: %s", str(e))
-                    return {
-                        "status": "unhealthy",
-                        "database": {
-                            "status": "disconnected",
-                            "error": str(e)
-                        },
-                        "environment": settings.API_ENV
-                    }
-
-            # Import and include routers here
-            # from api.routers import stocks, users, etc.
-            EOF
-            
-            echo "=== Starting FastAPI Application ==="
-            cd /app && uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+        - |
+          echo "=== Creating API Structure ==="
+          # Create api directory and main.py
+          mkdir -p /app/api
+          mkdir -p /app/api/routers
+          mkdir -p /app/core
+          
+          # Create __init__.py
+          cat > /app/api/__init__.py << 'EOT'
+          from .main import app
+          EOT
+          
+          # Create init file for routers
+          cat > /app/api/routers/__init__.py << 'EOT'
+          # Router package
+          EOT
+          
+          # Create auth router with register endpoint
+          cat > /app/api/routers/auth.py << 'EOT'
+          """
+          Authentication Router
+          Created: 2025-06-17 03:53:49
+          Author: daparthi001
+          """
+          from fastapi import APIRouter, Depends, HTTPException, Request, status, Response
+          from fastapi.middleware.cors import CORSMiddleware
+          from sqlalchemy.orm import Session
+          from db.session import get_db
+          from datetime import datetime
+          import logging
+          
+          # Configure logging
+          logging.basicConfig(
+              level=logging.INFO,
+              format='%(asctime)s - %(levelname)s - %(message)s'
+          )
+          logger = logging.getLogger("auth_router")
+          
+          router = APIRouter()
+          
+          @router.post("/register")
+          async def register(request: Request, response: Response):
+              """
+              User registration endpoint
+              """
+              try:
+                  # Extract request body
+                  data = await request.json()
+                  username = data.get('username')
+                  logger.info(f"Registration request received for user: {username}")
+                  
+                  # Simple validation
+                  if not username or not data.get("password") or not data.get("email"):
+                      logger.error(f"Registration missing required fields")
+                      return {
+                          "status": "error",
+                          "message": "Missing required fields: username, password, and email are required"
+                      }
+                  
+                  # Set CORS headers
+                  response.headers["Access-Control-Allow-Origin"] = "*"
+                  response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+                  response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+                  
+                  # In a real implementation, we would:
+                  # 1. Check if user exists
+                  # 2. Hash password
+                  # 3. Store user in database
+                  
+                  # For now, simulate successful registration
+                  logger.info(f"Registration successful for user: {username}")
+                  return {
+                      "status": "success",
+                      "message": "Registration successful",
+                      "username": username,
+                      "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+                  }
+                  
+              except Exception as e:
+                  logger.error(f"Registration failed: {str(e)}")
+                  response.headers["Access-Control-Allow-Origin"] = "*"
+                  response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+                  response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+                  return {
+                      "status": "error",
+                      "message": f"Registration failed: {str(e)}"
+                  }
+          
+          @router.options("/register")
+          async def register_options(response: Response):
+              """Handle CORS preflight requests for register endpoint"""
+              response.headers["Access-Control-Allow-Origin"] = "*"
+              response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+              response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+              return {}
+          
+          @router.get("/status")
+          async def auth_status(response: Response):
+              """Auth status endpoint"""
+              response.headers["Access-Control-Allow-Origin"] = "*"
+              return {
+                  "status": "active",
+                  "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+              }
+          EOT
+          
+          # Create core middleware module
+          mkdir -p /app/core
+          cat > /app/core/middleware.py << 'EOT'
+          """
+          Middleware Configuration Module
+          Created: 2025-06-17 03:53:49
+          Author: daparthi001
+          """
+          from fastapi import FastAPI
+          from fastapi.middleware.cors import CORSMiddleware
+          
+          def setup_middleware(app: FastAPI):
+              """Configure middleware for the application"""
+              # Add CORS middleware
+              app.add_middleware(
+                  CORSMiddleware,
+                  allow_origins=["*"],  # Set to specific origins in production
+                  allow_credentials=True,
+                  allow_methods=["*"],
+                  allow_headers=["*"],
+                  expose_headers=["*"],
+              )
+          EOT
+          
+          # Create logger module
+          cat > /app/core/logger.py << 'EOT'
+          """
+          Logger Configuration Module
+          Created: 2025-06-17 03:53:49
+          Author: daparthi001
+          """
+          import logging
+          
+          # Configure logger
+          logger = logging.getLogger("quantumvestai_api")
+          
+          if not logger.handlers:
+              # Set logging level
+              logger.setLevel(logging.INFO)
+              
+              # Create console handler
+              handler = logging.StreamHandler()
+              handler.setLevel(logging.INFO)
+              
+              # Create formatter
+              formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+              handler.setFormatter(formatter)
+              
+              # Add handler to logger
+              logger.addHandler(handler)
+          EOT
+          
+          # Create config module
+          cat > /app/core/config.py << 'EOT'
+          """
+          Configuration Module
+          Created: 2025-06-17 03:53:49
+          Author: daparthi001
+          """
+          import os
+          from pydantic import BaseSettings
+          
+          class Settings(BaseSettings):
+              PROJECT_NAME: str = "QuantumVestAI API"
+              DESCRIPTION: str = "Stock Market Analysis and Investment Platform API"
+              VERSION: str = "0.1.0"
+              
+              # API Environment
+              API_ENV: str = os.getenv("API_ENV", "development")
+              
+              # Database settings
+              DB_HOST: str = os.getenv("DB_HOST")
+              DB_PORT: str = os.getenv("DB_PORT")
+              DB_NAME: str = os.getenv("DB_NAME")
+              DB_USER: str = os.getenv("DB_USER")
+              DB_PASSWORD: str = os.getenv("DB_PASSWORD")
+              
+              @property
+              def DATABASE_URL(self) -> str:
+                  """Construct PostgreSQL database URL from environment variables"""
+                  return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+          
+          # Create a global instance
+          settings = Settings()
+          EOT
+          
+          # Create main.py with updated configuration including auth router
+          cat > /app/api/main.py << 'EOT'
+          """
+          Main Application Module
+          Created: 2025-06-17 03:53:49
+          Author: daparthi001
+          """
+          import logging
+          from fastapi import FastAPI, Depends, Request
+          from sqlalchemy.orm import Session
+          from sqlalchemy import text
+          from datetime import datetime
+          
+          # Import components
+          from core.config import settings
+          from core.middleware import setup_middleware
+          from db.session import get_db, engine
+          from core.logger import logger
+          
+          # Create FastAPI application
+          app = FastAPI(
+              title=settings.PROJECT_NAME,
+              description=settings.DESCRIPTION,
+              version=settings.VERSION,
+              docs_url="/docs",
+              redoc_url="/redoc"
+          )
+          
+          # Setup middleware
+          setup_middleware(app)
+          
+          # Import routers
+          from api.routers.auth import router as auth_router
+          
+          # Include routers
+          app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
+          
+          @app.middleware("http")
+          async def log_requests(request: Request, call_next):
+              """Log all requests and responses"""
+              request_id = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}-{id(request)}"
+              
+              # Log the request
+              logger.info(f"Request [{request_id}] {request.method} {request.url.path}")
+              
+              # Process the request
+              start_time = datetime.utcnow()
+              response = await call_next(request)
+              duration = (datetime.utcnow() - start_time).total_seconds()
+              
+              # Log the response
+              logger.info(f"Response [{request_id}] {request.method} {request.url.path} - Status: {response.status_code} - Duration: {duration:.3f}s")
+              
+              return response
+          
+          @app.get("/")
+          async def root():
+              """API root endpoint"""
+              return {
+                  "name": settings.PROJECT_NAME,
+                  "version": settings.VERSION,
+                  "status": "online",
+                  "environment": settings.API_ENV,
+                  "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+              }
+          
+          @app.get("/health")
+          async def health_check():
+              """Health check endpoint"""
+              try:
+                  # Test database connection using text() wrapper
+                  with engine.connect() as conn:
+                      result = conn.execute(text("SELECT 1")).scalar()
+                      
+                  return {
+                      "status": "healthy",
+                      "database": {
+                          "status": "connected",
+                          "result": result
+                      },
+                      "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+                      "environment": settings.API_ENV
+                  }
+              except Exception as e:
+                  logger.error(f"Health check failed: {str(e)}")
+                  return {
+                      "status": "unhealthy",
+                      "database": {
+                          "status": "disconnected",
+                          "error": str(e)
+                      },
+                      "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+                      "environment": settings.API_ENV
+                  }
+          EOT
+          
+          echo "=== Starting FastAPI Application ==="
+          cd /app && uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
         env:
-        # Database configuration from secret
         - name: DB_HOST
           valueFrom:
             secretKeyRef:
@@ -137,36 +351,32 @@ spec:
             secretKeyRef:
               name: quantumvestai-cluster-rds-credentials
               key: password
-        
-        # Application configuration
         - name: PYTHONPATH
-          value: "/app"
+          value: /app
         - name: PYTHONUNBUFFERED
           value: "1"
         - name: API_ENV
-          value: "development"
-        
-        ports:
-        - containerPort: 8000
-        
+          value: development
         resources:
-          requests:
-            cpu: "250m"
-            memory: "512Mi"
           limits:
-            cpu: "500m"
-            memory: "1Gi"
-        
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 8000
-          initialDelaySeconds: 10
-          periodSeconds: 30
-        
+            cpu: 500m
+            memory: 1Gi
+          requests:
+            cpu: 250m
+            memory: 512Mi
         livenessProbe:
           httpGet:
             path: /health
             port: 8000
           initialDelaySeconds: 15
+          timeoutSeconds: 1
           periodSeconds: 60
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          timeoutSeconds: 1
+          periodSeconds: 30
+          failureThreshold: 3
