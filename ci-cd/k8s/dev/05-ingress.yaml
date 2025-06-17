@@ -1,28 +1,53 @@
-# Development Ingress
-# Created: 2025-05-20 06:14:34
-# Author: daparthi001
-
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: quantumvestai-ingress
+  name: quantumvestai-alb
   namespace: dev
-  labels:
-    environment: development
-    app: quantumvestai
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/group.name: quantumvestai
+    alb.ingress.kubernetes.io/healthcheck-path: /
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:921930869047:certificate/94eec8e0-cf9a-4184-8e27-2c3c845c390a
+    alb.ingress.kubernetes.io/success-codes: "200-399"
+  creationTimestamp: "2025-06-16T00:26:45Z"
+  finalizers:
+  - group.ingress.k8s.aws/quantumvestai
+  generation: 2
+  name: quantumvestai-alb
+  namespace: dev
+  resourceVersion: "13094897"
+  uid: 5abf5d7c-5f14-434c-84f9-b3ab3c6a9523
 spec:
   rules:
-    - host: dev-api.quantumvest.local
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: quantumvestai-api
-                port:
-                  number: 8000
+  - host: dev.quantumvestai.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: quantumvestai-dev-api
+            port:
+              number: 8000
+        path: /api
+        pathType: Prefix
+      - backend:
+          service:
+            name: quantumvestai-dev-api
+            port:
+              number: 8000
+        path: /auth
+        pathType: Prefix
+      - backend:
+          service:
+            name: ui-service
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+status:
+  loadBalancer:
+    ingress:
+    - hostname: k8s-quantumvestai-4c2477a64e-414685747.us-east-1.elb.amazonaws.com
