@@ -9,8 +9,8 @@
             <a href="/" class="auth-logo">
                 <img src="{{ url_for('static', path='/img/logo.svg') }}" alt="QuantumVestAI">
             </a>
-            <h1 class="auth-title">Sign In</h1>
-            <p class="auth-subtitle">Sign in to your account to continue</p>
+            <h1 class="auth-title">Welcome Back</h1>
+            <p class="auth-subtitle">Sign in to continue to QuantumVestAI</p>
         </div>
         
         {% if msg %}
@@ -21,12 +21,13 @@
         {% endif %}
         
         <div class="auth-body">
-            <form method="post" action="/login{% if next %}?next={{ next }}{% endif %}">
+            <form method="post" action="/login">
                 <div class="mb-3">
                     <label for="username" class="form-label">Username</label>
                     <input type="text" class="form-control" id="username" name="username" required autofocus>
                 </div>
-                <div class="mb-3">
+                
+                <div class="mb-4">
                     <label for="password" class="form-label">Password</label>
                     <div class="password-input">
                         <input type="password" class="form-control" id="password" name="password" required>
@@ -34,16 +35,16 @@
                             <i class="bi bi-eye"></i>
                         </button>
                     </div>
-                    <div class="d-flex justify-content-between mt-2">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="remember" name="remember">
-                            <label class="form-check-label" for="remember">Remember me</label>
-                        </div>
-                        <div>
-                            <a href="/password-reset" class="forgot-password">Forgot password?</a>
-                        </div>
-                    </div>
                 </div>
+                
+                <div class="mb-3 d-flex justify-content-between align-items-center">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                        <label class="form-check-label" for="remember">Remember me</label>
+                    </div>
+                    <a href="/forgot-password" class="text-reset small">Forgot Password?</a>
+                </div>
+                
                 <div class="d-grid">
                     <button type="submit" class="btn btn-primary">Sign In</button>
                 </div>
@@ -51,7 +52,7 @@
         </div>
         
         <div class="auth-footer">
-            <p class="text-center">Don't have an account? <a href="/register{% if next %}?next={{ next }}{% endif %}">Sign up</a></p>
+            <p class="text-center">Don't have an account? <a href="/register">Sign up</a></p>
         </div>
     </div>
 </div>
@@ -62,15 +63,15 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Password visibility toggle
         const toggleButton = document.querySelector('.password-toggle');
-        const passwordInput = document.querySelector('#password');
         
-        if (toggleButton && passwordInput) {
+        if (toggleButton) {
             toggleButton.addEventListener('click', function() {
-                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordInput.setAttribute('type', type);
+                const input = this.parentNode.querySelector('input');
+                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                input.setAttribute('type', type);
                 
                 // Toggle icon
-                const icon = toggleButton.querySelector('i');
+                const icon = this.querySelector('i');
                 icon.classList.toggle('bi-eye');
                 icon.classList.toggle('bi-eye-slash');
             });

@@ -1,129 +1,247 @@
 """
-QuantumVestAI API - Main Application Entry Point
-Created: 2025-05-19 03:43:23
+Main API Module
+Created: 2025-05-21 14:26:28
+Updated: 2025-06-17 00:30:50
 Author: daparthi001
 """
-import uvicorn
-from fastapi import FastAPI, Request
+import sys
+from pathlib import Path
+from fastapi import FastAPI, HTTPException, Request, Form, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-import logging
-from datetime import datetime
-from config.settings_wrapper import wrapped_settings as settings
-from api.core.config import settings
-from api.core.logging import setup_logging
-from api.core.middleware import (
-    rate_limit_middleware,
-    metrics_middleware,
-    request_id_middleware
-)
-from api.routers import (
+from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
+
+# Add parent directory to Python path
+sys.path.append(str(Path(__file__).parent.parent))
+
+# Import settings and logger first
+from core.config import settings
+from core.logger import logger
+
+# Then import database
+from db.session import engine, SessionLocal, get_db
+
+# Import middleware and routers
+from core.middleware import setup_middleware
+from routers import (
     auth,
-    users,
     stocks,
+    users,
     forecast,
     watchlist,
     admin,
     sentiment,
     data,
-    whitepaper,
-    websocket
+    whitepaper
 )
-
-# Setup logging
-logger = setup_logging()
-logger.info(f"Starting {settings.PROJECT_NAME} v{settings.VERSION}")
+from schemas.auth import RegisterRequest
 
 # Create FastAPI application
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    description="API for the QuantumVestAI trading platform",
     version=settings.VERSION,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    description="QuantumVestAI Stock Market Analysis Platform",
     docs_url=f"{settings.API_V1_STR}/docs",
     redoc_url=f"{settings.API_V1_STR}/redoc",
-    debug=settings.DEBUG
 )
 
-# Configure CORS
-if settings.BACKEND_CORS_ORIGINS:
-    logger.info("Configuring CORS middleware")
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+# Setup middleware
+setup_middleware(app)
 
-# Add custom middleware
-app.middleware("http")(request_id_middleware)
-app.middleware("http")(metrics_middleware)
-app.middleware("http")(rate_limit_middleware)
+# Attempt to mount static files if directory exists
+try:
+    app.mount("/static", StaticFiles(directory="ui/static"), name="static")
+except Exception as e:
+    logger.warning(f"Could not mount static files: {str(e)}")
 
-# Include API routers
-logger.info("Registering API routers")
-api_routers = [
-    (auth.router, "Authentication"),
-    (users.router, "User Management"),
-    (stocks.router, "Stock Data"),
-    (forecast.router, "Forecasting"),
-    (watchlist.router, "Watchlists"),
-    (admin.router, "Administration"),
-    (sentiment.router, "Sentiment Analysis"),
-    (data.router, "Data Management"),
-    (whitepaper.router, "Whitepapers"),
-    (websocket.router, "WebSocket")
+# Setup templates if directory exists
+templates_path = Path("ui/templates")
+if templates_path.exists() and templates_path.is_dir():
+    templates = Jinja2Templates(directory="ui/templates")
+else:
+    templates = None
+    logger.warning("Templates directory not found")
+
+logger.info(
+    "Starting %s version %s",
+    settings.PROJECT_NAME,
+    settings.VERSION
+)
+
+# Register all routers with API prefix
+API_ROUTERS = [
+    auth.router,
+    users.router,
+    stocks.router,
+    forecast.router,
+    watchlist.router,
+    admin.router,
+    sentiment.router,
+    data.router,
+    whitepaper.router
 ]
 
-for router, description in api_routers:
-    logger.debug(f"Registering router: {description}")
+for router in API_ROUTERS:
     app.include_router(
         router,
-        prefix=settings.API_V1_STR,
-        tags=[description]
+        prefix=f"{settings.API_V1_STR}"
     )
+    logger.debug(f"Registered router: {router.prefix} at {settings.API_V1_STR}{router.prefix}")
+
+# Register specific non-prefixed routes for web app integration
+@app.get("/register")
+async def register_page(request: Request, msg: str = None):
+    """Serve registration page"""
+    if templates:
+        try:
+            return templates.TemplateResponse(
+                "register.html", 
+                {"request": request, "msg": msg}
+            )
+        except Exception as e:
+            logger.error(f"Could not render template: {str(e)}")
+    
+    # If templates not available, redirect to API endpoint
+    return RedirectResponse(url=f"{settings.API_V1_STR}/auth/register" + 
+                          (f"?next={request.query_params.get('next', '/')}" 
+                           if "next" in request.query_params else ""))
+
+@app.post("/register")
+async def process_registration(
+    request: Request,
+    username: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    confirm_password: str = Form(...),
+    terms: bool = Form(False),
+    db: Session = Depends(get_db)
+):
+    """Process registration form submission"""
+    # Validate inputs
+    if password != confirm_password:
+        if templates:
+            return templates.TemplateResponse(
+                "register.html", 
+                {
+                    "request": request, 
+                    "msg": "Passwords do not match"
+                },
+                status_code=400
+            )
+    
+    if not terms:
+        if templates:
+            return templates.TemplateResponse(
+                "register.html", 
+                {
+                    "request": request, 
+                    "msg": "You must accept the Terms of Service"
+                },
+                status_code=400
+            )
+    
+    try:
+        # Create registration data
+        user_data = RegisterRequest(
+            username=username,
+            email=email,
+            password=password,
+            full_name=username  # Default to username as full name
+        )
+        
+        # Call API register function
+        result = await auth.register(request, user_data, db)
+        
+        # Redirect to login with success message
+        next_url = request.query_params.get("next", "/login")
+        return RedirectResponse(
+            url=f"{next_url}?msg=Registration+successful!+Please+log+in.",
+            status_code=303
+        )
+    
+    except Exception as e:
+        # Handle errors
+        logger.error(f"Registration error: {str(e)}")
+        
+        if templates:
+            return templates.TemplateResponse(
+                "register.html", 
+                {
+                    "request": request, 
+                    "msg": str(e)
+                },
+                status_code=400
+            )
+        else:
+            return JSONResponse(
+                status_code=400,
+                content={"error": str(e)}
+            )
+
+@app.get("/signup")
+async def signup_page(request: Request):
+    """Serve signup page or redirect to registration page"""
+    return RedirectResponse(url="/register" + 
+                           (f"?next={request.query_params.get('next')}" 
+                            if "next" in request.query_params else ""))
+
+# Add root route handler
+@app.get("/")
+async def root():
+    """
+    Root endpoint - redirects to API documentation
+    """
+    return RedirectResponse(url=f"{settings.API_V1_STR}/docs")
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "version": settings.VERSION,
-        "timestamp": "2025-05-19 03:43:23",
-        "author": "daparthi001",
-        "environment": settings.ENVIRONMENT,
-        "uptime": "System uptime will be added here"
+        "timestamp": "2025-06-17 00:30:50",
+        "version": settings.VERSION
     }
 
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    """Global exception handler"""
-    logger.error(
-        f"Unhandled exception: {str(exc)}",
-        exc_info=True,
-        extra={
-            "path": request.url.path,
-            "method": request.method,
-            "headers": dict(request.headers),
-        }
-    )
+# Error handling
+@app.exception_handler(404)
+async def not_found_exception_handler(request: Request, exc: HTTPException):
+    """Handle 404 errors"""
+    if templates:
+        try:
+            return templates.TemplateResponse(
+                "404.html", 
+                {"request": request, "path": request.url.path},
+                status_code=404
+            )
+        except Exception as e:
+            logger.error(f"Could not render template: {str(e)}")
+    
     return JSONResponse(
-        status_code=500,
+        status_code=404,
         content={
-            "detail": "Internal server error",
-            "timestamp": datetime.utcnow().isoformat(),
-            "path": request.url.path
+            "message": "The requested resource was not found",
+            "path": request.url.path,
+            "timestamp": "2025-06-17 00:30:50"
         }
     )
 
-if __name__ == "__main__":
-    logger.info(f"Starting {settings.PROJECT_NAME} on http://0.0.0.0:8000")
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=settings.DEBUG,
-        log_level=settings.LOG_LEVEL.lower(),
-        access_log=True
-    )
+# Add startup event to verify database connection
+@app.on_event("startup")
+async def startup_event():
+    """Verify database connection on startup"""
+    try:
+        # Test database connection
+        with engine.connect() as conn:
+            conn.execute("SELECT 1")
+        logger.info("Database connection verified")
+    except Exception as e:
+        logger.error("Database connection failed: %s", str(e))
+        raise
+
+# Log application startup complete
+logger.info(
+    "Application startup complete - %s v%s",
+    settings.PROJECT_NAME,
+    settings.VERSION
+)
