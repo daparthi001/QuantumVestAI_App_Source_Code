@@ -137,6 +137,8 @@ spec:
             secretKeyRef:
               name: quantumvestai-cluster-rds-credentials
               key: password
+        - name: API_URL
+          value: "http://quantumvestai-dev-api.dev.svc.cluster.local:8000"
         
         # Application configuration
         - name: PYTHONPATH

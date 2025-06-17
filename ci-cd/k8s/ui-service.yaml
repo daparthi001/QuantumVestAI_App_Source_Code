@@ -19,8 +19,8 @@ spec:
     tier: frontend
     environment: development
   ports:
-  - name: http
-    port: 80
-    targetPort: 3000
-    protocol: TCP
+    - name: http
+      port: 80       # The port this service exposes internally
+      targetPort: 3000 # The container port your UI app listens on
+      protocol: TCP
   type: ClusterIP
