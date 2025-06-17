@@ -1,7 +1,7 @@
 """
 Main Application Entry Point
 Created: 2025-06-17 00:07:14
-Updated: 2025-06-17 02:44:21
+Updated: 2025-06-17 02:56:44
 Author: daparthi001
 """
 import sys
@@ -14,6 +14,7 @@ from fastapi.templating import Jinja2Templates
 import uvicorn
 import httpx
 from datetime import datetime
+from sqlalchemy import text
 
 # Add API directory to Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), "api"))
@@ -22,7 +23,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "api"))
 from api.main import app as api_app
 from core.config import settings
 from core.logger import logger
-from db.session import get_db
+from db.session import engine, get_db
 from routers.auth import register as api_register
 
 # Create frontend application
@@ -174,11 +175,54 @@ async def login_page(request: Request):
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    return {
-        "status": "healthy",
-        "timestamp": "2025-06-17 02:44:21",
-        "version": settings.VERSION
+    health_data = {
+        "ui": {
+            "status": "healthy",
+            "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        },
+        "api": {
+            "status": "healthy",
+            "database": {
+                "status": "connected"
+            },
+            "environment": settings.ENVIRONMENT
+        }
     }
+    
+    # Check database connection
+    try:
+        # Use text() to explicitly wrap the SQL query as required in the error message
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        
+        # No exception means database is connected
+    except Exception as e:
+        health_data["api"]["status"] = "unhealthy"
+        health_data["api"]["database"]["status"] = "disconnected"
+        health_data["api"]["database"]["error"] = str(e)
+    
+    # Return health status
+    return health_data
+
+# Add startup event to verify database connection
+@app.on_event("startup")
+async def startup_event():
+    """Verify database connection on startup"""
+    try:
+        # Test database connection with properly wrapped SQL query
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        logger.info("Database connection verified")
+    except Exception as e:
+        logger.error("Database connection failed: %s", str(e))
+        # Don't raise exception here to allow app to start even with DB issues
+
+# Log application startup complete
+logger.info(
+    "API startup complete - %s v%s",
+    settings.PROJECT_NAME,
+    settings.VERSION
+)
 
 if __name__ == "__main__":
     # Use the PORT from settings
