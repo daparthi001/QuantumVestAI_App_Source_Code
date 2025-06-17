@@ -1,7 +1,7 @@
 """
 Main Application Entry Point
 Created: 2025-06-17 00:07:14
-Updated: 2025-06-17 02:30:15
+Updated: 2025-06-17 02:44:21
 Author: daparthi001
 """
 import sys
@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import uvicorn
 import httpx
+from datetime import datetime
 
 # Add API directory to Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), "api"))
@@ -39,6 +40,16 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Configure templates
 templates = Jinja2Templates(directory="templates")
+
+# Get API base URL based on environment
+def get_api_base_url():
+    """Get the base URL for API calls based on environment"""
+    # Default to same-process localhost
+    api_host = getattr(settings, "API_HOST", "localhost")
+    api_port = getattr(settings, "API_PORT", getattr(settings, "PORT", 8000))
+    api_scheme = getattr(settings, "API_SCHEME", "http")
+    
+    return f"{api_scheme}://{api_host}:{api_port}"
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
@@ -107,18 +118,26 @@ async def auth_register_proxy(request: Request):
         # Extract the request body
         body = await request.json()
         
-        # Forward to API endpoint - using direct internal URL
-        # This assumes both UI and API are running in the same process
+        # Get API base URL
+        api_base = get_api_base_url()
+        api_url = f"{api_base}/api/auth/register"
+        
+        # Log the proxy attempt
+        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        logger.info(f"[{now}] Proxying /auth/register request to {api_url}")
+        
+        # Forward to API endpoint
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"http://localhost:{settings.PORT}/api/auth/register", 
+                api_url, 
                 json=body,
                 headers={k: v for k, v in request.headers.items() 
-                        if k.lower() not in ["host", "content-length"]}
+                        if k.lower() not in ["host", "content-length"]},
+                timeout=10.0  # Add timeout for better error handling
             )
             
-            # Log the proxy operation
-            logger.info(f"Proxied /auth/register request to API - Status: {response.status_code}")
+            # Log the proxy result
+            logger.info(f"Proxied /auth/register request - Status: {response.status_code}")
             
             # Return the API response directly
             return Response(
@@ -126,9 +145,15 @@ async def auth_register_proxy(request: Request):
                 status_code=response.status_code,
                 headers=dict(response.headers)
             )
+    except httpx.TimeoutException:
+        logger.error(f"Timeout while proxying to /auth/register")
+        raise HTTPException(status_code=504, detail="Request to authentication service timed out")
+    except httpx.HTTPError as e:
+        logger.error(f"HTTP error while proxying to /auth/register: {str(e)}")
+        raise HTTPException(status_code=502, detail=f"Error communicating with authentication service")
     except Exception as e:
         logger.error(f"Proxy to /auth/register failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Registration proxy failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Registration proxy failed")
 
 @app.get("/auth/register")
 async def auth_register_get_proxy(request: Request):
@@ -151,7 +176,7 @@ async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "timestamp": "2025-06-17 02:30:15",
+        "timestamp": "2025-06-17 02:44:21",
         "version": settings.VERSION
     }
 
