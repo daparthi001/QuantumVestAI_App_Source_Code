@@ -1,12 +1,12 @@
 """
-Authentication Routes for QuantumVestAI
+Authentication Routes for QuantumVestAI - Fixed
 Created: 2025-05-19 03:44:39
 Author: daparthi001
-Updated: 2025-06-16 22:34:00 by daparthi001
+Updated: 2025-06-17 16:20:02 by daparthi001yes
 """
 from fastapi import APIRouter, Request, HTTPException, Depends, Form, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
@@ -43,8 +43,8 @@ except Exception as e:
     # Fallback to a basic path
     templates = Jinja2Templates(directory="templates")
 
-# OAuth2 scheme for token handling - FIXED: Changed the tokenUrl to match the actual route
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+# OAuth2 scheme for token handling
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 # Mock user database - replace with actual database in production
 USERS_DB = {
@@ -135,11 +135,17 @@ async def login_page(request: Request, next: str = "/"):
         {"request": request, "next": next}
     )
 
-# Route to handle token requests for API authentication
-@router.post("/token")
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+# Route for API token requests
+@router.post("/auth/token")
+async def login_for_access_token(
+    request: Request,
+    form_data: OAuth2PasswordRequestForm = Depends()
+):
+    logger.info(f"Token request for username: {form_data.username}")
+    
     user = authenticate_user(form_data.username, form_data.password)
     if not user:
+        logger.warning(f"Failed token request for username: {form_data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -151,28 +157,28 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         data={"sub": user["username"]}, expires_delta=access_token_expires
     )
     
+    logger.info(f"Token generated for user: {form_data.username}")
     return {"access_token": access_token, "token_type": "bearer"}
 
-# Route to handle form-based login from the UI
-@router.post("/login")
+# Route to handle form-based login from the UI 
+@router.post("/auth/login")
 async def login_post(
     request: Request,
     username: str = Form(...),
     password: str = Form(...),
     remember: bool = Form(False),
-    next: str = "/"
 ):
+    logger.info(f"Login attempt for username: {username}")
+    
     user = authenticate_user(username, password)
     if not user:
         logger.warning(f"Failed login attempt for username: {username}")
-        return templates.TemplateResponse(
-            "login.html",
-            {
-                "request": request, 
-                "msg": "Incorrect username or password", 
-                "next": next
-            },
-            status_code=status.HTTP_401_UNAUTHORIZED
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "detail": "Incorrect username or password"
+            }
         )
         
     # Set token expiration based on "remember me" option
@@ -186,7 +192,7 @@ async def login_post(
     )
     
     # Create response with redirect
-    response = RedirectResponse(url=next, status_code=status.HTTP_302_FOUND)
+    response = RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
     
     # Set cookie with token
     max_age = 30 * 24 * 60 * 60 if remember else None  # 30 days in seconds or session cookie
@@ -202,12 +208,74 @@ async def login_post(
     logger.info(f"User {username} successfully logged in")
     return response
 
+# Route to handle the OPTIONS request for CORS
+@router.options("/auth/login")
+async def options_login(response: Response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return {}
+
 # Route for logout
 @router.get("/logout")
 async def logout():
     response = RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
     response.delete_cookie(key="access_token")
     return response
+
+# Route for registration page
+@router.get("/register", response_class=HTMLResponse)
+async def register_page(request: Request):
+    return templates.TemplateResponse(
+        "register.html", 
+        {"request": request}
+    )
+
+# Route for handling registration
+@router.post("/register")
+async def register_post(
+    request: Request,
+    username: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    confirm_password: str = Form(...),
+):
+    # Check if passwords match
+    if password != confirm_password:
+        return templates.TemplateResponse(
+            "register.html",
+            {
+                "request": request, 
+                "msg": "Passwords don't match", 
+                "username": username,
+                "email": email
+            },
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
+        )
+    
+    # Check if username already exists
+    if username in USERS_DB:
+        return templates.TemplateResponse(
+            "register.html",
+            {
+                "request": request, 
+                "msg": "Username already registered", 
+                "email": email
+            },
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
+        )
+    
+    # In production, save user to database
+    # For now, just redirect to login page with success message
+    logger.info(f"New user registered: {username}")
+    
+    return templates.TemplateResponse(
+        "login.html",
+        {
+            "request": request,
+            "msg": "Registration successful! Please sign in with your new account."
+        }
+    )
 
 # Route for password reset request
 @router.get("/password-reset", response_class=HTMLResponse)

@@ -1,15 +1,14 @@
 """
-Authentication Router
+Authentication Router - Fixed Version
 Created: 2025-05-20 04:43:53
-Updated: 2025-06-16 23:54:39
-Author: daparthi001
+Updated: 2025-06-17 16:20:02
+Author: daparthi001yes
 """
-from fastapi import APIRouter, Depends, Body, Response, status, Request
+from fastapi import APIRouter, Depends, Response, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
-from typing import Dict, Any, Optional
+from fastapi.responses import JSONResponse
 
 from core.config import settings
 from core.security import (
@@ -25,9 +24,7 @@ from schemas.auth import (
     TokenResponse,
     LoginResponse,
     RegisterRequest,
-    RegisterResponse,
-    PasswordChangeRequest,
-    PasswordResetRequest
+    RegisterResponse
 )
 
 router = APIRouter(
@@ -86,6 +83,51 @@ async def login(
         "user": user
     }
 
+# Add a new endpoint to handle OPTIONS requests for CORS
+@router.options(
+    "/login",
+    status_code=200,
+    summary="CORS preflight for login",
+    description="Handles CORS preflight requests for login endpoint"
+)
+async def options_login(response: Response):
+    """Handle CORS preflight requests for login."""
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Max-Age"] = "86400"
+    return {}
+
+@router.post(
+    "/token",
+    response_model=TokenResponse,
+    summary="Get access token",
+    description="OAuth2 compatible token endpoint for API clients"
+)
+async def get_token(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+) -> TokenResponse:
+    """OAuth2 compatible token endpoint."""
+    user = db.query(User).filter(User.username == form_data.username).first()
+    
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        raise AuthenticationError("Incorrect username or password")
+    
+    if not user.is_active:
+        raise AuthenticationError("Inactive user")
+    
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username, "role": user.role},
+        expires_delta=access_token_expires
+    )
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
+
 @router.post(
     "/register",
     response_model=RegisterResponse,
@@ -115,7 +157,8 @@ async def register(
         hashed_password=get_password_hash(user_data.password),
         role="free",
         created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow()
+        updated_at=datetime.utcnow(),
+        is_active=True  # Make sure user is active by default
     )
     
     db.add(db_user)
@@ -131,6 +174,21 @@ async def register(
         "created_at": db_user.created_at.isoformat(),
         "redirect_url": next_url
     }
+
+# Add OPTIONS support for register endpoint as well
+@router.options(
+    "/register",
+    status_code=200,
+    summary="CORS preflight for register",
+    description="Handles CORS preflight requests for register endpoint"
+)
+async def options_register(response: Response):
+    """Handle CORS preflight requests for register."""
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Max-Age"] = "86400"
+    return {}
 
 @router.post(
     "/signup",

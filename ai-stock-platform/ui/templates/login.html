@@ -21,7 +21,7 @@
         {% endif %}
         
         <div class="auth-body">
-            <form method="post" action="/login">
+            <form method="post" action="/auth/login" id="loginForm">
                 <div class="mb-3">
                     <label for="username" class="form-label">Username</label>
                     <input type="text" class="form-control" id="username" name="username" required autofocus>
@@ -74,6 +74,106 @@
                 const icon = this.querySelector('i');
                 icon.classList.toggle('bi-eye');
                 icon.classList.toggle('bi-eye-slash');
+            });
+        }
+
+        // Handle login form submission with fetch API
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                const remember = document.getElementById('remember').checked;
+                
+                try {
+                    // Show loading indicator if available
+                    const submitButton = this.querySelector('button[type="submit"]');
+                    if (submitButton) {
+                        submitButton.disabled = true;
+                        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Signing in...';
+                    }
+                    
+                    const formData = new FormData();
+                    formData.append('username', username);
+                    formData.append('password', password);
+                    formData.append('remember', remember);
+                    
+                    const response = await fetch('/auth/login', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                        return;
+                    }
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        // Store token in localStorage
+                        if (data.access_token) {
+                            localStorage.setItem('auth_token', data.access_token);
+                        }
+                        
+                        // Redirect to dashboard or next parameter
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const nextUrl = urlParams.get('next') || '/dashboard';
+                        window.location.href = nextUrl;
+                    } else {
+                        const errorData = await response.json();
+                        // Show error message
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                        alertDiv.role = 'alert';
+                        alertDiv.innerHTML = errorData.detail || 'Login failed. Please check your credentials.';
+                        
+                        const closeButton = document.createElement('button');
+                        closeButton.type = 'button';
+                        closeButton.className = 'btn-close';
+                        closeButton.setAttribute('data-bs-dismiss', 'alert');
+                        closeButton.setAttribute('aria-label', 'Close');
+                        
+                        alertDiv.appendChild(closeButton);
+                        
+                        const authHeader = document.querySelector('.auth-header');
+                        authHeader.insertAdjacentElement('afterend', alertDiv);
+                        
+                        // Re-enable button
+                        if (submitButton) {
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = 'Sign In';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    
+                    // Show error message
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                    alertDiv.role = 'alert';
+                    alertDiv.innerHTML = 'An error occurred during login. Please try again.';
+                    
+                    const closeButton = document.createElement('button');
+                    closeButton.type = 'button';
+                    closeButton.className = 'btn-close';
+                    closeButton.setAttribute('data-bs-dismiss', 'alert');
+                    closeButton.setAttribute('aria-label', 'Close');
+                    
+                    alertDiv.appendChild(closeButton);
+                    
+                    const authHeader = document.querySelector('.auth-header');
+                    authHeader.insertAdjacentElement('afterend', alertDiv);
+                    
+                    // Re-enable button
+                    const submitButton = this.querySelector('button[type="submit"]');
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = 'Sign In';
+                    }
+                }
             });
         }
     });
