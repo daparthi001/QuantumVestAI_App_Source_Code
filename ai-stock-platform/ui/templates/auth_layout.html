@@ -10,8 +10,48 @@
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
     
-    <!-- Custom CSS -->
+    <!-- Custom CSS - Use CDN fallback if local fails -->
     <link rel="stylesheet" href="{{ url_for('static', path='/css/auth.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/daparthi001/quantumvestai@main/auth.css">
+    
+    <!-- Inline CSS as last resort -->
+    <style>
+        .auth-page {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .auth-container {
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+        }
+        .auth-card {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .password-input {
+            position: relative;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            color: #6c757d;
+        }
+    </style>
     
     {% block extra_css %}{% endblock %}
 </head>
