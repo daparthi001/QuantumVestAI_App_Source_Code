@@ -1,0 +1,606 @@
+{% extends "base.html" %}
+
+{% block title %}{{ stock.ticker }} Stock | QuantumVestAI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/stock-detail.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Stock Header -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="d-flex align-items-center mb-2">
+                {% if stock.details.logo_url %}
+                <img src="{{ stock.details.logo_url }}" alt="{{ stock.ticker }}" class="company-logo me-3" width="40" height="40">
+                {% else %}
+                <div class="stock-icon me-3">{{ stock.ticker[0] }}</div>
+                {% endif %}
+                <h2 class="mb-0">{{ stock.details.name }}</h2>
+                <span class="ticker-symbol ms-2">({{ stock.ticker }})</span>
+            </div>
+            <p class="text-muted">{{ stock.details.sector }} • {{ stock.details.industry }}</p>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+            <div class="action-buttons">
+                {% if stock.in_watchlist %}
+                <form action="/watchlist/remove" method="post" class="d-inline">
+                    <input type="hidden" name="ticker" value="{{ stock.ticker }}">
+                    <button type="submit" class="btn btn-outline-warning">
+                        <i class="fas fa-star"></i> In Watchlist
+                    </button>
+                </form>
+                {% else %}
+                <form action="/stock/{{ stock.ticker }}/add-to-watchlist" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="far fa-star"></i> Add to Watchlist
+                    </button>
+                </form>
+                {% endif %}
+                
+                <div class="btn-group ms-2">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="fas fa-chart-line"></i> Trade
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/trade/buy/{{ stock.ticker }}">Buy</a></li>
+                        <li><a class="dropdown-item" href="/trade/sell/{{ stock.ticker }}">Sell</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Price and Chart -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    {% if stock.price and stock.price.status != 'unavailable' %}
+                    <div class="current-price mb-2">
+                        <h1 class="mb-0">${{ stock.price.current | round(2) }}</h1>
+                        <div class="change {% if stock.price.change_percent > 0 %}text-success{% elif stock.price.change_percent < 0 %}text-danger{% endif %}">
+                            {{ stock.price.change | round(2) }} ({{ stock.price.change_percent | round(2) }}%)
+                            {% if stock.price.change_percent > 0 %}
+                            <i class="fas fa-caret-up"></i>
+                            {% elif stock.price.change_percent < 0 %}
+                            <i class="fas fa-caret-down"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="trading-info">
+                        <div class="row mb-2">
+                            <div class="col-6">
+                                <div class="text-muted small">Open</div>
+                                <div>${{ stock.price.open | round(2) }}</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted small">Prev Close</div>
+                                <div>${{ stock.price.prev_close | round(2) }}</div>
+                            </div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-6">
+                                <div class="text-muted small">Day Range</div>
+                                <div>${{ stock.price.day_low | round(2) }} - {{ stock.price.day_high | round(2) }}</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted small">52w Range</div>
+                                <div>${{ stock.price.year_low | round(2) }} - {{ stock.price.year_high | round(2) }}</div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="text-muted small">Volume</div>
+                                <div>{{ stock.price.volume | format_number }}</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted small">Market Cap</div>
+                                <div>{{ stock.details.market_cap | format_market_cap }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        Price data is currently unavailable
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Price Chart</h5>
+                    <div class="btn-group btn-group-sm timeframe-selector">
+                        <a href="/stock/{{ stock.ticker }}?timeframe=1d" class="btn btn-outline-primary {% if stock.timeframe == '1d' %}active{% endif %}">1D</a>
+                        <a href="/stock/{{ stock.ticker }}?timeframe=1w" class="btn btn-outline-primary {% if stock.timeframe == '1w' %}active{% endif %}">1W</a>
+                        <a href="/stock/{{ stock.ticker }}?timeframe=1m" class="btn btn-outline-primary {% if stock.timeframe == '1m' %}active{% endif %}">1M</a>
+                        <a href="/stock/{{ stock.ticker }}?timeframe=3m" class="btn btn-outline-primary {% if stock.timeframe == '3m' %}active{% endif %}">3M</a>
+                        <a href="/stock/{{ stock.ticker }}?timeframe=1y" class="btn btn-outline-primary {% if stock.timeframe == '1y' %}active{% endif %}">1Y</a>
+                        <a href="/stock/{{ stock.ticker }}?timeframe=5y" class="btn btn-outline-primary {% if stock.timeframe == '5y' %}active{% endif %}">5Y</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="price-chart-container" style="height: 300px;">
+                        <canvas id="priceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AI Forecast & Analysis -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-robot text-primary me-2"></i>AI Forecast
+                    </h5>
+                    <div class="d-flex align-items-center">
+                        <div class="me-2">
+                            <span class="small me-1">Forecast days:</span>
+                            <div class="btn-group btn-group-sm">
+                                <a href="/stock/{{ stock.ticker }}?forecast_days=7" class="btn btn-outline-primary {% if stock.forecast_days == 7 %}active{% endif %}">7</a>
+                                <a href="/stock/{{ stock.ticker }}?forecast_days=14" class="btn btn-outline-primary {% if stock.forecast_days == 14 %}active{% endif %}">14</a>
+                                <a href="/stock/{{ stock.ticker }}?forecast_days=30" class="btn btn-outline-primary {% if stock.forecast_days == 30 %}active{% endif %}">30</a>
+                            </div>
+                        </div>
+                        <a href="/forecast/{{ stock.ticker }}" class="btn btn-sm btn-primary">Advanced Analysis</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if stock.forecast and stock.forecast.status != 'unavailable' %}
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <div class="forecast-summary mb-3">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="text-muted">Current Price</div>
+                                        <h4>${{ stock.forecast.current_price | round(2) }}</h4>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="text-muted">Forecast Price</div>
+                                        <h4>${{ stock.forecast.forecast_price | round(2) }}</h4>
+                                    </div>
+                                </div>
+                                
+                                <div class="forecast-change mt-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span>Forecast Change</span>
+                                        <span class="badge {% if stock.forecast.change_percent > 5 %}bg-success{% elif stock.forecast.change_percent > 2 %}bg-primary{% elif stock.forecast.change_percent > 0 %}bg-info{% elif stock.forecast.change_percent > -3 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ stock.forecast.change_percent | round(2) }}%
+                                        </span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar {% if stock.forecast.change_percent > 0 %}bg-success{% else %}bg-danger{% endif %}" 
+                                             role="progressbar" 
+                                             style="width: {{ stock.forecast.change_percent | abs | min(20) * 5 }}%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="forecast-confidence mt-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span>Model Confidence</span>
+                                        <span class="badge {% if stock.forecast.confidence >= 70 %}bg-success{% elif stock.forecast.confidence >= 50 %}bg-primary{% else %}bg-warning{% endif %}">
+                                            {{ stock.forecast.confidence }}%
+                                        </span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar {% if stock.forecast.confidence >= 70 %}bg-success{% elif stock.forecast.confidence >= 50 %}bg-primary{% else %}bg-warning{% endif %}" 
+                                             role="progressbar" 
+                                             style="width: {{ stock.forecast.confidence }}%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="forecast-signal mt-4">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>AI Recommendation</span>
+                                    </div>
+                                    <div class="recommendation-badge my-2 p-3 text-center rounded 
+                                        {% if stock.forecast.signal == 'Strong Buy' %}bg-success text-white{% 
+                                        elif stock.forecast.signal == 'Buy' %}bg-primary text-white{% 
+                                        elif stock.forecast.signal == 'Hold' %}bg-info text-white{% 
+                                        elif stock.forecast.signal == 'Sell' %}bg-warning{% 
+                                        else %}bg-danger text-white{% endif %}">
+                                        <h4 class="mb-0">{{ stock.forecast.signal }}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-8">
+                            <div class="forecast-chart-container" style="height: 300px;">
+                                <canvas id="forecastChart"></canvas>
+                            </div>
+                            
+                            {% if stock.sentiment and stock.sentiment.status != 'unavailable' %}
+                            <div class="sentiment-summary mt-3">
+                                <h6>Sentiment Analysis</h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="sentiment-card p-2 text-center rounded bg-light">
+                                            <div class="small text-muted mb-1">News Sentiment</div>
+                                            <div class="sentiment-score 
+                                                {% if stock.sentiment.news_score > 0.7 %}text-success{% 
+                                                elif stock.sentiment.news_score > 0.4 %}text-primary{% 
+                                                elif stock.sentiment.news_score > -0.4 %}text-muted{% 
+                                                elif stock.sentiment.news_score > -0.7 %}text-warning{% 
+                                                else %}text-danger{% endif %}">
+                                                {{ stock.sentiment.news_score | format_sentiment }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="sentiment-card p-2 text-center rounded bg-light">
+                                            <div class="small text-muted mb-1">Social Sentiment</div>
+                                            <div class="sentiment-score 
+                                                {% if stock.sentiment.social_score > 0.7 %}text-success{% 
+                                                elif stock.sentiment.social_score > 0.4 %}text-primary{% 
+                                                elif stock.sentiment.social_score > -0.4 %}text-muted{% 
+                                                elif stock.sentiment.social_score > -0.7 %}text-warning{% 
+                                                else %}text-danger{% endif %}">
+                                                {{ stock.sentiment.social_score | format_sentiment }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="sentiment-card p-2 text-center rounded bg-light">
+                                            <div class="small text-muted mb-1">Overall Sentiment</div>
+                                            <div class="sentiment-score 
+                                                {% if stock.sentiment.overall_score > 0.7 %}text-success{% 
+                                                elif stock.sentiment.overall_score > 0.4 %}text-primary{% 
+                                                elif stock.sentiment.overall_score > -0.4 %}text-muted{% 
+                                                elif stock.sentiment.overall_score > -0.7 %}text-warning{% 
+                                                else %}text-danger{% endif %}">
+                                                {{ stock.sentiment.overall_score | format_sentiment }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="forecast-insight mt-3">
+                        <h6>AI Insights</h6>
+                        <p>{{ stock.forecast.insight }}</p>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i> 
+                        Forecast data is currently unavailable
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Company Info & Financials -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">Company Information</h5>
+                </div>
+                <div class="card-body">
+                    {% if stock.details %}
+                    <p>{{ stock.details.description }}</p>
+                    
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <div class="company-info-item">
+                                <div class="text-muted small">CEO</div>
+                                <div>{{ stock.details.ceo }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="company-info-item">
+                                <div class="text-muted small">Employees</div>
+                                <div>{{ stock.details.employees | format_number }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="company-info-item">
+                                <div class="text-muted small">Headquarters</div>
+                                <div>{{ stock.details.headquarters }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="company-info-item">
+                                <div class="text-muted small">Founded</div>
+                                <div>{{ stock.details.founded }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="company-info-item">
+                                <div class="text-muted small">Exchange</div>
+                                <div>{{ stock.details.exchange }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="company-info-item">
+                                <div class="text-muted small">Website</div>
+                                <div><a href="{{ stock.details.website }}" target="_blank">{{ stock.details.website | replace('https://', '') | replace('http://', '') }}</a></div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        Company information is currently unavailable
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">Key Financials</h5>
+                </div>
+                <div class="card-body">
+                    {% if stock.details and stock.details.financials %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="financial-item">
+                                <div class="text-muted small">P/E Ratio</div>
+                                <div>{{ stock.details.financials.pe_ratio | round(2) }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="financial-item">
+                                <div class="text-muted small">EPS</div>
+                                <div>${{ stock.details.financials.eps | round(2) }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="financial-item">
+                                <div class="text-muted small">Dividend Yield</div>
+                                <div>{{ stock.details.financials.dividend_yield | round(2) }}%</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="financial-item">
+                                <div class="text-muted small">52 Week Change</div>
+                                <div class="{% if stock.details.financials.year_change > 0 %}text-success{% elif stock.details.financials.year_change < 0 %}text-danger{% endif %}">
+                                    {{ stock.details.financials.year_change | round(2) }}%
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="financial-item">
+                                <div class="text-muted small">Revenue (TTM)</div>
+                                <div>{{ stock.details.financials.revenue | format_market_cap }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="financial-item">
+                                <div class="text-muted small">Profit Margin</div>
+                                <div>{{ stock.details.financials.profit_margin | round(2) }}%</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="financial-item">
+                                <div class="text-muted small">Beta</div>
+                                <div>{{ stock.details.financials.beta | round(2) }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="financial-item">
+                                <div class="text-muted small">Average Volume</div>
+                                <div>{{ stock.details.financials.avg_volume | format_number }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h6 class="mb-3">Quarterly Results</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Quarter</th>
+                                    <th>Revenue</th>
+                                    <th>EPS</th>
+                                    <th>Surprise</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for quarter in stock.details.financials.quarterly %}
+                                <tr>
+                                    <td>{{ quarter.date }}</td>
+                                    <td>{{ quarter.revenue | format_market_cap }}</td>
+                                    <td>${{ quarter.eps | round(2) }}</td>
+                                    <td class="{% if quarter.surprise > 0 %}text-success{% elif quarter.surprise < 0 %}text-danger{% endif %}">
+                                        {{ quarter.surprise }}%
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        Financial data is currently unavailable
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Price Chart
+    {% if stock.price and stock.price.status != 'unavailable' and stock.price.history %}
+    const priceCtx = document.getElementById('priceChart').getContext('2d');
+    const priceData = {{ stock.price.history | tojson }};
+    
+    const priceChart = new Chart(priceCtx, {
+        type: 'line',
+        data: {
+            labels: priceData.map(item => item.date),
+            datasets: [{
+                label: '{{ stock.ticker }} Price',
+                data: priceData.map(item => item.close),
+                borderColor: 'rgba(13, 110, 253, 1)',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                borderWidth: 2,
+                tension: 0.1,
+                fill: true,
+                pointRadius: 0,
+                pointHoverRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += new Intl.NumberFormat('en-US', {
+                                    style: 'currency',
+                                    currency: 'USD'
+                                }).format(context.parsed.y);
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toFixed(2);
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        maxTicksLimit: 10
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+    
+    // Forecast Chart
+    {% if stock.forecast and stock.forecast.status != 'unavailable' and stock.forecast.data %}
+    const forecastCtx = document.getElementById('forecastChart').getContext('2d');
+    const forecastData = {{ stock.forecast.data | tojson }};
+    
+    // Split data into historical and forecast
+    const splitIndex = forecastData.findIndex(d => d.type === 'forecast');
+    const historicalData = forecastData.slice(0, splitIndex);
+    const futureData = forecastData.slice(splitIndex - 1); // Include overlap point
+    
+    const forecastChart = new Chart(forecastCtx, {
+        type: 'line',
+        data: {
+            datasets: [
+                {
+                    label: 'Historical',
+                    data: historicalData.map(item => ({
+                        x: item.date,
+                        y: item.price
+                    })),
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    fill: true,
+                    borderWidth: 2,
+                    tension: 0.1,
+                    pointRadius: 0,
+                    pointHoverRadius: 4
+                },
+                {
+                    label: 'Forecast',
+                    data: futureData.map(item => ({
+                        x: item.date,
+                        y: item.price
+                    })),
+                    borderColor: 'rgba(220, 53, 69, 1)',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    fill: true,
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    tension: 0.1,
+                    pointRadius: 0,
+                    pointHoverRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += new Intl.NumberFormat('en-US', {
+                                    style: 'currency',
+                                    currency: 'USD'
+                                }).format(context.parsed.y);
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toFixed(2);
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        maxTicksLimit: 10
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

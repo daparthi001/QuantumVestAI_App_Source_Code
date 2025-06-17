@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | QuantumVestAI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/dashboard.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="mb-3">Welcome, {{ data.user.full_name }}</h2>
+            <p class="text-muted">Last updated: {{ data.timestamp }}</p>
+        </div>
+    </div>
+    
+    <!-- Market Summary -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-transparent d-flex justify-content-between">
+                    <h5 class="card-title mb-0">Market Summary</h5>
+                    <a href="/market" class="btn btn-sm btn-outline-primary">Full View</a>
+                </div>
+                <div class="card-body">
+                    {% if data.market and data.market.status != 'unavailable' %}
+                    <div class="row">
+                        {% for index in data.market.indices[:4] %}
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="market-index-card p-3 rounded {% if index.change_percent > 0 %}bg-success-subtle{% elif index.change_percent < 0 %}bg-danger-subtle{% else %}bg-light{% endif %}">
+                                <h6 class="mb-1">{{ index.name }}</h6>
+                                <h4 class="mb-0">{{ index.price | round(2) }}</h4>
+                                <span class="change {% if index.change_percent > 0 %}text-success{% elif index.change_percent < 0 %}text-danger{% endif %}">
+                                    {{ index.change | round(2) }} ({{ index.change_percent | round(2) }}%)
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i> 
+                        Market data is currently unavailable
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Dashboard Main Content -->
+    <div class="row">
+        <!-- Portfolio Summary -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-transparent d-flex justify-content-between">
+                    <h5 class="card-title mb-0">Your Portfolio</h5>
+                    <div>
+                        {% if data.user.role == 'free' %}
+                        <span class="badge bg-secondary me-2">Free Plan</span>
+                        <a href="/upgrade" class="text-decoration-none small">Upgrade</a>
+                        {% else %}
+                        <span class="badge bg-primary">Premium</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if data.portfolio and data.portfolio.status != 'unavailable' %}
+                    <div class="d-flex justify-content-between mb-3">
+                        <div>
+                            <h3 class="mb-1">${{ data.portfolio.total_value | round(2) }}</h3>
+                            <span class="change {% if data.portfolio.change_percent > 0 %}text-success{% elif data.portfolio.change_percent < 0 %}text-danger{% endif %}">
+                                {{ data.portfolio.change | round(2) }} ({{ data.portfolio.change_percent | round(2) }}%)
+                            </span>
+                        </div>
+                        <div class="text-end">
+                            <a href="/portfolio" class="btn btn-sm btn-primary">Manage</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Portfolio Chart -->
+                    <div class="portfolio-chart-container">
+                        <canvas id="portfolioChart" height="200"></canvas>
+                    </div>
+                    
+                    <!-- Top Holdings -->
+                    <h6 class="mt-3 mb-2">Top Holdings</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Shares</th>
+                                    <th>Price</th>
+                                    <th>Change</th>
+                                    <th>Market Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for holding in data.portfolio.holdings[:5] %}
+                                <tr>
+                                    <td>
+                                        <a href="/stock/{{ holding.symbol }}" class="text-decoration-none fw-bold">{{ holding.symbol }}</a>
+                                    </td>
+                                    <td>{{ holding.shares }}</td>
+                                    <td>${{ holding.current_price | round(2) }}</td>
+                                    <td class="{% if holding.change_percent > 0 %}text-success{% elif holding.change_percent < 0 %}text-danger{% endif %}">
+                                        {{ holding.change_percent | round(2) }}%
+                                    </td>
+                                    <td>${{ holding.market_value | round(2) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <img src="/static/img/portfolio-empty.svg" alt="Empty Portfolio" class="mb-3" width="120">
+                        <h5>No Portfolio Yet</h5>
+                        <p class="text-muted">Start building your investment portfolio</p>
+                        <a href="/portfolio/create" class="btn btn-primary">Create Portfolio</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- AI Recommendations -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-transparent d-flex justify-content-between">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-robot text-primary me-2"></i>AI Recommendations
+                    </h5>
+                    <a href="/forecast" class="btn btn-sm btn-outline-primary">All Forecasts</a>
+                </div>
+                <div class="card-body">
+                    {% if data.recommendations and data.recommendations.stocks %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <h6>Top Picks</h6>
+                            <span class="text-muted small">{{ data.recommendations.generated_at }}</span>
+                        </div>
+                        <div class="row">
+                            {% for stock in data.recommendations.stocks[:3] %}
+                            <div class="col-md-4 mb-3">
+                                <div class="recommendation-card p-3 rounded shadow-sm">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <a href="/stock/{{ stock.symbol }}" class="h5 mb-0 text-decoration-none">{{ stock.symbol }}</a>
+                                        <span class="badge bg-primary">{{ stock.signal }}</span>
+                                    </div>
+                                    <div class="mb-1">{{ stock.name }}</div>
+                                    <div class="d-flex justify-content-between">
+                                        <span>${{ stock.current_price | round(2) }}</span>
+                                        <span class="{% if stock.forecast_change > 0 %}text-success{% elif stock.forecast_change < 0 %}text-danger{% endif %}">
+                                            {{ stock.forecast_change | round(2) }}%
+                                        </span>
+                                    </div>
+                                    <div class="forecast-confidence mt-2">
+                                        <div class="progress" style="height: 5px;">
+                                            <div class="progress-bar {% if stock.confidence >= 70 %}bg-success{% elif stock.confidence >= 50 %}bg-primary{% else %}bg-warning{% endif %}" 
+                                                 role="progressbar" 
+                                                 style="width: {{ stock.confidence }}%"></div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mt-1">
+                                            <span class="small text-muted">Confidence</span>
+                                            <span class="small fw-bold">{{ stock.confidence }}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Market Insight -->
+                    <div class="ai-insight p-3 rounded bg-light mt-3">
+                        <h6><i class="fas fa-lightbulb text-warning me-2"></i>Market Insight</h6>
+                        <p class="mb-0">{{ data.recommendations.market_insight }}</p>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        AI recommendations are currently being calculated.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bottom Row -->
+    <div class="row">
+        <!-- Watchlist -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-transparent d-flex justify-content-between">
+                    <h5 class="card-title mb-0">Watchlist</h5>
+                    <a href="/watchlist" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if data.watchlist and data.watchlist.items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Price</th>
+                                    <th>Change</th>
+                                    <th>Alerts</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in data.watchlist.items %}
+                                <tr>
+                                    <td>
+                                        <a href="/stock/{{ item.symbol }}" class="text-decoration-none fw-bold">{{ item.symbol }}</a>
+                                        <div class="small text-truncate" style="max-width: 150px;">{{ item.name }}</div>
+                                    </td>
+                                    <td>${{ item.price | round(2) }}</td>
+                                    <td class="{% if item.change_percent > 0 %}text-success{% elif item.change_percent < 0 %}text-danger{% endif %}">
+                                        {{ item.change_percent | round(2) }}%
+                                    </td>
+                                    <td>
+                                        {% if item.alerts %}
+                                        <span class="badge bg-warning text-dark">{{ item.alerts }}</span>
+                                        {% else %}
+                                        <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted">Your watchlist is empty</p>
+                        <a href="/stock/search" class="btn btn-sm btn-outline-primary">Add Stocks</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Market News -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-transparent d-flex justify-content-between">
+                    <h5 class="card-title mb-0">Latest News</h5>
+                    <a href="/news" class="btn btn-sm btn-outline-primary">All News</a>
+                </div>
+                <div class="card-body">
+                    {% if data.news and data.news.articles %}
+                    <div class="news-list">
+                        {% for article in data.news.articles[:4] %}
+                        <div class="news-item mb-3">
+                            <div class="d-flex">
+                                {% if article.image_url %}
+                                <div class="news-image me-3">
+                                    <img src="{{ article.image_url }}" alt="{{ article.title }}" class="rounded" width="80" height="60">
+                                </div>
+                                {% endif %}
+                                <div class="news-content">
+                                    <h6 class="mb-1">
+                                        <a href="/news/article/{{ article.id }}" class="text-decoration-none">{{ article.title }}</a>
+                                    </h6>
+                                    <p class="text-muted small mb-0">{{ article.source }} • {{ article.published_at }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        News feed is currently unavailable.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Portfolio Chart
+    {% if data.portfolio and data.portfolio.status != 'unavailable' and data.portfolio.history %}
+    const portfolioCtx = document.getElementById('portfolioChart').getContext('2d');
+    const portfolioData = {{ data.portfolio.history | tojson }};
+    
+    const portfolioChart = new Chart(portfolioCtx, {
+        type: 'line',
+        data: {
+            labels: portfolioData.map(item => item.date),
+            datasets: [{
+                label: 'Portfolio Value',
+                data: portfolioData.map(item => item.value),
+                borderColor: 'rgba(13, 110, 253, 1)',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                borderWidth: 2,
+                tension: 0.2,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += new Intl.NumberFormat('en-US', {
+                                    style: 'currency',
+                                    currency: 'USD'
+                                }).format(context.parsed.y);
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}
