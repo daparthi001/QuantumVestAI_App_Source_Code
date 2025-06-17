@@ -1,8 +1,8 @@
 """
-Authentication Routes for QuantumVestAI - Fixed
+Authentication Routes for QuantumVestAI - Fixed Login Routes
 Created: 2025-05-19 03:44:39
 Author: daparthi001
-Updated: 2025-06-17 18:55:24
+Updated: 2025-06-17 19:42:11
 """
 from fastapi import APIRouter, Request, HTTPException, Depends, Form, status, Response
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -45,7 +45,7 @@ except Exception as e:
     templates = Jinja2Templates(directory="templates")
 
 # OAuth2 scheme for token handling
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 
 # Mock user database - replace with actual database in production
 USERS_DB = {
@@ -152,15 +152,21 @@ async def login_page(request: Request, next: str = "/", msg: str = None, registe
         {"request": request, "next": next, "msg": msg}
     )
 
-# Route for API token requests
+# NEW: Route for token generation with direct access (no /auth prefix)
+@router.post("/token")
+async def login_for_access_token_direct(
+    request: Request,
+    form_data: OAuth2PasswordRequestForm = Depends()
+):
+    return await login_for_access_token(request, form_data)
+
+# Original route for API token requests with /auth prefix
 @router.post("/auth/token")
 async def login_for_access_token(
     request: Request,
     form_data: OAuth2PasswordRequestForm = Depends()
 ):
     logger.info(f"Token request for username: {form_data.username}")
-    
-    # Debug log for user existence
     logger.info(f"User exists in DB: {form_data.username in USERS_DB}")
     
     user = authenticate_user(form_data.username, form_data.password)
@@ -180,7 +186,18 @@ async def login_for_access_token(
     logger.info(f"Token generated for user: {form_data.username}")
     return {"access_token": access_token, "token_type": "bearer"}
 
-# Route to handle form-based login from the UI
+# NEW: Direct login endpoint without /auth prefix
+@router.post("/login")
+async def login_post_direct(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+    remember: bool = Form(False),
+):
+    logger.info(f"Direct login attempt for username: {username}")
+    return await login_post(request, username, password, remember)
+
+# Original login endpoint with /auth prefix
 @router.post("/auth/login")
 async def login_post(
     request: Request,
@@ -243,7 +260,13 @@ async def login_post(
     logger.info(f"User {username} successfully logged in")
     return response
 
-# Add emergency login endpoint for testing
+# NEW: Direct emergency login endpoint without /auth prefix
+@router.post("/emergency-login")
+async def emergency_login_direct(request: Request):
+    logger.info(f"Direct emergency login attempt")
+    return await emergency_login(request)
+
+# Original emergency login endpoint with /auth prefix
 @router.post("/auth/emergency-login")
 async def emergency_login(request: Request):
     """Emergency login endpoint that allows any credentials."""
@@ -302,6 +325,13 @@ async def emergency_login(request: Request):
         )
 
 # Route to handle the OPTIONS request for CORS
+@router.options("/login")
+async def options_login_direct(response: Response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return {}
+
 @router.options("/auth/login")
 async def options_login(response: Response):
     response.headers["Access-Control-Allow-Origin"] = "*"
@@ -309,8 +339,9 @@ async def options_login(response: Response):
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
     return {}
 
-# Route for logout
+# UPDATED: Route for logout (both direct and with /auth prefix)
 @router.get("/logout")
+@router.get("/auth/logout")
 async def logout():
     response = RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
     response.delete_cookie(key="access_token")
@@ -370,7 +401,8 @@ async def register_post(
         }
     )
 
-# Route for handling API registration
+# Route for handling API registration (both direct and with /auth prefix)
+@router.post("/register-api")
 @router.post("/auth/register")
 async def register_api(request: Request):
     try:
@@ -482,7 +514,8 @@ async def register_api(request: Request):
             }
         )
 
-# OPTIONS handler for register endpoint
+# OPTIONS handler for register endpoint (both direct and with /auth prefix)
+@router.options("/register-api")
 @router.options("/auth/register")
 async def options_register(response: Response):
     response.headers["Access-Control-Allow-Origin"] = "*"
@@ -491,7 +524,8 @@ async def options_register(response: Response):
     response.headers["Access-Control-Max-Age"] = "86400"
     return {}
 
-# OPTIONS handler for emergency login endpoint
+# OPTIONS handler for emergency login endpoint (both direct and with /auth prefix)
+@router.options("/emergency-login")
 @router.options("/auth/emergency-login")
 async def options_emergency_login(response: Response):
     response.headers["Access-Control-Allow-Origin"] = "*"
@@ -532,3 +566,18 @@ async def password_reset_post(request: Request, email: str = Form(...)):
             "msg_type": "success"
         }
     )
+
+# NEW: Debug endpoint to show all registered routes
+@router.get("/debug-routes")
+async def debug_routes():
+    """Debug endpoint to show all registered routes"""
+    routes = []
+    
+    for route in router.routes:
+        routes.append({
+            "path": route.path,
+            "name": route.name,
+            "methods": list(route.methods) if hasattr(route, "methods") and route.methods else []
+        })
+    
+    return {"routes": routes}

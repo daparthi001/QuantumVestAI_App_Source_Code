@@ -21,7 +21,7 @@
         {% endif %}
         
         <div class="auth-body">
-            <form method="post" action="/auth/login" id="loginForm">
+            <form method="post" action="/login" id="loginForm">
                 <div class="mb-3">
                     <label for="username" class="form-label">Username</label>
                     <input type="text" class="form-control" id="username" name="username" required autofocus>
@@ -61,8 +61,8 @@
 {% block scripts %}
 <script>
 /**
- * Enhanced Login Form JavaScript
- * Date: 2025-06-17 18:55:24
+ * Enhanced Login Form JavaScript - Fixed URLs
+ * Date: 2025-06-17 19:42:11
  * Author: daparthi001
  */
 document.addEventListener('DOMContentLoaded', function() {
@@ -82,12 +82,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Emergency login function
+    // Emergency login function - FIXED URL
     async function emergencyLogin(username, password) {
         try {
             console.log('Attempting emergency login for:', username);
             
-            const response = await fetch('/auth/emergency-login', {
+            // FIXED: Use direct URL without /auth prefix
+            const response = await fetch('/emergency-login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -143,14 +144,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             try {
-                console.log('Sending login request to /auth/login');
+                // FIXED: Use direct URL without /auth prefix
+                console.log('Sending login request to /login');
                 
                 const formData = new FormData();
                 formData.append('username', username);
                 formData.append('password', password);
                 formData.append('remember', remember);
                 
-                const response = await fetch('/auth/login', {
+                const response = await fetch('/login', {
                     method: 'POST',
                     body: formData
                 });

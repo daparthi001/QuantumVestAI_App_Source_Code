@@ -1,7 +1,7 @@
 """
-Main API Module - Updated with Authentication Fixes
+Main API Module - Updated Auth Router Configuration
 Created: 2025-05-21 14:26:28
-Updated: 2025-06-17 18:55:24
+Updated: 2025-06-17 19:42:11
 Author: daparthi001
 """
 import sys
@@ -16,7 +16,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 # Import settings and logger first
 from core.config import settings
 from core.logger import logger
-from core.middleware.cors import configure_cors
+from core.middleware.cors import configure_cors  # Use cors.py
 from core.middleware.exception_handlers import configure_exception_handlers
 # Then import database
 from db.session import engine, SessionLocal, get_db
@@ -59,10 +59,15 @@ logger.info(
     settings.VERSION
 )
 
-# Register auth router WITHOUT the API prefix
-# This ensures /auth/* endpoints are accessible directly
-app.include_router(auth.router)
-logger.debug(f"Registered auth router without API prefix")
+# CRITICAL: Register auth router WITHOUT the API prefix AND without any prefix at all
+# This ensures auth endpoints are accessible directly at /login, /register, etc.
+# as well as at /auth/login, /auth/register, etc.
+app.include_router(auth.router, prefix="")
+logger.debug(f"Registered auth router with empty prefix")
+
+# Also register with /auth prefix for backward compatibility
+app.include_router(auth.router, prefix="/auth")
+logger.debug(f"Registered auth router with /auth prefix")
 
 # Register remaining routers with API prefix
 API_ROUTERS = [
@@ -140,6 +145,21 @@ async def options_handler(request: Request, full_path: str):
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
     response.headers["Access-Control-Max-Age"] = "86400"
     return response
+
+# Add debug endpoint for all registered routes
+@app.get("/debug/routes")
+async def debug_all_routes():
+    """Debug endpoint to show all registered routes"""
+    routes = []
+    
+    for route in app.routes:
+        routes.append({
+            "path": route.path,
+            "name": route.name,
+            "methods": list(route.methods) if hasattr(route, "methods") and route.methods else []
+        })
+    
+    return {"routes": routes}
 
 if __name__ == "__main__":
     import uvicorn
