@@ -6,6 +6,7 @@ Author: daparthi001
 """
 from fastapi import APIRouter, Depends, Body, Response, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional

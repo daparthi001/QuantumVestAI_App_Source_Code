@@ -47,5 +47,6 @@ flake8==6.1.0
 watchfiles==0.21.0
 
 # Caching
+requests>=2.26.0
 cachetools>=5.3.1
 redis>=4.6.0
