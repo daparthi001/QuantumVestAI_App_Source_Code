@@ -61,11 +61,13 @@
 {% block scripts %}
 <script>
 /**
- * Enhanced Login Form JavaScript - Fixed URLs
- * Date: 2025-06-17 19:42:11
+ * Enhanced Login Form JavaScript - Updated for Direct Routes
+ * Date: 2025-06-17 20:20:15
  * Author: daparthi001
  */
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Login page script loaded');
+    
     // Password visibility toggle
     const toggleButton = document.querySelector('.password-toggle');
     
@@ -82,12 +84,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Emergency login function - FIXED URL
+    // Emergency login function
     async function emergencyLogin(username, password) {
         try {
             console.log('Attempting emergency login for:', username);
             
-            // FIXED: Use direct URL without /auth prefix
             const response = await fetch('/emergency-login', {
                 method: 'POST',
                 headers: {
@@ -101,16 +102,28 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             console.log('Emergency login response status:', response.status);
-            const data = await response.json();
-            console.log('Emergency login response:', data);
             
-            if (data.success) {
-                // Store the token
-                localStorage.setItem('auth_token', data.access_token);
-                
-                // Redirect to dashboard
-                window.location.href = data.redirect_url || '/dashboard';
-                return true;
+            if (response.ok) {
+                try {
+                    const data = await response.json();
+                    console.log('Emergency login response:', data);
+                    
+                    if (data.success) {
+                        // Store the token
+                        localStorage.setItem('auth_token', data.access_token);
+                        
+                        // Redirect to dashboard
+                        window.location.href = data.redirect_url || '/dashboard';
+                        return true;
+                    }
+                } catch (parseErr) {
+                    console.error('Error parsing JSON:', parseErr);
+                    // If JSON parsing fails but response was OK, still consider it successful
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                        return true;
+                    }
+                }
             }
             return false;
         } catch (error) {
@@ -124,17 +137,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const loginBtn = document.getElementById('loginBtn');
     
     if (loginForm) {
-        loginForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
+        console.log('Login form found, attaching submit handler');
+        
+        loginForm.addEventListener('submit', function(e) {
+            // Let the form submit normally - this will send the form POST to /login
+            console.log('Form submitting normally to:', loginForm.action);
             
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            const remember = document.getElementById('remember').checked;
             
-            // Basic validation
+            // Just do basic validation
             if (!username || !password) {
+                e.preventDefault();
                 showAlert('Please enter both username and password', 'danger');
-                return;
+                return false;
             }
             
             // Show loading state
@@ -143,103 +159,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Signing in...';
             }
             
-            try {
-                // FIXED: Use direct URL without /auth prefix
-                console.log('Sending login request to /login');
-                
-                const formData = new FormData();
-                formData.append('username', username);
-                formData.append('password', password);
-                formData.append('remember', remember);
-                
-                const response = await fetch('/login', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                console.log('Login response status:', response.status);
-                
-                // Handle redirect
-                if (response.redirected) {
-                    console.log('Redirecting to:', response.url);
-                    window.location.href = response.url;
-                    return;
-                }
-                
-                // Handle JSON response
-                if (response.headers.get('content-type')?.includes('application/json')) {
-                    const responseText = await response.text();
-                    console.log('Login response text:', responseText);
-                    
-                    let data;
-                    try {
-                        data = JSON.parse(responseText);
-                        console.log('Login response data:', data);
-                    } catch (parseErr) {
-                        console.error('Error parsing JSON response:', parseErr);
-                        data = { success: response.ok };
-                    }
-                    
-                    if (response.ok) {
-                        // Store token in localStorage if available
-                        if (data.access_token) {
-                            localStorage.setItem('auth_token', data.access_token);
-                        }
-                        
-                        // Redirect to dashboard or specified next URL
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const nextUrl = urlParams.get('next') || '/dashboard';
-                        window.location.href = nextUrl;
-                    } else {
-                        // Try emergency login as a fallback
-                        if (loginBtn) {
-                            loginBtn.innerHTML = 'Trying alternative login...';
-                        }
-                        
-                        // Try emergency login as a backup
-                        const emergencyResult = await emergencyLogin(username, password);
-                        if (emergencyResult) {
-                            return; // Successfully logged in with emergency method
-                        }
-                        
-                        showAlert(data.detail || 'Login failed. Please check your credentials.', 'danger');
-                        resetLoginButton();
-                    }
-                } else {
-                    // For non-JSON responses (like HTML)
-                    if (!response.ok) {
-                        // Try emergency login as a fallback
-                        if (loginBtn) {
-                            loginBtn.innerHTML = 'Trying alternative login...';
-                        }
-                        
-                        // Try emergency login as a backup
-                        const emergencyResult = await emergencyLogin(username, password);
-                        if (emergencyResult) {
-                            return; // Successfully logged in with emergency method
-                        }
-                        
-                        showAlert('Login failed. Please check your credentials.', 'danger');
-                        resetLoginButton();
-                    }
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                
-                // Try emergency login as a last resort
-                if (loginBtn) {
-                    loginBtn.innerHTML = 'Trying emergency login...';
-                }
-                
-                // Try emergency login as a backup
-                const emergencyResult = await emergencyLogin(username, password);
-                if (emergencyResult) {
-                    return; // Successfully logged in with emergency method
-                }
-                
-                showAlert('An error occurred during login. Please try again.', 'danger');
-                resetLoginButton();
-            }
+            // Let the form submit normally
+            return true;
         });
     }
     
@@ -264,20 +185,22 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Insert before the form
         const authHeader = document.querySelector('.auth-header');
-        authHeader.parentNode.insertBefore(alertDiv, authHeader.nextSibling);
-    }
-    
-    function resetLoginButton() {
-        if (loginBtn) {
-            loginBtn.disabled = false;
-            loginBtn.innerHTML = 'Sign In';
+        if (authHeader && authHeader.parentNode) {
+            authHeader.parentNode.insertBefore(alertDiv, authHeader.nextSibling);
         }
     }
     
-    // Check for registration success
+    // Check for query parameters
     const urlParams = new URLSearchParams(window.location.search);
+    
+    // Show registration success message
     if (urlParams.get('registered') === 'true') {
         showAlert('Registration successful! Please sign in with your new account.', 'success');
+    }
+    
+    // Show message if present in URL
+    if (urlParams.get('msg')) {
+        showAlert(urlParams.get('msg'), urlParams.get('msg').includes('success') ? 'success' : 'danger');
     }
 });
 </script>
