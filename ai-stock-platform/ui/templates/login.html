@@ -60,133 +60,153 @@
 
 {% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Password visibility toggle
-        const toggleButton = document.querySelector('.password-toggle');
-        
-        if (toggleButton) {
-            toggleButton.addEventListener('click', function() {
-                const input = this.parentNode.querySelector('input');
-                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-                input.setAttribute('type', type);
-                
-                // Toggle icon
-                const icon = this.querySelector('i');
-                icon.classList.toggle('bi-eye');
-                icon.classList.toggle('bi-eye-slash');
-            });
-        }
+/**
+ * Fixed Login Form JavaScript
+ * Date: 2025-06-17 18:17:40
+ * Author: daparthi001
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    // Password visibility toggle
+    const toggleButton = document.querySelector('.password-toggle');
+    
+    if (toggleButton) {
+        toggleButton.addEventListener('click', function() {
+            const input = this.parentNode.querySelector('input');
+            const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+            input.setAttribute('type', type);
+            
+            // Toggle icon
+            const icon = this.querySelector('i');
+            icon.classList.toggle('bi-eye');
+            icon.classList.toggle('bi-eye-slash');
+        });
+    }
 
-        // Handle login form submission
-        const loginForm = document.getElementById('loginForm');
-        const loginBtn = document.getElementById('loginBtn');
-        
-        if (loginForm) {
-            loginForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
+    // Handle login form submission
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    
+    if (loginForm) {
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const remember = document.getElementById('remember').checked;
+            
+            // Basic validation
+            if (!username || !password) {
+                showAlert('Please enter both username and password', 'danger');
+                return;
+            }
+            
+            // Show loading state
+            if (loginBtn) {
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Signing in...';
+            }
+            
+            try {
+                console.log('Sending login request to /auth/login');
                 
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
-                const remember = document.getElementById('remember').checked;
+                const formData = new FormData();
+                formData.append('username', username);
+                formData.append('password', password);
+                formData.append('remember', remember);
                 
-                // Basic validation
-                if (!username || !password) {
-                    showAlert('Please enter both username and password', 'danger');
+                const response = await fetch('/auth/login', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                console.log('Login response status:', response.status);
+                
+                // Handle redirect
+                if (response.redirected) {
+                    console.log('Redirecting to:', response.url);
+                    window.location.href = response.url;
                     return;
                 }
                 
-                // Show loading state
-                if (loginBtn) {
-                    loginBtn.disabled = true;
-                    loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Signing in...';
-                }
-                
-                try {
-                    const formData = new FormData();
-                    formData.append('username', username);
-                    formData.append('password', password);
-                    formData.append('remember', remember);
+                // Handle JSON response
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                    const responseText = await response.text();
+                    console.log('Login response text:', responseText);
                     
-                    const response = await fetch('/auth/login', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    // Handle redirect
-                    if (response.redirected) {
-                        window.location.href = response.url;
-                        return;
+                    let data;
+                    try {
+                        data = JSON.parse(responseText);
+                        console.log('Login response data:', data);
+                    } catch (parseErr) {
+                        console.error('Error parsing JSON response:', parseErr);
+                        data = { success: response.ok };
                     }
                     
-                    // Handle JSON response
-                    if (response.headers.get('content-type')?.includes('application/json')) {
-                        const data = await response.json();
+                    if (response.ok) {
+                        // Store token in localStorage if available
+                        if (data.access_token) {
+                            localStorage.setItem('auth_token', data.access_token);
+                        }
                         
-                        if (response.ok) {
-                            // Store token in localStorage if available
-                            if (data.access_token) {
-                                localStorage.setItem('auth_token', data.access_token);
-                            }
-                            
-                            // Redirect to dashboard or specified next URL
-                            const urlParams = new URLSearchParams(window.location.search);
-                            const nextUrl = urlParams.get('next') || '/dashboard';
-                            window.location.href = nextUrl;
-                        } else {
-                            showAlert(data.detail || 'Login failed. Please check your credentials.', 'danger');
-                            resetLoginButton();
-                        }
+                        // Redirect to dashboard or specified next URL
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const nextUrl = urlParams.get('next') || '/dashboard';
+                        window.location.href = nextUrl;
                     } else {
-                        // For non-JSON responses (like HTML)
-                        if (!response.ok) {
-                            showAlert('Login failed. Please check your credentials.', 'danger');
-                            resetLoginButton();
-                        }
+                        showAlert(data.detail || 'Login failed. Please check your credentials.', 'danger');
+                        resetLoginButton();
                     }
-                } catch (error) {
-                    console.error('Login error:', error);
-                    showAlert('An error occurred during login. Please try again.', 'danger');
-                    resetLoginButton();
+                } else {
+                    // For non-JSON responses (like HTML)
+                    if (!response.ok) {
+                        showAlert('Login failed. Please check your credentials.', 'danger');
+                        resetLoginButton();
+                    }
                 }
-            });
-        }
-        
-        function showAlert(message, type = 'danger') {
-            // Remove any existing alerts
-            const existingAlerts = document.querySelectorAll('.alert');
-            existingAlerts.forEach(alert => alert.remove());
-            
-            // Create new alert
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-            alertDiv.role = 'alert';
-            alertDiv.innerHTML = message;
-            
-            const closeButton = document.createElement('button');
-            closeButton.type = 'button';
-            closeButton.className = 'btn-close';
-            closeButton.setAttribute('data-bs-dismiss', 'alert');
-            closeButton.setAttribute('aria-label', 'Close');
-            
-            alertDiv.appendChild(closeButton);
-            
-            // Insert before the form
-            const authHeader = document.querySelector('.auth-header');
-            authHeader.parentNode.insertBefore(alertDiv, authHeader.nextSibling);
-        }
-        
-        function resetLoginButton() {
-            if (loginBtn) {
-                loginBtn.disabled = false;
-                loginBtn.innerHTML = 'Sign In';
+            } catch (error) {
+                console.error('Login error:', error);
+                showAlert('An error occurred during login. Please try again.', 'danger');
+                resetLoginButton();
             }
-        }
+        });
+    }
+    
+    function showAlert(message, type = 'danger') {
+        // Remove any existing alerts
+        const existingAlerts = document.querySelectorAll('.alert');
+        existingAlerts.forEach(alert => alert.remove());
         
-        // Check for registration success
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('registered') === 'true') {
-            showAlert('Registration successful! Please sign in with your new account.', 'success');
+        // Create new alert
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.role = 'alert';
+        alertDiv.innerHTML = message;
+        
+        const closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.className = 'btn-close';
+        closeButton.setAttribute('data-bs-dismiss', 'alert');
+        closeButton.setAttribute('aria-label', 'Close');
+        
+        alertDiv.appendChild(closeButton);
+        
+        // Insert before the form
+        const authHeader = document.querySelector('.auth-header');
+        authHeader.parentNode.insertBefore(alertDiv, authHeader.nextSibling);
+    }
+    
+    function resetLoginButton() {
+        if (loginBtn) {
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = 'Sign In';
         }
-    });
+    }
+    
+    // Check for registration success
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('registered') === 'true') {
+        showAlert('Registration successful! Please sign in with your new account.', 'success');
+    }
+});
 </script>
 {% endblock %}

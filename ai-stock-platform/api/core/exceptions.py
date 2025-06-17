@@ -1,7 +1,7 @@
 """
-Core Exceptions
+Core Exceptions Module
 Created: 2025-05-20 04:43:53
-Updated: 2025-06-17 17:03:55
+Updated: 2025-06-17 18:33:20
 Author: daparthi001
 """
 from fastapi import HTTPException, status

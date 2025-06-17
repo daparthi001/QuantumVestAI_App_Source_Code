@@ -2,9 +2,9 @@
 Authentication Routes for QuantumVestAI - Fixed
 Created: 2025-05-19 03:44:39
 Author: daparthi001
-Updated: 2025-06-17 16:20:02 by daparthi001yes
+Updated: 2025-06-17 18:33:20
 """
-from fastapi import APIRouter, Request, HTTPException, Depends, Form, status
+from fastapi import APIRouter, Request, HTTPException, Depends, Form, status, Response
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 import logging
 from pathlib import Path
+import json
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -129,10 +130,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 
 # Route to display login page
 @router.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request, next: str = "/"):
+async def login_page(request: Request, next: str = "/", msg: str = None, registered: str = None):
+    # Handle registered=true parameter
+    if registered == "true":
+        msg = "Registration successful! Please sign in with your new account."
+        
     return templates.TemplateResponse(
         "login.html", 
-        {"request": request, "next": next}
+        {"request": request, "next": next, "msg": msg}
     )
 
 # Route for API token requests
@@ -231,7 +236,7 @@ async def register_page(request: Request):
         {"request": request}
     )
 
-# Route for handling registration
+# Route for handling form-based registration
 @router.post("/register")
 async def register_post(
     request: Request,
@@ -276,6 +281,138 @@ async def register_post(
             "msg": "Registration successful! Please sign in with your new account."
         }
     )
+
+# UPDATED: Route for handling API registration
+@router.post("/auth/register")
+async def register_api(request: Request):
+    try:
+        # Log request info for debugging
+        logger.info(f"API Registration request at {datetime.utcnow().isoformat()}")
+        logger.info(f"Request headers: {dict(request.headers)}")
+        
+        # Get raw request body for debugging
+        body = await request.body()
+        logger.info(f"Raw request body ({len(body)} bytes): {body.decode('utf-8', errors='ignore')[:200]}...")
+        
+        # Parse JSON body with explicit error handling
+        try:
+            data = await request.json()
+            username = data.get("username")
+            email = data.get("email")
+            password = data.get("password")
+            
+            logger.info(f"API registration attempt for username: {username}, email: {email}")
+            
+            # Validate input
+            if not username or not email or not password:
+                logger.warning("Registration missing required fields")
+                return JSONResponse(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    content={
+                        "success": False,
+                        "detail": "Missing required fields"
+                    },
+                    headers={
+                        "Access-Control-Allow-Origin": "*",
+                        "Access-Control-Allow-Methods": "POST, OPTIONS",
+                        "Access-Control-Allow-Headers": "Content-Type, Authorization"
+                    }
+                )
+            
+            # Check if username already exists
+            if username in USERS_DB:
+                logger.warning(f"API registration failed - username already exists: {username}")
+                return JSONResponse(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    content={
+                        "success": False,
+                        "detail": "Username already registered"
+                    },
+                    headers={
+                        "Access-Control-Allow-Origin": "*",
+                        "Access-Control-Allow-Methods": "POST, OPTIONS",
+                        "Access-Control-Allow-Headers": "Content-Type, Authorization"
+                    }
+                )
+            
+            # Add user to mock database
+            USERS_DB[username] = {
+                "email": email,
+                "username": username,
+                "full_name": "",
+                "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
+                "disabled": False,
+                "role": "user",
+                "status": "active",
+                "created_at": datetime.utcnow().isoformat(),
+                "last_login": None
+            }
+            
+            logger.info(f"API registration successful for user: {username}")
+            
+            # Always return success with CORS headers
+            return JSONResponse(
+                status_code=status.HTTP_201_CREATED,
+                content={
+                    "success": True,
+                    "user_id": 12345,  # Mock ID
+                    "created_at": datetime.utcnow().isoformat(),
+                    "redirect_url": "/login"
+                },
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "POST, OPTIONS",
+                    "Access-Control-Allow-Headers": "Content-Type, Authorization"
+                }
+            )
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to decode JSON: {str(e)}")
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False, 
+                    "detail": "Invalid JSON format"
+                },
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "POST, OPTIONS",
+                    "Access-Control-Allow-Headers": "Content-Type, Authorization"
+                }
+            )
+    except Exception as e:
+        logger.error(f"Unexpected error during registration: {str(e)}", exc_info=True)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "detail": "An unexpected error occurred during registration"
+            },
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization"
+            }
+        )
+
+# OPTIONS handler for register endpoint
+@router.options("/auth/register")
+async def options_register(response: Response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Max-Age"] = "86400"
+    return {}
+
+# NEW: Universal OPTIONS handler
+@router.options("/{rest_of_path:path}")
+async def options_universal(rest_of_path: str, response: Response):
+    """Universal OPTIONS handler for CORS preflight requests."""
+    logger.info(f"OPTIONS request for /{rest_of_path}")
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Max-Age"] = "86400"
+    return {}
 
 # Route for password reset request
 @router.get("/password-reset", response_class=HTMLResponse)

@@ -1,12 +1,12 @@
 """
 Main API Module - Updated with Authentication Fixes
 Created: 2025-05-21 14:26:28
-Updated: 2025-06-17 17:55:08
+Updated: 2025-06-17 18:33:20
 Author: daparthi001
 """
 import sys
 from pathlib import Path
-from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi import FastAPI, HTTPException, Request, Depends, Response
 from fastapi.responses import JSONResponse
 from datetime import datetime
 
