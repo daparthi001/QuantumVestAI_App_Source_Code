@@ -1,6 +1,6 @@
 """
-CORS Configuration for QuantumVestAI
-Created: 2025-06-17 18:33:20
+CORS Configuration Module
+Created: 2025-06-17 18:55:24
 Author: daparthi001
 """
 
@@ -22,8 +22,8 @@ def configure_cors(app):
         allow_origins=origins,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=["*"],
-        expose_headers=["*"],
+        allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
+        expose_headers=["Content-Type", "Content-Length"],
         max_age=86400,
     )
 

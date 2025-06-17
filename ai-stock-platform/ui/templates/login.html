@@ -61,8 +61,8 @@
 {% block scripts %}
 <script>
 /**
- * Fixed Login Form JavaScript
- * Date: 2025-06-17 18:17:40
+ * Enhanced Login Form JavaScript
+ * Date: 2025-06-17 18:55:24
  * Author: daparthi001
  */
 document.addEventListener('DOMContentLoaded', function() {
@@ -80,6 +80,42 @@ document.addEventListener('DOMContentLoaded', function() {
             icon.classList.toggle('bi-eye');
             icon.classList.toggle('bi-eye-slash');
         });
+    }
+
+    // Emergency login function
+    async function emergencyLogin(username, password) {
+        try {
+            console.log('Attempting emergency login for:', username);
+            
+            const response = await fetch('/auth/emergency-login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
+            });
+            
+            console.log('Emergency login response status:', response.status);
+            const data = await response.json();
+            console.log('Emergency login response:', data);
+            
+            if (data.success) {
+                // Store the token
+                localStorage.setItem('auth_token', data.access_token);
+                
+                // Redirect to dashboard
+                window.location.href = data.redirect_url || '/dashboard';
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Emergency login error:', error);
+            return false;
+        }
     }
 
     // Handle login form submission
@@ -153,18 +189,52 @@ document.addEventListener('DOMContentLoaded', function() {
                         const nextUrl = urlParams.get('next') || '/dashboard';
                         window.location.href = nextUrl;
                     } else {
+                        // Try emergency login as a fallback
+                        if (loginBtn) {
+                            loginBtn.innerHTML = 'Trying alternative login...';
+                        }
+                        
+                        // Try emergency login as a backup
+                        const emergencyResult = await emergencyLogin(username, password);
+                        if (emergencyResult) {
+                            return; // Successfully logged in with emergency method
+                        }
+                        
                         showAlert(data.detail || 'Login failed. Please check your credentials.', 'danger');
                         resetLoginButton();
                     }
                 } else {
                     // For non-JSON responses (like HTML)
                     if (!response.ok) {
+                        // Try emergency login as a fallback
+                        if (loginBtn) {
+                            loginBtn.innerHTML = 'Trying alternative login...';
+                        }
+                        
+                        // Try emergency login as a backup
+                        const emergencyResult = await emergencyLogin(username, password);
+                        if (emergencyResult) {
+                            return; // Successfully logged in with emergency method
+                        }
+                        
                         showAlert('Login failed. Please check your credentials.', 'danger');
                         resetLoginButton();
                     }
                 }
             } catch (error) {
                 console.error('Login error:', error);
+                
+                // Try emergency login as a last resort
+                if (loginBtn) {
+                    loginBtn.innerHTML = 'Trying emergency login...';
+                }
+                
+                // Try emergency login as a backup
+                const emergencyResult = await emergencyLogin(username, password);
+                if (emergencyResult) {
+                    return; // Successfully logged in with emergency method
+                }
+                
                 showAlert('An error occurred during login. Please try again.', 'danger');
                 resetLoginButton();
             }
