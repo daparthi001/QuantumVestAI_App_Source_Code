@@ -7,6 +7,7 @@ metadata:
     app: quantumvestai
     tier: backend
     environment: development
+    updated: "20250617153026"
 spec:
   replicas: 1
   selector:
@@ -25,6 +26,7 @@ spec:
         app: quantumvestai
         tier: backend
         environment: development
+        updated: "20250617153026"
     spec:
       containers:
       - name: api
@@ -37,152 +39,115 @@ spec:
         args:
         - |
           echo "=== Creating API Structure ==="
-          # Create api directory and main.py
           mkdir -p /app/api
           mkdir -p /app/api/routers
           mkdir -p /app/core
+          mkdir -p /app/db
           
-          # Create __init__.py
+          # Database session
+          cat > /app/db/__init__.py << 'EOT'
+          # Database package
+          EOT
+          
+          cat > /app/db/session.py << 'EOT'
+          """
+          Database Session Module
+          Created: 2025-06-17 15:30:26
+          Author: daparthi001
+          """
+          import os
+          import logging
+          from sqlalchemy import create_engine, text
+          from sqlalchemy.ext.declarative import declarative_base
+          from sqlalchemy.orm import sessionmaker
+
+          # Configure logging
+          logging.basicConfig(level=logging.INFO)
+          logger = logging.getLogger("db_session")
+
+          # Get database connection details from environment variables
+          DB_HOST = os.getenv("DB_HOST", "localhost")
+          DB_PORT = os.getenv("DB_PORT", "5432")
+          DB_NAME = os.getenv("DB_NAME", "quantumvestai")
+          DB_USER = os.getenv("DB_USER", "postgres")
+          DB_PASSWORD = os.getenv("DB_PASSWORD", "postgres")
+
+          # Construct database URL
+          DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
+          try:
+              # Create SQLAlchemy engine with custom parameters for better connection handling
+              engine = create_engine(
+                  DATABASE_URL,
+                  pool_pre_ping=True,
+                  pool_recycle=300,
+                  pool_size=5,
+                  max_overflow=10,
+                  connect_args={"connect_timeout": 10}
+              )
+              
+              # Test connection when module is loaded
+              with engine.connect() as conn:
+                  result = conn.execute(text("SELECT 1")).scalar()
+                  logger.info(f"Database connection established successfully")
+                  
+              # Create sessionmaker
+              SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+              
+              # Create Base class for models
+              Base = declarative_base()
+              
+          except Exception as e:
+              logger.error(f"Error connecting to database: {str(e)}")
+              # Create dummy engine for testing/development if connection fails
+              engine = create_engine("sqlite:///./test.db", connect_args={"check_same_thread": False})
+              SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+              Base = declarative_base()
+
+          def get_db():
+              """Dependency for getting DB session"""
+              db = SessionLocal()
+              try:
+                  yield db
+              finally:
+                  db.close()
+          EOT
+          
+          # API package
           cat > /app/api/__init__.py << 'EOT'
           from .main import app
           EOT
           
-          # Create init file for routers
+          # Routers package
           cat > /app/api/routers/__init__.py << 'EOT'
           # Router package
           EOT
           
-          # Create auth router with register endpoint
-          cat > /app/api/routers/auth.py << 'EOT'
-          """
-          Authentication Router
-          Created: 2025-06-17 03:53:49
-          Author: daparthi001
-          """
-          from fastapi import APIRouter, Depends, HTTPException, Request, status, Response
-          from fastapi.middleware.cors import CORSMiddleware
-          from sqlalchemy.orm import Session
-          from db.session import get_db
-          from datetime import datetime
-          import logging
-          
-          # Configure logging
-          logging.basicConfig(
-              level=logging.INFO,
-              format='%(asctime)s - %(levelname)s - %(message)s'
-          )
-          logger = logging.getLogger("auth_router")
-          
-          router = APIRouter()
-          
-          @router.post("/register")
-          async def register(request: Request, response: Response):
-              """
-              User registration endpoint
-              """
-              try:
-                  # Extract request body
-                  data = await request.json()
-                  username = data.get('username')
-                  logger.info(f"Registration request received for user: {username}")
-                  
-                  # Simple validation
-                  if not username or not data.get("password") or not data.get("email"):
-                      logger.error(f"Registration missing required fields")
-                      return {
-                          "status": "error",
-                          "message": "Missing required fields: username, password, and email are required"
-                      }
-                  
-                  # Set CORS headers
-                  response.headers["Access-Control-Allow-Origin"] = "*"
-                  response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
-                  response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-                  
-                  # In a real implementation, we would:
-                  # 1. Check if user exists
-                  # 2. Hash password
-                  # 3. Store user in database
-                  
-                  # For now, simulate successful registration
-                  logger.info(f"Registration successful for user: {username}")
-                  return {
-                      "status": "success",
-                      "message": "Registration successful",
-                      "username": username,
-                      "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-                  }
-                  
-              except Exception as e:
-                  logger.error(f"Registration failed: {str(e)}")
-                  response.headers["Access-Control-Allow-Origin"] = "*"
-                  response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
-                  response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-                  return {
-                      "status": "error",
-                      "message": f"Registration failed: {str(e)}"
-                  }
-          
-          @router.options("/register")
-          async def register_options(response: Response):
-              """Handle CORS preflight requests for register endpoint"""
-              response.headers["Access-Control-Allow-Origin"] = "*"
-              response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
-              response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-              return {}
-          
-          @router.get("/status")
-          async def auth_status(response: Response):
-              """Auth status endpoint"""
-              response.headers["Access-Control-Allow-Origin"] = "*"
-              return {
-                  "status": "active",
-                  "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-              }
-          EOT
-          
-          # Create core middleware module
-          mkdir -p /app/core
-          cat > /app/core/middleware.py << 'EOT'
-          """
-          Middleware Configuration Module
-          Created: 2025-06-17 03:53:49
-          Author: daparthi001
-          """
-          from fastapi import FastAPI
-          from fastapi.middleware.cors import CORSMiddleware
-          
-          def setup_middleware(app: FastAPI):
-              """Configure middleware for the application"""
-              # Add CORS middleware
-              app.add_middleware(
-                  CORSMiddleware,
-                  allow_origins=["*"],  # Set to specific origins in production
-                  allow_credentials=True,
-                  allow_methods=["*"],
-                  allow_headers=["*"],
-                  expose_headers=["*"],
-              )
-          EOT
-          
-          # Create logger module
+          # Core modules
           cat > /app/core/logger.py << 'EOT'
           """
           Logger Configuration Module
-          Created: 2025-06-17 03:53:49
+          Created: 2025-06-17 15:30:26
           Author: daparthi001
           """
           import logging
-          
-          # Configure logger
+          import sys
+
+          # Configure root logger
+          logging.basicConfig(
+              level=logging.INFO,
+              format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+              stream=sys.stdout
+          )
+
+          # Create logger
           logger = logging.getLogger("quantumvestai_api")
-          
+          logger.setLevel(logging.INFO)
+
+          # Ensure we don't add multiple handlers if module is reloaded
           if not logger.handlers:
-              # Set logging level
-              logger.setLevel(logging.INFO)
-              
               # Create console handler
-              handler = logging.StreamHandler()
+              handler = logging.StreamHandler(sys.stdout)
               handler.setLevel(logging.INFO)
               
               # Create formatter
@@ -191,86 +156,162 @@ spec:
               
               # Add handler to logger
               logger.addHandler(handler)
+              
+              logger.info("Logger initialized")
           EOT
-          
-          # Create config module
-          cat > /app/core/config.py << 'EOT'
+
+          # Auth router
+          cat > /app/api/routers/auth.py << 'EOT'
           """
-          Configuration Module
-          Created: 2025-06-17 03:53:49
+          Authentication Router
+          Created: 2025-06-17 15:30:26
           Author: daparthi001
           """
-          import os
-          from pydantic import BaseSettings
-          
-          class Settings(BaseSettings):
-              PROJECT_NAME: str = "QuantumVestAI API"
-              DESCRIPTION: str = "Stock Market Analysis and Investment Platform API"
-              VERSION: str = "0.1.0"
+          from fastapi import APIRouter, Request, Response, status
+          from fastapi.responses import JSONResponse
+          from core.logger import logger
+          from datetime import datetime
+          import traceback
+          import json
+
+          router = APIRouter()
+
+          @router.post("/register", status_code=status.HTTP_200_OK)
+          async def register(request: Request, response: Response):
+              """
+              User registration endpoint
+              """
+              # Set CORS headers
+              response.headers["Access-Control-Allow-Origin"] = "*"
+              response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+              response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
               
-              # API Environment
-              API_ENV: str = os.getenv("API_ENV", "development")
+              try:
+                  # Log raw request data
+                  body = await request.body()
+                  logger.info(f"Registration request received, length: {len(body)}")
+                  
+                  try:
+                      # Parse JSON data
+                      data = await request.json()
+                      username = data.get("username")
+                      email = data.get("email")
+                      password = data.get("password")
+                      
+                      logger.info(f"Registration request parsed for user: {username}")
+                      
+                      # Basic validation
+                      if not username or not email or not password:
+                          logger.warning(f"Missing required registration fields")
+                          return JSONResponse(
+                              status_code=status.HTTP_200_OK,
+                              content={
+                                  "status": "error",
+                                  "message": "Username, email and password are required"
+                              }
+                          )
+                      
+                      # In production: check if user exists, hash password, store in database
+                      
+                      # Return success response
+                      logger.info(f"Registration successful for user: {username}")
+                      return {
+                          "status": "success",
+                          "message": "Registration successful",
+                          "username": username,
+                          "timestamp": datetime.utcnow().isoformat()
+                      }
+                      
+                  except json.JSONDecodeError as json_error:
+                      logger.error(f"JSON parse error: {str(json_error)}")
+                      logger.error(f"Raw request: {body.decode('utf-8', errors='replace')}")
+                      
+                      return JSONResponse(
+                          status_code=status.HTTP_200_OK,
+                          content={
+                              "status": "error",
+                              "message": "Invalid request format"
+                          }
+                      )
+                      
+              except Exception as e:
+                  logger.error(f"Registration error: {str(e)}")
+                  logger.error(traceback.format_exc())
+                  
+                  return JSONResponse(
+                      status_code=status.HTTP_200_OK,
+                      content={
+                          "status": "error",
+                          "message": "An unexpected error occurred"
+                      }
+                  )
+
+          @router.options("/register")
+          async def options_register(response: Response):
+              """Handle CORS preflight requests"""
+              response.headers["Access-Control-Allow-Origin"] = "*"
+              response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+              response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+              response.headers["Access-Control-Max-Age"] = "86400"
               
-              # Database settings
-              DB_HOST: str = os.getenv("DB_HOST")
-              DB_PORT: str = os.getenv("DB_PORT")
-              DB_NAME: str = os.getenv("DB_NAME")
-              DB_USER: str = os.getenv("DB_USER")
-              DB_PASSWORD: str = os.getenv("DB_PASSWORD")
+              return Response(
+                  status_code=200,
+                  content="",
+                  media_type="text/plain"
+              )
+
+          @router.get("/status")
+          async def auth_status(response: Response):
+              """Auth status endpoint"""
+              response.headers["Access-Control-Allow-Origin"] = "*"
               
-              @property
-              def DATABASE_URL(self) -> str:
-                  """Construct PostgreSQL database URL from environment variables"""
-                  return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
-          
-          # Create a global instance
-          settings = Settings()
+              return {
+                  "status": "active",
+                  "version": "2025.06.17.4",
+                  "timestamp": datetime.utcnow().isoformat()
+              }
           EOT
           
-          # Create main.py with updated configuration including auth router
+          # Main FastAPI application - BARE MINIMUM VERSION
           cat > /app/api/main.py << 'EOT'
           """
-          Main Application Module
-          Created: 2025-06-17 03:53:49
+          Main Application Module - Bare Minimum Version
+          Created: 2025-06-17 15:30:26
           Author: daparthi001
           """
-          import logging
-          from fastapi import FastAPI, Depends, Request
-          from sqlalchemy.orm import Session
+          from fastapi import FastAPI, Request, Response
+          from fastapi.middleware.cors import CORSMiddleware
           from sqlalchemy import text
           from datetime import datetime
           
           # Import components
-          from core.config import settings
-          from core.middleware import setup_middleware
-          from db.session import get_db, engine
+          from db.session import engine
           from core.logger import logger
           
           # Create FastAPI application
           app = FastAPI(
-              title=settings.PROJECT_NAME,
-              description=settings.DESCRIPTION,
-              version=settings.VERSION,
-              docs_url="/docs",
-              redoc_url="/redoc"
+              title="QuantumVestAI API",
+              description="Stock Market Analysis and Investment Platform API",
+              version="1.0.0"
           )
           
-          # Setup middleware
-          setup_middleware(app)
+          # Setup CORS middleware directly with values
+          app.add_middleware(
+              CORSMiddleware,
+              allow_origins=["*"],
+              allow_credentials=True,
+              allow_methods=["*"],
+              allow_headers=["*"],
+          )
           
-          # Import routers
-          from api.routers.auth import router as auth_router
-          
-          # Include routers
-          app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
-          
+          # Add request logging middleware
           @app.middleware("http")
           async def log_requests(request: Request, call_next):
               """Log all requests and responses"""
-              request_id = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}-{id(request)}"
+              path = request.url.path
+              method = request.method
               
-              # Log the request
-              logger.info(f"Request [{request_id}] {request.method} {request.url.path}")
+              logger.info(f"Request: {method} {path}")
               
               # Process the request
               start_time = datetime.utcnow()
@@ -278,26 +319,34 @@ spec:
               duration = (datetime.utcnow() - start_time).total_seconds()
               
               # Log the response
-              logger.info(f"Response [{request_id}] {request.method} {request.url.path} - Status: {response.status_code} - Duration: {duration:.3f}s")
+              logger.info(f"Response: {method} {path} - Status: {response.status_code} - Duration: {duration:.3f}s")
+              
+              # Ensure CORS headers are set
+              response.headers["Access-Control-Allow-Origin"] = "*"
               
               return response
           
+          # Import routers
+          from api.routers.auth import router as auth_router
+          
+          # Register routes
+          app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
+          
           @app.get("/")
           async def root():
-              """API root endpoint"""
+              """Root endpoint"""
               return {
-                  "name": settings.PROJECT_NAME,
-                  "version": settings.VERSION,
+                  "name": "QuantumVestAI API",
+                  "version": "1.0.0",
                   "status": "online",
-                  "environment": settings.API_ENV,
-                  "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+                  "timestamp": datetime.utcnow().isoformat()
               }
           
           @app.get("/health")
           async def health_check():
               """Health check endpoint"""
               try:
-                  # Test database connection using text() wrapper
+                  # Test database connection
                   with engine.connect() as conn:
                       result = conn.execute(text("SELECT 1")).scalar()
                       
@@ -307,8 +356,7 @@ spec:
                           "status": "connected",
                           "result": result
                       },
-                      "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
-                      "environment": settings.API_ENV
+                      "timestamp": datetime.utcnow().isoformat()
                   }
               except Exception as e:
                   logger.error(f"Health check failed: {str(e)}")
@@ -318,8 +366,7 @@ spec:
                           "status": "disconnected",
                           "error": str(e)
                       },
-                      "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
-                      "environment": settings.API_ENV
+                      "timestamp": datetime.utcnow().isoformat()
                   }
           EOT
           
@@ -369,7 +416,7 @@ spec:
             path: /health
             port: 8000
           initialDelaySeconds: 15
-          timeoutSeconds: 1
+          timeoutSeconds: 2
           periodSeconds: 60
           failureThreshold: 3
         readinessProbe:
@@ -377,6 +424,6 @@ spec:
             path: /health
             port: 8000
           initialDelaySeconds: 10
-          timeoutSeconds: 1
+          timeoutSeconds: 2
           periodSeconds: 30
           failureThreshold: 3

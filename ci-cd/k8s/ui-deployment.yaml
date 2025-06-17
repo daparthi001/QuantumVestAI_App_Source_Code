@@ -9,6 +9,8 @@ metadata:
     environment: development
     created-by: daparthi001
     created-date: "2025-06-15"
+    updated-by: daparthi001
+    updated-date: "2025-06-17"
 spec:
   replicas: 1
   selector:
@@ -22,6 +24,8 @@ spec:
         app: quantumvestai
         tier: frontend
         environment: development
+      annotations:
+        timestamp: "20250617160655"  # For forcing updates
     spec:
       containers:
       - name: ui
@@ -36,11 +40,6 @@ spec:
             secretKeyRef:
               name: ui-secrets
               key: JWT_SECRET_KEY
-        # - name: YAHOO_FINANCE_API_KEY
-        #   valueFrom:
-        #     secretKeyRef:
-        #       name: ui-secrets
-        #       key: YAHOO_FINANCE_API_KEY
         - name: TWITTER_API_KEY
           valueFrom:
             secretKeyRef:
@@ -70,7 +69,12 @@ spec:
           value: "true"
         - name: CACHE_DURATION
           value: "3600"
-          
+        # Health check settings - making them more compatible with AWS ALB
+        - name: HEALTH_CHECK_PATH
+          value: "/health"
+        - name: HEALTH_CHECK_ENABLED
+          value: "true"
+        
         resources:
           requests:
             cpu: "100m"
@@ -78,12 +82,16 @@ spec:
           limits:
             cpu: "500m"
             memory: "512Mi"
+        # AWS ALB compatible health checks
         livenessProbe:
           httpGet:
             path: /health
             port: 3000
           initialDelaySeconds: 30
           periodSeconds: 30
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
         readinessProbe:
           httpGet:
             path: /health

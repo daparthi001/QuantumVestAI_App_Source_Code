@@ -1,15 +1,216 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: ui-configmap
+  name: ui-scripts
   namespace: dev
+  labels:
+    app: quantumvestai
+    tier: frontend
+    environment: development
+    updated: "20250617040715"
 data:
-  # UI Configuration
-  NODE_ENV: "production"
-  API_URL: "http://api-service:8000"
-  PUBLIC_URL: "/"
-  
-  # Feature flags
-  ENABLE_ANALYTICS: "true"
-  ENABLE_WHITEPAPER_UPLOAD: "true"
-  ENABLE_SENTIMENT_ANALYSIS: "true"
+  registration-fix.js: |
+    /**
+     * QuantumVestAI Registration Fix
+     * Created: 2025-06-17 04:07:15
+     * Author: daparthi001
+     * 
+     * This script fixes registration form submissions when working with AWS ALB Ingress
+     */
+    (function() {
+      console.log('QuantumVestAI Registration Fix - Version 2025.06.17.2');
+      
+      // Wait for DOM to be fully loaded
+      document.addEventListener('DOMContentLoaded', function() {
+        // Find the registration form
+        const form = document.querySelector('form');
+        if (!form) {
+          console.warn('Registration form not found');
+          return;
+        }
+        
+        console.log('Registration form found - applying fix');
+        
+        // Override the form submission
+        form.addEventListener('submit', async function(event) {
+          // Prevent default form submission
+          event.preventDefault();
+          
+          // Get form elements
+          const usernameField = document.querySelector('input[name="username"]');
+          const emailField = document.querySelector('input[name="email"]');
+          const passwordField = document.querySelector('input[name="password"]');
+          const passwordConfirmField = document.querySelector('input[name="confirm_password"]') || 
+                                     document.querySelector('input[name="passwordConfirm"]');
+          
+          if (!usernameField || !emailField || !passwordField) {
+            console.error('Required form fields not found');
+            showError('Registration form is missing required fields. Please refresh and try again.');
+            return;
+          }
+          
+          const username = usernameField.value.trim();
+          const email = emailField.value.trim();
+          const password = passwordField.value;
+          
+          // Basic client-side validation
+          if (!username) {
+            showError('Username is required');
+            usernameField.focus();
+            return;
+          }
+          
+          if (!email) {
+            showError('Email is required');
+            emailField.focus();
+            return;
+          }
+          
+          if (!password) {
+            showError('Password is required');
+            passwordField.focus();
+            return;
+          }
+          
+          if (passwordConfirmField && passwordConfirmField.value !== password) {
+            showError('Passwords do not match');
+            passwordConfirmField.focus();
+            return;
+          }
+          
+          // Show loading state
+          showLoading();
+          
+          try {
+            console.log('Submitting registration for: ' + username);
+            
+            // Use fetch API with specific configuration for AWS ALB
+            const response = await fetch('/auth/register', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              body: JSON.stringify({
+                username: username,
+                email: email,
+                password: password
+              }),
+              // Important for ALB - disable credentials
+              credentials: 'omit'
+            });
+            
+            console.log('Registration response status: ' + response.status);
+            
+            // Parse response
+            const data = await response.json();
+            console.log('Registration response:', data);
+            
+            // Handle response
+            if (data.status === 'success') {
+              console.log('Registration successful!');
+              hideLoading();
+              showSuccess('Registration successful! Redirecting to login...');
+              
+              // Redirect after successful registration
+              setTimeout(function() {
+                window.location.href = '/login?registered=true';
+              }, 2000);
+              
+            } else {
+              console.error('Registration failed:', data.message);
+              hideLoading();
+              showError(data.message || 'Registration failed. Please try again.');
+            }
+            
+          } catch (error) {
+            console.error('Registration error:', error);
+            hideLoading();
+            showError('An error occurred during registration. Please try again later.');
+          }
+        });
+        
+        // Helper function to show error message
+        function showError(message) {
+          hideLoading();
+          
+          // Remove any existing error message
+          const existingError = document.querySelector('.alert-danger');
+          if (existingError) {
+            existingError.remove();
+          }
+          
+          // Create and show new error message
+          const errorElement = document.createElement('div');
+          errorElement.className = 'alert alert-danger';
+          errorElement.textContent = message;
+          
+          // Insert before the form
+          form.parentNode.insertBefore(errorElement, form);
+          
+          // Scroll to error
+          errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        // Helper function to show success message
+        function showSuccess(message) {
+          // Remove any existing messages
+          const existingMessages = document.querySelectorAll('.alert');
+          existingMessages.forEach(el => el.remove());
+          
+          // Create and show new success message
+          const successElement = document.createElement('div');
+          successElement.className = 'alert alert-success';
+          successElement.textContent = message;
+          
+          // Insert before the form
+          form.parentNode.insertBefore(successElement, form);
+        }
+        
+        // Helper function to show loading indicator
+        function showLoading() {
+          // Create loading overlay if it doesn't exist
+          let loadingOverlay = document.querySelector('#registration-loading');
+          if (!loadingOverlay) {
+            loadingOverlay = document.createElement('div');
+            loadingOverlay.id = 'registration-loading';
+            loadingOverlay.style.position = 'absolute';
+            loadingOverlay.style.top = '0';
+            loadingOverlay.style.left = '0';
+            loadingOverlay.style.width = '100%';
+            loadingOverlay.style.height = '100%';
+            loadingOverlay.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
+            loadingOverlay.style.display = 'flex';
+            loadingOverlay.style.justifyContent = 'center';
+            loadingOverlay.style.alignItems = 'center';
+            loadingOverlay.style.zIndex = '1000';
+            
+            const spinner = document.createElement('div');
+            spinner.className = 'spinner-border text-primary';
+            spinner.setAttribute('role', 'status');
+            
+            const srText = document.createElement('span');
+            srText.className = 'sr-only';
+            srText.textContent = 'Loading...';
+            
+            spinner.appendChild(srText);
+            loadingOverlay.appendChild(spinner);
+            
+            // Add to form's parent with relative positioning
+            const formContainer = form.parentNode;
+            formContainer.style.position = 'relative';
+            formContainer.appendChild(loadingOverlay);
+          }
+          
+          loadingOverlay.style.display = 'flex';
+        }
+        
+        // Helper function to hide loading indicator
+        function hideLoading() {
+          const loadingOverlay = document.querySelector('#registration-loading');
+          if (loadingOverlay) {
+            loadingOverlay.style.display = 'none';
+          }
+        }
+      });
+    })();

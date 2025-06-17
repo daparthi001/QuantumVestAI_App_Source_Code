@@ -9,18 +9,27 @@ metadata:
     environment: development
     created-by: daparthi001
     created-date: "2025-06-15"
+    updated-by: daparthi001
+    updated-date: "2025-06-17"
   annotations:
-    alb.ingress.kubernetes.io/target-group-attributes: deregistration_delay.timeout_seconds=30
-    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "http"
-    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "60"
+    # AWS ALB health check annotations
+    alb.ingress.kubernetes.io/target-type: "ip"
+    alb.ingress.kubernetes.io/healthcheck-path: "/health"
+    alb.ingress.kubernetes.io/healthcheck-port: "3000"  # Match your container port
+    alb.ingress.kubernetes.io/healthcheck-protocol: "HTTP"
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
+    alb.ingress.kubernetes.io/healthy-threshold-count: "2"
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: "2"
+    alb.ingress.kubernetes.io/success-codes: "200-399"
 spec:
+  type: ClusterIP
+  ports:
+  - port: 80  # External port
+    targetPort: 3000  # Container port
+    protocol: TCP
+    name: http
   selector:
     app: quantumvestai
     tier: frontend
     environment: development
-  ports:
-    - name: http
-      port: 80       # The port this service exposes internally
-      targetPort: 3000 # The container port your UI app listens on
-      protocol: TCP
-  type: ClusterIP

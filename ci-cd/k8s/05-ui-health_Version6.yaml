@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ui-health-files
+  namespace: dev
+  labels:
+    app: ui
+    tier: frontend
+    environment: development
+    updated: "20250617155345"
+data:
+  health.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>QuantumVestAI - Health Check</title>
+    </head>
+    <body>
+      <h1>QuantumVestAI UI Service - Healthy</h1>
+      <p>Server time: 2025-06-17 15:53:45</p>
+      <p>User: daparthi001</p>
+    </body>
+    </html>
