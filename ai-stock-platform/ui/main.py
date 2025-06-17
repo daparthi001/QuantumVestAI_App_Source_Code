@@ -1,7 +1,7 @@
 """
-QuantumVestAI UI Main Module
+QuantumVestAI UI Main Module - Fixed JSONResponse Error
 Created: 2025-06-17 01:50:11
-Updated: 2025-06-17 20:15:37
+Updated: 2025-06-17 20:28:17
 Author: daparthi001
 """
 import os
@@ -197,11 +197,13 @@ async def direct_emergency_login(request: Request):
             }
         )
 
-# OPTIONS handlers for CORS preflight requests
+# OPTIONS handlers for CORS preflight requests - FIXED empty content
 @app.options("/{rest_of_path:path}")
-async def options_universal(rest_of_path: str, response: JSONResponse = JSONResponse()):
+async def options_universal(rest_of_path: str):
     """Universal OPTIONS handler for CORS preflight requests"""
     logger.info(f"OPTIONS request for /{rest_of_path}")
+    # Create response with empty object content
+    response = JSONResponse(content={})
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
@@ -363,7 +365,7 @@ async def health_check():
     return {
         "ui": {
             "status": "healthy",
-            "timestamp": "2025-06-17 20:15:37"
+            "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         },
         "api": api_health
     }
@@ -415,6 +417,44 @@ async def server_error_handler(request: Request, exc: HTTPException):
         return HTMLResponse(
             content=f"<h1>500 Server Error</h1><p>{str(exc)}</p>",
             status_code=500
+        )
+
+# Add route to serve dashboard placeholder
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard(request: Request):
+    """Temporary dashboard placeholder until real dashboard is implemented"""
+    try:
+        return templates.TemplateResponse(
+            "dashboard.html",
+            {"request": request, "username": "User"}
+        )
+    except Exception as e:
+        # If dashboard.html doesn't exist, return a simple HTML response
+        return HTMLResponse(
+            content="""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Dashboard - QuantumVestAI</title>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+            </head>
+            <body>
+                <div class="container mt-5">
+                    <div class="row">
+                        <div class="col-md-12 text-center">
+                            <h1>Dashboard</h1>
+                            <p class="lead">Welcome to QuantumVestAI Dashboard</p>
+                            <p>Your login was successful! This is a placeholder for the dashboard.</p>
+                            <a href="/login" class="btn btn-primary">Back to Login</a>
+                        </div>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """,
+            status_code=200
         )
 
 if __name__ == "__main__":
