@@ -1,7 +1,7 @@
 """
 QuantumVestAI UI Main Module - Fixed Import and Template Issues
 Created: 2025-06-17 01:50:11
-Updated: 2025-06-18 01:39:47
+Updated: 2025-06-18 22:10:00
 Author: daparthi001
 """
 import os
@@ -47,6 +47,9 @@ from utils.template_filters import register_filters
 
 # Register template filters - this should now work with app.state.templates
 register_filters(app)
+
+# Import proxy router
+from routes import api_proxy 
 
 # THEN import controllers after templates are set up
 # Import controllers
