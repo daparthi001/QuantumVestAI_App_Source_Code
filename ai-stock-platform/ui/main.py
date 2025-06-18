@@ -1,7 +1,7 @@
 """
 QuantumVestAI UI Main Module - Fixed JSONResponse Error
 Created: 2025-06-17 01:50:11
-Updated: 2025-06-17 20:28:17
+Updated: 2025-06-18 00:57:48
 Author: daparthi001
 """
 import os
@@ -13,6 +13,22 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from datetime import datetime, timedelta
 import logging
+from pathlib import Path
+
+# Import controllers
+from controllers import (
+    auth_controller, 
+    dashboard_controller,
+    market_controller,
+    stock_controller,
+    watchlist_controller,
+    profile_controller,
+    forecast_controller,
+    news_controller
+)
+
+# Import utility functions
+from utils.template_filters import register_filters
 
 # Setup logging
 logging.basicConfig(
@@ -27,14 +43,21 @@ app = FastAPI(
     description="Web UI for QuantumVestAI Platform",
 )
 
+# Get base directory
+BASE_DIR = Path(__file__).resolve().parent
+
 # Mount static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
 # Setup templates
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 # Get API URL from environment or use default for local development
-API_URL = os.environ.get("API_URL", "http://api:8000/api/v1")
+API_URL = os.environ.get("API_URL", "http://api:8000")
+API_V1_URL = f"{API_URL}/api/v1"
+
+# Register template filters
+register_filters(app)
 
 # Debug middleware to log all requests
 @app.middleware("http")
@@ -74,7 +97,7 @@ async def direct_login_post(
         
         # Call API login endpoint
         response = requests.post(
-            f"{API_URL}/auth/login", 
+            f"{API_V1_URL}/auth/login", 
             json=login_data,
             timeout=5
         )
@@ -285,7 +308,7 @@ async def process_registration(
         
         # Call API register endpoint
         response = requests.post(
-            f"{API_URL}/auth/register", 
+            f"{API_V1_URL}/auth/register", 
             json=user_data
         )
         
@@ -355,7 +378,7 @@ async def health_check():
     
     try:
         # Check API health
-        response = requests.get(f"{API_URL}/health", timeout=2)
+        response = requests.get(f"{API_V1_URL}/health", timeout=2)
         if response.status_code == 200:
             api_health = response.json()
     except Exception as e:
@@ -365,7 +388,8 @@ async def health_check():
     return {
         "ui": {
             "status": "healthy",
-            "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+            "version": "1.0.0"
         },
         "api": api_health
     }
@@ -419,7 +443,17 @@ async def server_error_handler(request: Request, exc: HTTPException):
             status_code=500
         )
 
-# Add route to serve dashboard placeholder
+# Include controllers AFTER defining direct routes to avoid conflicts
+app.include_router(auth_controller.router)
+app.include_router(dashboard_controller.router)
+app.include_router(market_controller.router)  
+app.include_router(stock_controller.router)
+app.include_router(watchlist_controller.router)
+app.include_router(profile_controller.router)
+app.include_router(forecast_controller.router)
+app.include_router(news_controller.router)
+
+# Add route to serve dashboard placeholder (will be overridden by dashboard_controller if implemented)
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request):
     """Temporary dashboard placeholder until real dashboard is implemented"""

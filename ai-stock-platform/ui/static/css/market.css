@@ -1,0 +1,89 @@
+/* Market Overview Page Styles
+   Created: 2025-06-18 00:46:35
+   Author: daparthi001
+*/
+
+.market-index-card {
+  transition: transform 0.15s;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.market-index-card:hover {
+  transform: translateY(-3px);
+}
+
+.market-chart-container {
+  position: relative;
+  height: 300px;
+  width: 100%;
+}
+
+.sector-bar {
+  height: 24px;
+  border-radius: 4px;
+}
+
+.mood-meter {
+  height: 8px;
+  margin: 10px 0 5px;
+}
+
+.mood-indicator {
+  position: absolute;
+  bottom: 0;
+  transform: translateX(-50%);
+  color: var(--dark);
+  font-size: 1.25rem;
+  line-height: 0;
+}
+
+.timeframe-selector .btn {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--secondary);
+  margin-bottom: 0.25rem;
+}
+
+.stat-value {
+  font-weight: 500;
+}
+
+/* Sector Performance */
+.sector-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.sector-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sector-change {
+  width: 70px;
+  text-align: right;
+  font-weight: 500;
+}
+
+.sector-bar-container {
+  flex: 2;
+  height: 8px;
+  margin: 0 10px;
+  background-color: var(--light);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* Responsive fixes */
+@media (max-width: 767.98px) {
+  .market-index-card {
+    margin-bottom: 15px;
+  }
+}

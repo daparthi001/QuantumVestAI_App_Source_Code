@@ -1,166 +1,181 @@
 """
-Main API Module - Updated Auth Router Configuration
-Created: 2025-05-21 14:26:28
-Updated: 2025-06-17 19:42:11
+QuantumVestAI API Main Module
+Created: 2025-06-17 01:50:11
+Updated: 2025-06-18 01:01:01
 Author: daparthi001
 """
-import sys
-from pathlib import Path
-from fastapi import FastAPI, HTTPException, Request, Depends, Response
+import os
+import time
+import logging
+from fastapi import FastAPI, Request, status, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from datetime import datetime
+from typing import Dict, Any
 
-# Add parent directory to Python path
-sys.path.append(str(Path(__file__).parent.parent))
-
-# Import settings and logger first
-from core.config import settings
-from core.logger import logger
-from core.middleware.cors import configure_cors  # Use cors.py
-from core.middleware.exception_handlers import configure_exception_handlers
-# Then import database
-from db.session import engine, SessionLocal, get_db
-
-# Import middleware and routers
-from core.middleware import setup_middleware
+# Import routers from modules
 from routers import (
-    auth,
-    stocks,
-    users,
-    forecast,
-    watchlist,
-    admin,
-    sentiment,
-    data,
-    whitepaper
+    auth, 
+    market, 
+    stocks, 
+    forecast, 
+    portfolio, 
+    watchlist, 
+    news, 
+    users
 )
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger("quantumvestai_api")
 
 # Create FastAPI application
 app = FastAPI(
-    title=settings.PROJECT_NAME,
-    version=settings.VERSION,
-    description="QuantumVestAI Stock Market Analysis Platform API",
-    docs_url=f"{settings.API_V1_STR}/docs",
-    redoc_url=f"{settings.API_V1_STR}/redoc",
+    title="QuantumVestAI API",
+    description="API for QuantumVestAI Platform",
+    version="1.0.0",
 )
 
-# Setup middleware including basic middleware
-setup_middleware(app)
-
-# Configure CORS with our standardized configuration
-app = configure_cors(app)
-
-# Configure exception handlers for consistent error responses
-app = configure_exception_handlers(app)
-
-logger.info(
-    "Starting API %s version %s",
-    settings.PROJECT_NAME,
-    settings.VERSION
-)
-
-# CRITICAL: Register auth router WITHOUT the API prefix AND without any prefix at all
-# This ensures auth endpoints are accessible directly at /login, /register, etc.
-# as well as at /auth/login, /auth/register, etc.
-app.include_router(auth.router, prefix="")
-logger.debug(f"Registered auth router with empty prefix")
-
-# Also register with /auth prefix for backward compatibility
-app.include_router(auth.router, prefix="/auth")
-logger.debug(f"Registered auth router with /auth prefix")
-
-# Register remaining routers with API prefix
-API_ROUTERS = [
-    users.router,
-    stocks.router,
-    forecast.router,
-    watchlist.router,
-    admin.router,
-    sentiment.router,
-    data.router,
-    whitepaper.router
+# Configure CORS
+origins = [
+    "http://localhost:8080",
+    "https://dev.quantumvestai.com",
+    "https://app.quantumvestai.com",
+    "https://quantumvestai.com",
+    "*"  # Allow all origins for development - REMOVE IN PRODUCTION
 ]
 
-for router in API_ROUTERS:
-    app.include_router(
-        router,
-        prefix=f"{settings.API_V1_STR}"
-    )
-    logger.debug(f"Registered router: {router.prefix} at {settings.API_V1_STR}{router.prefix}")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"]
+)
 
+security = HTTPBearer()
+
+# Middleware for request timing and logging
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.time()
+    path = request.url.path
+    method = request.method
+    
+    logger.info(f"Request: {method} {path}")
+    
+    try:
+        # Process the request and get the response
+        response = await call_next(request)
+        
+        # Calculate the processing time
+        process_time = time.time() - start_time
+        
+        # Add the processing time to the response headers
+        response.headers["X-Process-Time"] = str(process_time)
+        
+        # Log the response status
+        logger.info(f"Response: {method} {path} - Status: {response.status_code} - Time: {process_time:.3f}s")
+        
+        return response
+    except Exception as e:
+        # Log any errors that occur during processing
+        logger.error(f"Error processing request {method} {path}: {str(e)}")
+        
+        # Return a JSON error response
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": "Internal server error", "error": str(e)}
+        )
+
+# Global exception handler
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled exception: {str(exc)}")
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": "An unexpected error occurred"}
+    )
+
+# Root endpoint
 @app.get("/")
-async def api_root():
-    """API Root endpoint - provides basic information"""
+async def root():
     return {
-        "name": settings.PROJECT_NAME,
-        "version": settings.VERSION,
-        "description": "QuantumVestAI Stock Market Analysis Platform API",
-        "docs_url": f"{settings.API_V1_STR}/docs",
+        "name": "QuantumVestAI API",
+        "version": "1.0.0",
+        "status": "running",
         "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
     }
 
+# Health check endpoint
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
+    # Add more comprehensive health checks here (DB, services, etc.)
     return {
         "status": "healthy",
         "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
-        "version": settings.VERSION
+        "environment": os.environ.get("ENVIRONMENT", "development"),
+        "version": "1.0.0"
     }
 
-# Add startup event to verify database connection
-@app.on_event("startup")
-async def startup_event():
-    """Verify database connection on startup"""
-    try:
-        # Test database connection
-        with engine.connect() as conn:
-            conn.execute("SELECT 1")
-        logger.info("Database connection verified")
+# Preflight handler for CORS
+@app.options("/{rest_of_path:path}")
+async def options_handler(rest_of_path: str):
+    return {}
+
+# API v1 endpoint prefix
+API_V1_PREFIX = "/api/v1"
+
+# Include routers with versioned prefix
+app.include_router(auth.router, prefix=API_V1_PREFIX)
+app.include_router(market.router, prefix=API_V1_PREFIX)
+app.include_router(stocks.router, prefix=API_V1_PREFIX)
+app.include_router(forecast.router, prefix=API_V1_PREFIX)
+app.include_router(portfolio.router, prefix=API_V1_PREFIX)
+app.include_router(watchlist.router, prefix=API_V1_PREFIX)
+app.include_router(news.router, prefix=API_V1_PREFIX)
+app.include_router(users.router, prefix=API_V1_PREFIX)
+
+# Add development-only routes
+if os.environ.get("ENVIRONMENT", "development") != "production":
+    @app.get("/debug/routes")
+    async def debug_routes():
+        """Show all registered routes for debugging (Development only)"""
+        routes = []
         
-        # Log authentication routes
-        logger.info("Authentication routes registered:")
-        auth_paths = [route.path for route in auth.router.routes]
-        for path in auth_paths:
-            logger.info(f" - {path}")
-            
-    except Exception as e:
-        logger.error("Database connection failed: %s", str(e))
-        raise
-
-# Log application startup complete
-logger.info(
-    "API startup complete - %s v%s",
-    settings.PROJECT_NAME,
-    settings.VERSION
-)
-
-# Special handling for OPTIONS requests to support CORS preflight
-@app.options("/{full_path:path}")
-async def options_handler(request: Request, full_path: str):
-    """Handle OPTIONS requests for CORS preflight"""
-    response = JSONResponse(content={})
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "POST, GET, DELETE, PUT, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    response.headers["Access-Control-Max-Age"] = "86400"
-    return response
-
-# Add debug endpoint for all registered routes
-@app.get("/debug/routes")
-async def debug_all_routes():
-    """Debug endpoint to show all registered routes"""
-    routes = []
+        for route in app.routes:
+            route_info = {
+                "path": getattr(route, "path", None),
+                "name": getattr(route, "name", None),
+                "methods": list(route.methods) if hasattr(route, "methods") and route.methods else []
+            }
+            routes.append(route_info)
+        
+        return {"routes": routes}
     
-    for route in app.routes:
-        routes.append({
-            "path": route.path,
-            "name": route.name,
-            "methods": list(route.methods) if hasattr(route, "methods") and route.methods else []
-        })
+    @app.get("/debug/headers")
+    async def debug_headers(request: Request):
+        """Show request headers (Development only)"""
+        return {"headers": dict(request.headers)}
     
-    return {"routes": routes}
+    @app.post("/debug/echo")
+    async def echo_payload(request: Request):
+        """Echo back request body (Development only)"""
+        try:
+            body = await request.json()
+            return {"echo": body}
+        except:
+            try:
+                body = await request.body()
+                return {"echo": str(body)}
+            except:
+                return {"echo": "Could not parse request body"}
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

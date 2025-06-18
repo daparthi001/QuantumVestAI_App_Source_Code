@@ -1,0 +1,432 @@
+{% extends "base.html" %}
+
+{% block title %}Market Overview | QuantumVestAI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/market.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="mb-2">Market Overview</h2>
+            <p class="text-muted">Last updated: {{ data.timestamp }}</p>
+        </div>
+    </div>
+    
+    <!-- Market Indices -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">Major Indices</h5>
+                </div>
+                <div class="card-body">
+                    {% if data.overview and data.overview.status != 'unavailable' and data.overview.indices %}
+                    <div class="row">
+                        {% for index in data.overview.indices %}
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="market-index-card p-3 rounded {% if index.change_percent > 0 %}bg-success-subtle{% elif index.change_percent < 0 %}bg-danger-subtle{% else %}bg-light{% endif %}">
+                                <h6 class="mb-1">{{ index.name }}</h6>
+                                <h4 class="mb-0">{{ index.price | round(2) }}</h4>
+                                <span class="change {% if index.change_percent > 0 %}text-success{% elif index.change_percent < 0 %}text-danger{% endif %}">
+                                    {{ index.change | round(2) }} ({{ index.change_percent | round(2) }}%)
+                                    {% if index.change_percent > 0 %}
+                                    <i class="fas fa-caret-up"></i>
+                                    {% elif index.change_percent < 0 %}
+                                    <i class="fas fa-caret-down"></i>
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i> 
+                        Market data is currently unavailable
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <!-- Market Chart -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Market Performance</h5>
+                    <div class="btn-group btn-group-sm timeframe-selector">
+                        <button type="button" class="btn btn-outline-primary active" data-timeframe="1d">1D</button>
+                        <button type="button" class="btn btn-outline-primary" data-timeframe="5d">5D</button>
+                        <button type="button" class="btn btn-outline-primary" data-timeframe="1m">1M</button>
+                        <button type="button" class="btn btn-outline-primary" data-timeframe="3m">3M</button>
+                        <button type="button" class="btn btn-outline-primary" data-timeframe="1y">1Y</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="market-chart-container">
+                        <canvas id="marketChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Market Summary -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">Market Summary</h5>
+                </div>
+                <div class="card-body">
+                    {% if data.overview and data.overview.status != 'unavailable' and data.overview.summary %}
+                    <div class="market-stats mb-4">
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="stat-label text-muted small">Advancing</div>
+                                <div class="stat-value text-success">
+                                    {{ data.overview.summary.advancing }} ({{ data.overview.summary.advancing_percent }}%)
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-label text-muted small">Declining</div>
+                                <div class="stat-value text-danger">
+                                    {{ data.overview.summary.declining }} ({{ data.overview.summary.declining_percent }}%)
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-label text-muted small">Volume</div>
+                                <div class="stat-value">{{ data.overview.summary.total_volume | format_number }}</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-label text-muted small">Market Cap</div>
+                                <div class="stat-value">{{ data.overview.summary.total_market_cap | format_market_cap }}</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-label text-muted small">New Highs</div>
+                                <div class="stat-value text-success">{{ data.overview.summary.new_highs }}</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-label text-muted small">New Lows</div>
+                                <div class="stat-value text-danger">{{ data.overview.summary.new_lows }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="market-mood py-3">
+                        <h6>Market Mood</h6>
+                        <div class="mood-meter position-relative mb-2">
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-danger" role="progressbar" style="width: 20%"></div>
+                                <div class="progress-bar bg-warning" role="progressbar" style="width: 20%"></div>
+                                <div class="progress-bar bg-info" role="progressbar" style="width: 20%"></div>
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: 20%"></div>
+                                <div class="progress-bar bg-success" role="progressbar" style="width: 20%"></div>
+                            </div>
+                            {% set mood_position = (data.overview.summary.market_mood + 100) / 2 %}
+                            <div class="mood-indicator" style="left: {{ mood_position }}%;">
+                                <i class="fas fa-caret-down"></i>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>Bearish</span>
+                            <span>Neutral</span>
+                            <span>Bullish</span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Market summary is currently unavailable
+                    </div>
+                    {% endif %}
+                    
+                    {% if data.user and data.sentiment and data.sentiment.status != 'unavailable' %}
+                    <div class="sentiment-preview mt-4">
+                        <h6>Sentiment Preview <span class="badge bg-primary">Premium</span></h6>
+                        <div class="sentiment-indicator p-3 rounded bg-light">
+                            <div class="d-flex justify-content-between mb-2">
+                                <div>Social Sentiment</div>
+                                <div class="{% if data.sentiment.social_score > 0 %}text-success{% elif data.sentiment.social_score < 0 %}text-danger{% endif %}">
+                                    {{ data.sentiment.social_score | format_sentiment }}
+                                </div>
+                            </div>
+                            <a href="/market/sentiment" class="btn btn-sm btn-outline-primary w-100 mt-2">
+                                View Full Analysis
+                            </a>
+                        </div>
+                    </div>
+                    {% elif data.user and data.user.role == 'free' %}
+                    <div class="premium-feature mt-4">
+                        <h6>Sentiment Analysis</h6>
+                        <div class="p-3 rounded bg-light text-center">
+                            <p class="mb-2"><i class="fas fa-lock me-2"></i> Premium Feature</p>
+                            <a href="/upgrade" class="btn btn-sm btn-outline-primary">Upgrade Now</a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sector Performance -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">Sector Performance</h5>
+                </div>
+                <div class="card-body">
+                    {% if data.sectors and data.sectors.status != 'unavailable' and data.sectors.data %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Sector</th>
+                                    <th class="text-end">Change</th>
+                                    <th class="text-end">Volume</th>
+                                    <th>Performance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sector in data.sectors.data %}
+                                <tr>
+                                    <td>
+                                        <a href="/market/sector/{{ sector.id }}" class="text-decoration-none">{{ sector.name }}</a>
+                                    </td>
+                                    <td class="text-end {% if sector.change_percent > 0 %}text-success{% elif sector.change_percent < 0 %}text-danger{% endif %}">
+                                        {{ sector.change_percent | round(2) }}%
+                                    </td>
+                                    <td class="text-end">{{ sector.volume | format_number }}</td>
+                                    <td style="width: 30%;">
+                                        <div class="progress" style="height: 8px;">
+                                            {% if sector.change_percent > 0 %}
+                                            <div class="progress-bar bg-success" role="progressbar" 
+                                                style="width: {{ sector.change_percent | abs | min(10) * 10 }}%"></div>
+                                            {% else %}
+                                            <div class="progress-bar bg-danger" role="progressbar" 
+                                                style="width: {{ sector.change_percent | abs | min(10) * 10 }}%"></div>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i> 
+                        Sector performance data is currently unavailable
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Top Movers -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">Top Gainers</h5>
+                </div>
+                <div class="card-body">
+                    {% if data.movers and data.movers.status != 'unavailable' and data.movers.gainers %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Price</th>
+                                    <th>Change</th>
+                                    <th>Volume</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stock in data.movers.gainers[:5] %}
+                                <tr>
+                                    <td>
+                                        <a href="/stock/{{ stock.symbol }}" class="text-decoration-none fw-bold">
+                                            {{ stock.symbol }}
+                                        </a>
+                                        <div class="small text-truncate" style="max-width: 150px;">
+                                            {{ stock.name }}
+                                        </div>
+                                    </td>
+                                    <td>${{ stock.price | round(2) }}</td>
+                                    <td class="text-success">
+                                        {{ stock.change_percent | round(2) }}% 
+                                        <i class="fas fa-caret-up"></i>
+                                    </td>
+                                    <td>{{ stock.volume | format_number }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i> 
+                        Top gainers data is currently unavailable
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">Top Losers</h5>
+                </div>
+                <div class="card-body">
+                    {% if data.movers and data.movers.status != 'unavailable' and data.movers.losers %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Price</th>
+                                    <th>Change</th>
+                                    <th>Volume</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stock in data.movers.losers[:5] %}
+                                <tr>
+                                    <td>
+                                        <a href="/stock/{{ stock.symbol }}" class="text-decoration-none fw-bold">
+                                            {{ stock.symbol }}
+                                        </a>
+                                        <div class="small text-truncate" style="max-width: 150px;">
+                                            {{ stock.name }}
+                                        </div>
+                                    </td>
+                                    <td>${{ stock.price | round(2) }}</td>
+                                    <td class="text-danger">
+                                        {{ stock.change_percent | round(2) }}% 
+                                        <i class="fas fa-caret-down"></i>
+                                    </td>
+                                    <td>{{ stock.volume | format_number }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i> 
+                        Top losers data is currently unavailable
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Market Chart
+    {% if data.overview and data.overview.status != 'unavailable' and data.overview.chart_data %}
+    const marketCtx = document.getElementById('marketChart').getContext('2d');
+    const marketData = {{ data.overview.chart_data | tojson }};
+    
+    const marketChart = new Chart(marketCtx, {
+        type: 'line',
+        data: {
+            labels: marketData.labels,
+            datasets: [
+                {
+                    label: 'S&P 500',
+                    data: marketData.sp500,
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    tension: 0.1,
+                    pointRadius: 0,
+                    pointHoverRadius: 3
+                },
+                {
+                    label: 'Dow Jones',
+                    data: marketData.dow,
+                    borderColor: 'rgba(220, 53, 69, 1)',
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    tension: 0.1,
+                    pointRadius: 0,
+                    pointHoverRadius: 3
+                },
+                {
+                    label: 'Nasdaq',
+                    data: marketData.nasdaq,
+                    borderColor: 'rgba(25, 135, 84, 1)',
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    tension: 0.1,
+                    pointRadius: 0,
+                    pointHoverRadius: 3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            scales: {
+                y: {
+                    display: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    align: 'end'
+                }
+            }
+        }
+    });
+    
+    // Timeframe Selector
+    document.querySelectorAll('.timeframe-selector button').forEach(function(button) {
+        button.addEventListener('click', function() {
+            // Remove active class from all buttons
+            document.querySelectorAll('.timeframe-selector button').forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            // Get timeframe value
+            const timeframe = this.dataset.timeframe;
+            
+            // Here you would typically fetch new data based on timeframe
+            // For now we'll just log it
+            console.log('Fetching data for timeframe: ' + timeframe);
+            
+            // In a real implementation, you would update the chart with new data
+        });
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}
