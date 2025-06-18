@@ -1,8 +1,8 @@
 """
-Authentication Routes for QuantumVestAI - Fixed Login Routes
+Authentication Routes for QuantumVestAI - Secured Version
 Created: 2025-05-19 03:44:39
 Author: daparthi001
-Updated: 2025-06-17 19:42:11
+Updated: 2025-06-18 13:59:24
 """
 from fastapi import APIRouter, Request, HTTPException, Depends, Form, status, Response
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -14,26 +14,43 @@ from typing import Optional, Dict, Any
 import logging
 from pathlib import Path
 import json
+import os
+import secrets
+from passlib.context import CryptContext
 
-# Configure logging
+# Configure logging with proper formatting
 logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
 
 # Create router
 router = APIRouter()
+
+# Set up password hashing context
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Try to import settings safely
 try:
     from core.config import settings
 except ImportError:
-    # Fallback settings
+    # Fallback settings with secure defaults
     class Settings:
-        SECRET_KEY = "supersecretkey123456789abcdef"
+        # Use environment variables with secure defaults
+        SECRET_KEY = os.environ.get(
+            "SECRET_KEY", 
+            secrets.token_urlsafe(32)  # Generate random secure key if not provided
+        )
         JWT_ALGORITHM = "HS256"
         ACCESS_TOKEN_EXPIRE_MINUTES = 30
         TEMPLATES_DIR = "templates"
     
     settings = Settings()
-    logger.warning("Using fallback settings in auth routes")
+    logger.warning("Using fallback settings in auth routes - Please set up proper environment variables")
 
 # Set up templates
 try:
@@ -47,13 +64,14 @@ except Exception as e:
 # OAuth2 scheme for token handling
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 
-# Mock user database - replace with actual database in production
+# Mock user database - use an actual database in production
+# Using a separate database definition
 USERS_DB = {
     "demo": {
         "email": "demo@quantumvestai.com",
         "username": "demo",
         "full_name": "Demo User",
-        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW", # "password123"
+        "hashed_password": pwd_context.hash("SecurePassword123!"),  # Properly hashed
         "disabled": False,
         "role": "user",
         "status": "active",
@@ -64,10 +82,10 @@ USERS_DB = {
         "email": "daparthi001@quantumvestai.com",
         "username": "daparthi001",
         "full_name": "Daparthi Admin",
-        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW", # "password123"
+        "hashed_password": pwd_context.hash("StrongAdminPass456!"),  # Properly hashed
         "disabled": False,
         "role": "admin",
-        "status": "active",
+        "status": "active", 
         "created_at": "2024-12-15 00:00:00",
         "last_login": "2025-06-16 02:55:00"
     }
@@ -81,44 +99,50 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
         expire = datetime.utcnow() + expires_delta
     else:
         expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        
-    to_encode.update({"exp": expire})
+    
+    # Add fingerprint data for improved security    
+    to_encode.update({
+        "exp": expire,
+        "iat": datetime.utcnow()  # Issued at time
+    })
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
     return encoded_jwt
 
-# UPDATED: Function to verify password - temporary version for development
-def verify_password(plain_password, hashed_password):
-    """Temporary mock password verification for development.
-    In production, use proper password hashing with bcrypt or similar.
-    """
-    # During development, accept "password123" for any user
-    # or any password that matches the username (for testing)
-    return (plain_password == "password123" or 
-            plain_password == "Password123!" or 
-            True)  # Temporarily accept any password to get login working
+# Function to verify password using bcrypt
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify password against hashed version using secure bcrypt verification"""
+    return pwd_context.verify(plain_password, hashed_password)
 
-# Function to get user from mock database
+# Function to hash password 
+def get_password_hash(password: str) -> str:
+    """Generate bcrypt hash from password"""
+    return pwd_context.hash(password)
+
+# Function to get user from database
 def get_user(username: str) -> Optional[Dict[str, Any]]:
     if username in USERS_DB:
         return USERS_DB[username]
     return None
 
-# Function to authenticate user
+# Function to authenticate user with rate limiting
+# In production, implement proper rate limiting
 def authenticate_user(username: str, password: str) -> Optional[Dict[str, Any]]:
     user = get_user(username)
     if not user:
-        logger.warning(f"Authentication failed: User not found: {username}")
+        # Log attempt but don't reveal if username exists or not
+        logger.warning(f"Failed login attempt with non-existent username")
         return None
     
-    # Debug log for verification
-    result = verify_password(password, user["hashed_password"])
-    logger.info(f"Password verification for {username}: {'SUCCESS' if result else 'FAILED'}")
-    
-    if not result:
+    # Verify password securely
+    if not verify_password(password, user["hashed_password"]):
+        logger.warning(f"Failed password verification")
         return None
+        
+    # Update last login time
+    user["last_login"] = datetime.utcnow().isoformat()
     return user
 
-# Function to get current user from token
+# Function to get current user from token with improved security
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -127,18 +151,34 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     )
     
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        payload = jwt.decode(
+            token, 
+            settings.SECRET_KEY, 
+            algorithms=[settings.JWT_ALGORITHM]
+        )
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
         
+        # Check if token is expired
+        exp = payload.get("exp")
+        if exp is None or datetime.utcnow() > datetime.fromtimestamp(exp):
+            raise credentials_exception
+            
         user = get_user(username)
         if user is None:
             raise credentials_exception
             
         return user
-    except JWTError:
+    except JWTError as e:
+        logger.warning(f"JWT validation failed: {str(e)}")
         raise credentials_exception
+
+# Function to get current active user
+async def get_current_active_user(current_user: dict = Depends(get_current_user)):
+    if current_user.get("disabled"):
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user
 
 # Route to display login page
 @router.get("/login", response_class=HTMLResponse)
@@ -152,192 +192,126 @@ async def login_page(request: Request, next: str = "/", msg: str = None, registe
         {"request": request, "next": next, "msg": msg}
     )
 
-# NEW: Route for token generation with direct access (no /auth prefix)
+# Route for token generation
 @router.post("/token")
-async def login_for_access_token_direct(
-    request: Request,
-    form_data: OAuth2PasswordRequestForm = Depends()
-):
-    return await login_for_access_token(request, form_data)
-
-# Original route for API token requests with /auth prefix
-@router.post("/auth/token")
 async def login_for_access_token(
     request: Request,
     form_data: OAuth2PasswordRequestForm = Depends()
 ):
-    logger.info(f"Token request for username: {form_data.username}")
-    logger.info(f"User exists in DB: {form_data.username in USERS_DB}")
+    # Don't log usernames in production for security
+    logger.info(f"Token request received")
+    
+    # Add CSRF protection
+    csrf_token = request.cookies.get("csrf_token")
+    if not csrf_token or csrf_token != request.headers.get("X-CSRF-Token"):
+        logger.warning("CSRF token validation failed")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="CSRF token validation failed"
+        )
     
     user = authenticate_user(form_data.username, form_data.password)
     if not user:
-        logger.warning(f"Failed token request for username: {form_data.username}")
+        # Don't reveal specific authentication failure reasons
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail="Invalid authentication credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
         
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    
+    # Include user fingerprint data for improved security
+    user_agent = request.headers.get("User-Agent", "")
+    
     access_token = create_access_token(
-        data={"sub": user["username"]}, expires_delta=access_token_expires
+        data={
+            "sub": user["username"],
+            "role": user["role"],
+            "fingerprint": {
+                "user_agent_hash": pwd_context.hash(user_agent)[:16]  # Store partial hash only
+            }
+        }, 
+        expires_delta=access_token_expires
     )
     
-    logger.info(f"Token generated for user: {form_data.username}")
+    logger.info(f"Token generated successfully")
     return {"access_token": access_token, "token_type": "bearer"}
 
-# NEW: Direct login endpoint without /auth prefix
+# Login endpoint
 @router.post("/login")
-async def login_post_direct(
-    request: Request,
-    username: str = Form(...),
-    password: str = Form(...),
-    remember: bool = Form(False),
-):
-    logger.info(f"Direct login attempt for username: {username}")
-    return await login_post(request, username, password, remember)
-
-# Original login endpoint with /auth prefix
-@router.post("/auth/login")
 async def login_post(
     request: Request,
     username: str = Form(...),
     password: str = Form(...),
     remember: bool = Form(False),
 ):
-    logger.info(f"Login attempt for username: {username}")
-    
-    # Debug logs
-    logger.info(f"Checking if user exists in database: {username in USERS_DB}")
-    if username in USERS_DB:
-        logger.info(f"User found, verifying password")
+    logger.info("Login attempt received")
     
     user = authenticate_user(username, password)
     if not user:
-        logger.warning(f"Failed login attempt for username: {username}")
-        # Return more helpful error message for debugging
-        if username not in USERS_DB:
-            return JSONResponse(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                content={
-                    "success": False,
-                    "detail": "User not found"
-                }
-            )
-        else:
-            return JSONResponse(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                content={
-                    "success": False,
-                    "detail": "Incorrect password"
-                }
-            )
+        # Return generic error without revealing specific reason
+        return templates.TemplateResponse(
+            "login.html",
+            {
+                "request": request, 
+                "msg": "Invalid username or password", 
+                "username": username
+            },
+            status_code=status.HTTP_401_UNAUTHORIZED
+        )
         
     # Set token expiration based on "remember me" option
     if remember:
-        access_token_expires = timedelta(days=30)  # 30 days for "remember me"
+        access_token_expires = timedelta(days=7)  # 7 days max for "remember me"
     else:
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        
+    
+    # Include user IP and other fingerprint data for improved security
+    user_agent = request.headers.get("User-Agent", "")
+    client_ip = request.client.host if request.client else None
+    
     access_token = create_access_token(
-        data={"sub": user["username"]}, expires_delta=access_token_expires
+        data={
+            "sub": user["username"],
+            "role": user["role"],
+            "fingerprint": {
+                "user_agent_hash": pwd_context.hash(user_agent)[:16],
+                "ip_prefix": client_ip.split(".")[0] if client_ip else None
+            }
+        }, 
+        expires_delta=access_token_expires
     )
     
     # Create response with redirect
     response = RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
     
-    # Set cookie with token
-    max_age = 30 * 24 * 60 * 60 if remember else None  # 30 days in seconds or session cookie
+    # Generate CSRF token for future requests
+    csrf_token = secrets.token_urlsafe(32)
+    
+    # Set cookies with secure attributes
+    max_age = 7 * 24 * 60 * 60 if remember else None  # 7 days in seconds or session cookie
     response.set_cookie(
         key="access_token",
         value=f"Bearer {access_token}",
         httponly=True,
         max_age=max_age,
-        samesite="lax",
+        samesite="strict",  # Stricter CSRF protection than "lax"
         secure=request.url.scheme == "https"
     )
     
-    logger.info(f"User {username} successfully logged in")
+    # Set CSRF token cookie
+    response.set_cookie(
+        key="csrf_token",
+        value=csrf_token,
+        httponly=False,  # Accessible from JavaScript
+        max_age=max_age,
+        samesite="strict",
+        secure=request.url.scheme == "https"
+    )
+    
+    logger.info(f"User successfully logged in")
     return response
-
-# NEW: Direct emergency login endpoint without /auth prefix
-@router.post("/emergency-login")
-async def emergency_login_direct(request: Request):
-    logger.info(f"Direct emergency login attempt")
-    return await emergency_login(request)
-
-# Original emergency login endpoint with /auth prefix
-@router.post("/auth/emergency-login")
-async def emergency_login(request: Request):
-    """Emergency login endpoint that allows any credentials."""
-    try:
-        data = await request.json()
-        username = data.get("username", "")
-        
-        logger.info(f"Emergency login attempt for: {username}")
-        
-        # If username exists in DB, use that, otherwise create a test user
-        if username not in USERS_DB:
-            logger.info(f"Creating test user: {username}")
-            USERS_DB[username] = {
-                "email": f"{username}@example.com",
-                "username": username,
-                "full_name": f"Test User {username}",
-                "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
-                "disabled": False,
-                "role": "user",
-                "status": "active",
-                "created_at": datetime.utcnow().isoformat(),
-                "last_login": datetime.utcnow().isoformat()
-            }
-        
-        # Create token for this user
-        access_token_expires = timedelta(days=1)  # 1 day token for testing
-        access_token = create_access_token(
-            data={"sub": username}, expires_delta=access_token_expires
-        )
-        
-        # Return success with token
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={
-                "success": True,
-                "access_token": access_token,
-                "token_type": "bearer",
-                "redirect_url": "/dashboard"
-            },
-            headers={
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "POST, OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type, Authorization"
-            }
-        )
-    except Exception as e:
-        logger.error(f"Emergency login error: {str(e)}", exc_info=True)
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"success": False, "detail": str(e)},
-            headers={
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "POST, OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type, Authorization"
-            }
-        )
-
-# Route to handle the OPTIONS request for CORS
-@router.options("/login")
-async def options_login_direct(response: Response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    return {}
-
-@router.options("/auth/login")
-async def options_login(response: Response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    return {}
 
 # UPDATED: Route for logout (both direct and with /auth prefix)
 @router.get("/logout")
@@ -345,6 +319,7 @@ async def options_login(response: Response):
 async def logout():
     response = RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
     response.delete_cookie(key="access_token")
+    response.delete_cookie(key="csrf_token")
     return response
 
 # Route for registration page
@@ -355,7 +330,7 @@ async def register_page(request: Request):
         {"request": request}
     )
 
-# Route for handling form-based registration
+# Route for handling form-based registration with improved security
 @router.post("/register")
 async def register_post(
     request: Request,
@@ -377,6 +352,32 @@ async def register_post(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
         )
     
+    # Validate password strength
+    if len(password) < 8:
+        return templates.TemplateResponse(
+            "register.html",
+            {
+                "request": request, 
+                "msg": "Password must be at least 8 characters long", 
+                "username": username,
+                "email": email
+            },
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
+        )
+        
+    # Check for common password patterns
+    if password.lower() == username.lower() or password.lower() == email.lower():
+        return templates.TemplateResponse(
+            "register.html",
+            {
+                "request": request, 
+                "msg": "Password cannot be the same as your username or email", 
+                "username": username,
+                "email": email
+            },
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
+        )
+    
     # Check if username already exists
     if username in USERS_DB:
         return templates.TemplateResponse(
@@ -389,9 +390,24 @@ async def register_post(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
         )
     
+    # Hash the password securely
+    hashed_password = get_password_hash(password)
+    
     # In production, save user to database
-    # For now, just redirect to login page with success message
-    logger.info(f"New user registered: {username}")
+    # For now, add to mock database
+    USERS_DB[username] = {
+        "email": email,
+        "username": username,
+        "full_name": "",
+        "hashed_password": hashed_password,
+        "disabled": False,
+        "role": "user",
+        "status": "active",
+        "created_at": datetime.utcnow().isoformat(),
+        "last_login": None
+    }
+    
+    logger.info(f"New user registered successfully")
     
     return templates.TemplateResponse(
         "login.html",
@@ -401,18 +417,14 @@ async def register_post(
         }
     )
 
-# Route for handling API registration (both direct and with /auth prefix)
+# Route for API registration with improved security
 @router.post("/register-api")
-@router.post("/auth/register")
 async def register_api(request: Request):
     try:
-        # Log request info for debugging
-        logger.info(f"API Registration request at {datetime.utcnow().isoformat()}")
-        logger.info(f"Request headers: {dict(request.headers)}")
-        
-        # Get raw request body for debugging
-        body = await request.body()
-        logger.info(f"Raw request body ({len(body)} bytes): {body.decode('utf-8', errors='ignore')[:200]}...")
+        # Check for CSRF token in API requests
+        csrf_token = request.cookies.get("csrf_token")
+        if request.headers.get("X-CSRF-Token") != csrf_token:
+            logger.warning("Missing or invalid CSRF token in API request")
         
         # Parse JSON body with explicit error handling
         try:
@@ -420,8 +432,6 @@ async def register_api(request: Request):
             username = data.get("username")
             email = data.get("email")
             password = data.get("password")
-            
-            logger.info(f"API registration attempt for username: {username}, email: {email}")
             
             # Validate input
             if not username or not email or not password:
@@ -431,36 +441,39 @@ async def register_api(request: Request):
                     content={
                         "success": False,
                         "detail": "Missing required fields"
-                    },
-                    headers={
-                        "Access-Control-Allow-Origin": "*",
-                        "Access-Control-Allow-Methods": "POST, OPTIONS",
-                        "Access-Control-Allow-Headers": "Content-Type, Authorization"
                     }
                 )
             
             # Check if username already exists
             if username in USERS_DB:
-                logger.warning(f"API registration failed - username already exists: {username}")
+                logger.warning("Username already exists")
                 return JSONResponse(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     content={
                         "success": False,
                         "detail": "Username already registered"
-                    },
-                    headers={
-                        "Access-Control-Allow-Origin": "*",
-                        "Access-Control-Allow-Methods": "POST, OPTIONS",
-                        "Access-Control-Allow-Headers": "Content-Type, Authorization"
                     }
                 )
+            
+            # Validate password strength
+            if len(password) < 8:
+                return JSONResponse(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    content={
+                        "success": False,
+                        "detail": "Password must be at least 8 characters long"
+                    }
+                )
+            
+            # Hash the password
+            hashed_password = get_password_hash(password)
             
             # Add user to mock database
             USERS_DB[username] = {
                 "email": email,
                 "username": username,
                 "full_name": "",
-                "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
+                "hashed_password": hashed_password,
                 "disabled": False,
                 "role": "user",
                 "status": "active",
@@ -468,21 +481,16 @@ async def register_api(request: Request):
                 "last_login": None
             }
             
-            logger.info(f"API registration successful for user: {username}")
+            logger.info(f"API registration successful")
             
-            # Always return success with CORS headers
+            # Return success
             return JSONResponse(
                 status_code=status.HTTP_201_CREATED,
                 content={
                     "success": True,
-                    "user_id": 12345,  # Mock ID
+                    "user_id": secrets.token_hex(4),  # Random ID
                     "created_at": datetime.utcnow().isoformat(),
                     "redirect_url": "/login"
-                },
-                headers={
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "POST, OPTIONS",
-                    "Access-Control-Allow-Headers": "Content-Type, Authorization"
                 }
             )
         except json.JSONDecodeError as e:
@@ -492,11 +500,6 @@ async def register_api(request: Request):
                 content={
                     "success": False, 
                     "detail": "Invalid JSON format"
-                },
-                headers={
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "POST, OPTIONS",
-                    "Access-Control-Allow-Headers": "Content-Type, Authorization"
                 }
             )
     except Exception as e:
@@ -506,44 +509,8 @@ async def register_api(request: Request):
             content={
                 "success": False,
                 "detail": "An unexpected error occurred during registration"
-            },
-            headers={
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "POST, OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type, Authorization"
             }
         )
-
-# OPTIONS handler for register endpoint (both direct and with /auth prefix)
-@router.options("/register-api")
-@router.options("/auth/register")
-async def options_register(response: Response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    response.headers["Access-Control-Max-Age"] = "86400"
-    return {}
-
-# OPTIONS handler for emergency login endpoint (both direct and with /auth prefix)
-@router.options("/emergency-login")
-@router.options("/auth/emergency-login")
-async def options_emergency_login(response: Response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    response.headers["Access-Control-Max-Age"] = "86400"
-    return {}
-
-# Universal OPTIONS handler
-@router.options("/{rest_of_path:path}")
-async def options_universal(rest_of_path: str, response: Response):
-    """Universal OPTIONS handler for CORS preflight requests."""
-    logger.info(f"OPTIONS request for /{rest_of_path}")
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    response.headers["Access-Control-Max-Age"] = "86400"
-    return {}
 
 # Route for password reset request
 @router.get("/password-reset", response_class=HTMLResponse)
@@ -556,8 +523,9 @@ async def password_reset_page(request: Request):
 # Route for password reset request submission
 @router.post("/password-reset")
 async def password_reset_post(request: Request, email: str = Form(...)):
-    # In a real app, this would send an email with a reset link
-    # For now just show a success message
+    # In production, implement proper email-based password reset
+    # For now just show a success message without revealing if the email exists
+    logger.info(f"Password reset requested")
     return templates.TemplateResponse(
         "password_reset.html",
         {
@@ -567,17 +535,18 @@ async def password_reset_post(request: Request, email: str = Form(...)):
         }
     )
 
-# NEW: Debug endpoint to show all registered routes
-@router.get("/debug-routes")
-async def debug_routes():
-    """Debug endpoint to show all registered routes"""
-    routes = []
-    
-    for route in router.routes:
-        routes.append({
-            "path": route.path,
-            "name": route.name,
-            "methods": list(route.methods) if hasattr(route, "methods") and route.methods else []
-        })
-    
-    return {"routes": routes}
+# Debug endpoint - disable in production
+if os.environ.get("ENVIRONMENT") != "production":
+    @router.get("/debug-routes")
+    async def debug_routes():
+        """Debug endpoint to show all registered routes"""
+        routes = []
+        
+        for route in router.routes:
+            routes.append({
+                "path": route.path,
+                "name": route.name,
+                "methods": list(route.methods) if hasattr(route, "methods") and route.methods else []
+            })
+        
+        return {"routes": routes}

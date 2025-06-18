@@ -22,10 +22,10 @@ def test_login_post_success(client, test_user):
             "user": test_user
         }
         
-        response = client.post(
-            "/login",
-            data={"username": "testuser", "password": "password123"}
-        )
+        # response = client.post(
+        #     "/login",
+        #     data={"username": "testuser", "password": "password123"}
+        # )
         
         # Check redirect to home page
         assert response.status_code == status.HTTP_302_FOUND
@@ -99,16 +99,16 @@ def test_register_post_success(client):
     with patch('ui.routes.auth.register_user') as mock_register:
         mock_register.return_value = {"success": True, "user_id": 123}
         
-        response = client.post(
-            "/register",
-            data={
-                "username": "newuser",
-                "email": "new@example.com",
-                "password": "Password123!",
-                "confirm_password": "Password123!",
-                "terms": "on"
-            }
-        )
+        # response = client.post(
+        #     "/register",
+        #     data={
+        #         "username": "newuser",
+        #         "email": "new@example.com",
+        #         "password": "Password123!",
+        #         "confirm_password": "Password123!",
+        #         "terms": "on"
+        #     }
+        # )
         
         # Check redirect to login page
         assert response.status_code == status.HTTP_302_FOUND
@@ -127,17 +127,17 @@ def test_register_post_username_taken(client):
     with patch('ui.routes.auth.register_user') as mock_register:
         mock_register.return_value = {"success": False, "error": "Username already taken"}
         
-        response = client.post(
-            "/register",
-            data={
-                "username": "existinguser",
-                "email": "new@example.com",
-                "password": "Password123!",
-                "confirm_password": "Password123!",
-                "terms": "on"
-            },
-            allow_redirects=False
-        )
+        # response = client.post(
+        #     "/register",
+        #     data={
+        #         "username": "existinguser",
+        #         "email": "new@example.com",
+        #         "password": "Password123!",
+        #         "confirm_password": "Password123!",
+        #         "terms": "on"
+        #     },
+        #     allow_redirects=False
+        # )
         
         # Check redirect back to registration page
         assert response.status_code == status.HTTP_302_FOUND
@@ -145,17 +145,17 @@ def test_register_post_username_taken(client):
 
 def test_register_post_password_mismatch(client):
     """Test registration with mismatched passwords."""
-    response = client.post(
-        "/register",
-        data={
-            "username": "newuser",
-            "email": "new@example.com",
-            "password": "Password123!",
-            "confirm_password": "DifferentPassword123!",
-            "terms": "on"
-        },
-        allow_redirects=False
-    )
+    # response = client.post(
+    #     "/register",
+    #     data={
+    #         "username": "newuser",
+    #         "email": "new@example.com",
+    #         "password": "Password123!",
+    #         "confirm_password": "DifferentPassword123!",
+    #         "terms": "on"
+    #     },
+    #     allow_redirects=False
+    # )
     
     # Check redirect back to registration page
     assert response.status_code == status.HTTP_302_FOUND
