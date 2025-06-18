@@ -1,7 +1,7 @@
 """
 QuantumVestAI UI Utilities
-Created: 2025-06-18 01:38:35
-Updated: 2025-06-18 01:38:35
+Created: 2025-06-18 01:50:17
+Updated: 2025-06-18 01:50:17
 Author: daparthi001
 """
 # This file makes the utils directory a proper Python package.

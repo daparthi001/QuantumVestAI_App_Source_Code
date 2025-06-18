@@ -7,8 +7,9 @@ metadata:
     app: quantumvestai
     tier: frontend
     environment: development
-    updated: "20250617040715"
+    updated: "20250618020235"  # Updated timestamp
 data:
+  # Keep your existing registration-fix.js
   registration-fix.js: |
     /**
      * QuantumVestAI Registration Fix
@@ -214,3 +215,138 @@ data:
         }
       });
     })();
+
+  # Add fix-imports.sh script
+  fix-imports.sh: |
+    #!/bin/bash
+    # QuantumVestAI Import Path Fix
+    # Created: 2025-06-18 02:02:35
+    # Author: daparthi001
+    
+    set -e
+    
+    echo "=== QuantumVestAI Import Path Fix ==="
+    echo "Starting fix process at $(date)"
+    
+    # Fix utils/__init__.py import paths
+    if [ -f /app/utils/__init__.py ]; then
+      echo "Fixing import paths in utils/__init__.py"
+      # Replace "from ui.utils" with "from utils"
+      sed -i 's/from ui\.utils/from utils/g' /app/utils/__init__.py
+      echo "✓ utils/__init__.py updated"
+    else
+      echo "⚠ utils/__init__.py not found"
+    fi
+    
+    # Fix template_filters.py
+    if [ -f /app/utils/template_filters.py ]; then
+      echo "Fixing template_filters.py"
+      # Replace app.jinja_env with templates.env if it exists
+      sed -i 's/app\.jinja_env/templates.env/g' /app/utils/template_filters.py
+      echo "✓ utils/template_filters.py updated"
+    else
+      echo "⚠ utils/template_filters.py not found"
+    fi
+    
+    # Update main.py to store templates in app.state
+    if [ -f /app/main.py ]; then
+      echo "Checking main.py for app.state.templates setting"
+      if grep -q "templates = Jinja2Templates" /app/main.py && ! grep -q "app.state.templates = templates" /app/main.py; then
+        echo "Adding app.state.templates assignment to main.py"
+        sed -i '/templates = Jinja2Templates/a app.state.templates = templates  # Store templates in app.state' /app/main.py
+        echo "✓ main.py updated"
+      else
+        echo "✓ main.py already has correct templates configuration"
+      fi
+    else
+      echo "⚠ main.py not found"
+    fi
+    
+    echo "Import path fix completed at $(date)"
+    echo "===================================="
+
+  # Add install-dependencies.sh script
+  install-dependencies.sh: |
+    #!/bin/bash
+    # QuantumVestAI Missing Dependencies Installer
+    # Created: 2025-06-18 02:02:35
+    # Author: daparthi001
+    
+    set -e
+    
+    echo "=== QuantumVestAI Dependencies Installer ==="
+    echo "Starting installation at $(date)"
+    
+    # Check for fastapi
+    if python -c "import fastapi" &>/dev/null; then
+      echo "✓ fastapi is already installed"
+    else
+      echo "Installing fastapi..."
+      pip install --no-cache-dir fastapi
+      echo "✓ fastapi installed"
+    fi
+    
+    # Check for uvicorn
+    if python -c "import uvicorn" &>/dev/null; then
+      echo "✓ uvicorn is already installed"
+    else
+      echo "Installing uvicorn..."
+      pip install --no-cache-dir uvicorn
+      echo "✓ uvicorn installed"
+    fi
+    
+    # Check for other critical dependencies
+    for package in aiohttp requests jinja2 python-multipart; do
+      if python -c "import ${package//-/_}" &>/dev/null; then
+        echo "✓ $package is already installed"
+      else
+        echo "Installing $package..."
+        pip install --no-cache-dir $package
+        echo "✓ $package installed"
+      fi
+    done
+    
+    echo "Dependency installation completed at $(date)"
+    echo "==========================================="
+
+  # Add startup-wrapper.sh script
+  startup-wrapper.sh: |
+    #!/bin/bash
+    # QuantumVestAI UI Startup Wrapper
+    # Created: 2025-06-18 02:02:35
+    # Author: daparthi001
+    
+    set -e
+    
+    echo "=== QuantumVestAI UI Startup Wrapper ==="
+    echo "Starting UI service at $(date)"
+    
+    # Apply fixes first
+    if [ "${FIX_IMPORT_PATHS:-true}" = "true" ]; then
+      echo "Applying import path fixes..."
+      if [ -f /scripts/fix-imports.sh ]; then
+        bash /scripts/fix-imports.sh
+      else
+        echo "⚠ fix-imports.sh not found, skipping import path fixes"
+      fi
+    fi
+    
+    # Install missing dependencies
+    if [ "${INSTALL_MISSING_DEPS:-true}" = "true" ]; then
+      echo "Checking for missing dependencies..."
+      if [ -f /scripts/install-dependencies.sh ]; then
+        bash /scripts/install-dependencies.sh
+      else
+        echo "⚠ install-dependencies.sh not found, installing critical dependencies directly"
+        pip install --no-cache-dir fastapi uvicorn aiohttp requests jinja2
+      fi
+    fi
+    
+    # Start the application using the original start script
+    echo "Starting UI application..."
+    if [ -f /app/scripts/start.sh ]; then
+      exec /app/scripts/start.sh
+    else
+      echo "⚠ start.sh not found, using default startup command"
+      exec uvicorn main:app --host ${HOST:-0.0.0.0} --port ${PORT:-3000}
+    fi

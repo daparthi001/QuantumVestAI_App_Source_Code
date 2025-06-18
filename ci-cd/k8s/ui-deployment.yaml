@@ -10,9 +10,14 @@ metadata:
     created-by: daparthi001
     created-date: "2025-06-15"
     updated-by: daparthi001
-    updated-date: "2025-06-17"
+    updated-date: "2025-06-18"  # Updated today
 spec:
-  replicas: 1
+  replicas: 2  # Increased for better availability
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0  # Zero-downtime updates
   selector:
     matchLabels:
       app: quantumvestai
@@ -25,7 +30,8 @@ spec:
         tier: frontend
         environment: development
       annotations:
-        timestamp: "20250617160655"  # For forcing updates
+        timestamp: "20250618020235"  # Updated timestamp for forcing updates
+        configmap/checksum: "${CONFIG_MAP_CHECKSUM}"  # Add this placeholder, which can be filled during CI/CD
     spec:
       containers:
       - name: ui
@@ -33,6 +39,7 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 3000
+          name: http
         env:
         # Kubernetes secrets
         - name: JWT_SECRET_KEY
@@ -60,6 +67,7 @@ spec:
             secretKeyRef:
               name: ui-secrets
               key: TWITTER_ACCESS_SECRET
+        # API connection
         - name: API_URL
           value: "http://quantumvestai-dev-api.dev.svc.cluster.local:8000"              
         # UI settings
@@ -69,25 +77,42 @@ spec:
           value: "true"
         - name: CACHE_DURATION
           value: "3600"
-        # Health check settings - making them more compatible with AWS ALB
+        # Fix flags
+        - name: FIX_IMPORT_PATHS
+          value: "true"
+        - name: INSTALL_MISSING_DEPS
+          value: "true"
+        # Health check settings
         - name: HEALTH_CHECK_PATH
           value: "/health"
         - name: HEALTH_CHECK_ENABLED
           value: "true"
         
+        # Use the wrapper script to start the application
+        command: ["/bin/bash"]
+        args: ["/scripts/startup-wrapper.sh"]
+        
         resources:
           requests:
-            cpu: "100m"
-            memory: "256Mi"
+            cpu: "150m"
+            memory: "320Mi"
           limits:
             cpu: "500m"
             memory: "512Mi"
+            
+        # Volume mounts for scripts
+        volumeMounts:
+        - name: scripts-volume
+          mountPath: /scripts
+        - name: ui-logs
+          mountPath: /app/logs
+            
         # AWS ALB compatible health checks
         livenessProbe:
           httpGet:
             path: /health
             port: 3000
-          initialDelaySeconds: 30
+          initialDelaySeconds: 60  # Increased to allow for fixes and dependency installation
           periodSeconds: 30
           timeoutSeconds: 5
           successThreshold: 1
@@ -96,8 +121,22 @@ spec:
           httpGet:
             path: /health
             port: 3000
-          initialDelaySeconds: 10
+          initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 2
           successThreshold: 1
           failureThreshold: 3
+      
+      # Init container to check API availability before starting UI
+      initContainers:
+      - name: check-api-service
+        image: busybox:1.36
+        command: ['sh', '-c', 'until wget -T 5 -q -O- http://quantumvestai-dev-api.dev.svc.cluster.local:8000/health || echo "Waiting for API..."; do sleep 2; done']
+      
+      volumes:
+      - name: scripts-volume
+        configMap:
+          name: ui-scripts
+          defaultMode: 0755  # Make scripts executable
+      - name: ui-logs
+        emptyDir: {}
