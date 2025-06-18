@@ -30,7 +30,7 @@ spec:
         tier: frontend
         environment: development
       annotations:
-        timestamp: "20250618032215"
+        timestamp: "20250618043223"
     spec:
       initContainers:
       - name: fix-app-issues
@@ -39,440 +39,54 @@ spec:
         args:
         - |
           # Install required packages
-          pip install --no-cache-dir markupsafe jinja2>=3.0.0 fastapi uvicorn
+          echo "Installing required packages..."
+          pip install --no-cache-dir markupsafe==2.1.3 jinja2>=3.0.0 fastapi uvicorn python-multipart
           
-          # Create or update template_filters.py
-          echo "Updating template_filters.py"
-          cat > /app/utils/template_filters.py << 'EOL'
-          """
-          QuantumVestAI UI Template Filters
-          Updated: 2025-06-18 03:22:15
-          Author: daparthi001
-          """
-          import re
-          import json
-          import datetime
-          from decimal import Decimal
-          from markupsafe import Markup
-
-          def format_currency(value, currency_symbol="$", decimal_places=2):
-              """Format a number as currency with specified symbol and decimal places"""
-              if value is None:
-                  return "—"
-              try:
-                  formatted = f"{float(value):.{decimal_places}f}"
-                  parts = formatted.split('.')
-                  integer_part = parts[0]
-                  decimal_part = parts[1] if len(parts) > 1 else ""
-                  
-                  # Add commas to the integer part
-                  if len(integer_part) > 3:
-                      integer_part = f"{int(integer_part):,}"
-                  
-                  if decimal_part:
-                      return f"{currency_symbol}{integer_part}.{decimal_part}"
-                  return f"{currency_symbol}{integer_part}"
-              except (ValueError, TypeError):
-                  return f"{currency_symbol}0.00"
-
-          def format_percentage(value, decimal_places=2):
-              """Format a number as a percentage with specified decimal places"""
-              if value is None:
-                  return "—"
-              try:
-                  return f"{float(value):.{decimal_places}f}%"
-              except (ValueError, TypeError):
-                  return "0.00%"
-
-          def format_date(value, format_string="%Y-%m-%d"):
-              """Format a date object according to the specified format string"""
-              if value is None:
-                  return "—"
-              try:
-                  return value.strftime(format_string)
-              except (AttributeError, ValueError, TypeError):
-                  return str(value)
-
-          def format_large_number(value, decimal_places=1):
-              """
-              Format large numbers with K, M, B, T suffixes
-              Example: 1234 -> 1.2K, 1234567 -> 1.2M
-              """
-              if value is None:
-                  return "—"
-              
-              try:
-                  value = float(value)
-                  abs_value = abs(value)
-                  sign = "-" if value < 0 else ""
-                  
-                  if abs_value >= 1e12:
-                      return f"{sign}{abs_value/1e12:.{decimal_places}f}T"
-                  elif abs_value >= 1e9:
-                      return f"{sign}{abs_value/1e9:.{decimal_places}f}B"
-                  elif abs_value >= 1e6:
-                      return f"{sign}{abs_value/1e6:.{decimal_places}f}M"
-                  elif abs_value >= 1e3:
-                      return f"{sign}{abs_value/1e3:.{decimal_places}f}K"
-                  else:
-                      return f"{sign}{abs_value:.{decimal_places}f}"
-              except (ValueError, TypeError):
-                  return str(value)
-
-          def format_change_value(value, include_sign=True, with_color=False, decimal_places=2):
-              """
-              Format a change value (like stock price change)
-              Optionally include sign and color indicators for positive/negative values
-              """
-              if value is None:
-                  return "—"
-              
-              try:
-                  value = float(value)
-                  formatted = f"{value:.{decimal_places}f}"
-                  
-                  if include_sign and value > 0:
-                      formatted = f"+{formatted}"
-                      
-                  if with_color:
-                      if value > 0:
-                          return Markup(f'<span class="text-success">{formatted}</span>')
-                      elif value < 0:
-                          return Markup(f'<span class="text-danger">{formatted}</span>')
-                      else:
-                          return Markup(f'<span class="text-muted">{formatted}</span>')
-                  
-                  return formatted
-              except (ValueError, TypeError):
-                  return str(value)
-
-          def truncate_string(s, max_length=50):
-              """Truncate a string to max_length and append ellipsis if needed"""
-              if not s:
-                  return ""
-              return s if len(s) <= max_length else s[:max_length-3] + "..."
-
-          def humanize_date(date_value):
-              """Convert a date to a human-readable format"""
-              if not date_value:
-                  return ""
-              
-              try:
-                  if isinstance(date_value, str):
-                      date_value = datetime.datetime.strptime(date_value, "%Y-%m-%d").date()
-                      
-                  now = datetime.datetime.now().date()
-                  delta = now - date_value
-                  
-                  if delta.days == 0:
-                      return "Today"
-                  elif delta.days == 1:
-                      return "Yesterday"
-                  elif delta.days < 7:
-                      return f"{delta.days} days ago"
-                  elif delta.days < 30:
-                      weeks = delta.days // 7
-                      return f"{weeks} {'week' if weeks == 1 else 'weeks'} ago"
-                  elif delta.days < 365:
-                      months = delta.days // 30
-                      return f"{months} {'month' if months == 1 else 'months'} ago"
-                  else:
-                      years = delta.days // 365
-                      return f"{years} {'year' if years == 1 else 'years'} ago"
-              except Exception:
-                  return str(date_value)
-
-          def to_json(value):
-              """Convert a value to JSON string"""
-              return json.dumps(value)
-
-          def nl2br(value):
-              """Convert newlines to <br> tags"""
-              if not value:
-                  return ""
-              return Markup(value.replace('\n', '<br>'))
-
-          def register_filters(app):
-              """Register all filters with the FastAPI application's templates"""
-              # Fixed: use getattr instead of get method
-              templates = getattr(app.state, "templates", None)
-              if templates is None:
-                  return
-              
-              # Register all filters
-              templates.env.filters["currency"] = format_currency
-              templates.env.filters["percentage"] = format_percentage
-              templates.env.filters["date"] = format_date
-              templates.env.filters["format_large_number"] = format_large_number
-              templates.env.filters["format_currency"] = format_currency
-              templates.env.filters["format_percentage"] = format_percentage
-              templates.env.filters["format_change_value"] = format_change_value
-              templates.env.filters["truncate"] = truncate_string
-              templates.env.filters["humanize_date"] = humanize_date
-              templates.env.filters["tojson"] = to_json
-              templates.env.filters["nl2br"] = nl2br
-          EOL
+          # Create necessary directories
+          mkdir -p /app/utils /app/controllers /app/templates/dashboard /app/templates/auth /app/static/css /app/auth
           
-          # Create dashboard index template
-          echo "Updating dashboard template"
-          mkdir -p /app/templates/dashboard
-          cat > /app/templates/dashboard/index.html << 'EOL'
-          {% extends "base.html" %}
-
-          {% block title %}QuantumVestAI Dashboard{% endblock %}
-
-          {% block content %}
-          <div class="dashboard-container">
-            <div class="row">
-              <div class="col-12">
-                <h1>Welcome, {{ data.user.display_name | default(data.user.username) }}</h1>
-                <p class="text-muted">{{ data.timestamp }}</p>
-              </div>
-            </div>
-
-            <!-- Market Overview Section -->
-            <div class="card mb-4">
-              <div class="card-header">
-                <h2 class="h5 mb-0">Market Overview</h2>
-              </div>
-              <div class="card-body">
-                {% if data.market and data.market.status != "unavailable" and data.market.status != "error" %}
-                  <div class="row">
-                    {% if data.market.indices %}
-                      <div class="col-md-6">
-                        <h3 class="h6">Market Indices</h3>
-                        <table class="table table-sm">
-                          <thead>
-                            <tr>
-                              <th>Index</th>
-                              <th>Value</th>
-                              <th>Change</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {% for index in data.market.indices %}
-                              <tr>
-                                <td>{{ index.name }}</td>
-                                <td>{{ index.value | format_large_number }}</td>
-                                <td class="{{ 'text-success' if index.change > 0 else 'text-danger' }}">
-                                  {{ index.change | format_change_value }}
-                                </td>
-                              </tr>
-                            {% endfor %}
-                          </tbody>
-                        </table>
-                      </div>
-                    {% endif %}
-                    
-                    {% if data.market.trends %}
-                      <div class="col-md-6">
-                        <h3 class="h6">Market Trends</h3>
-                        <ul class="list-group">
-                          {% for trend in data.market.trends %}
-                            <li class="list-group-item">
-                              {{ trend.description }}
-                            </li>
-                          {% endfor %}
-                        </ul>
-                      </div>
-                    {% endif %}
-                  </div>
-                {% else %}
-                  <div class="alert alert-info">Market data currently unavailable.</div>
-                {% endif %}
-              </div>
-            </div>
-
-            <!-- Portfolio Summary Section -->
-            <div class="row">
-              <div class="col-lg-8">
-                {% if data.portfolio and data.portfolio.status != "unavailable" and data.portfolio.status != "error" %}
-                  <div class="card mb-4">
-                    <div class="card-header">
-                      <h2 class="h5 mb-0">Portfolio Summary</h2>
-                    </div>
-                    <div class="card-body">
-                      <div class="row">
-                        <div class="col-md-6">
-                          <h3 class="h6">Total Value</h3>
-                          <p class="display-4">{{ data.portfolio.total_value | format_currency }}</p>
-                          
-                          <div class="d-flex align-items-center">
-                            <span class="mr-2 {{ 'text-success' if data.portfolio.daily_change > 0 else 'text-danger' }}">
-                              {{ data.portfolio.daily_change | format_change_value }}
-                            </span>
-                            <span class="text-muted">(Today)</span>
-                          </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                          <h3 class="h6">Asset Allocation</h3>
-                          {% if data.portfolio.allocation %}
-                            <div class="chart-container">
-                              <!-- Placeholder for chart -->
-                              <div id="allocation-chart" style="height: 200px;"></div>
-                            </div>
-                          {% else %}
-                            <p>No allocation data available.</p>
-                          {% endif %}
-                        </div>
-                      </div>
-                      
-                      {% if data.portfolio.holdings %}
-                        <h3 class="h6 mt-4">Top Holdings</h3>
-                        <table class="table table-sm">
-                          <thead>
-                            <tr>
-                              <th>Symbol</th>
-                              <th>Shares</th>
-                              <th>Current Price</th>
-                              <th>Value</th>
-                              <th>Change</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {% for holding in data.portfolio.holdings %}
-                              <tr>
-                                <td>{{ holding.symbol }}</td>
-                                <td>{{ holding.shares }}</td>
-                                <td>{{ holding.price | format_currency }}</td>
-                                <td>{{ holding.value | format_currency }}</td>
-                                <td class="{{ 'text-success' if holding.change > 0 else 'text-danger' }}">
-                                  {{ holding.change | format_change_value }}
-                                </td>
-                              </tr>
-                            {% endfor %}
-                          </tbody>
-                        </table>
-                      {% endif %}
-                    </div>
-                  </div>
-                {% else %}
-                  <div class="card mb-4">
-                    <div class="card-header">
-                      <h2 class="h5 mb-0">Portfolio Summary</h2>
-                    </div>
-                    <div class="card-body">
-                      <div class="alert alert-info">Portfolio data currently unavailable.</div>
-                    </div>
-                  </div>
-                {% endif %}
-                
-                <!-- Recommendations Section -->
-                {% if data.recommendations and data.recommendations.status != "unavailable" and data.recommendations.status != "error" %}
-                  {% if data.recommendations.items %}
-                    <div class="card mb-4">
-                      <div class="card-header">
-                        <h2 class="h5 mb-0">Personalized Recommendations</h2>
-                      </div>
-                      <div class="card-body">
-                        <div class="row">
-                          {% for recommendation in data.recommendations.items %}
-                            <div class="col-md-4">
-                              <div class="card mb-3">
-                                <div class="card-body">
-                                  <h3 class="h6">{{ recommendation.symbol }}</h3>
-                                  <p class="mb-1">{{ recommendation.name }}</p>
-                                  <p class="text-muted small mb-2">{{ recommendation.sector }}</p>
-                                  <div class="d-flex justify-content-between">
-                                    <span>{{ recommendation.price | format_currency }}</span>
-                                    <span class="{{ 'text-success' if recommendation.potential > 0 else 'text-danger' }}">
-                                      {{ recommendation.potential | format_percentage }}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          {% endfor %}
-                        </div>
-                      </div>
-                    </div>
-                  {% endif %}
-                {% endif %}
-              </div>
-              
-              <div class="col-lg-4">
-                <!-- Watchlist Section -->
-                {% if data.watchlist and data.watchlist.status != "unavailable" and data.watchlist.status != "error" %}
-                  {% if data.watchlist.items %}
-                    <div class="card mb-4">
-                      <div class="card-header">
-                        <h2 class="h5 mb-0">Watchlist Highlights</h2>
-                      </div>
-                      <ul class="list-group list-group-flush">
-                        {% for item in data.watchlist.items %}
-                          <li class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-center">
-                              <div>
-                                <h3 class="h6 mb-0">{{ item.symbol }}</h3>
-                                <p class="text-muted small mb-0">{{ item.name }}</p>
-                              </div>
-                              <div class="text-right">
-                                <div>{{ item.price | format_currency }}</div>
-                                <div class="{{ 'text-success' if item.change > 0 else 'text-danger' }}">
-                                  {{ item.change | format_change_value }}
-                                </div>
-                              </div>
-                            </div>
-                          </li>
-                        {% endfor %}
-                      </ul>
-                    </div>
-                  {% endif %}
-                {% endif %}
-                
-                <!-- News Section -->
-                {% if data.news and data.news.status != "unavailable" and data.news.status != "error" %}
-                  {% if data.news.items %}
-                    <div class="card mb-4">
-                      <div class="card-header">
-                        <h2 class="h5 mb-0">Market News</h2>
-                      </div>
-                      <ul class="list-group list-group-flush">
-                        {% for article in data.news.items %}
-                          <li class="list-group-item">
-                            <h3 class="h6">{{ article.title }}</h3>
-                            <p class="small mb-0">{{ article.summary }}</p>
-                            <div class="d-flex justify-content-between align-items-center mt-2">
-                              <span class="text-muted small">{{ article.source }}</span>
-                              <span class="text-muted small">{{ article.published | humanize_date }}</span>
-                            </div>
-                          </li>
-                        {% endfor %}
-                      </ul>
-                    </div>
-                  {% endif %}
-                {% endif %}
-              </div>
-            </div>
-          </div>
-          {% endblock %}
-
-          {% block scripts %}
-          <script>
-            // Initialize charts if needed
-            document.addEventListener('DOMContentLoaded', function() {
-              // Add any JavaScript for charts here
-              
-              // Example: Update allocation chart
-              if (document.getElementById('allocation-chart')) {
-                // Chart initialization code would go here
-              }
-            });
-          </script>
-          {% endblock %}
-          EOL
+          # Copy config files to appropriate locations
+          echo "Copying template_filters.py..."
+          cp /config/utils.template_filters.py /app/utils/template_filters.py
           
-          # Fix import paths in __init__.py
-          if [ -f /app/utils/__init__.py ]; then
-            echo "Fixing import paths in utils/__init__.py"
-            sed -i 's/from ui\.utils/from utils/g' /app/utils/__init__.py
-          fi
+          echo "Copying dashboard_controller.py..."
+          cp /config/controllers.dashboard_controller.py /app/controllers/dashboard_controller.py
           
-          echo "All fixes applied"
+          echo "Copying dependencies.py..."
+          cp /config/auth.dependencies.py /app/auth/dependencies.py
+          
+          echo "Copying base.html..."
+          cp /config/templates.base.html /app/templates/base.html
+          
+          echo "Copying dashboard/index.html..."
+          cp /config/templates.dashboard.index.html /app/templates/dashboard/index.html
+          
+          echo "Copying error.html..."
+          cp /config/templates.error.html /app/templates/error.html
+          
+          echo "Copying login.html..."
+          cp /config/templates.auth.login.html /app/templates/auth/login.html
+          
+          echo "Copying startup.sh..."
+          cp /config/scripts.startup.sh /app/startup.sh
+          chmod +x /app/startup.sh
+          
+          # Create __init__.py files
+          touch /app/utils/__init__.py
+          touch /app/controllers/__init__.py
+          touch /app/auth/__init__.py
+          
+          # Fix import paths in any __init__.py files
+          echo "Fixing import paths..."
+          find /app -name "__init__.py" -exec sed -i 's/from ui\.utils/from utils/g' {} \;
+          find /app -name "__init__.py" -exec sed -i 's/from ui\.controllers/from controllers/g' {} \;
+          
+          echo "All configuration applied"
         volumeMounts:
         - name: app-volume
           mountPath: /app
+        - name: ui-config
+          mountPath: /config
       containers:
       - name: ui
         image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:ui-dev-latest
@@ -528,9 +142,12 @@ spec:
         - name: HEALTH_CHECK_ENABLED
           value: "true"
         
-        # Use the wrapper script to start the application
-        command: ["/bin/bash"]
-        args: ["/scripts/startup-wrapper.sh"]
+        # Use startup script from config
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          cd /app
+          /app/startup.sh
         
         resources:
           requests:
@@ -540,10 +157,8 @@ spec:
             cpu: "500m"
             memory: "512Mi"
             
-        # Volume mounts for scripts
+        # Volume mounts
         volumeMounts:
-        - name: scripts-volume
-          mountPath: /scripts
         - name: ui-logs
           mountPath: /app/logs
         - name: app-volume
@@ -570,11 +185,11 @@ spec:
           failureThreshold: 3
       
       volumes:
-      - name: scripts-volume
-        configMap:
-          name: ui-scripts
-          defaultMode: 0755
       - name: ui-logs
         emptyDir: {}
       - name: app-volume
         emptyDir: {}
+      - name: ui-config
+        configMap:
+          name: ui-config
+          defaultMode: 0755
