@@ -1,12 +1,11 @@
 """
 QuantumVestAI UI Formatters
-Created: 2025-06-18 01:25:07
-Updated: 2025-06-18 01:25:07
+Created: Original date
+Updated: 2025-06-18 02:30:22
 Author: daparthi001
 """
 import locale
-from datetime import datetime
-from typing import Union, Any
+from typing import Union, Optional
 
 # Set locale for number formatting
 try:
@@ -14,96 +13,99 @@ try:
 except:
     locale.setlocale(locale.LC_ALL, '')
 
-def format_number(value: Union[int, float, None], precision: int = 0) -> str:
-    """Format a number with thousands separator"""
+def format_currency(value: Union[float, int], currency_symbol: str = '$', decimal_places: int = 2) -> str:
+    """Format a number as currency with specified symbol and decimal places"""
     if value is None:
-        return "N/A"
-    
+        return "—"
     try:
-        if precision == 0:
-            return f"{int(value):,}"
-        else:
-            return f"{float(value):,.{precision}f}"
-    except (ValueError, TypeError):
-        return str(value)
-
-def format_market_cap(value: Union[int, float, None]) -> str:
-    """Format market cap in K, M, B, T"""
-    if value is None:
-        return "N/A"
-    
-    try:
-        value = float(value)
-        if value >= 1_000_000_000_000:  # Trillion
-            return f"${value / 1_000_000_000_000:.2f}T"
-        elif value >= 1_000_000_000:  # Billion
-            return f"${value / 1_000_000_000:.2f}B"
-        elif value >= 1_000_000:  # Million
-            return f"${value / 1_000_000:.2f}M"
-        elif value >= 1_000:  # Thousand
-            return f"${value / 1_000:.2f}K"
-        else:
-            return f"${value:.2f}"
-    except (ValueError, TypeError):
-        return str(value)
-
-def format_percentage(value: Union[float, None], precision: int = 2) -> str:
-    """Format a percentage value"""
-    if value is None:
-        return "N/A"
-    
-    try:
-        return f"{float(value):.{precision}f}%"
-    except (ValueError, TypeError):
-        return str(value)
-
-def format_currency(value: Union[float, None], symbol: str = "$", precision: int = 2) -> str:
-    """Format a currency value"""
-    if value is None:
-        return "N/A"
-    
-    try:
-        return f"{symbol}{float(value):,.{precision}f}"
-    except (ValueError, TypeError):
-        return str(value)
-
-def format_date(value: Union[str, datetime, None], format_str: str = "%Y-%m-%d") -> str:
-    """Format a date string or datetime object"""
-    if value is None:
-        return "N/A"
-    
-    try:
-        if isinstance(value, str):
-            # Try parsing the string as a datetime
-            value = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        formatted = f"{float(value):.{decimal_places}f}"
+        parts = formatted.split('.')
+        integer_part = parts[0]
+        decimal_part = parts[1] if len(parts) > 1 else ""
         
-        if isinstance(value, datetime):
-            return value.strftime(format_str)
-        else:
-            return str(value)
+        # Add commas to the integer part
+        if len(integer_part) > 3:
+            integer_part = f"{int(integer_part):,}"
+        
+        if decimal_part:
+            return f"{currency_symbol}{integer_part}.{decimal_part}"
+        return f"{currency_symbol}{integer_part}"
     except (ValueError, TypeError):
+        return f"{currency_symbol}0.00"
+
+def format_percentage(value: Union[float, int], decimal_places: int = 2) -> str:
+    """Format a number as a percentage with specified decimal places"""
+    if value is None:
+        return "—"
+    try:
+        return f"{float(value):.{decimal_places}f}%"
+    except (ValueError, TypeError):
+        return "0.00%"
+
+def format_date(value, format_string: str = "%Y-%m-%d") -> str:
+    """Format a date object according to the specified format string"""
+    if value is None:
+        return "—"
+    try:
+        return value.strftime(format_string)
+    except (AttributeError, ValueError, TypeError):
         return str(value)
 
-def format_datetime(value: Union[str, datetime, None], format_str: str = "%Y-%m-%d %H:%M:%S") -> str:
-    """Format a datetime string or datetime object"""
-    return format_date(value, format_str)
-
-def format_sentiment(value: Union[float, None]) -> str:
-    """Format a sentiment score (usually between -1 and 1)"""
+def format_large_number(value: Union[float, int], decimal_places: int = 1) -> str:
+    """
+    Format large numbers with K, M, B, T suffixes
+    Example: 1234 -> 1.2K, 1234567 -> 1.2M
+    """
     if value is None:
-        return "Neutral"
+        return "—"
     
     try:
         value = float(value)
-        if value > 0.6:
-            return "Very Bullish"
-        elif value > 0.2:
-            return "Bullish"
-        elif value > -0.2:
-            return "Neutral"
-        elif value > -0.6:
-            return "Bearish"
+        abs_value = abs(value)
+        sign = "-" if value < 0 else ""
+        
+        if abs_value >= 1e12:
+            # Trillions
+            return f"{sign}{abs_value/1e12:.{decimal_places}f}T"
+        elif abs_value >= 1e9:
+            # Billions
+            return f"{sign}{abs_value/1e9:.{decimal_places}f}B"
+        elif abs_value >= 1e6:
+            # Millions
+            return f"{sign}{abs_value/1e6:.{decimal_places}f}M"
+        elif abs_value >= 1e3:
+            # Thousands
+            return f"{sign}{abs_value/1e3:.{decimal_places}f}K"
         else:
-            return "Very Bearish"
+            # Regular number
+            return f"{sign}{abs_value:.{decimal_places}f}"
     except (ValueError, TypeError):
-        return "N/A"
+        return str(value)
+
+def format_change_value(value: Union[float, int], include_sign: bool = True, 
+                       with_color: bool = False, decimal_places: int = 2) -> str:
+    """
+    Format a change value (like stock price change)
+    Optionally include sign and color indicators for positive/negative values
+    """
+    if value is None:
+        return "—"
+    
+    try:
+        value = float(value)
+        formatted = f"{value:.{decimal_places}f}"
+        
+        if include_sign and value > 0:
+            formatted = f"+{formatted}"
+            
+        if with_color:
+            if value > 0:
+                return f'<span class="text-success">{formatted}</span>'
+            elif value < 0:
+                return f'<span class="text-danger">{formatted}</span>'
+            else:
+                return f'<span class="text-muted">{formatted}</span>'
+        
+        return formatted
+    except (ValueError, TypeError):
+        return str(value)
