@@ -1,4 +1,4 @@
-/* QuantumVestAI - Main Application Styles (Updated: 2025-06-18) */
+/* QuantumVestAI - Main Application Styles (Updated: 2025-06-18 12:55:39) */
 
 :root {
     /* Color scheme - enhanced with additional shades */
@@ -88,10 +88,15 @@
 }
 
 /* Base Styles */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
 html {
     height: 100%;
     font-size: 16px;
     scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -105,11 +110,31 @@ body {
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    margin: 0; /* Fix common margin issue */
+    padding: 0; /* Fix common padding issue */
+}
+
+img, svg {
+    vertical-align: middle;
+    max-width: 100%;
+    height: auto;
+}
+
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color var(--transition-speed) var(--transition-ease);
+}
+
+a:hover {
+    color: var(--primary-dark);
 }
 
 .app-container {
     display: flex;
     min-height: 100vh;
+    width: 100%;
+    position: relative;
 }
 
 /* Sidebar Styles */
@@ -127,6 +152,7 @@ body {
     display: flex;
     flex-direction: column;
     box-shadow: var(--shadow-md);
+    overflow-x: hidden; /* Fix overflow issues */
 }
 
 .sidebar.collapsed {
@@ -140,6 +166,7 @@ body {
     justify-content: space-between;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     height: 70px;
+    min-height: 70px; /* Fix for inconsistent heights */
 }
 
 .sidebar-logo {
@@ -149,16 +176,20 @@ body {
     font-weight: 600;
     font-size: var(--font-size-xl);
     text-decoration: none;
+    max-width: 180px; /* Fix overflow issues */
+    overflow: hidden;
 }
 
 .logo-default {
     height: 32px;
     transition: opacity var(--transition-speed) var(--transition-ease);
+    max-width: 100%; /* Fix for oversized logos */
 }
 
 .logo-collapsed {
     height: 28px;
     display: none;
+    max-width: 100%; /* Fix for oversized logos */
 }
 
 .sidebar.collapsed .logo-default {
@@ -181,6 +212,7 @@ body {
     height: 30px;
     border-radius: 50%;
     transition: background-color var(--transition-speed) var(--transition-ease);
+    padding: 0; /* Fix for inconsistent button sizing */
 }
 
 .sidebar-toggle:hover {
@@ -230,6 +262,7 @@ body {
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-top: var(--spacing-lg);
+    white-space: nowrap; /* Fix for text wrapping */
 }
 
 .sidebar.collapsed .nav-section-title {
@@ -254,6 +287,7 @@ body {
     text-decoration: none;
     border-left: 3px solid transparent;
     transition: all var(--transition-speed) var(--transition-ease);
+    white-space: nowrap; /* Fix for text wrapping */
 }
 
 .nav-link i {
@@ -273,6 +307,8 @@ body {
     transition: opacity var(--transition-speed) var(--transition-ease),
                 visibility var(--transition-speed) var(--transition-ease),
                 width var(--transition-speed) var(--transition-ease);
+    overflow: hidden; /* Fix text overflow */
+    text-overflow: ellipsis; /* Show ellipsis for overflowed text */
 }
 
 .sidebar.collapsed .nav-text {
@@ -293,6 +329,7 @@ body {
 .sidebar-footer {
     padding: var(--spacing-md);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+    min-height: 70px; /* Fix for inconsistent heights */
 }
 
 .user-info {
@@ -331,6 +368,7 @@ body {
     flex: 1;
     transition: opacity var(--transition-speed) var(--transition-ease),
                 visibility var(--transition-speed) var(--transition-ease);
+    overflow: hidden; /* Fix text overflow */
 }
 
 .sidebar.collapsed .user-details {
@@ -340,12 +378,18 @@ body {
 .user-name {
     display: block;
     font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Show ellipsis for overflowed text */
 }
 
 .user-role {
     display: block;
     font-size: var(--font-size-xs);
     color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Show ellipsis for overflowed text */
 }
 
 .user-actions {
@@ -378,10 +422,12 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    width: calc(100% - 250px); /* Fix width calculation */
 }
 
 .sidebar.collapsed ~ .main-content {
     margin-left: 70px;
+    width: calc(100% - 70px); /* Fix width calculation */
 }
 
 /* Top Navigation */
@@ -412,6 +458,7 @@ body {
     font-size: var(--font-size-xl);
     color: var(--text-primary);
     transition: color var(--transition-speed) var(--transition-ease);
+    padding: 0; /* Fix for inconsistent button sizing */
 }
 
 .mobile-menu-toggle:hover {
@@ -427,6 +474,35 @@ body {
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
+}
+
+/* Date-Time Display */
+.current-datetime {
+    display: flex;
+    align-items: center;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-right: var(--spacing-md);
+    white-space: nowrap; /* Prevent wrapping */
+}
+
+.current-datetime i {
+    margin-right: var(--spacing-xs);
+    color: var(--primary-color);
+}
+
+.current-user {
+    display: flex;
+    align-items: center;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-right: var(--spacing-md);
+    white-space: nowrap; /* Prevent wrapping */
+}
+
+.current-user i {
+    margin-right: var(--spacing-xs);
+    color: var(--primary-color);
 }
 
 .search-container {
@@ -446,6 +522,7 @@ body {
     border-radius: var(--border-radius-md);
     background-color: var(--light-color);
     transition: all var(--transition-speed) var(--transition-ease);
+    font-size: var(--font-size-sm); /* Fix for inconsistent font sizes */
 }
 
 .search-input:focus {
@@ -466,6 +543,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 0; /* Fix for inconsistent button sizing */
 }
 
 .search-btn:hover {
@@ -489,6 +567,7 @@ body {
     border-radius: 50%;
     transition: background-color var(--transition-speed) var(--transition-ease),
                 color var(--transition-speed) var(--transition-ease);
+    padding: 0; /* Fix for inconsistent button sizing */
 }
 
 .theme-toggle:hover, .notifications-toggle:hover {
@@ -515,6 +594,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    font-weight: 600; /* Make text more readable */
 }
 
 .notifications-dropdown {
@@ -634,11 +714,14 @@ body {
 
 .notification-content {
     flex: 1;
+    overflow: hidden; /* Fix text overflow */
 }
 
 .notification-text {
     margin: 0 0 0.25rem;
     font-size: var(--font-size-sm);
+    overflow: hidden;
+    text-overflow: ellipsis; /* Show ellipsis for overflowed text */
 }
 
 .notification-time {
@@ -728,6 +811,7 @@ body {
     margin-bottom: var(--spacing-lg);
     transition: box-shadow var(--transition-speed) var(--transition-ease),
                 transform var(--transition-speed) var(--transition-ease);
+    overflow: hidden; /* Fix for border-radius overflow */
 }
 
 .card:hover {
@@ -756,6 +840,8 @@ body {
     margin: 0;
     font-size: var(--font-size-lg);
     font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Show ellipsis for overflowed text */
 }
 
 .card-actions {
@@ -881,6 +967,7 @@ body {
 .market-chart {
     height: 100px;
     margin: var(--spacing-md) 0;
+    width: 100%; /* Fix for inconsistent widths */
 }
 
 .market-range {
@@ -896,11 +983,18 @@ body {
 }
 
 /* Table Styles */
+.table-container {
+    width: 100%;
+    overflow-x: auto; /* Fix for tables on small screens */
+    -webkit-overflow-scrolling: touch;
+}
+
 .table-stocks {
     margin-bottom: 0;
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
+    min-width: 600px; /* Ensures table doesn't get too compressed */
 }
 
 .table-stocks thead th {
@@ -912,6 +1006,7 @@ body {
     position: sticky;
     top: 0;
     z-index: 1;
+    white-space: nowrap; /* Prevent wrapping */
 }
 
 .table-stocks td, .table-stocks th {
@@ -944,6 +1039,10 @@ body {
     font-size: var(--font-size-sm);
     color: var(--text-secondary);
     display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px; /* Limit width */
 }
 
 .stock-actions {
@@ -1019,6 +1118,7 @@ body {
     height: 300px;
     border-radius: var(--border-radius-md);
     overflow: hidden;
+    width: 100%; /* Fix for inconsistent widths */
 }
 
 .forecast-metrics {
@@ -1260,6 +1360,7 @@ body {
     background-color: var(--card-bg);
     padding: var(--spacing-md) var(--spacing-lg);
     border-top: 1px solid var(--border-color);
+    margin-top: auto; /* Ensure footer sticks to bottom */
 }
 
 .footer-content {
@@ -1291,6 +1392,36 @@ body {
 
 .footer-links a:hover {
     color: var(--primary-color);
+}
+
+/* Current User and Date Display */
+.datetime-display {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background-color: var(--light-color);
+    border-radius: var(--border-radius-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.datetime-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.datetime-user {
+    font-weight: 500;
+    margin-bottom: var(--spacing-xs);
+}
+
+.datetime-user span {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.datetime-timestamp {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
 }
 
 /* Modal Styles */
@@ -1341,6 +1472,7 @@ body {
     padding: var(--spacing-sm) var(--spacing-md);
     transition: all var(--transition-speed) var(--transition-ease);
     width: 100%;
+    font-size: var(--font-size-sm); /* Fix for inconsistent font sizes */
 }
 
 .form-control:focus {
@@ -1374,6 +1506,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+    border: 1px solid transparent; /* Fix button border inconsistencies */
 }
 
 .btn:focus {
@@ -1637,6 +1770,21 @@ body {
 .position-fixed { position: fixed !important; }
 .position-sticky { position: sticky !important; }
 
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.text-break {
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+}
+
+.text-nowrap {
+    white-space: nowrap !important;
+}
+
 /* Dark Mode Styles */
 .dark-mode {
     --body-bg: #121212;
@@ -1732,6 +1880,10 @@ body {
     background-color: #2c2c2c;
 }
 
+.dark-mode .datetime-display {
+    background-color: #2c2c2c;
+}
+
 /* Responsive Styles */
 @media (max-width: 1199.98px) {
     .page-content {
@@ -1755,6 +1907,7 @@ body {
     
     .main-content {
         margin-left: 0 !important;
+        width: 100% !important;
     }
     
     .mobile-menu-toggle {
@@ -1771,6 +1924,11 @@ body {
     
     .top-nav {
         padding: var(--spacing-md);
+    }
+    
+    .current-datetime,
+    .current-user {
+        display: none; /* Hide on smaller screens */
     }
 }
 
@@ -1852,6 +2010,11 @@ body {
     
     .form-actions .btn {
         width: 100%;
+    }
+    
+    .datetime-display {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
 
@@ -1967,4 +2130,26 @@ body {
     }
 }
 
-/* Last updated: 2025-06-18 by daparthi001 */
+/* Current User and Date Display - Fixed positioning on mobile devices */
+.current-user-date-banner {
+    position: sticky;
+    top: 70px; /* Below top navbar */
+    z-index: var(--z-sticky);
+    background-color: var(--primary-light);
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-md);
+    font-size: var(--font-size-sm);
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.current-user-date-banner .separator {
+    width: 1px;
+    height: 16px;
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Last updated: 2025-06-18 12:55:39 by
