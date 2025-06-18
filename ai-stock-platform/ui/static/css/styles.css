@@ -1,4 +1,4 @@
-/* QuantumVestAI - Main Application Styles (Updated: 2025-06-18 13:59:24) */
+/* QuantumVestAI - Main Application Styles (Updated: 2025-06-18 14:34:03) */
 
 :root {
     /* Color scheme - enhanced with additional shades */
@@ -244,6 +244,158 @@ a:hover {
 .auth-form .auth-divider-text {
     padding: 0 var(--spacing-md);
     color: var(--text-muted);
+    font-size: var(--font-size-sm);
+}
+
+/* Error Response Styles */
+.error-response {
+    background-color: var(--dark-color);
+    color: var(--light-color);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    font-family: monospace;
+    white-space: pre-wrap;
+    margin: var(--spacing-lg) 0;
+}
+
+.error-response-json {
+    margin: 0;
+    padding: 0;
+}
+
+/* Not Found Page Styles */
+.not-found-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    padding: var(--spacing-xl);
+}
+
+.not-found-code {
+    font-size: 8rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    line-height: 1;
+    margin-bottom: var(--spacing-lg);
+    opacity: 0.7;
+}
+
+.not-found-title {
+    font-size: var(--font-size-3xl);
+    font-weight: 600;
+    margin-bottom: var(--spacing-md);
+    color: var(--text-primary);
+}
+
+.not-found-message {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-xl);
+    color: var(--text-secondary);
+    max-width: 600px;
+}
+
+.not-found-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* API Documentation Styles */
+.api-docs-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+}
+
+.api-docs-header {
+    margin-bottom: var(--spacing-xl);
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: var(--spacing-lg);
+}
+
+.api-docs-title {
+    font-size: var(--font-size-3xl);
+    margin-bottom: var(--spacing-sm);
+    font-weight: 700;
+}
+
+.api-docs-subtitle {
+    font-size: var(--font-size-lg);
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-md);
+}
+
+.api-section {
+    margin-bottom: var(--spacing-2xl);
+}
+
+.api-section-title {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-xs);
+    border-bottom: 2px solid var(--primary-light);
+}
+
+.api-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: var(--spacing-lg);
+    font-size: var(--font-size-sm);
+}
+
+.api-table th,
+.api-table td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--border-color);
+    text-align: left;
+}
+
+.api-table th {
+    background-color: var(--light-color);
+    font-weight: 600;
+}
+
+.api-table tr:nth-child(even) {
+    background-color: var(--light-alt);
+}
+
+.api-method {
+    display: inline-block;
+    padding: 0.2em 0.5em;
+    border-radius: var(--border-radius-sm);
+    color: white;
+    font-weight: 600;
+    font-size: var(--font-size-xs);
+}
+
+.api-method-get {
+    background-color: var(--success-color);
+}
+
+.api-method-post {
+    background-color: var(--primary-color);
+}
+
+.api-method-put {
+    background-color: var(--warning-color);
+    color: var(--dark-color);
+}
+
+.api-method-delete {
+    background-color: var(--danger-color);
+}
+
+.api-docs-note {
+    background-color: var(--light-color);
+    border-left: 4px solid var(--info-color);
+    padding: var(--spacing-md);
+    margin: var(--spacing-lg) 0;
     font-size: var(--font-size-sm);
 }
 
@@ -647,7 +799,7 @@ a:hover {
 }
 
 .current-datetime-value::after {
-    content: "2025-06-18 13:59:24";
+    content: "2025-06-18 14:34:03";
 }
 
 .search-container {
@@ -815,7 +967,7 @@ a:hover {
 }
 
 .datetime-display::after {
-    content: "2025-06-18 13:59:24";
+    content: "2025-06-18 14:34:03";
 }
 
 /* Page Content */
@@ -881,7 +1033,7 @@ a:hover {
 }
 
 .datetime-info-value::after {
-    content: "2025-06-18 13:59:24";
+    content: "2025-06-18 14:34:03";
 }
 
 .page-header {
@@ -1059,6 +1211,11 @@ a:hover {
     .search-container {
         width: 200px;
     }
+    
+    .api-table {
+        display: block;
+        overflow-x: auto;
+    }
 }
 
 @media (max-width: 767.98px) {
@@ -1105,5 +1262,18 @@ a:hover {
     
     .auth-form {
         padding: var(--spacing-lg);
+    }
+    
+    .not-found-code {
+        font-size: 6rem;
+    }
+    
+    .not-found-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .not-found-actions .btn {
+        width: 100%;
     }
 }
