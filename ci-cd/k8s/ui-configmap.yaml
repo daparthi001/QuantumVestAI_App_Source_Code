@@ -1,352 +1,182 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: ui-scripts
+  name: ui-filters-update
   namespace: dev
-  labels:
-    app: quantumvestai
-    tier: frontend
-    environment: development
-    updated: "20250618020235"  # Updated timestamp
 data:
-  # Keep your existing registration-fix.js
-  registration-fix.js: |
-    /**
-     * QuantumVestAI Registration Fix
-     * Created: 2025-06-17 04:07:15
-     * Author: daparthi001
-     * 
-     * This script fixes registration form submissions when working with AWS ALB Ingress
-     */
-    (function() {
-      console.log('QuantumVestAI Registration Fix - Version 2025.06.17.2');
-      
-      // Wait for DOM to be fully loaded
-      document.addEventListener('DOMContentLoaded', function() {
-        // Find the registration form
-        const form = document.querySelector('form');
-        if (!form) {
-          console.warn('Registration form not found');
-          return;
-        }
-        
-        console.log('Registration form found - applying fix');
-        
-        // Override the form submission
-        form.addEventListener('submit', async function(event) {
-          // Prevent default form submission
-          event.preventDefault();
-          
-          // Get form elements
-          const usernameField = document.querySelector('input[name="username"]');
-          const emailField = document.querySelector('input[name="email"]');
-          const passwordField = document.querySelector('input[name="password"]');
-          const passwordConfirmField = document.querySelector('input[name="confirm_password"]') || 
-                                     document.querySelector('input[name="passwordConfirm"]');
-          
-          if (!usernameField || !emailField || !passwordField) {
-            console.error('Required form fields not found');
-            showError('Registration form is missing required fields. Please refresh and try again.');
-            return;
-          }
-          
-          const username = usernameField.value.trim();
-          const email = emailField.value.trim();
-          const password = passwordField.value;
-          
-          // Basic client-side validation
-          if (!username) {
-            showError('Username is required');
-            usernameField.focus();
-            return;
-          }
-          
-          if (!email) {
-            showError('Email is required');
-            emailField.focus();
-            return;
-          }
-          
-          if (!password) {
-            showError('Password is required');
-            passwordField.focus();
-            return;
-          }
-          
-          if (passwordConfirmField && passwordConfirmField.value !== password) {
-            showError('Passwords do not match');
-            passwordConfirmField.focus();
-            return;
-          }
-          
-          // Show loading state
-          showLoading();
-          
-          try {
-            console.log('Submitting registration for: ' + username);
-            
-            // Use fetch API with specific configuration for AWS ALB
-            const response = await fetch('/auth/register', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-              },
-              body: JSON.stringify({
-                username: username,
-                email: email,
-                password: password
-              }),
-              // Important for ALB - disable credentials
-              credentials: 'omit'
-            });
-            
-            console.log('Registration response status: ' + response.status);
-            
-            // Parse response
-            const data = await response.json();
-            console.log('Registration response:', data);
-            
-            // Handle response
-            if (data.status === 'success') {
-              console.log('Registration successful!');
-              hideLoading();
-              showSuccess('Registration successful! Redirecting to login...');
-              
-              // Redirect after successful registration
-              setTimeout(function() {
-                window.location.href = '/login?registered=true';
-              }, 2000);
-              
-            } else {
-              console.error('Registration failed:', data.message);
-              hideLoading();
-              showError(data.message || 'Registration failed. Please try again.');
-            }
-            
-          } catch (error) {
-            console.error('Registration error:', error);
-            hideLoading();
-            showError('An error occurred during registration. Please try again later.');
-          }
-        });
-        
-        // Helper function to show error message
-        function showError(message) {
-          hideLoading();
-          
-          // Remove any existing error message
-          const existingError = document.querySelector('.alert-danger');
-          if (existingError) {
-            existingError.remove();
-          }
-          
-          // Create and show new error message
-          const errorElement = document.createElement('div');
-          errorElement.className = 'alert alert-danger';
-          errorElement.textContent = message;
-          
-          // Insert before the form
-          form.parentNode.insertBefore(errorElement, form);
-          
-          // Scroll to error
-          errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-        
-        // Helper function to show success message
-        function showSuccess(message) {
-          // Remove any existing messages
-          const existingMessages = document.querySelectorAll('.alert');
-          existingMessages.forEach(el => el.remove());
-          
-          // Create and show new success message
-          const successElement = document.createElement('div');
-          successElement.className = 'alert alert-success';
-          successElement.textContent = message;
-          
-          // Insert before the form
-          form.parentNode.insertBefore(successElement, form);
-        }
-        
-        // Helper function to show loading indicator
-        function showLoading() {
-          // Create loading overlay if it doesn't exist
-          let loadingOverlay = document.querySelector('#registration-loading');
-          if (!loadingOverlay) {
-            loadingOverlay = document.createElement('div');
-            loadingOverlay.id = 'registration-loading';
-            loadingOverlay.style.position = 'absolute';
-            loadingOverlay.style.top = '0';
-            loadingOverlay.style.left = '0';
-            loadingOverlay.style.width = '100%';
-            loadingOverlay.style.height = '100%';
-            loadingOverlay.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
-            loadingOverlay.style.display = 'flex';
-            loadingOverlay.style.justifyContent = 'center';
-            loadingOverlay.style.alignItems = 'center';
-            loadingOverlay.style.zIndex = '1000';
-            
-            const spinner = document.createElement('div');
-            spinner.className = 'spinner-border text-primary';
-            spinner.setAttribute('role', 'status');
-            
-            const srText = document.createElement('span');
-            srText.className = 'sr-only';
-            srText.textContent = 'Loading...';
-            
-            spinner.appendChild(srText);
-            loadingOverlay.appendChild(spinner);
-            
-            // Add to form's parent with relative positioning
-            const formContainer = form.parentNode;
-            formContainer.style.position = 'relative';
-            formContainer.appendChild(loadingOverlay);
-          }
-          
-          loadingOverlay.style.display = 'flex';
-        }
-        
-        // Helper function to hide loading indicator
-        function hideLoading() {
-          const loadingOverlay = document.querySelector('#registration-loading');
-          if (loadingOverlay) {
-            loadingOverlay.style.display = 'none';
-          }
-        }
-      });
-    })();
+  template_filters.py: |
+    """
+    QuantumVestAI UI Template Filters
+    Updated: 2025-06-18 03:13:30
+    Author: daparthi001
+    """
+    import re
+    import json
+    import datetime
+    from decimal import Decimal
+    from markupsafe import Markup
 
-  # Add fix-imports.sh script
-  fix-imports.sh: |
-    #!/bin/bash
-    # QuantumVestAI Import Path Fix
-    # Created: 2025-06-18 02:02:35
-    # Author: daparthi001
-    
-    set -e
-    
-    echo "=== QuantumVestAI Import Path Fix ==="
-    echo "Starting fix process at $(date)"
-    
-    # Fix utils/__init__.py import paths
-    if [ -f /app/utils/__init__.py ]; then
-      echo "Fixing import paths in utils/__init__.py"
-      # Replace "from ui.utils" with "from utils"
-      sed -i 's/from ui\.utils/from utils/g' /app/utils/__init__.py
-      echo "✓ utils/__init__.py updated"
-    else
-      echo "⚠ utils/__init__.py not found"
-    fi
-    
-    # Fix template_filters.py
-    if [ -f /app/utils/template_filters.py ]; then
-      echo "Fixing template_filters.py"
-      # Replace app.jinja_env with templates.env if it exists
-      sed -i 's/app\.jinja_env/templates.env/g' /app/utils/template_filters.py
-      echo "✓ utils/template_filters.py updated"
-    else
-      echo "⚠ utils/template_filters.py not found"
-    fi
-    
-    # Update main.py to store templates in app.state
-    if [ -f /app/main.py ]; then
-      echo "Checking main.py for app.state.templates setting"
-      if grep -q "templates = Jinja2Templates" /app/main.py && ! grep -q "app.state.templates = templates" /app/main.py; then
-        echo "Adding app.state.templates assignment to main.py"
-        sed -i '/templates = Jinja2Templates/a app.state.templates = templates  # Store templates in app.state' /app/main.py
-        echo "✓ main.py updated"
-      else
-        echo "✓ main.py already has correct templates configuration"
-      fi
-    else
-      echo "⚠ main.py not found"
-    fi
-    
-    echo "Import path fix completed at $(date)"
-    echo "===================================="
+    def round_number(value, decimal_places=2):
+        """Round a number to specified decimal places"""
+        if value is None:
+            return "—"
+        try:
+            return round(float(value), decimal_places)
+        except (ValueError, TypeError):
+            return value
 
-  # Add install-dependencies.sh script
-  install-dependencies.sh: |
-    #!/bin/bash
-    # QuantumVestAI Missing Dependencies Installer
-    # Created: 2025-06-18 02:02:35
-    # Author: daparthi001
-    
-    set -e
-    
-    echo "=== QuantumVestAI Dependencies Installer ==="
-    echo "Starting installation at $(date)"
-    
-    # Check for fastapi
-    if python -c "import fastapi" &>/dev/null; then
-      echo "✓ fastapi is already installed"
-    else
-      echo "Installing fastapi..."
-      pip install --no-cache-dir fastapi
-      echo "✓ fastapi installed"
-    fi
-    
-    # Check for uvicorn
-    if python -c "import uvicorn" &>/dev/null; then
-      echo "✓ uvicorn is already installed"
-    else
-      echo "Installing uvicorn..."
-      pip install --no-cache-dir uvicorn
-      echo "✓ uvicorn installed"
-    fi
-    
-    # Check for other critical dependencies
-    for package in aiohttp requests jinja2 python-multipart; do
-      if python -c "import ${package//-/_}" &>/dev/null; then
-        echo "✓ $package is already installed"
-      else
-        echo "Installing $package..."
-        pip install --no-cache-dir $package
-        echo "✓ $package installed"
-      fi
-    done
-    
-    echo "Dependency installation completed at $(date)"
-    echo "==========================================="
+    def format_currency(value, currency_symbol="$", decimal_places=2):
+        """Format a number as currency with specified symbol and decimal places"""
+        if value is None:
+            return "—"
+        try:
+            formatted = f"{float(value):.{decimal_places}f}"
+            parts = formatted.split('.')
+            integer_part = parts[0]
+            decimal_part = parts[1] if len(parts) > 1 else ""
+            
+            # Add commas to the integer part
+            if len(integer_part) > 3:
+                integer_part = f"{int(integer_part):,}"
+            
+            if decimal_part:
+                return f"{currency_symbol}{integer_part}.{decimal_part}"
+            return f"{currency_symbol}{integer_part}"
+        except (ValueError, TypeError):
+            return f"{currency_symbol}0.00"
 
-  # Add startup-wrapper.sh script
-  startup-wrapper.sh: |
-    #!/bin/bash
-    # QuantumVestAI UI Startup Wrapper
-    # Created: 2025-06-18 02:02:35
-    # Author: daparthi001
-    
-    set -e
-    
-    echo "=== QuantumVestAI UI Startup Wrapper ==="
-    echo "Starting UI service at $(date)"
-    
-    # Apply fixes first
-    if [ "${FIX_IMPORT_PATHS:-true}" = "true" ]; then
-      echo "Applying import path fixes..."
-      if [ -f /scripts/fix-imports.sh ]; then
-        bash /scripts/fix-imports.sh
-      else
-        echo "⚠ fix-imports.sh not found, skipping import path fixes"
-      fi
-    fi
-    
-    # Install missing dependencies
-    if [ "${INSTALL_MISSING_DEPS:-true}" = "true" ]; then
-      echo "Checking for missing dependencies..."
-      if [ -f /scripts/install-dependencies.sh ]; then
-        bash /scripts/install-dependencies.sh
-      else
-        echo "⚠ install-dependencies.sh not found, installing critical dependencies directly"
-        pip install --no-cache-dir fastapi uvicorn aiohttp requests jinja2
-      fi
-    fi
-    
-    # Start the application using the original start script
-    echo "Starting UI application..."
-    if [ -f /app/scripts/start.sh ]; then
-      exec /app/scripts/start.sh
-    else
-      echo "⚠ start.sh not found, using default startup command"
-      exec uvicorn main:app --host ${HOST:-0.0.0.0} --port ${PORT:-3000}
-    fi
+    def format_percentage(value, decimal_places=2):
+        """Format a number as a percentage with specified decimal places"""
+        if value is None:
+            return "—"
+        try:
+            return f"{float(value):.{decimal_places}f}%"
+        except (ValueError, TypeError):
+            return "0.00%"
+
+    def format_date(value, format_string="%Y-%m-%d"):
+        """Format a date object according to the specified format string"""
+        if value is None:
+            return "—"
+        try:
+            return value.strftime(format_string)
+        except (AttributeError, ValueError, TypeError):
+            return str(value)
+
+    def format_large_number(value, decimal_places=1):
+        """
+        Format large numbers with K, M, B, T suffixes
+        Example: 1234 -> 1.2K, 1234567 -> 1.2M
+        """
+        if value is None:
+            return "—"
+        
+        try:
+            value = float(value)
+            abs_value = abs(value)
+            sign = "-" if value < 0 else ""
+            
+            if abs_value >= 1e12:
+                return f"{sign}{abs_value/1e12:.{decimal_places}f}T"
+            elif abs_value >= 1e9:
+                return f"{sign}{abs_value/1e9:.{decimal_places}f}B"
+            elif abs_value >= 1e6:
+                return f"{sign}{abs_value/1e6:.{decimal_places}f}M"
+            elif abs_value >= 1e3:
+                return f"{sign}{abs_value/1e3:.{decimal_places}f}K"
+            else:
+                return f"{sign}{abs_value:.{decimal_places}f}"
+        except (ValueError, TypeError):
+            return str(value)
+
+    def format_change_value(value, include_sign=True, with_color=False, decimal_places=2):
+        """
+        Format a change value (like stock price change)
+        Optionally include sign and color indicators for positive/negative values
+        """
+        if value is None:
+            return "—"
+        
+        try:
+            value = float(value)
+            formatted = f"{value:.{decimal_places}f}"
+            
+            if include_sign and value > 0:
+                formatted = f"+{formatted}"
+                
+            if with_color:
+                if value > 0:
+                    return Markup(f'<span class="text-success">{formatted}</span>')
+                elif value < 0:
+                    return Markup(f'<span class="text-danger">{formatted}</span>')
+                else:
+                    return Markup(f'<span class="text-muted">{formatted}</span>')
+            
+            return formatted
+        except (ValueError, TypeError):
+            return str(value)
+
+    def truncate_string(s, max_length=50):
+        """Truncate a string to max_length and append ellipsis if needed"""
+        if not s:
+            return ""
+        return s if len(s) <= max_length else s[:max_length-3] + "..."
+
+    def humanize_date(date_value):
+        """Convert a date to a human-readable format"""
+        if not date_value:
+            return ""
+        
+        try:
+            if isinstance(date_value, str):
+                date_value = datetime.datetime.strptime(date_value, "%Y-%m-%d").date()
+                
+            now = datetime.datetime.now().date()
+            delta = now - date_value
+            
+            if delta.days == 0:
+                return "Today"
+            elif delta.days == 1:
+                return "Yesterday"
+            elif delta.days < 7:
+                return f"{delta.days} days ago"
+            elif delta.days < 30:
+                weeks = delta.days // 7
+                return f"{weeks} {'week' if weeks == 1 else 'weeks'} ago"
+            elif delta.days < 365:
+                months = delta.days // 30
+                return f"{months} {'month' if months == 1 else 'months'} ago"
+            else:
+                years = delta.days // 365
+                return f"{years} {'year' if years == 1 else 'years'} ago"
+        except Exception:
+            return str(date_value)
+
+    def to_json(value):
+        """Convert a value to JSON string"""
+        return json.dumps(value)
+
+    def nl2br(value):
+        """Convert newlines to <br> tags"""
+        if not value:
+            return ""
+        return Markup(value.replace('\n', '<br>'))
+
+    def register_filters(app):
+        """Register all filters with the FastAPI application's templates"""
+        # Fixed: use getattr instead of get method
+        templates = getattr(app.state, "templates", None)
+        if templates is None:
+            return
+        
+        # Register all filters - Including the 'round' filter
+        templates.env.filters["round"] = round_number
+        templates.env.filters["currency"] = format_currency
+        templates.env.filters["percentage"] = format_percentage
+        templates.env.filters["date"] = format_date
+        templates.env.filters["large_number"] = format_large_number
+        templates.env.filters["change_value"] = format_change_value
+        templates.env.filters["truncate"] = truncate_string
+        templates.env.filters["humanize_date"] = humanize_date
+        templates.env.filters["tojson"] = to_json
+        templates.env.filters["nl2br"] = nl2br

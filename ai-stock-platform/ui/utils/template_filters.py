@@ -1,117 +1,175 @@
 """
-Custom template filters for QuantumVestAI UI
-Created: 2025-06-17 21:02:50
-Updated: 2025-06-18 01:38:35
+QuantumVestAI UI Template Filters
+Updated: 2025-06-18 03:13:30
 Author: daparthi001
 """
-from fastapi import FastAPI
-from jinja2 import Markup
-import locale
+import re
 import json
-from datetime import datetime
+import datetime
+from decimal import Decimal
 from markupsafe import Markup
-# Set locale for number formatting
-try:
-    locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
-except:
-    locale.setlocale(locale.LC_ALL, '')
 
-def format_number(value):
-    """Format large numbers with commas"""
+def round_number(value, decimal_places=2):
+    """Round a number to specified decimal places"""
     if value is None:
         return "—"
     try:
-        return f"{int(value):,}"
+        return round(float(value), decimal_places)
     except (ValueError, TypeError):
         return value
 
-def format_market_cap(value):
-    """Format market cap with B/M suffixes"""
+def format_currency(value, currency_symbol="$", decimal_places=2):
+    """Format a number as currency with specified symbol and decimal places"""
     if value is None:
         return "—"
     try:
-        value = float(value)
-        if value >= 1e12:
-            return f"${value/1e12:.2f}T"
-        elif value >= 1e9:
-            return f"${value/1e9:.2f}B"
-        elif value >= 1e6:
-            return f"${value/1e6:.2f}M"
-        elif value >= 1e3:
-            return f"${value/1e3:.2f}K"
-        else:
-            return f"${value:.2f}"
+        formatted = f"{float(value):.{decimal_places}f}"
+        parts = formatted.split('.')
+        integer_part = parts[0]
+        decimal_part = parts[1] if len(parts) > 1 else ""
+        
+        # Add commas to the integer part
+        if len(integer_part) > 3:
+            integer_part = f"{int(integer_part):,}"
+        
+        if decimal_part:
+            return f"{currency_symbol}{integer_part}.{decimal_part}"
+        return f"{currency_symbol}{integer_part}"
     except (ValueError, TypeError):
-        return value
+        return f"{currency_symbol}0.00"
 
-def format_sentiment(value):
-    """Format sentiment score with descriptive labels"""
+def format_percentage(value, decimal_places=2):
+    """Format a number as a percentage with specified decimal places"""
     if value is None:
-        return "Neutral"
+        return "—"
+    try:
+        return f"{float(value):.{decimal_places}f}%"
+    except (ValueError, TypeError):
+        return "0.00%"
+
+def format_date(value, format_string="%Y-%m-%d"):
+    """Format a date object according to the specified format string"""
+    if value is None:
+        return "—"
+    try:
+        return value.strftime(format_string)
+    except (AttributeError, ValueError, TypeError):
+        return str(value)
+
+def format_large_number(value, decimal_places=1):
+    """
+    Format large numbers with K, M, B, T suffixes
+    Example: 1234 -> 1.2K, 1234567 -> 1.2M
+    """
+    if value is None:
+        return "—"
+    
     try:
         value = float(value)
-        if value >= 0.7:
-            return Markup(f"Very Positive <i class='fas fa-grin'></i>")
-        elif value >= 0.4:
-            return Markup(f"Positive <i class='fas fa-smile'></i>")
-        elif value >= -0.4:
-            return Markup(f"Neutral <i class='fas fa-meh'></i>")
-        elif value >= -0.7:
-            return Markup(f"Negative <i class='fas fa-frown'></i>")
+        abs_value = abs(value)
+        sign = "-" if value < 0 else ""
+        
+        if abs_value >= 1e12:
+            return f"{sign}{abs_value/1e12:.{decimal_places}f}T"
+        elif abs_value >= 1e9:
+            return f"{sign}{abs_value/1e9:.{decimal_places}f}B"
+        elif abs_value >= 1e6:
+            return f"{sign}{abs_value/1e6:.{decimal_places}f}M"
+        elif abs_value >= 1e3:
+            return f"{sign}{abs_value/1e3:.{decimal_places}f}K"
         else:
-            return Markup(f"Very Negative <i class='fas fa-angry'></i>")
+            return f"{sign}{abs_value:.{decimal_places}f}"
     except (ValueError, TypeError):
-        return "Neutral"
+        return str(value)
 
-def time_ago(value):
-    """Format datetime as time ago string"""
+def format_change_value(value, include_sign=True, with_color=False, decimal_places=2):
+    """
+    Format a change value (like stock price change)
+    Optionally include sign and color indicators for positive/negative values
+    """
     if value is None:
+        return "—"
+    
+    try:
+        value = float(value)
+        formatted = f"{value:.{decimal_places}f}"
+        
+        if include_sign and value > 0:
+            formatted = f"+{formatted}"
+            
+        if with_color:
+            if value > 0:
+                return Markup(f'<span class="text-success">{formatted}</span>')
+            elif value < 0:
+                return Markup(f'<span class="text-danger">{formatted}</span>')
+            else:
+                return Markup(f'<span class="text-muted">{formatted}</span>')
+        
+        return formatted
+    except (ValueError, TypeError):
+        return str(value)
+
+def truncate_string(s, max_length=50):
+    """Truncate a string to max_length and append ellipsis if needed"""
+    if not s:
         return ""
-    try:
-        if isinstance(value, str):
-            value = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
-        
-        now = datetime.utcnow()
-        diff = now - value
-        
-        seconds = diff.total_seconds()
-        if seconds < 60:
-            return "just now"
-        elif seconds < 3600:
-            minutes = int(seconds / 60)
-            return f"{minutes}m ago"
-        elif seconds < 86400:
-            hours = int(seconds / 3600)
-            return f"{hours}h ago"
-        elif seconds < 604800:
-            days = int(seconds / 86400)
-            return f"{days}d ago"
-        else:
-            return value.strftime("%b %d, %Y")
-    except:
-        return value
+    return s if len(s) <= max_length else s[:max_length-3] + "..."
 
-# Register filters with FastAPI app
-def register_filters(app: FastAPI):
-    """Register custom filters with FastAPI app"""
-    from fastapi.templating import Jinja2Templates
-    import logging
+def humanize_date(date_value):
+    """Convert a date to a human-readable format"""
+    if not date_value:
+        return ""
     
-    # Store templates in app.state for consistency
-    templates = app.state.get("templates")
-    
+    try:
+        if isinstance(date_value, str):
+            date_value = datetime.datetime.strptime(date_value, "%Y-%m-%d").date()
+            
+        now = datetime.datetime.now().date()
+        delta = now - date_value
+        
+        if delta.days == 0:
+            return "Today"
+        elif delta.days == 1:
+            return "Yesterday"
+        elif delta.days < 7:
+            return f"{delta.days} days ago"
+        elif delta.days < 30:
+            weeks = delta.days // 7
+            return f"{weeks} {'week' if weeks == 1 else 'weeks'} ago"
+        elif delta.days < 365:
+            months = delta.days // 30
+            return f"{months} {'month' if months == 1 else 'months'} ago"
+        else:
+            years = delta.days // 365
+            return f"{years} {'year' if years == 1 else 'years'} ago"
+    except Exception:
+        return str(date_value)
+
+def to_json(value):
+    """Convert a value to JSON string"""
+    return json.dumps(value)
+
+def nl2br(value):
+    """Convert newlines to <br> tags"""
+    if not value:
+        return ""
+    return Markup(value.replace('\n', '<br>'))
+
+def register_filters(app):
+    """Register all filters with the FastAPI application's templates"""
+    # Fixed: use getattr instead of get method
+    templates = getattr(app.state, "templates", None)
     if templates is None:
-        logging.warning("Templates not found in app.state. Using templates directly.")
         return
     
-    # Access the Jinja2 environment
-    env = templates.env
-    
-    # Register the filters
-    env.filters["format_number"] = format_number
-    env.filters["format_market_cap"] = format_market_cap
-    env.filters["format_sentiment"] = format_sentiment
-    env.filters["time_ago"] = time_ago
-    env.filters["tojson"] = lambda obj: json.dumps(obj)
-    
-    logging.info("Template filters registered successfully")
+    # Register all filters - Including the 'round' filter
+    templates.env.filters["round"] = round_number
+    templates.env.filters["currency"] = format_currency
+    templates.env.filters["percentage"] = format_percentage
+    templates.env.filters["date"] = format_date
+    templates.env.filters["large_number"] = format_large_number
+    templates.env.filters["change_value"] = format_change_value
+    templates.env.filters["truncate"] = truncate_string
+    templates.env.filters["humanize_date"] = humanize_date
+    templates.env.filters["tojson"] = to_json
+    templates.env.filters["nl2br"] = nl2br
