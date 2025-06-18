@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Features - QuantumVestAI</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/features.css">
+</head>
+<body class="app-layout">
+    {% include 'components/header.html' %}
+    {% include 'components/sidebar.html' %}
+    
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Advanced Features</h1>
+            <p>Enhanced tools and analytics powered by AI</p>
+        </div>
+        
+        {% if error %}
+        <div class="alert alert-danger">
+            {{ error }}
+        </div>
+        {% endif %}
+        
+        <div class="advanced-features-grid">
+            <!-- AI Market Sentiment -->
+            <div class="feature-card active">
+                <div class="feature-header">
+                    <h3>AI Market Sentiment Analysis</h3>
+                    <span class="feature-badge">Active</span>
+                </div>
+                <p>Real-time analysis of market sentiment using advanced NLP algorithms</p>
+                <div class="feature-content">
+                    <p>Our AI scans thousands of news articles, social media posts, and financial reports to gauge market sentiment in real-time.</p>
+                    <ul class="feature-highlights">
+                        <li>Real-time sentiment tracking across multiple sources</li>
+                        <li>Historical sentiment patterns analysis</li>
+                        <li>Correlation with price movements</li>
+                        <li>Custom alert setting for sentiment shifts</li>
+                    </ul>
+                    <div class="feature-actions">
+                        <a href="/features/sentiment" class="btn btn-primary">Access Sentiment Analysis</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Multi-factor Analysis -->
+            <div class="feature-card active">
+                <div class="feature-header">
+                    <h3>Multi-factor Analysis</h3>
+                    <span class="feature-badge">Active</span>
+                </div>
+                <p>Comprehensive stock analysis using multiple predictive factors</p>
+                <div class="feature-content">
+                    <p>Analyze stocks using over 50 different financial and technical factors to identify the most promising investment opportunities.</p>
+                    <ul class="feature-highlights">
+                        <li>Custom factor weighting system</li>
+                        <li>Factor correlation analysis</li>
+                        <li>Historical backtesting of factor combinations</li>
+                        <li>Factor-based screening for stock selection</li>
+                    </ul>
+                    <div class="feature-actions">
+                        <a href="/features/multi-factor" class="btn btn-primary">Access Multi-factor Analysis</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Portfolio Optimization -->
+            <div class="feature-card active">
+                <div class="feature-header">
+                    <h3>Portfolio Optimization</h3>
+                    <span class="feature-badge">Active</span>
+                </div>
+                <p>AI-driven portfolio optimization for maximum returns</p>
+                <div class="feature-content">
+                    <p>Use advanced optimization algorithms to balance your portfolio for maximum returns while controlling risk.</p>
+                    <ul class="feature-highlights">
+                        <li>Modern portfolio theory implementation</li>
+                        <li>Risk-adjusted return optimization</li>
+                        <li>Multiple optimization models (Sharpe, Sortino, etc.)</li>
+                        <li>Custom constraint settings</li>
+                    </ul>
+                    <div class="feature-actions">
+                        <a href="/features/portfolio-optimization" class="btn btn-primary">Access Portfolio Optimization</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Prediction Interval -->
+            <div class="feature-card active">
+                <div class="feature-header">
+                    <h3>Extended Prediction Intervals</h3>
+                    <span class="feature-badge">Active</span>
+                </div>
+                <p>Extended prediction intervals up to 12 months</p>
+                <div class="feature-content">
+                    <p>Get long-term forecasts for stocks and markets with our extended prediction intervals.</p>
+                    <ul class="feature-highlights">
+                        <li>12-month forecast models</li>
+                        <li>Confidence interval adjustments</li>
+                        <li>Seasonal pattern detection</li>
+                        <li>Macro-economic factor integration</li>
+                    </ul>
+                    <div class="feature-actions">
+                        <a href="/features/extended-predictions" class="btn btn-primary">Access Extended Predictions</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Custom Indicators -->
+            <div class="feature-card active">
+                <div class="feature-header">
+                    <h3>Custom Technical Indicators</h3>
+                    <span class="feature-badge">Active</span>
+                </div>
+                <p>Create and backtest custom technical indicators</p>
+                <div class="feature-content">
+                    <p>Build your own technical indicators and test them against historical data to find edge in the market.</p>
+                    <ul class="feature-highlights">
+                        <li>Custom indicator builder</li>
+                        <li>Comprehensive backtesting engine</li>
+                        <li>Performance analytics</li>
+                        <li>Export and share indicators</li>
+                    </ul>
+                    <div class="feature-actions">
+                        <a href="/features/custom-indicators" class="btn btn-primary">Access Custom Indicators</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    {% include 'components/footer.html' %}
+    
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/features.js"></script>
+</body>
+</html>

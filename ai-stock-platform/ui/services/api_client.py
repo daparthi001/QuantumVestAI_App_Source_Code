@@ -1,3 +1,8 @@
+"""
+QuantumVestAI API Client
+Last Updated: 2025-06-18 21:25:28
+Author: daparthi001
+"""
 import requests
 import json
 import logging
@@ -168,7 +173,7 @@ class APIClient:
         """Check if the API is healthy"""
         try:
             response = requests.get(
-                f"{self.base_url}/api/v1/health",  # Updated to use correct health endpoint
+                f"{self.base_url}/api/v1/health",
                 timeout=2
             )
             return response.status_code == 200
@@ -182,9 +187,26 @@ class APIClient:
             return False
             
         try:
-            # Update to use normalized endpoint
             response = self.get("/users/feature-access", params={"feature": feature_name})
             return response.get("available", False)
         except:
             # If the check fails, default to not available
             return False
+    
+    def enable_advanced_features(self) -> Dict[str, Any]:
+        """Enable advanced features for the current user"""
+        try:
+            response = self.put("/users/features/advanced", data={"enabled": True})
+            self.logger.info("Advanced features enabled successfully")
+            return response
+        except Exception as e:
+            self.logger.error(f"Failed to enable advanced features: {str(e)}")
+            raise
+
+    def get_available_features(self) -> Dict[str, Any]:
+        """Get all available features for the current user"""
+        try:
+            return self.get("/users/features")
+        except Exception as e:
+            self.logger.error(f"Failed to get available features: {str(e)}")
+            return {"features": {}}

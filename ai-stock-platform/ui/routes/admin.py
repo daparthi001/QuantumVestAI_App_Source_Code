@@ -1,6 +1,6 @@
 """
 QuantumVestAI Admin Routes
-Last Updated: 2025-06-18 21:07:08
+Last Updated: 2025-06-18 21:48:41
 Author: daparthi001
 """
 from fastapi import APIRouter, Request, Depends, HTTPException, Form, Query
@@ -44,6 +44,9 @@ async def admin_dashboard(request: Request, current_user: dict = Depends(admin_r
         # Get system health metrics
         health_metrics = api_client.get("/admin/health")
         
+        # Get advanced features usage statistics
+        features_stats = api_client.get("/admin/features/stats")
+        
         return templates.TemplateResponse(
             "admin/dashboard.html", 
             {
@@ -51,7 +54,8 @@ async def admin_dashboard(request: Request, current_user: dict = Depends(admin_r
                 "user": current_user, 
                 "stats": stats,
                 "recent_users": recent_users,
-                "health_metrics": health_metrics
+                "health_metrics": health_metrics,
+                "features_stats": features_stats
             }
         )
         
@@ -146,13 +150,17 @@ async def user_detail(
         # Get user activity
         user_activity = api_client.get(f"/admin/users/{user_id}/activity")
         
+        # Get user's feature usage
+        feature_usage = api_client.get(f"/admin/users/{user_id}/features")
+        
         return templates.TemplateResponse(
             "admin/user_detail.html", 
             {
                 "request": request, 
                 "user": current_user,
                 "user_details": user_details,
-                "user_activity": user_activity
+                "user_activity": user_activity,
+                "feature_usage": feature_usage
             }
         )
         
@@ -222,6 +230,40 @@ async def toggle_user_status(
         
         # Update user status via API
         api_client.put(f"/admin/users/{user_id}/status", data={"active": active})
+        
+        return JSONResponse(content={"success": True})
+        
+    except Exception as e:
+        error_message = str(e)
+        if hasattr(e, "response") and hasattr(e.response, "json"):
+            try:
+                error_json = e.response.json()
+                if "detail" in error_json:
+                    error_message = error_json["detail"]
+            except:
+                pass
+                
+        return JSONResponse(
+            content={"success": False, "message": error_message},
+            status_code=500
+        )
+
+@router.post("/users/{user_id}/toggle-features")
+async def toggle_user_features(
+    user_id: str,
+    advanced_features: bool = Form(...),
+    current_user: dict = Depends(admin_required),
+    request: Request = None
+):
+    """Enable or disable advanced features for a user"""
+    try:
+        # Create API client with auth token
+        api_client = APIClient(token=request.cookies.get("access_token"))
+        
+        # Update user features via API
+        api_client.put(f"/admin/users/{user_id}/features", data={
+            "advanced_features": advanced_features
+        })
         
         return JSONResponse(content={"success": True})
         
@@ -380,12 +422,16 @@ async def admin_settings_page(
         # Get system settings from API
         system_settings = api_client.get("/admin/settings")
         
+        # Get feature settings
+        feature_settings = api_client.get("/admin/features/settings")
+        
         return templates.TemplateResponse(
             "admin/settings.html", 
             {
                 "request": request, 
                 "user": current_user, 
-                "settings": system_settings
+                "settings": system_settings,
+                "feature_settings": feature_settings
             }
         )
         
@@ -455,6 +501,91 @@ async def update_system_settings(
                 "request": request, 
                 "user": current_user, 
                 "settings": system_settings,
+                "error": error_message
+            },
+            status_code=500
+        )
+
+@router.post("/features/toggle")
+async def toggle_feature_availability(
+    request: Request,
+    feature_name: str = Form(...),
+    enabled: bool = Form(...),
+    current_user: dict = Depends(admin_required)
+):
+    """Toggle feature availability"""
+    try:
+        # Create API client with auth token
+        api_client = APIClient(token=request.cookies.get("access_token"))
+        
+        # Update feature settings via API
+        api_client.put("/admin/features/settings", data={
+            "feature_name": feature_name,
+            "enabled": enabled
+        })
+        
+        return JSONResponse(content={"success": True})
+        
+    except Exception as e:
+        error_message = str(e)
+        if hasattr(e, "response") and hasattr(e.response, "json"):
+            try:
+                error_json = e.response.json()
+                if "detail" in error_json:
+                    error_message = error_json["detail"]
+            except:
+                pass
+                
+        return JSONResponse(
+            content={"success": False, "message": error_message},
+            status_code=500
+        )
+
+@router.get("/features", response_class=HTMLResponse)
+async def features_management(
+    request: Request, 
+    current_user: dict = Depends(admin_required)
+):
+    """Advanced features management page"""
+    try:
+        # Create API client with auth token
+        api_client = APIClient(token=request.cookies.get("access_token"))
+        
+        # Get features usage statistics
+        usage_stats = api_client.get("/admin/features/stats")
+        
+        # Get feature settings
+        feature_settings = api_client.get("/admin/features/settings")
+        
+        # Get feature usage by user
+        usage_by_user = api_client.get("/admin/features/usage", params={"limit": 10})
+        
+        return templates.TemplateResponse(
+            "admin/features.html", 
+            {
+                "request": request, 
+                "user": current_user, 
+                "usage_stats": usage_stats,
+                "feature_settings": feature_settings,
+                "usage_by_user": usage_by_user
+            }
+        )
+        
+    except Exception as e:
+        error_message = str(e)
+        if hasattr(e, "response") and hasattr(e.response, "json"):
+            try:
+                error_json = e.response.json()
+                if "detail" in error_json:
+                    error_message = error_json["detail"]
+            except:
+                pass
+                
+        return templates.TemplateResponse(
+            "admin/features.html", 
+            {
+                "request": request, 
+                "user": current_user, 
                 "error": error_message
             },
             status_code=500

@@ -1,6 +1,6 @@
 """
 QuantumVestAI Application Settings
-Last Updated: 2025-06-18 21:07:08
+Last Updated: 2025-06-18 21:25:28
 Author: daparthi001
 """
 import os
@@ -58,10 +58,14 @@ class Settings:
     # Logging settings
     LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
     
-    # Feature flags
-    ENABLE_PREMIUM_FEATURES = os.environ.get("ENABLE_PREMIUM_FEATURES", "true").lower() == "true"
+    # Feature flags - Updated to enable all advanced features
+    ENABLE_PREMIUM_FEATURES = True
     ENABLE_SOCIAL_LOGIN = os.environ.get("ENABLE_SOCIAL_LOGIN", "true").lower() == "true"
-    ENABLE_EXPERIMENTAL = os.environ.get("ENABLE_EXPERIMENTAL", "false").lower() == "true"
+    ENABLE_EXPERIMENTAL = True
+    ENABLE_ADVANCED_ANALYTICS = True
+    ENABLE_AI_SENTIMENT = True
+    ENABLE_PORTFOLIO_OPTIMIZATION = True
+    ENABLE_MULTI_FACTOR_ANALYSIS = True
     
     # Email settings
     SMTP_SERVER = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
@@ -81,6 +85,35 @@ class Settings:
     # Default pagination settings
     DEFAULT_PAGE_SIZE = 10
     MAX_PAGE_SIZE = 100
+    
+    # Advanced feature settings
+    ADVANCED_FEATURES = {
+        "ai_sentiment": {
+            "enabled": True,
+            "requires_premium": True,
+            "description": "Real-time analysis of market sentiment using advanced NLP algorithms"
+        },
+        "multi_factor_analysis": {
+            "enabled": True,
+            "requires_premium": True,
+            "description": "Comprehensive stock analysis using multiple predictive factors"
+        },
+        "portfolio_optimization": {
+            "enabled": True,
+            "requires_premium": True,
+            "description": "AI-driven portfolio optimization for maximum returns"
+        },
+        "prediction_interval": {
+            "enabled": True,
+            "requires_premium": True,
+            "description": "Extended prediction intervals up to 12 months"
+        },
+        "custom_indicators": {
+            "enabled": True,
+            "requires_premium": True,
+            "description": "Create and backtest custom technical indicators"
+        }
+    }
     
     # Cache settings
     CACHE_TTL_SECONDS = 300  # 5 minutes
@@ -139,6 +172,12 @@ class Settings:
                 "handlers": ["console", "file"] if not self.is_testing() else ["console"]
             }
         }
+    
+    def is_feature_enabled(self, feature_name: str) -> bool:
+        """Check if a specific feature is enabled"""
+        if feature_name in self.ADVANCED_FEATURES:
+            return self.ADVANCED_FEATURES[feature_name]["enabled"]
+        return False
 
 # Create settings instance
 settings = Settings()
