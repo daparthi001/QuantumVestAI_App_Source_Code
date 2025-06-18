@@ -1,7 +1,7 @@
 """
-QuantumVestAI UI Main Module - Fixed JSONResponse Error
+QuantumVestAI UI Main Module - Fixed Import and Template Issues
 Created: 2025-06-17 01:50:11
-Updated: 2025-06-18 00:57:48
+Updated: 2025-06-18 01:39:47
 Author: daparthi001
 """
 import os
@@ -15,6 +15,40 @@ from datetime import datetime, timedelta
 import logging
 from pathlib import Path
 
+# Create FastAPI application for UI
+app = FastAPI(
+    title="QuantumVestAI UI",
+    description="Web UI for QuantumVestAI Platform",
+)
+
+# Get base directory
+BASE_DIR = Path(__file__).resolve().parent
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger("quantumvestai_ui")
+
+# Mount static files
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+
+# Setup templates and store in app.state - UPDATED
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+app.state.templates = templates  # Store templates in app.state
+
+# Get API URL from environment or use default for local development
+API_URL = os.environ.get("API_URL", "http://api:8000")
+API_V1_URL = f"{API_URL}/api/v1"
+
+# Import utility functions AFTER app creation to ensure app.state.templates exists
+from utils.template_filters import register_filters
+
+# Register template filters - this should now work with app.state.templates
+register_filters(app)
+
+# THEN import controllers after templates are set up
 # Import controllers
 from controllers import (
     auth_controller, 
@@ -26,38 +60,6 @@ from controllers import (
     forecast_controller,
     news_controller
 )
-
-# Import utility functions
-from utils.template_filters import register_filters
-
-# Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
-logger = logging.getLogger("quantumvestai_ui")
-
-# Create FastAPI application for UI
-app = FastAPI(
-    title="QuantumVestAI UI",
-    description="Web UI for QuantumVestAI Platform",
-)
-
-# Get base directory
-BASE_DIR = Path(__file__).resolve().parent
-
-# Mount static files
-app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
-
-# Setup templates
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
-
-# Get API URL from environment or use default for local development
-API_URL = os.environ.get("API_URL", "http://api:8000")
-API_V1_URL = f"{API_URL}/api/v1"
-
-# Register template filters
-register_filters(app)
 
 # Debug middleware to log all requests
 @app.middleware("http")

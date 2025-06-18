@@ -1,271 +1,109 @@
-from typing import Optional, Union
-from datetime import datetime
+"""
+QuantumVestAI UI Formatters
+Created: 2025-06-18 01:25:07
+Updated: 2025-06-18 01:25:07
+Author: daparthi001
+"""
 import locale
+from datetime import datetime
+from typing import Union, Any
 
-# Configure locale for currency formatting
+# Set locale for number formatting
 try:
     locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 except:
-    pass  # Fall back to default formatting if locale not available
+    locale.setlocale(locale.LC_ALL, '')
 
-def format_currency(value: Union[float, int, str, None], 
-                   include_symbol: bool = True, 
-                   precision: int = 2,
-                   default: str = 'N/A') -> str:
-    """
-    Format a value as currency
-    
-    Args:
-        value: The numeric value to format
-        include_symbol: Whether to include the currency symbol
-        precision: Number of decimal places
-        default: Default string to return for None values
-        
-    Returns:
-        Formatted currency string
-    """
+def format_number(value: Union[int, float, None], precision: int = 0) -> str:
+    """Format a number with thousands separator"""
     if value is None:
-        return default
-        
-    # Convert to float if it's a string
-    if isinstance(value, str):
-        try:
-            value = float(value)
-        except ValueError:
-            return default
+        return "N/A"
     
     try:
-        if include_symbol:
-            return f"${value:,.{precision}f}"
+        if precision == 0:
+            return f"{int(value):,}"
         else:
-            return f"{value:,.{precision}f}"
-    except:
-        # Fallback formatting if locale fails
-        if include_symbol:
-            return f"${value:.{precision}f}"
-        else:
-            return f"{value:.{precision}f}"
+            return f"{float(value):,.{precision}f}"
+    except (ValueError, TypeError):
+        return str(value)
 
-def format_percentage(value: Union[float, int, str, None], 
-                      include_symbol: bool = True, 
-                      precision: int = 2,
-                      default: str = 'N/A') -> str:
-    """
-    Format a value as a percentage
-    
-    Args:
-        value: The numeric value to format (as decimal, e.g. 0.25 for 25%)
-        include_symbol: Whether to include the % symbol
-        precision: Number of decimal places
-        default: Default string to return for None values
-        
-    Returns:
-        Formatted percentage string
-    """
+def format_market_cap(value: Union[int, float, None]) -> str:
+    """Format market cap in K, M, B, T"""
     if value is None:
-        return default
-    
-    # Convert to float if it's a string
-    if isinstance(value, str):
-        try:
-            value = float(value)
-        except ValueError:
-            return default
+        return "N/A"
     
     try:
-        if include_symbol:
-            return f"{value:.{precision}f}%"
+        value = float(value)
+        if value >= 1_000_000_000_000:  # Trillion
+            return f"${value / 1_000_000_000_000:.2f}T"
+        elif value >= 1_000_000_000:  # Billion
+            return f"${value / 1_000_000_000:.2f}B"
+        elif value >= 1_000_000:  # Million
+            return f"${value / 1_000_000:.2f}M"
+        elif value >= 1_000:  # Thousand
+            return f"${value / 1_000:.2f}K"
         else:
-            return f"{value:.{precision}f}"
-    except:
-        if include_symbol:
-            return f"{value:.{precision}f}%"
-        else:
-            return f"{value:.{precision}f}"
+            return f"${value:.2f}"
+    except (ValueError, TypeError):
+        return str(value)
 
-def format_date(date_value: Union[str, datetime, None], 
-                output_format: str = '%Y-%m-%d',
-                input_format: Optional[str] = None,
-                default: str = 'N/A') -> str:
-    """
-    Format a date value as string
-    
-    Args:
-        date_value: Date string or datetime object
-        output_format: Output date format
-        input_format: Input date format (if date_value is string)
-        default: Default string to return for None values
-        
-    Returns:
-        Formatted date string
-    """
-    if date_value is None:
-        return default
-        
-    try:
-        if isinstance(date_value, str) and input_format:
-            # Parse string to datetime using input format
-            date_obj = datetime.strptime(date_value, input_format)
-        elif isinstance(date_value, str):
-            # Try common formats if specific format not provided
-            for fmt in ['%Y-%m-%d', '%Y-%m-%d %H:%M:%S', '%m/%d/%Y', '%d-%m-%Y']:
-                try:
-                    date_obj = datetime.strptime(date_value, fmt)
-                    break
-                except ValueError:
-                    continue
-            else:
-                # If no format works
-                return default
-        else:
-            # Assume date_value is already a datetime object
-            date_obj = date_value
-            
-        return date_obj.strftime(output_format)
-    except:
-        return default
-
-def format_large_number(value: Union[float, int, str, None],
-                        precision: int = 1,
-                        default: str = 'N/A') -> str:
-    """
-    Format large numbers with K, M, B suffixes
-    
-    Args:
-        value: The numeric value to format
-        precision: Number of decimal places
-        default: Default string to return for None values
-        
-    Returns:
-        Formatted number string with appropriate suffix
-    """
+def format_percentage(value: Union[float, None], precision: int = 2) -> str:
+    """Format a percentage value"""
     if value is None:
-        return default
-    
-    # Convert to float if it's a string
-    if isinstance(value, str):
-        try:
-            value = float(value)
-        except ValueError:
-            return default
+        return "N/A"
     
     try:
-        abs_value = abs(value)
-        sign = '-' if value < 0 else ''
-        
-        if abs_value >= 1_000_000_000:
-            # Billions
-            return f"{sign}{abs_value / 1_000_000_000:.{precision}f}B"
-        elif abs_value >= 1_000_000:
-            # Millions
-            return f"{sign}{abs_value / 1_000_000:.{precision}f}M"
-        elif abs_value >= 1_000:
-            # Thousands
-            return f"{sign}{abs_value / 1_000:.{precision}f}K"
-        else:
-            # Regular number
-            return f"{sign}{abs_value:.{precision}f}"
-    except:
-        return default
+        return f"{float(value):.{precision}f}%"
+    except (ValueError, TypeError):
+        return str(value)
 
-def format_change_value(value: Union[float, int, str, None],
-                        percentage: Union[float, int, str, None] = None,
-                        with_sign: bool = True,
-                        with_color_class: bool = False,
-                        default: str = 'N/A') -> Union[str, dict]:
-    """
-    Format change value with direction indicators
-    
-    Args:
-        value: The numeric change value
-        percentage: Optional percentage change value
-        with_sign: Whether to include +/- sign
-        with_color_class: Whether to include a color class
-        default: Default string to return for None values
-        
-    Returns:
-        Formatted change string or dict with value and class
-    """
+def format_currency(value: Union[float, None], symbol: str = "$", precision: int = 2) -> str:
+    """Format a currency value"""
     if value is None:
-        return default
-    
-    # Convert to float if it's a string
-    if isinstance(value, str):
-        try:
-            value = float(value)
-        except ValueError:
-            return default
-    
-    if percentage is not None and isinstance(percentage, str):
-        try:
-            percentage = float(percentage)
-        except ValueError:
-            percentage = None
+        return "N/A"
     
     try:
-        # Format the value
-        value_str = format_currency(value, include_symbol=False)
-        
-        # Add sign if requested
-        if with_sign and value > 0:
-            value_str = f"+{value_str}"
-        
-        # Add percentage if provided
-        if percentage is not None:
-            percentage_str = format_percentage(percentage)
-            if with_sign and percentage > 0:
-                percentage_str = f"+{percentage_str}"
-            value_str = f"{value_str} ({percentage_str})"
-        
-        if with_color_class:
-            # Return with appropriate CSS class
-            if value > 0:
-                return {"value": value_str, "class": "positive"}
-            elif value < 0:
-                return {"value": value_str, "class": "negative"}
-            else:
-                return {"value": value_str, "class": "neutral"}
-        else:
-            return value_str
-    except:
-        return default
+        return f"{symbol}{float(value):,.{precision}f}"
+    except (ValueError, TypeError):
+        return str(value)
 
-def format_phone_number(phone: Union[str, None], 
-                        format_type: str = 'national',
-                        default: str = 'N/A') -> str:
-    """
-    Format a phone number
+def format_date(value: Union[str, datetime, None], format_str: str = "%Y-%m-%d") -> str:
+    """Format a date string or datetime object"""
+    if value is None:
+        return "N/A"
     
-    Args:
-        phone: Phone number string
-        format_type: Format type ('national' or 'international')
-        default: Default string to return for None values
-        
-    Returns:
-        Formatted phone number string
-    """
-    if phone is None or not phone:
-        return default
-    
-    # Clean the input
-    digits = ''.join(filter(str.isdigit, phone))
-    
-    if len(digits) < 10:
-        return default
-        
     try:
-        if format_type == 'international' and len(digits) >= 11:
-            # International format: +X XXX XXX XXXX
-            country_code = digits[0]
-            area_code = digits[1:4]
-            first_part = digits[4:7]
-            last_part = digits[7:11]
-            return f"+{country_code} {area_code} {first_part} {last_part}"
+        if isinstance(value, str):
+            # Try parsing the string as a datetime
+            value = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        
+        if isinstance(value, datetime):
+            return value.strftime(format_str)
         else:
-            # National format: (XXX) XXX-XXXX
-            area_code = digits[-10:-7]
-            first_part = digits[-7:-4]
-            last_part = digits[-4:]
-            return f"({area_code}) {first_part}-{last_part}"
-    except:
-        return phone  # Return original if formatting fails
+            return str(value)
+    except (ValueError, TypeError):
+        return str(value)
+
+def format_datetime(value: Union[str, datetime, None], format_str: str = "%Y-%m-%d %H:%M:%S") -> str:
+    """Format a datetime string or datetime object"""
+    return format_date(value, format_str)
+
+def format_sentiment(value: Union[float, None]) -> str:
+    """Format a sentiment score (usually between -1 and 1)"""
+    if value is None:
+        return "Neutral"
+    
+    try:
+        value = float(value)
+        if value > 0.6:
+            return "Very Bullish"
+        elif value > 0.2:
+            return "Bullish"
+        elif value > -0.2:
+            return "Neutral"
+        elif value > -0.6:
+            return "Bearish"
+        else:
+            return "Very Bearish"
+    except (ValueError, TypeError):
+        return "N/A"

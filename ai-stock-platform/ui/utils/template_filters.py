@@ -1,14 +1,20 @@
 """
 Custom template filters for QuantumVestAI UI
 Created: 2025-06-17 21:02:50
+Updated: 2025-06-18 01:38:35
 Author: daparthi001
 """
+from fastapi import FastAPI
 from jinja2 import Markup
 import locale
+import json
 from datetime import datetime
 
 # Set locale for number formatting
-locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+try:
+    locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+except:
+    locale.setlocale(locale.LC_ALL, '')
 
 def format_number(value):
     """Format large numbers with commas"""
@@ -86,10 +92,26 @@ def time_ago(value):
         return value
 
 # Register filters with FastAPI app
-def register_filters(app):
+def register_filters(app: FastAPI):
     """Register custom filters with FastAPI app"""
-    app.jinja_env.filters["format_number"] = format_number
-    app.jinja_env.filters["format_market_cap"] = format_market_cap
-    app.jinja_env.filters["format_sentiment"] = format_sentiment
-    app.jinja_env.filters["time_ago"] = time_ago
-    app.jinja_env.filters["tojson"] = lambda obj: Markup(json.dumps(obj))
+    from fastapi.templating import Jinja2Templates
+    import logging
+    
+    # Store templates in app.state for consistency
+    templates = app.state.get("templates")
+    
+    if templates is None:
+        logging.warning("Templates not found in app.state. Using templates directly.")
+        return
+    
+    # Access the Jinja2 environment
+    env = templates.env
+    
+    # Register the filters
+    env.filters["format_number"] = format_number
+    env.filters["format_market_cap"] = format_market_cap
+    env.filters["format_sentiment"] = format_sentiment
+    env.filters["time_ago"] = time_ago
+    env.filters["tojson"] = lambda obj: json.dumps(obj)
+    
+    logging.info("Template filters registered successfully")
