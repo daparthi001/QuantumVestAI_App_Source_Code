@@ -9,7 +9,7 @@ from jinja2 import Markup
 import locale
 import json
 from datetime import datetime
-
+from markupsafe import Markup
 # Set locale for number formatting
 try:
     locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
