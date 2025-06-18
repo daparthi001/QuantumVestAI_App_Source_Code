@@ -1,3 +1,8 @@
+"""
+QuantumVestAI Admin Routes
+Last Updated: 2025-06-18 21:07:08
+Author: daparthi001
+"""
 from fastapi import APIRouter, Request, Depends, HTTPException, Form, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -28,16 +33,16 @@ async def admin_dashboard(request: Request, current_user: dict = Depends(admin_r
     """Admin dashboard page"""
     try:
         # Create API client with auth token
-        api_client = APIClient(token=request.cookies.get("token"))
+        api_client = APIClient(token=request.cookies.get("access_token"))
         
         # Get system stats from API
-        stats = api_client.get("/api/admin/stats")
+        stats = api_client.get("/admin/stats")
         
         # Get recent user signups
-        recent_users = api_client.get("/api/admin/users/recent", params={"limit": 5})
+        recent_users = api_client.get("/admin/users/recent", params={"limit": 5})
         
         # Get system health metrics
-        health_metrics = api_client.get("/api/admin/health")
+        health_metrics = api_client.get("/admin/health")
         
         return templates.TemplateResponse(
             "admin/dashboard.html", 
@@ -81,7 +86,7 @@ async def user_management(
     """User management page"""
     try:
         # Create API client with auth token
-        api_client = APIClient(token=request.cookies.get("token"))
+        api_client = APIClient(token=request.cookies.get("access_token"))
         
         # Prepare query parameters
         params = {"page": page, "size": size}
@@ -89,7 +94,7 @@ async def user_management(
             params["search"] = search
             
         # Get users from API
-        users_data = api_client.get("/api/admin/users", params=params)
+        users_data = api_client.get("/admin/users", params=params)
         
         return templates.TemplateResponse(
             "admin/users.html", 
@@ -133,13 +138,13 @@ async def user_detail(
     """User detail page"""
     try:
         # Create API client with auth token
-        api_client = APIClient(token=request.cookies.get("token"))
+        api_client = APIClient(token=request.cookies.get("access_token"))
         
         # Get user details from API
-        user_details = api_client.get(f"/api/admin/users/{user_id}")
+        user_details = api_client.get(f"/admin/users/{user_id}")
         
         # Get user activity
-        user_activity = api_client.get(f"/api/admin/users/{user_id}/activity")
+        user_activity = api_client.get(f"/admin/users/{user_id}/activity")
         
         return templates.TemplateResponse(
             "admin/user_detail.html", 
@@ -181,10 +186,10 @@ async def update_user_role(
     """Update user role"""
     try:
         # Create API client with auth token
-        api_client = APIClient(token=request.cookies.get("token"))
+        api_client = APIClient(token=request.cookies.get("access_token"))
         
         # Update user role via API
-        api_client.put(f"/api/admin/users/{user_id}/role", data={"role": role})
+        api_client.put(f"/admin/users/{user_id}/role", data={"role": role})
         
         return JSONResponse(content={"success": True})
         
@@ -213,10 +218,10 @@ async def toggle_user_status(
     """Activate or deactivate a user"""
     try:
         # Create API client with auth token
-        api_client = APIClient(token=request.cookies.get("token"))
+        api_client = APIClient(token=request.cookies.get("access_token"))
         
         # Update user status via API
-        api_client.put(f"/api/admin/users/{user_id}/status", data={"active": active})
+        api_client.put(f"/admin/users/{user_id}/status", data={"active": active})
         
         return JSONResponse(content={"success": True})
         
@@ -243,13 +248,13 @@ async def model_management(
     """Model management page"""
     try:
         # Create API client with auth token
-        api_client = APIClient(token=request.cookies.get("token"))
+        api_client = APIClient(token=request.cookies.get("access_token"))
         
         # Get models from API
-        models = api_client.get("/api/admin/models")
+        models = api_client.get("/admin/models")
         
         # Get training status
-        training_status = api_client.get("/api/admin/models/training-status")
+        training_status = api_client.get("/admin/models/training-status")
         
         return templates.TemplateResponse(
             "admin/models.html", 
@@ -291,10 +296,10 @@ async def retrain_model(
     """Retrain a model"""
     try:
         # Create API client with auth token
-        api_client = APIClient(token=request.cookies.get("token"))
+        api_client = APIClient(token=request.cookies.get("access_token"))
         
         # Retrain model via API
-        response = api_client.post(f"/api/admin/models/{model_id}/retrain")
+        response = api_client.post(f"/admin/models/{model_id}/retrain")
         
         return JSONResponse(content={"success": True, "job_id": response.get("job_id")})
         
@@ -321,13 +326,13 @@ async def api_status_page(
     """API status dashboard"""
     try:
         # Create API client with auth token
-        api_client = APIClient(token=request.cookies.get("token"))
+        api_client = APIClient(token=request.cookies.get("access_token"))
         
         # Get API status from API
-        status_data = api_client.get("/api/admin/status")
+        status_data = api_client.get("/admin/status")
         
         # Get API logs
-        logs = api_client.get("/api/admin/logs", params={"limit": 100})
+        logs = api_client.get("/admin/logs", params={"limit": 100})
         
         return templates.TemplateResponse(
             "admin/api_status.html", 
@@ -370,10 +375,10 @@ async def admin_settings_page(
     """Admin settings page"""
     try:
         # Create API client with auth token
-        api_client = APIClient(token=request.cookies.get("token"))
+        api_client = APIClient(token=request.cookies.get("access_token"))
         
         # Get system settings from API
-        system_settings = api_client.get("/api/admin/settings")
+        system_settings = api_client.get("/admin/settings")
         
         return templates.TemplateResponse(
             "admin/settings.html", 
@@ -417,10 +422,10 @@ async def update_system_settings(
         settings_data = {k: v for k, v in form_data.items()}
         
         # Create API client with auth token
-        api_client = APIClient(token=request.cookies.get("token"))
+        api_client = APIClient(token=request.cookies.get("access_token"))
         
         # Update settings via API
-        api_client.put("/api/admin/settings", data=settings_data)
+        api_client.put("/admin/settings", data=settings_data)
         
         # Redirect back to settings page with success message
         return RedirectResponse(url="/admin/settings?success=true", status_code=303)
@@ -436,11 +441,11 @@ async def update_system_settings(
                 pass
                 
         # Create API client to fetch current settings
-        api_client = APIClient(token=request.cookies.get("token"))
+        api_client = APIClient(token=request.cookies.get("access_token"))
         system_settings = {}
         
         try:
-            system_settings = api_client.get("/api/admin/settings")
+            system_settings = api_client.get("/admin/settings")
         except:
             pass
             

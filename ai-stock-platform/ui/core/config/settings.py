@@ -1,121 +1,144 @@
 """
-Configuration Settings Module for QuantumVestAI
-Created: 2025-05-19 03:44:39
-Updated: 2025-06-15 03:42:15
+QuantumVestAI Application Settings
+Last Updated: 2025-06-18 21:07:08
 Author: daparthi001
 """
 import os
-import logging
 from pathlib import Path
-from typing import List, Optional, Union
-from pydantic_settings import BaseSettings
-from pydantic import Field, SecretStr, validator
+from dotenv import load_dotenv
+from typing import Dict, Any, List, Optional
 
-# Base directory
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+# Load environment variables from .env file if it exists
+load_dotenv()
 
-class Settings(BaseSettings):
-    """Application settings"""
-    # Project information
-    PROJECT_NAME: str = "QuantumVestAI"
-    VERSION: str = "1.0.0"
-    DESCRIPTION: str = "AI-Powered Investment Platform"
+class Settings:
+    """Application settings and configuration"""
+    
+    # Application name and version
+    APP_NAME = "QuantumVestAI"
+    APP_VERSION = "1.2.3"
+    APP_DESCRIPTION = "Advanced AI-driven stock market predictions and analytics"
     
     # Environment settings
-    ENVIRONMENT: str = Field(default="development", env="APP_ENV")
-    DEBUG: bool = Field(default=False, env="DEBUG")
+    ENV = os.environ.get("ENVIRONMENT", "development")
+    DEBUG = ENV != "production"
     
-    # Server settings
-    HOST: str = Field(default="0.0.0.0", env="HOST")
-    PORT: int = Field(default=3000, env="PORT")
+    # Base directories
+    BASE_DIR = Path(__file__).resolve().parent.parent.parent
+    TEMPLATES_DIR = BASE_DIR / "templates"
+    STATIC_DIR = BASE_DIR / "static"
     
-    # API settings
-    API_BASE_URL: str = Field(default="https://api.quantumvestai.com", env="API_BASE_URL")
-    API_V1_STR: str = "/api/v1"
+    # Secret key for session encryption
+    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production")
     
     # CORS settings
-    CORS_ORIGINS: List[str] = Field(
-        default=["http://localhost:3000", "https://app.quantumvestai.com", "*"],
-        env="CORS_ORIGINS"
-    )
+    CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:3000,https://dev.quantumvestai.com").split(",")
     
-    # Static files and templates
-    STATIC_DIR: str = Field(default=str(BASE_DIR / "static"), env="STATIC_DIR")
-    TEMPLATES_DIR: str = Field(default=str(BASE_DIR / "templates"), env="TEMPLATES_DIR")
-    UPLOAD_DIR: str = Field(default=str(BASE_DIR / "uploads"), env="UPLOAD_DIR")
+    # Base URL for API requests (without trailing slash)
+    API_BASE_URL = os.environ.get("API_BASE_URL", "http://quantumvestai-dev-api:8000")
+    
+    # JWT settings
+    JWT_SECRET = os.environ.get("JWT_SECRET", "jwt-secret-change-in-production")
+    JWT_ALGORITHM = "HS256"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES = 60
+    
+    # Redis settings
+    REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
+    REDIS_PORT = int(os.environ.get("REDIS_PORT", "6379"))
+    REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD", "")
+    REDIS_DB = int(os.environ.get("REDIS_DB", "0"))
     
     # Database settings
-    DB_HOST: str = Field(default="localhost", env="DB_HOST")
-    DB_PORT: str = Field(default="5432", env="DB_PORT")
-    DB_NAME: str = Field(default="quantumvestaidb", env="DB_NAME")
-    DB_USER: str = Field(default="dbadmin", env="DB_USER")
-    DB_PASSWORD: Optional[SecretStr] = Field(default=None, env="DB_PASSWORD")
-    
-    # Security settings
-    SECRET_KEY: str = Field(
-        default="supersecretkey123456789abcdef",
-        env="SECRET_KEY"
-    )
-    JWT_ALGORITHM: str = Field(default="HS256", env="JWT_ALGORITHM")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
+    DB_HOST = os.environ.get("DB_HOST", "localhost")
+    DB_PORT = int(os.environ.get("DB_PORT", "5432"))
+    DB_NAME = os.environ.get("DB_NAME", "quantumvestai")
+    DB_USER = os.environ.get("DB_USER", "postgres")
+    DB_PASSWORD = os.environ.get("DB_PASSWORD", "postgres")
     
     # Logging settings
-    LOG_LEVEL: str = Field(default="INFO", env="LOG_LEVEL")
-    LOG_FORMAT: str = Field(
-        default="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        env="LOG_FORMAT"
-    )
-    LOG_FILE: Optional[str] = Field(default="logs/app.log", env="LOG_FILE")
+    LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
     
-    @validator("LOG_LEVEL")
-    def validate_log_level(cls, v):
-        valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
-        v = v.upper()
-        if v not in valid_levels:
-            logging.warning(f"Invalid log level {v}. Defaulting to INFO.")
-            return "INFO"
-        return v
+    # Feature flags
+    ENABLE_PREMIUM_FEATURES = os.environ.get("ENABLE_PREMIUM_FEATURES", "true").lower() == "true"
+    ENABLE_SOCIAL_LOGIN = os.environ.get("ENABLE_SOCIAL_LOGIN", "true").lower() == "true"
+    ENABLE_EXPERIMENTAL = os.environ.get("ENABLE_EXPERIMENTAL", "false").lower() == "true"
     
-    @validator("CORS_ORIGINS", pre=True)
-    def parse_cors_origins(cls, v):
-        if isinstance(v, str):
-            return [i.strip() for i in v.split(",")]
-        return v
+    # Email settings
+    SMTP_SERVER = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
+    SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+    SMTP_USERNAME = os.environ.get("SMTP_USERNAME", "")
+    SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+    EMAIL_FROM = os.environ.get("EMAIL_FROM", "no-reply@quantumvestai.com")
     
-    def get_db_url(self) -> str:
-        """Get database URL with proper password handling"""
-        password = ""
-        if self.DB_PASSWORD:
-            password = self.DB_PASSWORD.get_secret_value()
-        else:
-            password = os.environ.get("DB_PASSWORD", "")
+    # OAuth settings
+    GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+    GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+    
+    # API rate limiting
+    RATE_LIMIT_REQUESTS = int(os.environ.get("RATE_LIMIT_REQUESTS", "100"))
+    RATE_LIMIT_WINDOW_MINUTES = int(os.environ.get("RATE_LIMIT_WINDOW_MINUTES", "60"))
+    
+    # Default pagination settings
+    DEFAULT_PAGE_SIZE = 10
+    MAX_PAGE_SIZE = 100
+    
+    # Cache settings
+    CACHE_TTL_SECONDS = 300  # 5 minutes
+    
+    def get_database_url(self) -> str:
+        """Get database connection string"""
+        return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+    
+    def get_redis_url(self) -> str:
+        """Get Redis connection string"""
+        if self.REDIS_PASSWORD:
+            return f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+    
+    def is_production(self) -> bool:
+        """Check if running in production environment"""
+        return self.ENV == "production"
+    
+    def is_development(self) -> bool:
+        """Check if running in development environment"""
+        return self.ENV == "development"
+    
+    def is_testing(self) -> bool:
+        """Check if running in testing environment"""
+        return self.ENV == "testing"
         
-        return f"postgresql://{self.DB_USER}:{password}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+    def get_logging_config(self) -> Dict[str, Any]:
+        """Get logging configuration dictionary"""
+        return {
+            "version": 1,
+            "disable_existing_loggers": False,
+            "formatters": {
+                "standard": {
+                    "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+                },
+            },
+            "handlers": {
+                "console": {
+                    "class": "logging.StreamHandler",
+                    "level": self.LOG_LEVEL,
+                    "formatter": "standard",
+                    "stream": "ext://sys.stdout"
+                },
+                "file": {
+                    "class": "logging.handlers.RotatingFileHandler",
+                    "level": self.LOG_LEVEL,
+                    "formatter": "standard",
+                    "filename": "logs/app.log",
+                    "maxBytes": 10485760,  # 10 MB
+                    "backupCount": 5,
+                    "encoding": "utf8"
+                }
+            },
+            "root": {
+                "level": self.LOG_LEVEL,
+                "handlers": ["console", "file"] if not self.is_testing() else ["console"]
+            }
+        }
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
-        env_file_encoding = "utf-8"
-
-# Global settings instance
+# Create settings instance
 settings = Settings()
-
-# Configure basic logging
-logging.basicConfig(
-    level=getattr(logging, settings.LOG_LEVEL, logging.INFO),
-    format=settings.LOG_FORMAT
-)
-logger = logging.getLogger(__name__)
-
-# Log settings for debugging
-logger.info(
-    "Settings loaded - Environment: %s, Debug: %s, Host: %s, Port: %s",
-    settings.ENVIRONMENT,
-    settings.DEBUG,
-    settings.HOST,
-    settings.PORT
-)
-
-def get_settings():
-    """Return settings instance"""
-    return settings

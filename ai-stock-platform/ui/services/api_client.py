@@ -25,6 +25,19 @@ class APIClient:
             headers["Authorization"] = f"Bearer {self.token}"
             
         return headers
+    
+    def _normalize_endpoint(self, endpoint: str) -> str:
+        """Ensure endpoint has the correct /api/v1 prefix"""
+        # If endpoint already starts with /api/v1, leave it as is
+        if endpoint.startswith("/api/v1"):
+            return endpoint
+            
+        # If endpoint starts with /, append it to /api/v1
+        if endpoint.startswith("/"):
+            return f"/api/v1{endpoint}"
+            
+        # If endpoint doesn't start with /, add /api/v1/
+        return f"/api/v1/{endpoint}"
         
     def _handle_response(self, response: requests.Response) -> Dict[str, Any]:
         """Handle API response and errors"""
@@ -57,8 +70,10 @@ class APIClient:
             
     def get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Make a GET request to the API"""
-        url = f"{self.base_url}{endpoint}"
+        normalized_endpoint = self._normalize_endpoint(endpoint)
+        url = f"{self.base_url}{normalized_endpoint}"
         
+        self.logger.debug(f"Making GET request to {url}")
         try:
             response = requests.get(
                 url,
@@ -68,10 +83,10 @@ class APIClient:
             )
             return self._handle_response(response)
         except Timeout:
-            self.logger.error(f"Request to {endpoint} timed out")
-            raise Timeout(f"Request to API timed out: {endpoint}")
+            self.logger.error(f"Request to {normalized_endpoint} timed out")
+            raise Timeout(f"Request to API timed out: {normalized_endpoint}")
         except ConnectionError:
-            self.logger.error(f"Connection to API failed: {endpoint}")
+            self.logger.error(f"Connection to API failed: {normalized_endpoint}")
             raise ConnectionError(f"Could not connect to API: {self.base_url}")
         except Exception as e:
             self.logger.error(f"Unexpected error in API GET request: {str(e)}")
@@ -79,8 +94,10 @@ class APIClient:
             
     def post(self, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Make a POST request to the API"""
-        url = f"{self.base_url}{endpoint}"
+        normalized_endpoint = self._normalize_endpoint(endpoint)
+        url = f"{self.base_url}{normalized_endpoint}"
         
+        self.logger.debug(f"Making POST request to {url}")
         try:
             response = requests.post(
                 url,
@@ -90,10 +107,10 @@ class APIClient:
             )
             return self._handle_response(response)
         except Timeout:
-            self.logger.error(f"Request to {endpoint} timed out")
-            raise Timeout(f"Request to API timed out: {endpoint}")
+            self.logger.error(f"Request to {normalized_endpoint} timed out")
+            raise Timeout(f"Request to API timed out: {normalized_endpoint}")
         except ConnectionError:
-            self.logger.error(f"Connection to API failed: {endpoint}")
+            self.logger.error(f"Connection to API failed: {normalized_endpoint}")
             raise ConnectionError(f"Could not connect to API: {self.base_url}")
         except Exception as e:
             self.logger.error(f"Unexpected error in API POST request: {str(e)}")
@@ -101,8 +118,10 @@ class APIClient:
             
     def put(self, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Make a PUT request to the API"""
-        url = f"{self.base_url}{endpoint}"
+        normalized_endpoint = self._normalize_endpoint(endpoint)
+        url = f"{self.base_url}{normalized_endpoint}"
         
+        self.logger.debug(f"Making PUT request to {url}")
         try:
             response = requests.put(
                 url,
@@ -112,10 +131,10 @@ class APIClient:
             )
             return self._handle_response(response)
         except Timeout:
-            self.logger.error(f"Request to {endpoint} timed out")
-            raise Timeout(f"Request to API timed out: {endpoint}")
+            self.logger.error(f"Request to {normalized_endpoint} timed out")
+            raise Timeout(f"Request to API timed out: {normalized_endpoint}")
         except ConnectionError:
-            self.logger.error(f"Connection to API failed: {endpoint}")
+            self.logger.error(f"Connection to API failed: {normalized_endpoint}")
             raise ConnectionError(f"Could not connect to API: {self.base_url}")
         except Exception as e:
             self.logger.error(f"Unexpected error in API PUT request: {str(e)}")
@@ -123,8 +142,10 @@ class APIClient:
             
     def delete(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Make a DELETE request to the API"""
-        url = f"{self.base_url}{endpoint}"
+        normalized_endpoint = self._normalize_endpoint(endpoint)
+        url = f"{self.base_url}{normalized_endpoint}"
         
+        self.logger.debug(f"Making DELETE request to {url}")
         try:
             response = requests.delete(
                 url,
@@ -134,10 +155,10 @@ class APIClient:
             )
             return self._handle_response(response)
         except Timeout:
-            self.logger.error(f"Request to {endpoint} timed out")
-            raise Timeout(f"Request to API timed out: {endpoint}")
+            self.logger.error(f"Request to {normalized_endpoint} timed out")
+            raise Timeout(f"Request to API timed out: {normalized_endpoint}")
         except ConnectionError:
-            self.logger.error(f"Connection to API failed: {endpoint}")
+            self.logger.error(f"Connection to API failed: {normalized_endpoint}")
             raise ConnectionError(f"Could not connect to API: {self.base_url}")
         except Exception as e:
             self.logger.error(f"Unexpected error in API DELETE request: {str(e)}")
@@ -147,7 +168,7 @@ class APIClient:
         """Check if the API is healthy"""
         try:
             response = requests.get(
-                f"{self.base_url}/health",
+                f"{self.base_url}/api/v1/health",  # Updated to use correct health endpoint
                 timeout=2
             )
             return response.status_code == 200
@@ -161,7 +182,8 @@ class APIClient:
             return False
             
         try:
-            response = self.get("/api/users/feature-access", params={"feature": feature_name})
+            # Update to use normalized endpoint
+            response = self.get("/users/feature-access", params={"feature": feature_name})
             return response.get("available", False)
         except:
             # If the check fails, default to not available
