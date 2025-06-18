@@ -10,14 +10,14 @@ metadata:
     created-by: daparthi001
     created-date: "2025-06-15"
     updated-by: daparthi001
-    updated-date: "2025-06-18"  # Updated today
+    updated-date: "2025-06-18"
 spec:
-  replicas: 2  # Increased for better availability
+  replicas: 2
   strategy:
     type: RollingUpdate
     rollingUpdate:
       maxSurge: 1
-      maxUnavailable: 0  # Zero-downtime updates
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: quantumvestai
@@ -30,8 +30,7 @@ spec:
         tier: frontend
         environment: development
       annotations:
-        timestamp: "20250618020235"  # Updated timestamp for forcing updates
-        configmap/checksum: "${CONFIG_MAP_CHECKSUM}"  # Add this placeholder, which can be filled during CI/CD
+        timestamp: "20250618021452"
     spec:
       containers:
       - name: ui
@@ -107,12 +106,12 @@ spec:
         - name: ui-logs
           mountPath: /app/logs
             
-        # AWS ALB compatible health checks
+        # Health checks
         livenessProbe:
           httpGet:
             path: /health
             port: 3000
-          initialDelaySeconds: 60  # Increased to allow for fixes and dependency installation
+          initialDelaySeconds: 60
           periodSeconds: 30
           timeoutSeconds: 5
           successThreshold: 1
@@ -127,16 +126,10 @@ spec:
           successThreshold: 1
           failureThreshold: 3
       
-      # Init container to check API availability before starting UI
-      initContainers:
-      - name: check-api-service
-        image: busybox:1.36
-        command: ['sh', '-c', 'until wget -T 5 -q -O- http://quantumvestai-dev-api.dev.svc.cluster.local:8000/health || echo "Waiting for API..."; do sleep 2; done']
-      
       volumes:
       - name: scripts-volume
         configMap:
           name: ui-scripts
-          defaultMode: 0755  # Make scripts executable
+          defaultMode: 0755
       - name: ui-logs
         emptyDir: {}

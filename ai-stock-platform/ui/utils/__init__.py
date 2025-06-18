@@ -1,7 +1,7 @@
 """
 QuantumVestAI UI Utilities
-Created: 2025-06-18 01:50:17
-Updated: 2025-06-18 01:50:17
+Created: Original date
+Updated: 2025-06-18 02:10:57
 Author: daparthi001
 """
 # This file makes the utils directory a proper Python package.
@@ -12,7 +12,7 @@ from utils.formatters import (
     format_currency, 
     format_percentage, 
     format_date, 
-    format_large_number, 
+    # format_large_number,  # Commented out since this function doesn't exist
     format_change_value
 )
 
