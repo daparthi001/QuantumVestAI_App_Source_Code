@@ -12,7 +12,7 @@ metadata:
     updated-by: daparthi001
     updated-date: "2025-06-18"
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -30,7 +30,7 @@ spec:
         tier: frontend
         environment: development
       annotations:
-        timestamp: "20250618021452"
+        timestamp: "20250618024810"
     spec:
       containers:
       - name: ui
@@ -89,7 +89,7 @@ spec:
         
         # Use the wrapper script to start the application
         command: ["/bin/bash"]
-        args: ["/scripts/startup-wrapper.sh"]
+        args: ["-c", "pip install markupsafe && if [ -f /app/utils/template_filters.py ]; then sed -i 's/from jinja2 import Markup/from markupsafe import Markup/g' /app/utils/template_filters.py; fi && if [ -f /app/utils/formatters.py ] && ! grep -q 'def format_large_number' /app/utils/formatters.py; then echo 'def format_large_number(value, decimal_places=1):\\n    \"\"\"Format large numbers with K, M, B, T suffixes\"\"\"\\n    if value is None:\\n        return \"—\"\\n    \\n    try:\\n        value = float(value)\\n        abs_value = abs(value)\\n        sign = \"-\" if value < 0 else \"\"\\n        \\n        if abs_value >= 1e12:\\n            return f\"{sign}{abs_value/1e12:.{decimal_places}f}T\"\\n        elif abs_value >= 1e9:\\n            return f\"{sign}{abs_value/1e9:.{decimal_places}f}B\"\\n        elif abs_value >= 1e6:\\n            return f\"{sign}{abs_value/1e6:.{decimal_places}f}M\"\\n        elif abs_value >= 1e3:\\n            return f\"{sign}{abs_value/1e3:.{decimal_places}f}K\"\\n        else:\\n            return f\"{sign}{abs_value:.{decimal_places}f}\"\\n    except (ValueError, TypeError):\\n        return str(value)' >> /app/utils/formatters.py; fi && if [ -f /app/utils/formatters.py ] && ! grep -q 'def format_change_value' /app/utils/formatters.py; then echo 'def format_change_value(value, include_sign=True, with_color=False, decimal_places=2):\\n    \"\"\"Format a change value (like stock price change)\"\"\"\\n    if value is None:\\n        return \"—\"\\n    \\n    try:\\n        value = float(value)\\n        formatted = f\"{value:.{decimal_places}f}\"\\n        \\n        if include_sign and value > 0:\\n            formatted = f\"+{formatted}\"\\n            \\n        if with_color:\\n            if value > 0:\\n                return f\"<span class=\\\"text-success\\\">{formatted}</span>\"\\n            elif value < 0:\\n                return f\"<span class=\\\"text-danger\\\">{formatted}</span>\"\\n            else:\\n                return f\"<span class=\\\"text-muted\\\">{formatted}</span>\"\\n        \\n        return formatted\\n    except (ValueError, TypeError):\\n        return str(value)' >> /app/utils/formatters.py; fi && if [ -f /app/utils/__init__.py ]; then sed -i 's/from ui\\.utils/from utils/g' /app/utils/__init__.py; fi && if [ -f /scripts/startup-wrapper.sh ]; then /scripts/startup-wrapper.sh; else uvicorn main:app --host 0.0.0.0 --port 3000; fi"]
         
         resources:
           requests:
@@ -106,12 +106,12 @@ spec:
         - name: ui-logs
           mountPath: /app/logs
             
-        # Health checks
+        # Health checks with increased timeouts
         livenessProbe:
           httpGet:
             path: /health
             port: 3000
-          initialDelaySeconds: 60
+          initialDelaySeconds: 90
           periodSeconds: 30
           timeoutSeconds: 5
           successThreshold: 1
@@ -120,7 +120,7 @@ spec:
           httpGet:
             path: /health
             port: 3000
-          initialDelaySeconds: 30
+          initialDelaySeconds: 60
           periodSeconds: 10
           timeoutSeconds: 2
           successThreshold: 1
