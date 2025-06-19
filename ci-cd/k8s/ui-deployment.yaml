@@ -10,7 +10,7 @@ metadata:
     created-by: daparthi001
     created-date: "2025-06-15"
     updated-by: daparthi001
-    updated-date: "2025-06-18"
+    updated-date: "2025-06-19"
 spec:
   replicas: 1
   strategy:
@@ -30,7 +30,7 @@ spec:
         tier: frontend
         environment: development
       annotations:
-        timestamp: "20250618043223"
+        timestamp: "20250619191416"
     spec:
       initContainers:
       - name: fix-app-issues
@@ -42,6 +42,7 @@ spec:
           # Install required packages
           echo "Installing required packages..."
           pip install --no-cache-dir markupsafe==2.1.3 jinja2>=3.0.0 fastapi uvicorn python-multipart
+          npm install --no-save axios http-proxy-middleware cors
           
           # Create necessary directories
           mkdir -p /app/utils /app/controllers /app/templates/dashboard /app/templates/auth /app/static/css /app/auth
@@ -76,6 +77,50 @@ spec:
           touch /app/utils/__init__.py
           touch /app/controllers/__init__.py
           touch /app/auth/__init__.py
+          
+          # Fix CORS and API connection in server.js
+          if [ -f "/app/server.js" ]; then
+            echo "Setting up API proxy in server.js..."
+            
+            # Create temporary API proxy module
+            cat > /app/api-proxy-setup.js << 'EOF'
+            const { createProxyMiddleware } = require('http-proxy-middleware');
+            const cors = require('cors');
+            
+            // Export setup function
+            module.exports = function setupApi(app) {
+              // Add CORS middleware
+              app.use(cors({
+                origin: '*',
+                methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+                allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+                credentials: true
+              }));
+              
+              // Add API proxy
+              const apiUrl = process.env.API_URL || 'https://dev.quantumvestai.com';
+              app.use('/api', createProxyMiddleware({
+                target: apiUrl,
+                changeOrigin: true,
+                pathRewrite: { '^/api': '/api' },
+                secure: false,
+                logLevel: 'debug'
+              }));
+              
+              console.log(`API proxy configured to: ${apiUrl}`);
+            };
+            EOF
+            
+            # Add require statement at the top of server.js
+            sed -i '1i const setupApi = require("./api-proxy-setup");' /app/server.js
+            
+            # Add API setup call before app.listen
+            sed -i '/app.listen/i // Setup API proxy and CORS\nsetupApi(app);' /app/server.js
+          fi
+          
+          # Add API URL to configuration
+          mkdir -p /app/public
+          echo "window.API_URL = '${API_URL:-https://dev.quantumvestai.com}';" > /app/public/api-config.js
           
           # Fix import paths in any __init__.py files
           echo "Fixing import paths..."
@@ -122,9 +167,22 @@ spec:
             secretKeyRef:
               name: ui-secrets
               key: TWITTER_ACCESS_SECRET
-        # API connection
+        # API connection - explicit URL to ensure access from UI
         - name: API_URL
           value: "http://quantumvestai-dev-api.dev.svc.cluster.local:8000"
+        # Add environment variables to enable all endpoints
+        - name: ENABLE_ALL_ENDPOINTS
+          value: "true"
+        - name: ENABLE_AUTH_ENDPOINTS
+          value: "true"
+        - name: ENABLE_DATA_ENDPOINTS
+          value: "true"
+        - name: ENABLE_TRADING_ENDPOINTS
+          value: "true"
+        - name: API_TIMEOUT
+          value: "30000"
+        - name: API_RETRY_ATTEMPTS
+          value: "3"
         # UI settings
         - name: THEME_COLOR
           value: "primary"
@@ -137,17 +195,32 @@ spec:
           value: "true"
         - name: INSTALL_MISSING_DEPS
           value: "true"
+        - name: ENABLE_API_PROXY
+          value: "true"
+        - name: ENABLE_CORS
+          value: "true"
         # Health check settings
         - name: HEALTH_CHECK_PATH
           value: "/health"
         - name: HEALTH_CHECK_ENABLED
           value: "true"
         
-        # Use startup script from config
+        # Use startup script from config with API_URL env passed
         command: ["/bin/bash", "-c"]
         args:
         - |
           cd /app
+          # Create health check endpoint
+          mkdir -p /app/public/health
+          cat > /app/public/health/index.html << EOF
+          {
+            "status": "healthy",
+            "apiUrl": "${API_URL}",
+            "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          }
+          EOF
+          # Start the application
+          echo "Starting application with API_URL=${API_URL}"
           /app/startup.sh
         
         resources:
