@@ -1,7 +1,6 @@
 """
 Authentication Controller for QuantumVestAI
-Created: 2025-06-17 20:54:48
-Updated: 2025-06-19 00:23:26
+Updated: 2025-06-19 02:20:19
 Author: daparthi001
 """
 import os
@@ -15,14 +14,18 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 router = APIRouter()
-templates = Jinja2Templates(directory=str(Path("templates")))
 logger = logging.getLogger("quantumvestai.auth_controller")
+
+# Get templates from app state
+def get_templates():
+    from main import app
+    return app.state.templates
 
 # Get API URL from environment or use default
 API_URL = os.environ.get("API_URL", "http://api:8000")
 API_V1_URL = f"{API_URL}/api/v1"
 
-# Add get_current_user function for use in other controllers
+# Function to get the current user from the token in the cookie
 async def get_current_user(request: Request):
     """Get the current user from the token in the cookie"""
     token = request.cookies.get("access_token", "")
@@ -32,7 +35,7 @@ async def get_current_user(request: Request):
         return None
     
     # If it's an emergency token, parse username from it
-    if token.startswith("emergency_"):
+    if token.startswith("emergency_") or token.startswith("Bearer emergency_"):
         parts = token.split("_")
         if len(parts) >= 2:
             username = parts[1]
@@ -47,11 +50,11 @@ async def get_current_user(request: Request):
     
     # For regular tokens, verify with API
     try:
-        # Remove Bearer prefix if present
+        # Use consistent headers format
         if token.startswith("Bearer "):
-            token = token[7:]
-        
-        headers = {"Authorization": f"Bearer {token}"}
+            headers = {"Authorization": token}
+        else:
+            headers = {"Authorization": f"Bearer {token}"}
         
         # Call API to get current user
         response = requests.get(
@@ -88,15 +91,16 @@ async def get_current_user(request: Request):
         
         return None
 
-@router.get("/login", response_class=HTMLResponse)
+@router.get("/auth/login", response_class=HTMLResponse)
 async def login_page(request: Request, next: str = "/dashboard", msg: str = None):
     """Render login page"""
+    templates = get_templates()
     return templates.TemplateResponse(
         "auth/login.html", 
         {"request": request, "next": next, "msg": msg}
     )
 
-@router.post("/login")
+@router.post("/auth/login")
 async def login_post(
     request: Request,
     username: str = Form(...),
@@ -105,6 +109,7 @@ async def login_post(
 ):
     """Process login form submission"""
     logger.info(f"Login attempt for username: {username}")
+    templates = get_templates()
     
     try:
         # Call API login endpoint
@@ -217,22 +222,28 @@ async def login_post(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-@router.get("/logout")
+@router.get("/auth/logout")
 async def logout():
     """Handle user logout"""
     response = RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
     response.delete_cookie(key="access_token")
     return response
 
-@router.get("/register", response_class=HTMLResponse)
+@router.get("/logout")
+async def logout_shortcut():
+    """Shortcut for logout"""
+    return RedirectResponse(url="/auth/logout", status_code=status.HTTP_302_FOUND)
+
+@router.get("/auth/register", response_class=HTMLResponse)
 async def register_page(request: Request):
     """Render registration page"""
+    templates = get_templates()
     return templates.TemplateResponse(
         "auth/register.html", 
         {"request": request}
     )
 
-@router.post("/register")
+@router.post("/auth/register")
 async def register_post(
     request: Request,
     username: str = Form(...),
@@ -241,6 +252,8 @@ async def register_post(
     confirm_password: str = Form(...),
 ):
     """Process registration form submission"""
+    templates = get_templates()
+    
     # Check if passwords match
     if password != confirm_password:
         return templates.TemplateResponse(
@@ -322,17 +335,19 @@ async def register_post(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-@router.get("/password-reset", response_class=HTMLResponse)
+@router.get("/auth/password-reset", response_class=HTMLResponse)
 async def password_reset_page(request: Request):
     """Render password reset request page"""
+    templates = get_templates()
     return templates.TemplateResponse(
         "auth/password_reset.html", 
         {"request": request}
     )
 
-@router.post("/password-reset")
+@router.post("/auth/password-reset")
 async def password_reset_post(request: Request, email: str = Form(...)):
     """Process password reset request"""
+    templates = get_templates()
     try:
         # Call API password reset endpoint
         response = requests.post(
@@ -363,8 +378,7 @@ async def password_reset_post(request: Request, email: str = Form(...)):
             }
         )
 
-# For debugging purposes, add a route to test current user
-@router.get("/whoami")
+@router.get("/auth/whoami")
 async def whoami(request: Request, user: dict = Depends(get_current_user)):
     """Test route to show current user info"""
     if user:

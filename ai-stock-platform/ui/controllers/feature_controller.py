@@ -1,6 +1,6 @@
 """
 QuantumVestAI Feature Controller
-Last Updated: 2025-06-19 00:23:26
+Updated: 2025-06-19 02:20:19
 Author: daparthi001
 """
 from fastapi import APIRouter, Request, Depends, HTTPException, Form
@@ -15,8 +15,12 @@ from controllers.auth_controller import get_current_user
 
 # Setup router
 router = APIRouter(prefix="/features", tags=["features"])
-templates = Jinja2Templates(directory=str(Path("templates")))
 logger = logging.getLogger("quantumvestai.feature_controller")
+
+# Get templates from app state
+def get_templates():
+    from main import app
+    return app.state.templates
 
 # Get API URL from environment or use default
 API_URL = os.environ.get("API_URL", "http://api:8000")
@@ -25,6 +29,7 @@ API_V1_URL = f"{API_URL}/api/v1"
 @router.get("/advanced", response_class=HTMLResponse)
 async def advanced_features(request: Request, user: dict = Depends(get_current_user)):
     """Advanced features page"""
+    templates = get_templates()
     if not user:
         logger.warning("Unauthenticated user tried to access advanced features page")
         return RedirectResponse(url="/login?next=/features/advanced", status_code=302)
@@ -66,6 +71,10 @@ async def advanced_features(request: Request, user: dict = Depends(get_current_u
     # Check for activation success flag
     activated = request.query_params.get("activated", "false").lower() == "true"
     
+    # If activated query param is true, override feature status
+    if activated:
+        feature_status["advanced"] = True
+    
     return templates.TemplateResponse(
         "features/advanced.html",
         {
@@ -79,6 +88,7 @@ async def advanced_features(request: Request, user: dict = Depends(get_current_u
 @router.post("/activate")
 async def activate_features(request: Request, user: dict = Depends(get_current_user)):
     """Activate advanced features directly"""
+    templates = get_templates()
     if not user:
         logger.warning("Unauthenticated user tried to activate features")
         return JSONResponse(
@@ -101,20 +111,20 @@ async def activate_features(request: Request, user: dict = Depends(get_current_u
                 status_code=302
             )
         
-        # Call API directly through our own API proxy
+        # Call API to activate advanced features
         response = requests.post(
-            "http://localhost:3000/api/v1/users/features/advanced",
+            f"{API_V1_URL}/users/features/advanced",
             headers=headers,
             json={"enabled": True},
             timeout=10
         )
         
         # Log the API response for debugging
-        logger.info(f"API activation response: {response.status_code}")
+        logger.info(f"API activation response status: {response.status_code}")
         try:
-            logger.info(f"API activation body: {json.dumps(response.json())}")
+            logger.info(f"API activation response body: {json.dumps(response.json())}")
         except:
-            logger.info(f"API activation body (not JSON): {response.text[:100]}")
+            logger.info(f"API activation response body (not JSON): {response.text[:100]}")
         
         if response.status_code == 200:
             # Success - redirect to advanced features page with success parameter
@@ -167,17 +177,19 @@ async def feature_status(request: Request, user: dict = Depends(get_current_user
     if user.get("is_emergency", False):
         # Check if after activation
         after_activation = request.query_params.get("after_activation", "false").lower() == "true"
+        activated = request.query_params.get("activated", "false").lower() == "true"
+        is_activated = after_activation or activated
         
-        logger.info(f"Returning mock feature status for emergency user (after_activation={after_activation})")
+        logger.info(f"Returning mock feature status for emergency user (activated={is_activated})")
         return JSONResponse(content={
-            "advanced": after_activation,
+            "advanced": is_activated,
             "data_access": {
                 "historical": True,
-                "real_time": after_activation
+                "real_time": is_activated
             },
             "ai_features": {
-                "sentiment": after_activation,
-                "prediction": after_activation
+                "sentiment": is_activated,
+                "prediction": is_activated
             }
         })
     
@@ -186,9 +198,9 @@ async def feature_status(request: Request, user: dict = Depends(get_current_user
         token = request.cookies.get("access_token", "")
         headers = {"Authorization": token} if token else {}
         
-        # Call our own API proxy to check feature status
+        # Call API to check feature status
         response = requests.get(
-            "http://localhost:3000/api/v1/users/features",
+            f"{API_V1_URL}/users/features",
             headers=headers,
             params=request.query_params,
             timeout=5

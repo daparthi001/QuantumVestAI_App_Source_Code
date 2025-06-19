@@ -1,6 +1,6 @@
 """
 QuantumVestAI API Proxy Routes
-Last Updated: 2025-06-19 00:23:26
+Updated: 2025-06-19 02:20:19
 Author: daparthi001
 """
 from fastapi import APIRouter, Request, Response, HTTPException
@@ -169,7 +169,8 @@ async def get_features_proxy(request: Request):
             logger.info("Using emergency token for features status check")
             # Check if it's after activation
             activation_param = request.query_params.get("after_activation", "false")
-            advanced = activation_param.lower() == "true"
+            activated_param = request.query_params.get("activated", "false")
+            advanced = activation_param.lower() == "true" or activated_param.lower() == "true"
             
             return JSONResponse(
                 content={
