@@ -1,6 +1,6 @@
 #!/bin/bash
 # Docker Entrypoint Script for QuantumVestAI API
-# Updated: 2025-06-19 05:51:42
+# Updated: 2025-06-19 05:57:30
 # Author: daparthi001
 
 set -e
@@ -44,7 +44,7 @@ if [ ! -f "/app/api/main.py" ]; then
     cat << 'MAINPY' > /app/api/main.py
 """
 QuantumVestAI API - Main Application
-Created: 2025-06-19 05:51:42
+Created: 2025-06-19 05:57:30
 Author: daparthi001
 """
 from fastapi import FastAPI
