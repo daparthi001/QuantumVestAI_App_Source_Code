@@ -35,6 +35,7 @@ spec:
       initContainers:
       - name: fix-app-issues
         image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:ui-dev-latest
+        imagePullPolicy: Always
         command: ["/bin/bash", "-c"]
         args:
         - |

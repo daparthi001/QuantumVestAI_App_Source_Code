@@ -10,7 +10,7 @@ import logging
 from datetime import datetime
 import json
 
-from fastapi import FastAPI, Request, HTTPException, status, Depends
+from fastapi import FastAPI, Request, HTTPException, status, Depends, Response
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
@@ -44,9 +44,13 @@ app = FastAPI(
 
 # CORS configuration
 origins = [
-    "http://localhost:3000",
-    "https://dev.quantumvestai.com",
+    "http://localhost",
+    "http://localhost:3000",  # React development server
+    "http://localhost:5173",  # Vite development server
     "https://quantumvestai.com",
+    "https://www.quantumvestai.com",
+    "https://dev.quantumvestai.com", 
+    "http://dev.quantumvestai.com",   # Include HTTP version
     "*"  # Remove in production
 ]
 
@@ -54,8 +58,10 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-API-Key", "Accept"],
+    expose_headers=["X-Request-ID", "X-Process-Time"],
+    max_age=600,  # Cache preflight requests for 10 minutes
 )
 
 # Log requests middleware
@@ -137,6 +143,14 @@ async def api_health_check():
             "timestamp": datetime.now().isoformat()
         }
 
+# Import routers
+try:
+    from routers.v1 import router as v1_router
+    app.include_router(v1_router)
+    logger.info("Included v1 router")
+except ImportError as e:
+    logger.error(f"Could not import v1 router: {e}")
+
 # Try to import routes if they exist, with graceful fallback
 try:
     from routes.sentiment import router as sentiment_router
@@ -204,6 +218,12 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+# Add OPTIONS handler for login endpoint
+@app.options("/api/v1/auth/login")
+async def login_options():
+    """Handle CORS preflight requests for login endpoint"""
+    return Response(status_code=200)
 
 @app.get("/api/v1/auth/me")
 async def get_current_user(token: str = Depends(oauth2_scheme)):

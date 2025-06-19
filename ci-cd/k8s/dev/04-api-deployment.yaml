@@ -31,7 +31,7 @@ spec:
       containers:
       - name: api
         image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:api-dev-latest
-        # Explicitly define the command to use main.py directly
+        imagePullPolicy: Always
         command: ["uvicorn"]
         args: ["main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
         ports:
