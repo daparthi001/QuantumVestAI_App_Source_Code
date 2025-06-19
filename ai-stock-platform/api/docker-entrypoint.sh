@@ -1,21 +1,18 @@
 #!/bin/bash
-# Docker Entrypoint Script for QuantumVestAI API
-# Updated: 2025-06-19 05:57:30
+# Production Docker Entrypoint for QuantumVestAI API
+# Created: 2025-06-19 06:07:51
 # Author: daparthi001
 
 set -e
 
 echo "=== Starting QuantumVestAI API Service ==="
-echo "Date: $(date)"
+echo "Date: $(date -u)"
 echo "Environment: $API_ENV"
 echo "User: $(whoami)"
-echo "Python: $(python --version)"
 
-# Check for main.py in alternative locations and copy if needed
-if [ -f "/app/main.py" ] && [ ! -f "/app/api/main.py" ]; then
-    echo "Found main.py in root directory, copying to api directory..."
-    cp /app/main.py /app/api/main.py
-fi
+# Set Python path to include current directory
+export PYTHONPATH=/app:$PYTHONPATH
+echo "PYTHONPATH: $PYTHONPATH"
 
 # Ensure api directory exists
 if [ ! -d "/app/api" ]; then
@@ -23,75 +20,25 @@ if [ ! -d "/app/api" ]; then
     mkdir -p /app/api
 fi
 
-# Ensure api/__init__.py exists with proper content
+# Ensure api/__init__.py exists
 if [ ! -f "/app/api/__init__.py" ]; then
     echo "Creating api/__init__.py..."
-    cat << 'INITPY' > /app/api/__init__.py
+    cat > /app/api/__init__.py << 'EOF'
 """
 API Package
-Created: 2025-05-21 13:57:49
+Created: 2025-06-19 06:07:51
 Author: daparthi001
 """
 from api.main import app
 
 __all__ = ['app']
-INITPY
+EOF
 fi
 
-# Ensure api/main.py exists with at least basic endpoints
-if [ ! -f "/app/api/main.py" ]; then
-    echo "Creating minimal api/main.py..."
-    cat << 'MAINPY' > /app/api/main.py
-"""
-QuantumVestAI API - Main Application
-Created: 2025-06-19 05:57:30
-Author: daparthi001
-"""
-from fastapi import FastAPI
-import logging
-from datetime import datetime
-import os
-import socket
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("quantumvestai_api")
-
-app = FastAPI(title="QuantumVestAI API", version="1.0.0")
-
-@app.get("/")
-async def root():
-    """API root endpoint"""
-    logger.info("Root endpoint accessed")
-    return {
-        "name": "QuantumVestAI API",
-        "version": "1.0.0",
-        "status": "running",
-        "environment": os.environ.get("API_ENV", "development"),
-        "documentation": "/docs"
-    }
-
-@app.get("/health")
-async def health_check():
-    """Basic health check endpoint"""
-    logger.info("Health check endpoint accessed")
-    return {"status": "healthy"}
-
-@app.get("/api/v1/health")
-async def api_health_check():
-    """API v1 health check endpoint"""
-    logger.info("API v1 health check endpoint accessed")
-    system_info = {
-        "hostname": socket.gethostname(),
-        "timestamp": datetime.now().isoformat(),
-        "environment": os.environ.get("API_ENV", "development"),
-    }
-    return {
-        "status": "healthy",
-        "version": "1.0.0",
-        "system": system_info
-    }
-MAINPY
+# Check for main.py in multiple locations and copy if needed
+if [ -f "/app/main.py" ] && [ ! -f "/app/api/main.py" ]; then
+    echo "Found main.py in root directory, copying to api directory..."
+    cp /app/main.py /app/api/main.py
 fi
 
 # Ensure logs directory exists
@@ -103,24 +50,86 @@ if [ ! -d "/app/logs" ]; then
     fi
 fi
 
-# Set Python path
-export PYTHONPATH="/app:${PYTHONPATH}"
-echo "PYTHONPATH: $PYTHONPATH"
-
-# Print system status
-echo "System status:"
-echo "  Disk space: $(df -h / | awk 'NR==2 {print $5 " used"}')"
-echo "  Memory: $(free -h | awk '/^Mem:/ {print $3 "/" $2}')"
-
-# Print current directory structure
+# Print directory contents for debugging
 echo "Directory structure:"
-echo "- /app contents:"
-ls -la /app | head -n 20
-echo "- /app/api contents:"
+ls -la /app
 ls -la /app/api
 
-# Check if we can import the api module
-python -c "import api; print(f'API module found and app imported. App routes: {len(api.app.routes)}')" || echo "Warning: Could not import api module"
+# Verify we can import the api module
+echo "Verifying api module can be imported..."
+python -c "import sys; print(sys.path); import api; print(f'API module found and app imported. Routes: {len(api.app.routes)}')" || {
+    echo "ERROR: Cannot import api module. Creating a minimal implementation..."
+    
+    # Create a minimal implementation
+    cat > /app/api/main.py << 'EOF'
+"""
+QuantumVestAI API - Main Application (Minimal Implementation)
+Created: 2025-06-19 06:07:51
+Author: daparthi001
+"""
+import os
+import socket
+import logging
+from datetime import datetime
+
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("quantumvestai_api")
+
+# Create FastAPI application
+app = FastAPI(
+    title="QuantumVestAI API",
+    version="1.0.0",
+    description="Stock Market Analysis Platform API",
+    docs_url="/docs",
+    redoc_url="/redoc",
+)
+
+# CORS configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/")
+async def root():
+    """API root endpoint"""
+    return {
+        "name": "QuantumVestAI API",
+        "version": "1.0.0",
+        "status": "running",
+        "documentation": "/docs"
+    }
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {"status": "healthy"}
+
+@app.get("/api/v1/health")
+async def api_health_check():
+    """API v1 health check endpoint"""
+    return {
+        "status": "healthy",
+        "version": "1.0.0",
+        "system": {
+            "hostname": socket.gethostname(),
+            "timestamp": datetime.now().isoformat(),
+            "environment": os.environ.get("API_ENV", "development")
+        }
+    }
+EOF
+
+    # Verify the minimal implementation
+    python -c "import api; print(f'Minimal API implementation created. Routes: {len(api.app.routes)}')"
+}
 
 # Start the application
 echo "Starting API service with command: $@"

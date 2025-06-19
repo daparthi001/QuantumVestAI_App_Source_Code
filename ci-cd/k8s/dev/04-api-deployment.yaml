@@ -1,15 +1,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: quantumvestai-dev-api
+  name: quantumvestai-api
   namespace: dev
   labels:
     app: quantumvestai
     tier: backend
     environment: development
-    updated: "20250619054413"
+    updated: "20250619060751"
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: quantumvestai
@@ -26,20 +26,17 @@ spec:
         app: quantumvestai
         tier: backend
         environment: development
-        updated: "20250619054413"
+        updated: "20250619060751"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
       - name: api
-        image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:api-dev-latest
+        image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:api-prod-20250619
         ports:
         - containerPort: 8000
-        command:
-        - /bin/sh
-        - -c
-        args:
-        - |
-          /app/docker-entrypoint.sh
-          cd /app && uvicorn api:app --host 0.0.0.0 --port 8000
         env:
         - name: DB_HOST
           valueFrom:
@@ -74,11 +71,11 @@ spec:
           value: development
         resources:
           limits:
+            cpu: 1000m
+            memory: 2Gi
+          requests:
             cpu: 500m
             memory: 1Gi
-          requests:
-            cpu: 250m
-            memory: 512Mi
         livenessProbe:
           httpGet:
             path: /health
