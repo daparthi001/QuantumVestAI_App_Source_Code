@@ -1,7 +1,7 @@
 """
 QuantumVestAI API - Main Application
-Updated: 2025-06-19 05:33:15
-Author: daparthi001
+Updated: 2025-06-19 08:04:12
+Author: daparthi001, daparthi0012
 """
 import os
 import sys
@@ -23,7 +23,7 @@ logging.basicConfig(
 logger = logging.getLogger("quantumvestai_api")
 
 # Print startup debugging information
-logger.info(f"Starting API server...")
+logger.info(f"Starting API server (FIXED VERSION)...")
 logger.info(f"Python version: {sys.version}")
 logger.info(f"Current directory: {os.getcwd()}")
 logger.info(f"System path: {sys.path}")
@@ -136,6 +136,31 @@ async def api_health_check():
             "error": str(e),
             "timestamp": datetime.now().isoformat()
         }
+
+# Try to import original routers without breaking if they don't exist
+try:
+    # Only try to import these if they exist, don't fail if they don't
+    from routes.sentiment import router as sentiment_router
+    app.include_router(sentiment_router)
+    logger.info("Included sentiment router")
+except ImportError as e:
+    logger.warning(f"Could not import sentiment router: {e}")
+
+try:
+    from routes.admin import router as admin_router
+    app.include_router(admin_router)
+    logger.info("Included admin router")
+except ImportError as e:
+    logger.warning(f"Could not import admin router: {e}")
+
+try:
+    from routes.whitepaper_analysis import router as whitepaper_router
+    app.include_router(whitepaper_router)
+    logger.info("Included whitepaper router")
+except ImportError as e:
+    logger.warning(f"Could not import whitepaper router: {e}")
+
+# --- BUILT-IN ENDPOINTS ---
 
 @app.get("/api/v1/forecast")
 async def forecast():
@@ -423,3 +448,8 @@ async def startup_event():
             route_paths.append(f"{method} {route.path}")
     
     logger.info(f"Registered routes: {route_paths}")
+
+# Check if this script is executed directly
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
