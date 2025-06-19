@@ -11,38 +11,59 @@ metadata:
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
     alb.ingress.kubernetes.io/ssl-redirect: "443"
     alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:921930869047:certificate/94eec8e0-cf9a-4184-8e27-2c3c845c390a
-    # ALB health check settings - now configured for Node.js app
-    alb.ingress.kubernetes.io/healthcheck-path: "/health"
-    alb.ingress.kubernetes.io/healthcheck-port: "3000"
+    # ALB health check settings - properly configured for API
+    alb.ingress.kubernetes.io/healthcheck-path: "/api/v1/health"
+    alb.ingress.kubernetes.io/healthcheck-port: "8000"
     alb.ingress.kubernetes.io/healthcheck-protocol: "HTTP"
     alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
     alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
     alb.ingress.kubernetes.io/healthy-threshold-count: "2"
     alb.ingress.kubernetes.io/unhealthy-threshold-count: "2"
     alb.ingress.kubernetes.io/success-codes: "200-399"
+    # CORS settings for API
+    alb.ingress.kubernetes.io/cors-allow-headers: "DNT,X-Requested-With,X-Request-ID,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+    alb.ingress.kubernetes.io/cors-allow-methods: "GET, POST, OPTIONS, PUT, DELETE, PATCH"
+    alb.ingress.kubernetes.io/cors-allow-origin: "*"
     created-by: daparthi001
     created-date: "2025-06-15"
     updated-by: daparthi001
-    updated-date: "2025-06-17"
+    updated-date: "2025-06-19"
 spec:
   rules:
   - host: dev.quantumvestai.com
     http:
       paths:
-      - path: /api
+      # Keep all API routes under a single prefix for consistency
+      - path: /api/v1
         pathType: Prefix
         backend:
           service:
             name: quantumvestai-dev-api
             port:
               number: 8000
-      - path: /auth
-        pathType: Prefix
+      # Add documentation routes
+      - path: /docs
+        pathType: Exact
         backend:
           service:
             name: quantumvestai-dev-api
             port:
               number: 8000
+      - path: /redoc
+        pathType: Exact
+        backend:
+          service:
+            name: quantumvestai-dev-api
+            port:
+              number: 8000
+      - path: /openapi.json
+        pathType: Exact
+        backend:
+          service:
+            name: quantumvestai-dev-api
+            port:
+              number: 8000
+      # UI route should be last (catch-all)
       - path: /
         pathType: Prefix
         backend:

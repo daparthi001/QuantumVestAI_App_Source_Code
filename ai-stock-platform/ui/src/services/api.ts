@@ -6,7 +6,8 @@
  */
 import axios, { AxiosError } from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
+// Use relative URL to avoid CORS issues
+const API_BASE_URL = '/api/v1';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -29,6 +30,11 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error: AxiosError) => {
+        // Log detailed error information
+        console.error('API Error:', error.response?.data || error.message);
+        console.error('Request URL:', error.config?.url);
+        console.error('Request Method:', error.config?.method);
+        
         const status = error.response?.status;
         
         // Handle authentication errors
