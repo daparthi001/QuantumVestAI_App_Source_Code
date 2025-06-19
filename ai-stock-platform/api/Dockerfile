@@ -2,9 +2,8 @@ FROM python:3.10-slim
 
 # Set metadata
 LABEL maintainer="daparthi001" \
-      created="2025-06-19 07:11:20" \
-      version="1.0.0" \
-      environment="production" \
+      created="2025-06-19 15:34:18" \
+      version="1.0.1" \
       description="QuantumVestAI API Service"
 
 WORKDIR /app
@@ -28,21 +27,19 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PORT=8000 \
     PYTHONPATH=/app \
     TZ=UTC \
-    API_ENV="production" \
-    API_V1_STR="/api/v1" \
+    API_ENV="development" \
     PROJECT_NAME="QuantumVestAI API" \
-    VERSION="1.0.0"
-    
+    VERSION="1.0.1"
+
+# Healthcheck - Test the /api/v1/health endpoint specifically
 # Set up a non-root user
 RUN adduser --disabled-password --gecos "" appuser && \
     chown -R appuser:appuser /app
 USER appuser
-
-# Healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-    CMD curl -f http://localhost:${PORT}/health || exit 1
+    CMD curl -f http://localhost:${PORT}/api/v1/health || exit 1
 
 EXPOSE ${PORT}
 
-# Start the application directly from main.py - this is critical for proper routing
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+# Start the application directly with Python to avoid import issues
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

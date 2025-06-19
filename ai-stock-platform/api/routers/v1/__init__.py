@@ -1,23 +1,24 @@
 """
 API v1 Router Module
-Created: 2025-06-19 07:48:11
+Created: 2025-06-19 15:30:25
 Author: daparthi001
 """
-import socket
-import os
-import sys
-from datetime import datetime
 from fastapi import APIRouter
 
-# Create the router
-router = APIRouter(prefix="/api/v1")
+router = APIRouter()
 
-@router.get("/health")
-async def health_check():
+@router.get("/api/v1/health")
+async def api_health_check():
     """API v1 health check endpoint"""
+    import os
+    import sys
+    import socket
+    from datetime import datetime
+    
     try:
         # Get environment variables
         API_ENV = os.environ.get("API_ENV", "development")
+        API_VERSION = "1.0.0"
 
         # Basic system information
         system_info = {
@@ -30,7 +31,7 @@ async def health_check():
         
         return {
             "status": "healthy",
-            "version": "1.0.1",
+            "version": API_VERSION,
             "system": system_info
         }
     except Exception as e:

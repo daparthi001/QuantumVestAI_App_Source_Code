@@ -1,7 +1,7 @@
 """
 QuantumVestAI API - Main Application
-Updated: 2025-06-19 08:04:12
-Author: daparthi001, daparthi0012
+Updated: 2025-06-19 15:34:18
+Author: daparthi001
 """
 import os
 import sys
@@ -137,9 +137,8 @@ async def api_health_check():
             "timestamp": datetime.now().isoformat()
         }
 
-# Try to import original routers without breaking if they don't exist
+# Try to import routes if they exist, with graceful fallback
 try:
-    # Only try to import these if they exist, don't fail if they don't
     from routes.sentiment import router as sentiment_router
     app.include_router(sentiment_router)
     logger.info("Included sentiment router")
