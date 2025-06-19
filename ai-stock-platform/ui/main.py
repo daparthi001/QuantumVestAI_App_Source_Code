@@ -1,7 +1,7 @@
 """
 QuantumVestAI UI Main Module - Fixed Import and Template Issues
 Created: 2025-06-17 01:50:11
-Updated: 2025-06-18 22:10:00
+Updated: 2025-06-19 00:23:26
 Author: daparthi001
 """
 import os
@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent
 
 # Setup logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,  # Changed to DEBUG for more verbose logging
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger("quantumvestai_ui")
@@ -53,7 +53,7 @@ from routes import api_proxy
 
 # THEN import controllers after templates are set up
 # Import controllers
-from controllers import feature_controller (
+from controllers import (
     auth_controller, 
     dashboard_controller,
     market_controller,
@@ -61,7 +61,8 @@ from controllers import feature_controller (
     watchlist_controller,
     profile_controller,
     forecast_controller,
-    news_controller
+    news_controller,
+    feature_controller  # Fixed import syntax
 )
 
 # Debug middleware to log all requests
@@ -450,6 +451,7 @@ async def server_error_handler(request: Request, exc: HTTPException):
 
 # Include controllers AFTER defining direct routes to avoid conflicts
 app.include_router(api_proxy.router)
+app.include_router(auth_controller.router) 
 app.include_router(dashboard_controller.router)
 app.include_router(feature_controller.router)  
 app.include_router(stock_controller.router)

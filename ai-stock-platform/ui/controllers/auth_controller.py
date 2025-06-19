@@ -1,24 +1,92 @@
 """
 Authentication Controller for QuantumVestAI
 Created: 2025-06-17 20:54:48
+Updated: 2025-06-19 00:23:26
 Author: daparthi001
 """
 import os
 import requests
 import logging
 import json
-from fastapi import APIRouter, Request, Form, status, HTTPException
+from fastapi import APIRouter, Request, Form, status, HTTPException, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from datetime import datetime, timedelta
 from pathlib import Path
 
 router = APIRouter()
-templates = Jinja2Templates(directory=str(Path("/app/templates")))
+templates = Jinja2Templates(directory=str(Path("templates")))
 logger = logging.getLogger("quantumvestai.auth_controller")
 
 # Get API URL from environment or use default
-API_URL = os.environ.get("API_URL", "http://quantumvestai-dev-api:8000")
+API_URL = os.environ.get("API_URL", "http://api:8000")
+API_V1_URL = f"{API_URL}/api/v1"
+
+# Add get_current_user function for use in other controllers
+async def get_current_user(request: Request):
+    """Get the current user from the token in the cookie"""
+    token = request.cookies.get("access_token", "")
+    
+    # If no token, return None (not authenticated)
+    if not token:
+        return None
+    
+    # If it's an emergency token, parse username from it
+    if token.startswith("emergency_"):
+        parts = token.split("_")
+        if len(parts) >= 2:
+            username = parts[1]
+            # Create minimal user object
+            return {
+                "username": username,
+                "email": f"{username}@example.com",
+                "full_name": username.capitalize(),
+                "id": 0,
+                "is_emergency": True
+            }
+    
+    # For regular tokens, verify with API
+    try:
+        # Remove Bearer prefix if present
+        if token.startswith("Bearer "):
+            token = token[7:]
+        
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        # Call API to get current user
+        response = requests.get(
+            f"{API_V1_URL}/users/me", 
+            headers=headers,
+            timeout=3
+        )
+        
+        if response.status_code == 200:
+            user_data = response.json()
+            # Add token for convenience
+            user_data["token"] = token
+            return user_data
+        else:
+            logger.warning(f"Failed to get user from API: {response.status_code}")
+            return None
+            
+    except Exception as e:
+        logger.error(f"Error getting current user: {str(e)}")
+        
+        # For emergency cases, create a dummy user
+        if token.startswith("Bearer emergency_"):
+            parts = token[15:].split("_")
+            if len(parts) >= 1:
+                username = parts[0]
+                # Create minimal user object
+                return {
+                    "username": username,
+                    "email": f"{username}@example.com",
+                    "full_name": username.capitalize(),
+                    "id": 0,
+                    "is_emergency": True
+                }
+        
+        return None
 
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request, next: str = "/dashboard", msg: str = None):
@@ -41,7 +109,7 @@ async def login_post(
     try:
         # Call API login endpoint
         response = requests.post(
-            f"{API_URL}/auth/login",
+            f"{API_V1_URL}/auth/login",
             json={"username": username, "password": password},
             timeout=5
         )
@@ -103,7 +171,7 @@ async def login_post(
         logger.error(f"API connection error during login: {str(e)}")
         
         # Emergency login for development/testing when API is unavailable
-        if username in ["demo", "daparthi001"] and password == "password123":
+        if username in ["demo", "daparthi001", "test"] and password == "password123":
             logger.warning(f"Using emergency login for {username} due to API unavailability")
             
             # Create emergency token with username and timestamp
@@ -118,7 +186,7 @@ async def login_post(
             max_age = 30 * 24 * 60 * 60 if remember else None
             response.set_cookie(
                 key="access_token",
-                value=emergency_token,
+                value=f"Bearer {emergency_token}",
                 httponly=True,
                 max_age=max_age,
                 samesite="lax",
@@ -189,7 +257,7 @@ async def register_post(
     try:
         # Call API registration endpoint
         response = requests.post(
-            f"{API_URL}/auth/register",
+            f"{API_V1_URL}/auth/register",
             json={
                 "username": username,
                 "email": email,
@@ -268,7 +336,7 @@ async def password_reset_post(request: Request, email: str = Form(...)):
     try:
         # Call API password reset endpoint
         response = requests.post(
-            f"{API_URL}/auth/password-reset",
+            f"{API_V1_URL}/auth/password-reset",
             json={"email": email},
             timeout=5
         )
@@ -294,3 +362,15 @@ async def password_reset_post(request: Request, email: str = Form(...)):
                 "msg_type": "success"
             }
         )
+
+# For debugging purposes, add a route to test current user
+@router.get("/whoami")
+async def whoami(request: Request, user: dict = Depends(get_current_user)):
+    """Test route to show current user info"""
+    if user:
+        return JSONResponse({
+            "authenticated": True,
+            "user": {k: v for k, v in user.items() if k != "token"}  # Don't expose token
+        })
+    else:
+        return JSONResponse({"authenticated": False}, status_code=401)
