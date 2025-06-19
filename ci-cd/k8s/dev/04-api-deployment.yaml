@@ -7,9 +7,9 @@ metadata:
     app: quantumvestai
     tier: backend
     environment: development
-    updated: "20250619065230"
+    updated: "20250619071120"
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: quantumvestai
@@ -26,11 +26,14 @@ spec:
         app: quantumvestai
         tier: backend
         environment: development
-        updated: "20250619065230"
+        updated: "20250619071120"
     spec:
       containers:
       - name: api
-        image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:latest
+        image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:api-dev-latest
+        # Explicitly define the command to use main.py directly
+        command: ["uvicorn"]
+        args: ["main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
         ports:
         - containerPort: 8000
         env:
@@ -66,9 +69,7 @@ spec:
         - name: API_ENV
           value: development
         resources:
-          limits:
-            cpu: 500m
-            memory: 1Gi
+
           requests:
             cpu: 250m
             memory: 512Mi

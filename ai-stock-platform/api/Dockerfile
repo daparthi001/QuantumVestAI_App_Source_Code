@@ -1,13 +1,9 @@
 FROM python:3.10-slim
 
-# Set build arguments and metadata
-ARG BUILD_DATE="2025-06-19 06:52:30"
-ARG VERSION="1.0.0"
-ARG MAINTAINER="daparthi001"
-
-LABEL maintainer="${MAINTAINER}" \
-      created="${BUILD_DATE}" \
-      version="${VERSION}" \
+# Set metadata
+LABEL maintainer="daparthi001" \
+      created="2025-06-19 07:11:20" \
+      version="1.0.0" \
       environment="production" \
       description="QuantumVestAI API Service"
 
@@ -19,11 +15,11 @@ RUN apt-get update && apt-get install -y \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for caching
+# Copy requirements first for better caching
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire application
+# Copy the application
 COPY . .
 
 # Set environment variables
@@ -48,5 +44,5 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
 
 EXPOSE ${PORT}
 
-# Starting command
-CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+# Start the application directly from main.py - this is critical for proper routing
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
