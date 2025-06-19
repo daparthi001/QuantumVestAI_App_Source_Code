@@ -1,18 +1,16 @@
 """
-Main API Module - Health Endpoint Fix
-Updated: 2025-06-19 03:54:33
+Main API Module - Dedicated Health Endpoint Fix
+Updated: 2025-06-19 04:08:15
 Author: daparthi001
 """
 import logging
 import uuid
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
-import socket
 from datetime import datetime
 
-from core.config import settings
-from core.middleware.cors import configure_cors
-from core.middleware.error_handler import ErrorHandlerMiddleware
+# Import health check module directly
+from health_check import get_health_data
 
 # Import routers
 from routers import (
@@ -22,7 +20,6 @@ from routers import (
     users,
     watchlists,
     analytics,
-    health,
     sentiment,
     backtest
 )
@@ -36,39 +33,42 @@ logger = logging.getLogger("quantumvestai_api")
 
 # Create FastAPI application
 app = FastAPI(
-    title=f"{settings.PROJECT_NAME} API",
-    version=settings.VERSION,
+    title="QuantumVestAI API",
+    version="1.0.0",
     description="QuantumVestAI Stock Market Analysis Platform API",
     docs_url="/docs",
     redoc_url="/redoc",
 )
 
-# Request ID middleware
+# Request ID and logging middleware
 @app.middleware("http")
-async def add_request_id(request: Request, call_next):
+async def add_request_id_and_logging(request: Request, call_next):
+    # Generate request ID
     request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
     request.state.request_id = request_id
+    
+    # Log request
+    logger.info(f"Request: {request.method} {request.url.path}")
+    
+    # Track timing
     start_time = datetime.now()
     
+    # Process request
     response = await call_next(request)
     
+    # Calculate duration
     process_time = (datetime.now() - start_time).total_seconds()
+    
+    # Log response
     logger.info(f"Response: {request.method} {request.url.path} - Status: {response.status_code} - Duration: {process_time:.3f}s")
+    
+    # Add headers
     response.headers["X-Request-ID"] = request_id
     response.headers["X-Process-Time"] = str(process_time)
+    
     return response
 
-# Log all requests
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    logger.info(f"Request: {request.method} {request.url.path}")
-    return await call_next(request)
-
-# Configure middleware
-app = configure_cors(app)
-app.add_middleware(ErrorHandlerMiddleware)
-
-# Exception handler
+# Global exception handler
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Global exception: {exc}", exc_info=True)
@@ -77,59 +77,40 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"detail": str(exc)},
     )
 
-# CRITICAL FIX: Add explicit health check endpoint directly in main.py
-@app.get("/api/v1/health", tags=["Health"])
+# CRITICAL: Direct health endpoints
+@app.get("/health", include_in_schema=False)
 async def health_check():
-    """
-    Health check endpoint for ALB
-    This is specifically added at the root level to ensure it's always available
-    regardless of router configuration
-    """
-    logger.info("Health check endpoint accessed")
-    return {
-        "status": "healthy",
-        "timestamp": datetime.now().isoformat(),
-        "version": settings.VERSION,
-        "hostname": socket.gethostname()
-    }
-
-# ALB specific health check endpoint
-@app.get("/health", tags=["Health"], include_in_schema=False)
-async def alb_health_check():
     """Simple health check endpoint for ALB"""
-    logger.info("ALB health check endpoint accessed")
+    logger.info("Health check endpoint accessed")
     return {"status": "healthy"}
 
-# Include routers with proper prefixes
-# Note: Avoid nested prefixes that could cause routing issues
+@app.get("/api/v1/health")
+async def api_health_check():
+    """API health check endpoint"""
+    logger.info("API health check endpoint accessed")
+    return await get_health_data()
+
+# Include routers
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(stocks.router, prefix="/api/v1")
 app.include_router(predictions.router, prefix="/api/v1")
 app.include_router(users.router, prefix="/api/v1")
 app.include_router(watchlists.router, prefix="/api/v1")
 app.include_router(analytics.router, prefix="/api/v1")
-app.include_router(health.router, prefix="/api/v1")
 app.include_router(sentiment.router, prefix="/api/v1")
 app.include_router(backtest.router, prefix="/api/v1")
 
-# Log all routes on startup
+# Startup event
 @app.on_event("startup")
-async def log_routes():
-    routes = []
-    for route in app.routes:
-        routes.append({
-            "path": route.path,
-            "name": route.name,
-            "methods": getattr(route, "methods", None)
-        })
-    logger.info(f"Registered routes: {routes}")
-    logger.info(f"Starting {settings.PROJECT_NAME} API v{settings.VERSION}")
+async def startup_event():
+    logger.info("API starting up")
+    logger.info(f"Registered paths: {[route.path for route in app.routes]}")
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
         "main:app",
-        host=settings.HOST,
-        port=settings.PORT,
-        reload=settings.DEBUG
+        host="0.0.0.0",
+        port=8000,
+        reload=False
     )
