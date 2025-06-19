@@ -1,20 +1,19 @@
 """
-API v1 Router Module
-Created: 2025-06-19 15:30:25
+API v1 Router
+Created: 2025-06-19 16:40:55
 Author: daparthi001
 """
 from fastapi import APIRouter
+import os
+import sys
+import socket
+from datetime import datetime
 
 router = APIRouter()
 
 @router.get("/api/v1/health")
 async def api_health_check():
     """API v1 health check endpoint"""
-    import os
-    import sys
-    import socket
-    from datetime import datetime
-    
     try:
         # Get environment variables
         API_ENV = os.environ.get("API_ENV", "development")
