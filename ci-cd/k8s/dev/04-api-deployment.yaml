@@ -7,7 +7,7 @@ metadata:
     app: quantumvestai
     tier: backend
     environment: development
-    updated: "20250617153026"
+    updated: "20250619054413"
 spec:
   replicas: 1
   selector:
@@ -26,7 +26,7 @@ spec:
         app: quantumvestai
         tier: backend
         environment: development
-        updated: "20250617153026"
+        updated: "20250619054413"
     spec:
       containers:
       - name: api
@@ -38,8 +38,8 @@ spec:
         - -c
         args:
         - |
-          echo "=== Starting FastAPI Application ==="
-          cd /app && uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+          /app/docker-entrypoint.sh
+          cd /app && uvicorn api:app --host 0.0.0.0 --port 8000
         env:
         - name: DB_HOST
           valueFrom:

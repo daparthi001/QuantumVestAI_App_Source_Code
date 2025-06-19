@@ -2,7 +2,7 @@
 FROM python:3.10-slim AS builder
 
 # Set build arguments and metadata
-ARG BUILD_DATE="2025-05-20 18:20:52"
+ARG BUILD_DATE="2025-06-19 05:44:13"
 ARG VERSION="1.0.0"
 ARG MAINTAINER="daparthi001"
 
@@ -43,7 +43,20 @@ RUN apt-get update && apt-get install -y \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the entire current directory
+# Create necessary directories
+RUN mkdir -p /app/api /app/logs
+
+# Copy entry point script first and make it executable
+COPY docker-entrypoint.sh /app/
+RUN chmod +x /app/docker-entrypoint.sh
+
+# Create api package structure
+RUN echo '"""API Package\nCreated: 2025-05-21 13:57:49\nAuthor: daparthi001\n"""\nfrom api.main import app\n\n__all__ = ["app"]' > /app/api/__init__.py
+
+# Copy api/main.py if it exists
+COPY api/main.py /app/api/main.py
+
+# Copy the rest of the application
 COPY . .
 
 # Set proper permissions
@@ -65,8 +78,7 @@ RUN chmod -R 755 \
         websocket && \
     chmod +x \
         build-db-init.sh \
-        deploy-to-eks.sh \
-        docker-entrypoint.sh
+        deploy-to-eks.sh
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -75,7 +87,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app \
     TZ=UTC \
     CREATED_BY="daparthi001" \
-    CREATED_DATE="2025-05-20 19:20:40" \
+    CREATED_DATE="2025-06-19 05:44:13" \
     API_ENV="development" \
     API_V1_STR="/api/v1" \
     PROJECT_NAME="QuantumVestAI API" \
@@ -95,5 +107,5 @@ EXPOSE ${PORT}
 # Use the entrypoint script
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
 
-# Start the application with debug logging
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "debug"]
+# Start the application using the app from the api package
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "info"]
