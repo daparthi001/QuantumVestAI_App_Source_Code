@@ -11,7 +11,7 @@ metadata:
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
     alb.ingress.kubernetes.io/ssl-redirect: "443"
     alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:921930869047:certificate/94eec8e0-cf9a-4184-8e27-2c3c845c390a
-    # ALB health check settings - properly configured for API
+    # FIXED ALB health check settings
     alb.ingress.kubernetes.io/healthcheck-path: "/api/v1/health"
     alb.ingress.kubernetes.io/healthcheck-port: "8000"
     alb.ingress.kubernetes.io/healthcheck-protocol: "HTTP"
@@ -20,10 +20,6 @@ metadata:
     alb.ingress.kubernetes.io/healthy-threshold-count: "2"
     alb.ingress.kubernetes.io/unhealthy-threshold-count: "2"
     alb.ingress.kubernetes.io/success-codes: "200-399"
-    # CORS settings for API
-    alb.ingress.kubernetes.io/cors-allow-headers: "DNT,X-Requested-With,X-Request-ID,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
-    alb.ingress.kubernetes.io/cors-allow-methods: "GET, POST, OPTIONS, PUT, DELETE, PATCH"
-    alb.ingress.kubernetes.io/cors-allow-origin: "*"
     created-by: daparthi001
     created-date: "2025-06-15"
     updated-by: daparthi001
@@ -33,7 +29,7 @@ spec:
   - host: dev.quantumvestai.com
     http:
       paths:
-      # Keep all API routes under a single prefix for consistency
+      # All API routes consolidated under /api/v1 prefix
       - path: /api/v1
         pathType: Prefix
         backend:
@@ -41,7 +37,15 @@ spec:
             name: quantumvestai-dev-api
             port:
               number: 8000
-      # Add documentation routes
+      # Extra health endpoint for direct access
+      - path: /health
+        pathType: Exact
+        backend:
+          service:
+            name: quantumvestai-dev-api
+            port:
+              number: 8000
+      # Documentation
       - path: /docs
         pathType: Exact
         backend:
@@ -63,7 +67,7 @@ spec:
             name: quantumvestai-dev-api
             port:
               number: 8000
-      # UI route should be last (catch-all)
+      # UI as catch-all
       - path: /
         pathType: Prefix
         backend:

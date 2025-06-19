@@ -1,72 +1,58 @@
 """
 Health Check Router
-Created: 2025-05-19 05:43:23
+Updated: 2025-06-19 03:54:33
 Author: daparthi001
 """
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, status
+import socket
 from datetime import datetime
-import psutil
+import logging
 import os
 
-from db.session import get_db
-from core.config import settings
+from core.models.response import StandardResponse
 
-router = APIRouter()
+router = APIRouter(tags=["Health"])
+logger = logging.getLogger("quantumvestai_api.health")
 
-@router.get("/health", tags=["health"])
-async def health_check(db: Session = Depends(get_db)):
-    """
-    Health check endpoint for Kubernetes probes
-    Checks:
-    - Database connection
-    - Memory usage
-    - Disk space
-    - Environment variables
-    """
+# Note: No prefix here - it will be added by the main app
+
+@router.get(
+    "/health/details",
+    response_model=StandardResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Detailed API Health Check",
+    description="Get detailed health status of the API and its dependencies"
+)
+async def detailed_health_check():
+    """Detailed API health check"""
+    logger.info("Detailed health check requested")
+    
     try:
-        # Check database connection
-        db.execute("SELECT 1")
-        
-        # System metrics
-        memory = psutil.virtual_memory()
-        disk = psutil.disk_usage('/app')
-        
-        # Check required environment variables
-        required_vars = [
-            "POSTGRES_USER",
-            "POSTGRES_PASSWORD",
-            "POSTGRES_SERVER",
-            "JWT_SECRET",
-            "ALPHA_VANTAGE_API_KEY"
-        ]
-        
-        missing_vars = [var for var in required_vars 
-                       if not getattr(settings, var, None)]
-        
-        if missing_vars:
-            raise HTTPException(
-                status_code=503,
-                detail=f"Missing required environment variables: {missing_vars}"
-            )
-        
-        return {
-            "status": "healthy",
-            "timestamp": datetime.utcnow().isoformat(),
-            "pod": {
-                "name": settings.POD_NAME,
-                "namespace": settings.POD_NAMESPACE
-            },
-            "database": "connected",
-            "system": {
-                "memory_usage": f"{memory.percent}%",
-                "disk_usage": f"{disk.percent}%"
-            },
-            "version": settings.VERSION
+        # System information
+        system_info = {
+            "hostname": socket.gethostname(),
+            "ip": socket.gethostbyname(socket.gethostname()),
+            "python_version": os.sys.version,
+            "environment": os.environ.get("ENVIRONMENT", "development"),
         }
         
+        # Health data
+        health_data = {
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "uptime": "unknown",  # Would need process start time
+            "system": system_info
+        }
+        
+        return StandardResponse(
+            status="success",
+            message="API is healthy",
+            data=health_data
+        )
     except Exception as e:
-        raise HTTPException(
-            status_code=503,
-            detail=f"Service unhealthy: {str(e)}"
+        logger.error(f"Health check failed: {e}", exc_info=True)
+        return StandardResponse(
+            status="error",
+            message=f"Health check failed: {str(e)}",
+            data={"status": "unhealthy"}
         )
