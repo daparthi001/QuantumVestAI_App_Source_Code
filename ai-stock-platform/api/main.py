@@ -219,7 +219,19 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-# Add OPTIONS handler for login endpoint
+@app.get("/api/v1/auth/login")
+async def login_get():
+    """GET handler for login endpoint - shows helpful message"""
+    return {
+        "status": "error",
+        "message": "This endpoint only accepts POST requests with form data. Please use a proper client or curl: curl -X POST -d 'username=demo&password=password' http://dev.quantumvestai.com/api/v1/auth/login",
+        "example": {
+            "curl": "curl -X POST -d 'username=demo&password=password' http://dev.quantumvestai.com/api/v1/auth/login",
+            "required_fields": ["username", "password"],
+            "method": "POST"
+        }
+    }
+
 @app.options("/api/v1/auth/login")
 async def login_options():
     """Handle CORS preflight requests for login endpoint"""

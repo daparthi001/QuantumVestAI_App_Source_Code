@@ -1,101 +1,93 @@
 /**
- * Authentication Context
- * Created: 2025-05-19 04:07:03
- * Updated: 2025-06-19 03:06:29
+ * Auth Context
+ * Created: 2025-06-19 17:56:46
  * Author: daparthi001
  */
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import { authService } from '../services/api';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import authService, { User } from '../services/auth.service';
 
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  role: string;
-}
-
+// Define context interface
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  error: string | null;
   login: (username: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
+  logout: () => void;
   isAuthenticated: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Create context with default values
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  loading: true,
+  login: async () => {},
+  logout: () => {},
+  isAuthenticated: false,
+});
 
-export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
+// Props interface for the provider
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+// Auth Provider component
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  
+  const navigate = useNavigate();
+  const location = useLocation();
 
+  // Initial check for authenticated user
   useEffect(() => {
-    const checkAuthStatus = async () => {
+    const checkAuth = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setLoading(false);
-          return;
+        if (authService.isAuthenticated()) {
+          try {
+            const userData = await authService.fetchCurrentUser();
+            setUser(userData);
+            setIsAuthenticated(true);
+          } catch (error) {
+            console.error('Error fetching user data:', error);
+            // Token invalid or expired
+            authService.logout();
+            setIsAuthenticated(false);
+          }
         }
-
-        const userData = await authService.getCurrentUser();
-        setUser(userData);
-        setIsAuthenticated(true);
-      } catch (err) {
-        console.error("Authentication check failed:", err);
-        // Token might be invalid or expired
-        localStorage.removeItem('token');
+      } catch (error) {
+        console.error('Auth check failed:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    checkAuthStatus();
+    checkAuth();
   }, []);
 
-  const login = async (username: string, password: string) => {
+  // Login function
+  const login = async (username: string, password: string): Promise<void> => {
     setLoading(true);
-    setError(null);
     try {
       await authService.login(username, password);
-      const userData = await authService.getCurrentUser();
-      setUser(userData);
+      setUser(authService.getCurrentUser());
       setIsAuthenticated(true);
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Login failed. Please check your credentials.';
-      setError(errorMessage);
-      throw new Error(errorMessage);
+      
+      // Redirect to dashboard or intended page
+      const from = location.state?.from?.pathname || '/dashboard';
+      navigate(from, { replace: true });
+    } catch (error) {
+      console.error('Login failed:', error);
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  const logout = async () => {
-    setLoading(true);
-    try {
-      await authService.logout();
-      setUser(null);
-      setIsAuthenticated(false);
-    } catch (err) {
-      console.error("Logout failed:", err);
-    } finally {
-      setLoading(false);
-    }
+  // Logout function
+  const logout = (): void => {
+    authService.logout();
+    setUser(null);
+    setIsAuthenticated(false);
+    navigate('/login');
   };
-
-  return (
-    <AuthContext.Provider value={{ user, loading, error, login, logout, isAuthenticated }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};

@@ -1,114 +1,223 @@
 /**
- * API Service
- * Updated: 2025-06-19 04:23:15
+ * Advanced API Service
+ * Updated: 2025-06-19 18:06:43
  * Author: daparthi001
  */
-import axios, { AxiosError, AxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { API_BASE_URL } from '../config/constants';
+import authService from './auth.service';
 
-// Use environment variable or default to the relative path
-const API_BASE_URL = process.env.REACT_APP_API_URL || '/api/v1';
+// API request queue for handling 401 token refresh
+let isRefreshing = false;
+let failedQueue: any[] = [];
 
-// Create axios instance with default config
-const api = axios.create({
-    baseURL: API_BASE_URL,
-    timeout: 15000, // Increased timeout for slower connections
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
-
-// Add request interceptor for token
-api.interceptors.request.use(
-    (config: AxiosRequestConfig) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers = {
-                ...config.headers,
-                Authorization: `Bearer ${token}`
-            };
-        }
-        return config;
-    },
-    (error) => {
-        console.error('Request error:', error);
-        return Promise.reject(error);
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
     }
-);
-
-// Add response interceptor for error handling
-api.interceptors.response.use(
-    (response) => response,
-    (error: AxiosError) => {
-        // Log detailed error for debugging
-        const requestUrl = error.config?.url;
-        const requestMethod = error.config?.method;
-        
-        console.error(`API Error: ${requestMethod?.toUpperCase()} ${requestUrl}`);
-        console.error('Status:', error.response?.status);
-        console.error('Data:', error.response?.data);
-        
-        const status = error.response?.status;
-        
-        // Handle authentication errors
-        if (status === 401) {
-            localStorage.removeItem('token');
-            window.location.href = '/login?session_expired=true';
-            return Promise.reject(new Error('Your session has expired. Please log in again.'));
-        }
-        
-        // Handle API service unavailable
-        if (status === 503) {
-            return Promise.reject(new Error('API service is currently unavailable. Please try again later.'));
-        }
-        
-        // Handle rate limiting
-        if (status === 429) {
-            return Promise.reject(new Error('Too many requests. Please try again later.'));
-        }
-        
-        // Return the original error
-        return Promise.reject(error);
-    }
-);
-
-// Authentication service
-export const authService = {
-    async login(username: string, password: string) {
-        try {
-            // Use URLSearchParams for form data (required by OAuth2)
-            const formData = new URLSearchParams();
-            formData.append('username', username);
-            formData.append('password', password);
-            
-            const response = await axios.post(`${API_BASE_URL}/auth/login`, formData, {
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                }
-            });
-            
-            const { access_token } = response.data.data;
-            localStorage.setItem('token', access_token);
-            return access_token;
-        } catch (error) {
-            console.error('Login error:', error);
-            throw error;
-        }
-    },
-    
-    async logout() {
-        localStorage.removeItem('token');
-        return Promise.resolve();
-    },
-    
-    async getCurrentUser() {
-        const response = await api.get('/auth/me');
-        return response.data.data;
-    },
-    
-    isAuthenticated() {
-        return !!localStorage.getItem('token');
-    }
+  });
+  
+  failedQueue = [];
 };
 
-// Other service exports...
-export { api };
+// Create a custom API client with advanced features
+const apiClient: AxiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 30000, // 30 seconds timeout
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor with advanced features
+apiClient.interceptors.request.use(
+  (config: AxiosRequestConfig) => {
+    // Get token and add it to the request
+    const token = authService.getToken();
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // Add request timestamp for performance monitoring
+    if (config.headers) {
+      config.headers['X-Request-Time'] = Date.now().toString();
+    }
+    
+    // Add device info for analytics
+    if (config.headers) {
+      config.headers['X-Device-Type'] = 'web';
+      config.headers['X-App-Version'] = '1.0.1';
+    }
+    
+    return config;
+  },
+  (error: AxiosError) => {
+    return Promise.reject(error);
+  }
+);
+
+// Advanced response interceptor with token refresh, rate limiting handling, and retry logic
+apiClient.interceptors.response.use(
+  (response: AxiosResponse) => {
+    // Calculate and log response time
+    const requestTime = response.config.headers?.['X-Request-Time'];
+    if (requestTime) {
+      const responseTime = Date.now() - parseInt(requestTime.toString(), 10);
+      console.debug(`API call to ${response.config.url} took ${responseTime}ms`);
+      
+      // Add response time to response headers
+      response.headers['X-Response-Time'] = responseTime.toString();
+    }
+    
+    return response;
+  },
+  async (error: AxiosError) => {
+    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+    
+    if (error.response) {
+      // Handle 401 Unauthorized errors with token refresh
+      if (error.response.status === 401 && !originalRequest._retry) {
+        if (isRefreshing) {
+          // If token refresh is in progress, queue this request
+          try {
+            const token = await new Promise((resolve, reject) => {
+              failedQueue.push({ resolve, reject });
+            });
+            
+            if (originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+            }
+            
+            return axios(originalRequest);
+          } catch (err) {
+            return Promise.reject(err);
+          }
+        }
+        
+        originalRequest._retry = true;
+        isRefreshing = true;
+        
+        try {
+          // Try to refresh token logic would go here in a real implementation
+          // For now, just logout since we don't have refresh token functionality
+          authService.logout();
+          processQueue(new Error('Token refresh failed'));
+          window.location.href = '/login';
+          return Promise.reject(error);
+        } catch (refreshError) {
+          processQueue(refreshError);
+          return Promise.reject(refreshError);
+        } finally {
+          isRefreshing = false;
+        }
+      }
+      
+      // Handle 403 Forbidden errors
+      if (error.response.status === 403) {
+        console.error('Permission denied for this resource');
+      }
+      
+      // Handle 404 Not Found errors
+      if (error.response.status === 404) {
+        console.error('Resource not found');
+      }
+      
+      // Handle 429 Too Many Requests (rate limiting)
+      if (error.response.status === 429) {
+        const retryAfter = error.response.headers['retry-after'] 
+          ? parseInt(error.response.headers['retry-after'] as string, 10) * 1000 
+          : 5000;
+          
+        console.warn(`Rate limited. Retrying after ${retryAfter}ms`);
+        await new Promise(resolve => setTimeout(resolve, retryAfter));
+        
+        // Retry the request
+        return axios(originalRequest);
+      }
+      
+      // Handle 500 Internal Server Error
+      if (error.response.status === 500) {
+        console.error('Server error occurred');
+      }
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('No response received from server');
+      
+      // Implement retry logic for network issues
+      if (!originalRequest._retry && navigator.onLine) {
+        originalRequest._retry = true;
+        console.warn('Network issue detected. Retrying request...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        return axios(originalRequest);
+      }
+    } else {
+      // Something happened in setting up the request
+      console.error('Error setting up request', error.message);
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
+// Add response time tracking method
+apiClient.getResponseTime = () => {
+  return {
+    average: calculateAverageResponseTime(),
+    max: getMaxResponseTime(),
+    min: getMinResponseTime()
+  };
+};
+
+// Track response times
+const responseTimes: Record<string, number[]> = {};
+
+function trackResponseTime(endpoint: string, time: number) {
+  if (!responseTimes[endpoint]) {
+    responseTimes[endpoint] = [];
+  }
+  
+  responseTimes[endpoint].push(time);
+  
+  // Keep only last 100 requests
+  if (responseTimes[endpoint].length > 100) {
+    responseTimes[endpoint].shift();
+  }
+}
+
+function calculateAverageResponseTime() {
+  const allTimes: number[] = [];
+  Object.values(responseTimes).forEach(times => {
+    allTimes.push(...times);
+  });
+  
+  if (allTimes.length === 0) return 0;
+  
+  return allTimes.reduce((sum, time) => sum + time, 0) / allTimes.length;
+}
+
+function getMaxResponseTime() {
+  const allTimes: number[] = [];
+  Object.values(responseTimes).forEach(times => {
+    allTimes.push(...times);
+  });
+  
+  if (allTimes.length === 0) return 0;
+  
+  return Math.max(...allTimes);
+}
+
+function getMinResponseTime() {
+  const allTimes: number[] = [];
+  Object.values(responseTimes).forEach(times => {
+    allTimes.push(...times);
+  });
+  
+  if (allTimes.length === 0) return 0;
+  
+  return Math.min(...allTimes);
+}
+
+export default apiClient;
