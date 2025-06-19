@@ -74,7 +74,7 @@ async def dashboard_page(
                 pass
         
         return templates.TemplateResponse(
-            "dashboard.html", 
+            "dashboard/index.html", 
             {
                 "request": request,
                 "user": current_user,
@@ -97,7 +97,7 @@ async def dashboard_page(
                 pass
                 
         return templates.TemplateResponse(
-            "dashboard.html", 
+            "dashboard/index.html", 
             {
                 "request": request,
                 "user": current_user,

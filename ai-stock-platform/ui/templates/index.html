@@ -1,26 +1,307 @@
-{% extends "auth_layout.html" %}
+{% extends "base.html" %}
 
-{% block title %}QuantumVestAI - AI-Powered Stock Analysis{% endblock %}
+{% block title %}QuantumVestAI Dashboard{% endblock %}
 
 {% block content %}
-<div class="auth-container">
-    <div class="auth-card text-center">
-        <div class="auth-header">
-            <a href="/" class="auth-logo">
-                <img src="{{ url_for('static', path='/img/logo.svg') }}" alt="QuantumVestAI">
-            </a>
-            <h1 class="auth-title">Welcome to QuantumVestAI</h1>
-            <p class="auth-subtitle">AI-Powered Stock Market Analysis Platform</p>
-        </div>
-        
-        <div class="auth-body">
-            <p class="mb-4">Advanced machine learning algorithms and real-time data analysis to help you make smarter investment decisions.</p>
-            
-            <div class="d-grid gap-3">
-                <a href="/login" class="btn btn-primary">Sign In</a>
-                <a href="/register" class="btn btn-outline-primary">Create Account</a>
-            </div>
-        </div>
+<div class="dashboard-container">
+  <div class="row">
+    <div class="col-12">
+      <h1>Welcome, {{ data.user.display_name | default(data.user.username) }}</h1>
+      <p class="text-muted">{{ data.timestamp }}</p>
     </div>
+  </div>
+
+  <!-- Advanced Features Activation Card -->
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h2 class="h5 mb-0">Advanced Features</h2>
+      <span class="badge bg-warning">New</span>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-8">
+          <p class="mb-3">Unlock premium AI-driven tools to enhance your investment strategy:</p>
+          <ul class="feature-list mb-3">
+            <li>Real-time market sentiment analysis using advanced NLP</li>
+            <li>Multi-factor stock analysis with custom weightings</li>
+            <li>AI-powered portfolio optimization for maximum returns</li>
+            <li>Extended prediction intervals up to 12 months</li>
+            <li>Custom technical indicator creation and backtesting</li>
+          </ul>
+        </div>
+        <div class="col-md-4 text-center d-flex flex-column justify-content-center">
+          <form action="/features/activate" method="post" class="mb-2">
+            <button type="submit" class="btn btn-primary btn-lg w-100">
+              Activate Advanced Features
+            </button>
+          </form>
+          <a href="/features/advanced" class="btn btn-outline-secondary">Learn More</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Market Overview Section -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h2 class="h5 mb-0">Market Overview</h2>
+    </div>
+    <div class="card-body">
+      {% if data.market and data.market.status != "unavailable" and data.market.status != "error" %}
+        <div class="row">
+          {% if data.market.indices %}
+            <div class="col-md-6">
+              <h3 class="h6">Market Indices</h3>
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Index</th>
+                    <th>Value</th>
+                    <th>Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for index in data.market.indices %}
+                    <tr>
+                      <td>{{ index.name }}</td>
+                      <td>{{ index.value | format_large_number }}</td>
+                      <td class="{{ 'text-success' if index.change > 0 else 'text-danger' }}">
+                        {{ index.change | format_change_value }}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% endif %}
+          
+          {% if data.market.trends %}
+            <div class="col-md-6">
+              <h3 class="h6">Market Trends</h3>
+              <ul class="list-group">
+                {% for trend in data.market.trends %}
+                  <li class="list-group-item">
+                    {{ trend.description }}
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="alert alert-info">Market data currently unavailable.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Portfolio Summary Section -->
+  <div class="row">
+    <div class="col-lg-8">
+      {% if data.portfolio and data.portfolio.status != "unavailable" and data.portfolio.status != "error" %}
+        <div class="card mb-4">
+          <div class="card-header">
+            <h2 class="h5 mb-0">Portfolio Summary</h2>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <h3 class="h6">Total Value</h3>
+                <p class="display-4">{{ data.portfolio.total_value | format_currency }}</p>
+                
+                <div class="d-flex align-items-center">
+                  <span class="mr-2 {{ 'text-success' if data.portfolio.daily_change > 0 else 'text-danger' }}">
+                    {{ data.portfolio.daily_change | format_change_value }}
+                  </span>
+                  <span class="text-muted">(Today)</span>
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <h3 class="h6">Asset Allocation</h3>
+                {% if data.portfolio.allocation %}
+                  <div class="chart-container">
+                    <!-- Placeholder for chart -->
+                    <div id="allocation-chart" style="height: 200px;"></div>
+                  </div>
+                {% else %}
+                  <p>No allocation data available.</p>
+                {% endif %}
+              </div>
+            </div>
+            
+            {% if data.portfolio.holdings %}
+              <h3 class="h6 mt-4">Top Holdings</h3>
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Shares</th>
+                    <th>Current Price</th>
+                    <th>Value</th>
+                    <th>Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for holding in data.portfolio.holdings %}
+                    <tr>
+                      <td>{{ holding.symbol }}</td>
+                      <td>{{ holding.shares }}</td>
+                      <td>{{ holding.price | format_currency }}</td>
+                      <td>{{ holding.value | format_currency }}</td>
+                      <td class="{{ 'text-success' if holding.change > 0 else 'text-danger' }}">
+                        {{ holding.change | format_change_value }}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            {% endif %}
+          </div>
+        </div>
+      {% else %}
+        <div class="card mb-4">
+          <div class="card-header">
+            <h2 class="h5 mb-0">Portfolio Summary</h2>
+          </div>
+          <div class="card-body">
+            <div class="alert alert-info">Portfolio data currently unavailable.</div>
+          </div>
+        </div>
+      {% endif %}
+      
+      <!-- Recommendations Section -->
+      {% if data.recommendations and data.recommendations.status != "unavailable" and data.recommendations.status != "error" %}
+        {% if data.recommendations.items %}
+          <div class="card mb-4">
+            <div class="card-header">
+              <h2 class="h5 mb-0">Personalized Recommendations</h2>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                {% for recommendation in data.recommendations.items %}
+                  <div class="col-md-4">
+                    <div class="card mb-3">
+                      <div class="card-body">
+                        <h3 class="h6">{{ recommendation.symbol }}</h3>
+                        <p class="mb-1">{{ recommendation.name }}</p>
+                        <p class="text-muted small mb-2">{{ recommendation.sector }}</p>
+                        <div class="d-flex justify-content-between">
+                          <span>{{ recommendation.price | format_currency }}</span>
+                          <span class="{{ 'text-success' if recommendation.potential > 0 else 'text-danger' }}">
+                            {{ recommendation.potential | format_percentage }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      {% endif %}
+    </div>
+    
+    <div class="col-lg-4">
+      <!-- Watchlist Section -->
+      {% if data.watchlist and data.watchlist.status != "unavailable" and data.watchlist.status != "error" %}
+        {% if data.watchlist.items %}
+          <div class="card mb-4">
+            <div class="card-header">
+              <h2 class="h5 mb-0">Watchlist Highlights</h2>
+            </div>
+            <ul class="list-group list-group-flush">
+              {% for item in data.watchlist.items %}
+                <li class="list-group-item">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <h3 class="h6 mb-0">{{ item.symbol }}</h3>
+                      <p class="text-muted small mb-0">{{ item.name }}</p>
+                    </div>
+                    <div class="text-right">
+                      <div>{{ item.price | format_currency }}</div>
+                      <div class="{{ 'text-success' if item.change > 0 else 'text-danger' }}">
+                        {{ item.change | format_change_value }}
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+      {% endif %}
+      
+      <!-- News Section -->
+      {% if data.news and data.news.status != "unavailable" and data.news.status != "error" %}
+        {% if data.news.items %}
+          <div class="card mb-4">
+            <div class="card-header">
+              <h2 class="h5 mb-0">Market News</h2>
+            </div>
+            <ul class="list-group list-group-flush">
+              {% for article in data.news.items %}
+                <li class="list-group-item">
+                  <h3 class="h6">{{ article.title }}</h3>
+                  <p class="small mb-0">{{ article.summary }}</p>
+                  <div class="d-flex justify-content-between align-items-center mt-2">
+                    <span class="text-muted small">{{ article.source }}</span>
+                    <span class="text-muted small">{{ article.published | humanize_date }}</span>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+      {% endif %}
+      
+      <!-- Advanced Features Promo -->
+      <div class="card bg-light mb-4">
+        <div class="card-body">
+          <h3 class="h6">QuantumVestAI Advanced</h3>
+          <p class="small mb-3">Upgrade your investment strategy with AI-powered advanced features.</p>
+          <div class="d-grid">
+            <a href="/features/advanced" class="btn btn-outline-primary btn-sm">Explore Advanced Features</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Initialize charts if needed
+  document.addEventListener('DOMContentLoaded', function() {
+    // Add any JavaScript for charts here
+    
+    // Example: Update allocation chart
+    if (document.getElementById('allocation-chart')) {
+      // Chart initialization code would go here
+    }
+    
+    // Check if advanced features activation was successful
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('features_activated')) {
+      // Show success message
+      const successAlert = document.createElement('div');
+      successAlert.className = 'alert alert-success alert-dismissible fade show';
+      successAlert.innerHTML = `
+        <strong>Success!</strong> Advanced features have been activated.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      `;
+      
+      // Insert at the top of the page
+      const dashboardContainer = document.querySelector('.dashboard-container');
+      dashboardContainer.insertBefore(successAlert, dashboardContainer.firstChild);
+      
+      // Auto-dismiss after 5 seconds
+      setTimeout(() => {
+        const bsAlert = bootstrap.Alert.getOrCreateInstance(successAlert);
+        bsAlert.close();
+      }, 5000);
+    }
+  });
+</script>
 {% endblock %}

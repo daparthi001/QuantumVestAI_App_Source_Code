@@ -53,7 +53,7 @@ from routes import api_proxy
 
 # THEN import controllers after templates are set up
 # Import controllers
-from controllers import (
+from controllers import feature_controller (
     auth_controller, 
     dashboard_controller,
     market_controller,
@@ -449,9 +449,9 @@ async def server_error_handler(request: Request, exc: HTTPException):
         )
 
 # Include controllers AFTER defining direct routes to avoid conflicts
-app.include_router(auth_controller.router)
+app.include_router(api_proxy.router)
 app.include_router(dashboard_controller.router)
-app.include_router(market_controller.router)  
+app.include_router(feature_controller.router)  
 app.include_router(stock_controller.router)
 app.include_router(watchlist_controller.router)
 app.include_router(profile_controller.router)
@@ -464,11 +464,11 @@ async def dashboard(request: Request):
     """Temporary dashboard placeholder until real dashboard is implemented"""
     try:
         return templates.TemplateResponse(
-            "dashboard.html",
+            "dashboard/index.html",
             {"request": request, "username": "User"}
         )
     except Exception as e:
-        # If dashboard.html doesn't exist, return a simple HTML response
+        # If dashboard/index.html doesn't exist, return a simple HTML response
         return HTMLResponse(
             content="""
             <!DOCTYPE html>

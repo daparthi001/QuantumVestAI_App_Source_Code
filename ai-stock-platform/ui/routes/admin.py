@@ -48,7 +48,7 @@ async def admin_dashboard(request: Request, current_user: dict = Depends(admin_r
         features_stats = api_client.get("/admin/features/stats")
         
         return templates.TemplateResponse(
-            "admin/dashboard.html", 
+            "admin/dashboard/index.html", 
             {
                 "request": request, 
                 "user": current_user, 
@@ -70,7 +70,7 @@ async def admin_dashboard(request: Request, current_user: dict = Depends(admin_r
                 pass
                 
         return templates.TemplateResponse(
-            "admin/dashboard.html", 
+            "admin/dashboard/index.html", 
             {
                 "request": request, 
                 "user": current_user, 

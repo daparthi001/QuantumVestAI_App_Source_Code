@@ -1,28 +1,51 @@
-<!-- Replace the "In Progress" notification with active features -->
-<div class="feature-card active">
-    <h3>Advanced Features</h3>
-    <div class="feature-status active">
-        <span class="status-icon">✓</span>
-        <span class="status-text">Active</span>
-    </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Features - QuantumVestAI</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/features.css">
+</head>
+<body class="app-layout">
+    {% include 'components/header.html' %}
+    {% include 'components/sidebar.html' %}
     
-    <div class="advanced-features-grid">
-        <div class="feature-item">
-            <h4>AI Market Sentiment</h4>
-            <p>Real-time analysis of market sentiment using advanced NLP algorithms</p>
-            <a href="/features/sentiment" class="btn btn-primary">Access</a>
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Advanced Features</h1>
+            <p>Enhanced tools and analytics powered by AI</p>
         </div>
         
-        <div class="feature-item">
-            <h4>Multi-factor Analysis</h4>
-            <p>Comprehensive stock analysis using multiple predictive factors</p>
-            <a href="/features/multi-factor" class="btn btn-primary">Access</a>
+        {% if error %}
+        <div class="alert alert-danger">
+            {{ error }}
         </div>
+        {% endif %}
         
-        <div class="feature-item">
-            <h4>Portfolio Optimization</h4>
-            <p>AI-driven portfolio optimization for maximum returns</p>
-            <a href="/features/portfolio-optimization" class="btn btn-primary">Access</a>
+        <div class="advanced-features">
+            <!-- This content will be replaced dynamically by JS if activation succeeds -->
+            <div class="feature-card pending">
+                <h3>Advanced Features</h3>
+                <div class="feature-status pending">
+                    <span class="status-text">In Progress</span>
+                </div>
+                <p>Coming soon</p>
+                
+                <div class="activation-panel">
+                    <p>Advanced features are ready to be activated for your account.</p>
+                    <button id="activate-advanced-features" class="btn btn-primary">
+                        Activate Advanced Features Now
+                    </button>
+                    <div id="activation-error" class="alert alert-danger mt-3 d-none"></div>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
+    </main>
+    
+    {% include 'components/footer.html' %}
+    
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/features.js"></script>
+</body>
+</html>
