@@ -1,181 +1,95 @@
 """
-QuantumVestAI API Main Module
-Created: 2025-06-17 01:50:11
-Updated: 2025-06-18 01:01:01
+Main API Module
+Updated: 2025-06-19 03:06:29
 Author: daparthi001
 """
-import os
-import time
 import logging
-from fastapi import FastAPI, Request, status, HTTPException, Depends
-from fastapi.middleware.cors import CORSMiddleware
+import uuid
+from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from datetime import datetime
-from typing import Dict, Any
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from starlette.middleware.sessions import SessionMiddleware
+import uvicorn
 
-# Import routers from modules
+from core.config import settings
+from core.middleware.cors import configure_cors
+from core.middleware.error_handler import ErrorHandlerMiddleware
+from core.utils.error_handler import APIError, handle_api_error
+
+# Import routers
 from routers import (
-    auth, 
-    market, 
-    stocks, 
-    forecast, 
-    portfolio, 
-    watchlist, 
-    news, 
-    users
+    auth,
+    stocks,
+    predictions,
+    users,
+    watchlists,
+    analytics,
+    health
 )
 
-# Setup logging
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
-logger = logging.getLogger("quantumvestai_api")
+logger = logging.getLogger("api")
 
 # Create FastAPI application
 app = FastAPI(
-    title="QuantumVestAI API",
-    description="API for QuantumVestAI Platform",
-    version="1.0.0",
+    title=f"{settings.PROJECT_NAME} API",
+    version=settings.VERSION,
+    description="QuantumVestAI Stock Market Analysis Platform API",
 )
 
-# Configure CORS
-origins = [
-    "http://localhost:8080",
-    "https://dev.quantumvestai.com",
-    "https://app.quantumvestai.com",
-    "https://quantumvestai.com",
-    "*"  # Allow all origins for development - REMOVE IN PRODUCTION
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"]
-)
-
-security = HTTPBearer()
-
-# Middleware for request timing and logging
+# Request ID middleware
 @app.middleware("http")
-async def add_process_time_header(request: Request, call_next):
-    start_time = time.time()
-    path = request.url.path
-    method = request.method
+async def add_request_id(request: Request, call_next):
+    request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
+    request.state.request_id = request_id
     
-    logger.info(f"Request: {method} {path}")
-    
-    try:
-        # Process the request and get the response
-        response = await call_next(request)
-        
-        # Calculate the processing time
-        process_time = time.time() - start_time
-        
-        # Add the processing time to the response headers
-        response.headers["X-Process-Time"] = str(process_time)
-        
-        # Log the response status
-        logger.info(f"Response: {method} {path} - Status: {response.status_code} - Time: {process_time:.3f}s")
-        
-        return response
-    except Exception as e:
-        # Log any errors that occur during processing
-        logger.error(f"Error processing request {method} {path}: {str(e)}")
-        
-        # Return a JSON error response
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"detail": "Internal server error", "error": str(e)}
-        )
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request_id
+    return response
 
-# Global exception handler
+# Configure middleware
+app = configure_cors(app)
+app.add_middleware(ErrorHandlerMiddleware)
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.ALLOWED_HOSTS)
+app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
+
+# Exception handler
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Unhandled exception: {str(exc)}")
-    return JSONResponse(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": "An unexpected error occurred"}
-    )
+    request_id = getattr(request.state, "request_id", str(uuid.uuid4()))
+    return handle_api_error(request_id, exc)
+
+# Include routers
+app.include_router(auth.router, prefix="/api/v1")
+app.include_router(stocks.router, prefix="/api/v1")
+app.include_router(predictions.router, prefix="/api/v1")
+app.include_router(users.router, prefix="/api/v1")
+app.include_router(watchlists.router, prefix="/api/v1")
+app.include_router(analytics.router, prefix="/api/v1")
+app.include_router(health.router, prefix="/api/v1")
 
 # Root endpoint
-@app.get("/")
+@app.get("/", tags=["Root"])
 async def root():
     return {
-        "name": "QuantumVestAI API",
-        "version": "1.0.0",
-        "status": "running",
-        "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        "name": settings.PROJECT_NAME,
+        "version": settings.VERSION,
+        "documentation": "/docs",
+        "health": "/api/v1/health"
     }
-
-# Health check endpoint
-@app.get("/health")
-async def health_check():
-    # Add more comprehensive health checks here (DB, services, etc.)
-    return {
-        "status": "healthy",
-        "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
-        "environment": os.environ.get("ENVIRONMENT", "development"),
-        "version": "1.0.0"
-    }
-
-# Preflight handler for CORS
-@app.options("/{rest_of_path:path}")
-async def options_handler(rest_of_path: str):
-    return {}
-
-# API v1 endpoint prefix
-API_V1_PREFIX = "/api/v1"
-
-# Include routers with versioned prefix
-app.include_router(auth.router, prefix=API_V1_PREFIX)
-app.include_router(market.router, prefix=API_V1_PREFIX)
-app.include_router(stocks.router, prefix=API_V1_PREFIX)
-app.include_router(forecast.router, prefix=API_V1_PREFIX)
-app.include_router(portfolio.router, prefix=API_V1_PREFIX)
-app.include_router(watchlist.router, prefix=API_V1_PREFIX)
-app.include_router(news.router, prefix=API_V1_PREFIX)
-app.include_router(users.router, prefix=API_V1_PREFIX)
-
-# Add development-only routes
-if os.environ.get("ENVIRONMENT", "development") != "production":
-    @app.get("/debug/routes")
-    async def debug_routes():
-        """Show all registered routes for debugging (Development only)"""
-        routes = []
-        
-        for route in app.routes:
-            route_info = {
-                "path": getattr(route, "path", None),
-                "name": getattr(route, "name", None),
-                "methods": list(route.methods) if hasattr(route, "methods") and route.methods else []
-            }
-            routes.append(route_info)
-        
-        return {"routes": routes}
-    
-    @app.get("/debug/headers")
-    async def debug_headers(request: Request):
-        """Show request headers (Development only)"""
-        return {"headers": dict(request.headers)}
-    
-    @app.post("/debug/echo")
-    async def echo_payload(request: Request):
-        """Echo back request body (Development only)"""
-        try:
-            body = await request.json()
-            return {"echo": body}
-        except:
-            try:
-                body = await request.body()
-                return {"echo": str(body)}
-            except:
-                return {"echo": "Could not parse request body"}
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(
+        "main:app",
+        host=settings.HOST,
+        port=settings.PORT,
+        reload=settings.DEBUG,
+        workers=settings.WORKERS
+    )

@@ -1,183 +1,88 @@
 """
 Sentiment Analysis Router
-Created: 2025-05-20 04:46:38
+Created: 2025-06-19 03:09:13
 Author: daparthi001
 """
-from fastapi import APIRouter, Depends, Query, Path, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
+from core.database import get_db_session
+from core.models.response import StandardResponse
+from social.twitter_sentiment import TwitterSentimentAnalyzer
+from auth.dependencies import get_current_user
+from models.user import User
+from models.stock import Stock
+from models.sentiment import SentimentRecord
 
-from core.security import get_current_user
-from core.exceptions import ResourceNotFoundError, PermissionDeniedError
-from db.session import get_db
-from db.models.user import User
-from services.sentiment_service import SentimentService
-from schemas.sentiment import (
-    SentimentResponse,
-    SentimentTrendsResponse,
-    SentimentSourcesResponse,
-    SentimentAlertResponse,
-    NewsSentimentResponse
-)
+router = APIRouter(prefix="/sentiment", tags=["Sentiment"])
 
-router = APIRouter(
-    prefix="/sentiment",
-    tags=["sentiment"],
-    dependencies=[Depends(get_current_user)]
-)
+# Initialize Twitter sentiment analyzer
+twitter_analyzer = TwitterSentimentAnalyzer()
 
 @router.get(
-    "/{ticker}",
-    response_model=SentimentResponse,
-    summary="Get sentiment",
-    description="Get sentiment analysis for a stock"
+    "/{symbol}",
+    response_model=StandardResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get Stock Sentiment Analysis",
+    description="Get sentiment analysis for a specific stock symbol based on social media data"
 )
 async def get_stock_sentiment(
-    ticker: str = Path(..., min_length=1, max_length=10),
-    sources: List[str] = Query(
-        ["news", "twitter", "reddit"],
-        description="Sentiment sources to analyze"
-    ),
-    period: str = Query(
-        "1d",
-        regex="^(1d|1w|1m|3m|6m|1y|all)$",
-        description="Analysis period"
-    ),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-) -> SentimentResponse:
-    """Get sentiment analysis for a stock."""
-    if current_user.role == "free":
-        raise PermissionDeniedError("Sentiment analysis requires premium subscription")
-    
-    service = SentimentService(db)
-    sentiment = await service.get_sentiment(ticker, sources, period)
-    
-    if not sentiment:
-        raise ResourceNotFoundError(f"Sentiment data not found for {ticker}")
-    
-    return sentiment
+    symbol: str,
+    days: int = Query(7, description="Number of days to analyze"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Get sentiment analysis for a stock"""
+    try:
+        # Get company name for better search results
+        stock = await Stock.get_by_symbol(db, symbol)
+        company_name = stock.name if stock else None
+        
+        # Get sentiment analysis
+        sentiment_data = await twitter_analyzer.analyze_sentiment(
+            symbol=symbol,
+            company_name=company_name,
+            days=days
+        )
+        
+        return StandardResponse(
+            status="success",
+            message=f"Successfully retrieved sentiment analysis for {symbol}",
+            data=sentiment_data
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving sentiment analysis: {str(e)}"
+        )
 
 @router.get(
-    "/{ticker}/trends",
-    response_model=SentimentTrendsResponse,
-    summary="Get sentiment trends",
-    description="Get historical sentiment trends"
+    "/trending",
+    response_model=StandardResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get Trending Stocks",
+    description="Get list of trending stocks based on social media activity"
 )
-async def get_sentiment_trends(
-    ticker: str = Path(..., min_length=1, max_length=10),
-    days: int = Query(30, ge=1, le=365),
-    source: str = Query(
-        "all",
-        regex="^(all|news|twitter|reddit)$",
-        description="Sentiment source"
-    ),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-) -> SentimentTrendsResponse:
-    """Get sentiment trends."""
-    if current_user.role == "free":
-        raise PermissionDeniedError("Sentiment trends require premium subscription")
-    
-    service = SentimentService(db)
-    trends = await service.get_trends(ticker, days, source)
-    
-    if not trends:
-        raise ResourceNotFoundError(f"Sentiment trends not found for {ticker}")
-    
-    return trends
-
-@router.get(
-    "/{ticker}/sources",
-    response_model=List[SentimentSourcesResponse],
-    summary="Get sentiment sources",
-    description="Get sentiment analysis by source"
-)
-async def get_sentiment_sources(
-    ticker: str = Path(..., min_length=1, max_length=10),
-    date: str = Query(
-        None,
-        regex=r"^\d{4}-\d{2}-\d{2}$",
-        description="Analysis date (YYYY-MM-DD)"
-    ),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-) -> List[SentimentSourcesResponse]:
-    """Get sentiment sources."""
-    if current_user.role == "free":
-        raise PermissionDeniedError("Source analysis requires premium subscription")
-    
-    service = SentimentService(db)
-    sources = await service.get_sources(ticker, date)
-    
-    if not sources:
-        raise ResourceNotFoundError(f"Sentiment sources not found for {ticker}")
-    
-    return sources
-
-@router.post(
-    "/alerts",
-    response_model=SentimentAlertResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Create sentiment alert",
-    description="Create a new sentiment alert"
-)
-async def create_sentiment_alert(
-    ticker: str = Query(..., min_length=1, max_length=10),
-    threshold: float = Query(..., ge=-1.0, le=1.0),
-    source: str = Query(
-        "all",
-        regex="^(all|news|twitter|reddit)$",
-        description="Alert source"
-    ),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-) -> SentimentAlertResponse:
-    """Create sentiment alert."""
-    if current_user.role == "free":
-        raise PermissionDeniedError("Sentiment alerts require premium subscription")
-    
-    service = SentimentService(db)
-    alert = await service.create_alert(
-        user_id=current_user.id,
-        ticker=ticker,
-        threshold=threshold,
-        source=source
-    )
-    
-    return alert
-
-@router.get(
-    "/news/{ticker}",
-    response_model=List[NewsSentimentResponse],
-    summary="Get news sentiment",
-    description="Get sentiment analysis of news articles"
-)
-async def get_news_sentiment(
-    ticker: str = Path(..., min_length=1, max_length=10),
-    days: int = Query(7, ge=1, le=30),
-    min_score: float = Query(
-        0.0,
-        ge=-1.0,
-        le=1.0,
-        description="Minimum sentiment score"
-    ),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-) -> List[NewsSentimentResponse]:
-    """Get news sentiment analysis."""
-    if current_user.role == "free":
-        raise PermissionDeniedError("News sentiment requires premium subscription")
-    
-    service = SentimentService(db)
-    news = await service.get_news_sentiment(
-        ticker=ticker,
-        days=days,
-        min_score=min_score
-    )
-    
-    if not news:
-        raise ResourceNotFoundError(f"News sentiment not found for {ticker}")
-    
-    return news
+async def get_trending_stocks(
+    limit: int = Query(10, description="Number of trending stocks to return"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Get trending stocks based on social media activity"""
+    try:
+        # Get recent sentiment records
+        recent_date = datetime.now() - timedelta(days=1)
+        records = await SentimentRecord.get_recent(db, recent_date, limit)
+        
+        # Format the response
+        trending_stocks = []
+        
+        for record in records:
+            # Get stock details
+            stock = await Stock.get_by_symbol(db, record.symbol)
+            
+            trending_stocks.append({
+                "symbol": record.symbol,
+                "company_name": stock.name if stock else record.symbol
