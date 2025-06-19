@@ -1,6 +1,6 @@
 """
 QuantumVestAI API - Main Application
-Updated: 2025-06-19 04:35:11
+Updated: 2025-06-19 05:11:32
 Author: daparthi001
 """
 from fastapi import FastAPI, Request, HTTPException, Depends, status
@@ -20,7 +20,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger("quantumvestai_api")
 
-# Create FastAPI application with debug option
+# Print startup debugging information
+print(f"Starting API server...")
+print(f"Python version: {sys.version}")
+print(f"Current directory: {os.getcwd()}")
+print(f"Directory listing: {os.listdir('.')}")
+
+# Create FastAPI application
 API_ENV = os.environ.get("API_ENV", "development")
 DEBUG = API_ENV.lower() == "development"
 API_VERSION = "1.0.0"
@@ -33,6 +39,9 @@ app = FastAPI(
     redoc_url="/redoc",
     debug=DEBUG
 )
+
+# Print all registered routes after app creation
+print(f"Initial routes: {[route.path for route in app.routes]}")
 
 # CORS configuration
 origins = [
@@ -90,6 +99,7 @@ async def log_requests(request: Request, call_next):
 @app.get("/")
 async def root():
     """API root endpoint"""
+    logger.info("Root endpoint accessed")
     return {
         "name": "QuantumVestAI API",
         "version": API_VERSION,
@@ -131,7 +141,6 @@ async def api_health_check():
             "timestamp": datetime.now().isoformat()
         }
 
-# Fix for forecast endpoint
 @app.get("/api/v1/forecast")
 async def forecast():
     """Temporary endpoint for forecast data"""
@@ -145,19 +154,31 @@ async def forecast():
         }
     }
 
-# --- ROUTERS IMPORT AND REGISTRATION ---
-# Import routers here to avoid circular imports
-from api.routers import auth, stocks, predictions, users, watchlists, analytics, sentiment, backtest
+# Print updated routes after adding critical endpoints
+print(f"Routes after adding critical endpoints: {[route.path for route in app.routes]}")
 
-# Include routers with explicit prefixes
-app.include_router(auth.router, prefix="/api/v1/auth")
-app.include_router(stocks.router, prefix="/api/v1/stocks")
-app.include_router(predictions.router, prefix="/api/v1/predictions")
-app.include_router(users.router, prefix="/api/v1/users")
-app.include_router(watchlists.router, prefix="/api/v1/watchlists")
-app.include_router(analytics.router, prefix="/api/v1/analytics")
-app.include_router(sentiment.router, prefix="/api/v1/sentiment")
-app.include_router(backtest.router, prefix="/api/v1/backtest")
+try:
+    # --- ROUTERS IMPORT AND REGISTRATION ---
+    print("Importing routers...")
+    from api.routers import auth, stocks, predictions, users, watchlists, analytics, sentiment, backtest
+
+    # Include routers with explicit prefixes
+    print("Registering routers...")
+    app.include_router(auth.router, prefix="/api/v1/auth")
+    app.include_router(stocks.router, prefix="/api/v1/stocks")
+    app.include_router(predictions.router, prefix="/api/v1/predictions")
+    app.include_router(users.router, prefix="/api/v1/users")
+    app.include_router(watchlists.router, prefix="/api/v1/watchlists")
+    app.include_router(analytics.router, prefix="/api/v1/analytics")
+    app.include_router(sentiment.router, prefix="/api/v1/sentiment")
+    app.include_router(backtest.router, prefix="/api/v1/backtest")
+except Exception as e:
+    print(f"Error importing routers: {e}")
+    import traceback
+    traceback.print_exc()
+
+# Print final routes after router registration
+print(f"Final routes: {[route.path for route in app.routes]}")
 
 # --- ERROR HANDLING ---
 @app.exception_handler(HTTPException)
@@ -192,5 +213,3 @@ async def startup_event():
             route_paths.append(f"{method} {route.path}")
     
     logger.info(f"Registered routes: {route_paths}")
-
-# No need for if __name__ == "__main__" block since this is run by uvicorn directly
