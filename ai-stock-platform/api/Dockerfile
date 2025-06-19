@@ -2,7 +2,7 @@
 FROM python:3.10-slim AS builder
 
 # Set build arguments and metadata
-ARG BUILD_DATE="2025-06-19 06:07:51"
+ARG BUILD_DATE="2025-06-19 06:26:46"
 ARG VERSION="1.0.0"
 ARG MAINTAINER="daparthi001"
 
@@ -50,20 +50,19 @@ RUN mkdir -p /app/api /app/logs
 COPY docker-entrypoint.sh /app/
 RUN chmod +x /app/docker-entrypoint.sh
 
-# Create proper package structure
-RUN echo '"""API Package\nCreated: 2025-06-19 06:07:51\nAuthor: daparthi001\n"""\nfrom api.main import app\n\n__all__ = ["app"]' > /app/api/__init__.py
+# Copy the __init__.py file to a backup location
+COPY api/__init__.py /app/api-init-backup.py
 
-# Copy the application files
+# Copy api files
+COPY api/__init__.py /app/api/
+COPY api/main.py /app/api/
+
+# Copy the rest of the application
 COPY . .
 
-# If main.py exists in the root, copy it to the api directory
-RUN if [ -f "/app/main.py" ] && [ ! -f "/app/api/main.py" ]; then \
-        cp /app/main.py /app/api/main.py; \
-    fi
-
 # Set proper permissions
-RUN chmod -R 755 $(find /app -type d) || echo "Some directories couldn't be chmod'd" && \
-    chmod +x $(find /app -name "*.sh") || echo "Some scripts couldn't be chmod'd"
+RUN find /app -type d -exec chmod 755 {} \; 2>/dev/null || echo "Some directories couldn't be chmod'd" && \
+    find /app -name "*.sh" -exec chmod +x {} \; 2>/dev/null || echo "Some scripts couldn't be chmod'd"
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -72,8 +71,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app \
     TZ=UTC \
     CREATED_BY="daparthi001" \
-    CREATED_DATE="2025-06-19 06:07:51" \
-    API_ENV="development" \
+    CREATED_DATE="2025-06-19 06:26:46" \
+    API_ENV="production" \
     API_V1_STR="/api/v1" \
     PROJECT_NAME="QuantumVestAI API" \
     VERSION="1.0.0"

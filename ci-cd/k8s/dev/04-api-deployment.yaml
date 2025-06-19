@@ -1,15 +1,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: quantumvestai-api
+  name: quantumvestai-dev-api
   namespace: dev
   labels:
     app: quantumvestai
     tier: backend
     environment: development
-    updated: "20250619060751"
+    updated: "20250619062646"
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: quantumvestai
@@ -26,15 +26,11 @@ spec:
         app: quantumvestai
         tier: backend
         environment: development
-        updated: "20250619060751"
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "8000"
-        prometheus.io/path: "/metrics"
+        updated: "20250619062646"
     spec:
       containers:
       - name: api
-        image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:api-prod-20250619
+        image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:latest
         ports:
         - containerPort: 8000
         env:
@@ -71,11 +67,11 @@ spec:
           value: development
         resources:
           limits:
-            cpu: 1000m
-            memory: 2Gi
-          requests:
             cpu: 500m
             memory: 1Gi
+          requests:
+            cpu: 250m
+            memory: 512Mi
         livenessProbe:
           httpGet:
             path: /health
