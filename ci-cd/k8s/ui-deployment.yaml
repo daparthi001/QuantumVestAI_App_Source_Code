@@ -9,7 +9,7 @@ metadata:
     environment: development
     version: v1.5.2
   annotations:
-    kubernetes.io/change-cause: "Updated UI deployment - 2025-06-20 03:11:18"
+    kubernetes.io/change-cause: "Fixed UI deployment issues - 2025-06-20 03:37:22"
     updated-by: "daparthi001"
 spec:
   replicas: 1
@@ -20,7 +20,6 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app: ui
       app: quantumvestai
       tier: frontend
       environment: development
@@ -33,7 +32,7 @@ spec:
         version: v1.5.2
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/port: "8080"
+        prometheus.io/port: "3000"
         prometheus.io/path: "/metrics"
     spec:
       containers:
@@ -103,8 +102,12 @@ spec:
           value: "/health"
         - name: HEALTH_CHECK_ENABLED
           value: "true"
+        - name: PORT
+          value: "3000"
+        - name: HOST
+          value: "0.0.0.0"
         
-        # Use startup script from config with API_URL env passed
+        # Use startup script from container
         command: ["/bin/bash", "-c"]
         args:
         - |
@@ -120,7 +123,7 @@ spec:
           EOF
           # Start the application
           echo "Starting application with API_URL=${API_URL}"
-          /app/startup.sh
+          chmod +x /app/scripts/start.sh && /app/scripts/start.sh
         
         resources:
           requests:
@@ -130,14 +133,12 @@ spec:
             cpu: "500m"
             memory: "512Mi"
             
-        # Volume mounts
+        # Volume mounts - simplified to only include logs volume
         volumeMounts:
         - name: ui-logs
           mountPath: /app/logs
-        - name: app-volume
-          mountPath: /app
             
-        # Health checks with increased timeouts
+        # Health checks with appropriate timeouts for container startup
         livenessProbe:
           httpGet:
             path: /health
@@ -159,8 +160,6 @@ spec:
       
       volumes:
       - name: ui-logs
-        emptyDir: {}
-      - name: app-volume
         emptyDir: {}
       - name: ui-config
         configMap:

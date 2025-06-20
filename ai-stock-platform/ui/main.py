@@ -1,7 +1,7 @@
 """
 QuantumVestAI UI Main Module - Fixed Import and Template Issues
 Created: 2025-06-17 01:50:11
-Updated: 2025-06-19 00:23:26
+Updated: 2025-06-20 03:48:17
 Author: daparthi001
 """
 import os
@@ -43,10 +43,11 @@ API_URL = os.environ.get("API_URL", "http://api:8000")
 API_V1_URL = f"{API_URL}/api/v1"
 
 # Import utility functions AFTER app creation to ensure app.state.templates exists
-from utils.template_filters import register_filters
+# FIX: Import template_filters module, not just the register_filters function
+import utils.template_filters
 
-# Register template filters - this should now work with app.state.templates
-register_filters(app)
+# Register template filters with app.state.templates
+utils.template_filters.register_filters(app)
 
 # Import proxy router
 from routes import api_proxy 
@@ -244,13 +245,13 @@ async def index(request: Request):
     """Serve the index page"""
     try:
         logger.info(f"Rendering index page. API URL: {API_URL}")
-        return templates.TemplateResponse(
+        return app.state.templates.TemplateResponse(
             "index.html", 
             {"request": request}
         )
     except Exception as e:
         logger.error(f"Error rendering index page: {str(e)}")
-        return templates.TemplateResponse(
+        return app.state.templates.TemplateResponse(
             "error.html",
             {"request": request, "error": str(e)},
             status_code=500
@@ -260,13 +261,13 @@ async def index(request: Request):
 async def register_page(request: Request, msg: str = None):
     """Serve registration page"""
     try:
-        return templates.TemplateResponse(
+        return app.state.templates.TemplateResponse(
             "register.html", 
             {"request": request, "msg": msg}
         )
     except Exception as e:
         logger.error(f"Error rendering register page: {str(e)}")
-        return templates.TemplateResponse(
+        return app.state.templates.TemplateResponse(
             "error.html",
             {"request": request, "error": str(e)},
             status_code=500
@@ -284,7 +285,7 @@ async def process_registration(
     """Process registration form and send to API"""
     # Validate inputs
     if password != confirm_password:
-        return templates.TemplateResponse(
+        return app.state.templates.TemplateResponse(
             "register.html", 
             {
                 "request": request, 
@@ -294,7 +295,7 @@ async def process_registration(
         )
     
     if not terms:
-        return templates.TemplateResponse(
+        return app.state.templates.TemplateResponse(
             "register.html", 
             {
                 "request": request, 
@@ -333,7 +334,7 @@ async def process_registration(
             error_data = response.json()
             error_message = error_data.get("detail", "Registration failed")
             
-            return templates.TemplateResponse(
+            return app.state.templates.TemplateResponse(
                 "register.html", 
                 {
                     "request": request, 
@@ -345,7 +346,7 @@ async def process_registration(
     except Exception as e:
         logger.error(f"Registration error: {str(e)}")
         
-        return templates.TemplateResponse(
+        return app.state.templates.TemplateResponse(
             "register.html", 
             {
                 "request": request, 
@@ -358,13 +359,13 @@ async def process_registration(
 async def login_page(request: Request, msg: str = None):
     """Serve login page"""
     try:
-        return templates.TemplateResponse(
+        return app.state.templates.TemplateResponse(
             "login.html", 
             {"request": request, "msg": msg}
         )
     except Exception as e:
         logger.error(f"Error rendering login page: {str(e)}")
-        return templates.TemplateResponse(
+        return app.state.templates.TemplateResponse(
             "error.html",
             {"request": request, "error": str(e)},
             status_code=500
@@ -421,7 +422,7 @@ async def debug_routes():
 async def not_found_exception_handler(request: Request, exc: HTTPException):
     """Handle 404 errors"""
     try:
-        return templates.TemplateResponse(
+        return app.state.templates.TemplateResponse(
             "404.html", 
             {"request": request, "path": request.url.path},
             status_code=404
@@ -438,7 +439,7 @@ async def not_found_exception_handler(request: Request, exc: HTTPException):
 async def server_error_handler(request: Request, exc: HTTPException):
     """Handle 500 errors"""
     try:
-        return templates.TemplateResponse(
+        return app.state.templates.TemplateResponse(
             "error.html", 
             {"request": request, "error": str(exc)},
             status_code=500
@@ -465,11 +466,12 @@ app.include_router(news_controller.router)
 async def dashboard(request: Request):
     """Temporary dashboard placeholder until real dashboard is implemented"""
     try:
-        return templates.TemplateResponse(
+        return app.state.templates.TemplateResponse(
             "dashboard/index.html",
             {"request": request, "username": "User"}
         )
     except Exception as e:
+        logger.error(f"Error rendering dashboard: {str(e)}")
         # If dashboard/index.html doesn't exist, return a simple HTML response
         return HTMLResponse(
             content="""
@@ -500,4 +502,4 @@ async def dashboard(request: Request):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=3000, reload=True)

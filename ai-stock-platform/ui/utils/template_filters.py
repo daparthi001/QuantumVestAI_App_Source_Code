@@ -1,6 +1,9 @@
-# Template filters utility functions
-# Last updated: 2025-06-20 02:53:45
-# Updated by: daparthi001
+"""
+Template filters for QuantumVestAI UI
+Created: 2025-06-17 01:50:11
+Updated: 2025-06-20 03:48:17
+Author: daparthi001
+"""
 
 from datetime import datetime
 import locale
@@ -17,15 +20,7 @@ except locale.Error:
     locale.setlocale(locale.LC_ALL, '')
 
 def format_currency(value, symbol='$'):
-    """Format a number as currency with proper separators and symbol.
-    
-    Args:
-        value (float): The value to format
-        symbol (str): Currency symbol to use
-        
-    Returns:
-        str: Formatted currency string
-    """
+    """Format a number as currency with proper separators and symbol."""
     if value is None:
         return f"{symbol}0.00"
     
@@ -36,15 +31,7 @@ def format_currency(value, symbol='$'):
         return f"{symbol}0.00"
 
 def format_percentage(value, precision=2):
-    """Format a decimal as percentage.
-    
-    Args:
-        value (float): The value to format (e.g., 0.1256)
-        precision (int): Number of decimal places
-        
-    Returns:
-        str: Formatted percentage (e.g., "12.56%")
-    """
+    """Format a decimal as percentage."""
     if value is None:
         return f"0.{precision * '0'}%"
     
@@ -58,16 +45,7 @@ def format_percentage(value, precision=2):
         return f"0.{precision * '0'}%"
 
 def truncate(s, length=50, suffix='...'):
-    """Truncate a string to a specified length.
-    
-    Args:
-        s (str): The string to truncate
-        length (int): Maximum length before truncation
-        suffix (str): String to append when truncated
-        
-    Returns:
-        str: Truncated string
-    """
+    """Truncate a string to a specified length."""
     if s is None:
         return ""
     
@@ -78,15 +56,7 @@ def truncate(s, length=50, suffix='...'):
         return s[:length].rstrip() + suffix
 
 def format_date(value, format_string="%b %d, %Y"):
-    """Format a datetime object or ISO date string.
-    
-    Args:
-        value: Datetime object or ISO date string
-        format_string: Date format
-        
-    Returns:
-        str: Formatted date string
-    """
+    """Format a datetime object or ISO date string."""
     if not value:
         return ""
     
@@ -109,26 +79,11 @@ def format_date(value, format_string="%b %d, %Y"):
     return value.strftime(format_string)
 
 def format_datetime(value, format_string="%b %d, %Y %H:%M"):
-    """Format a datetime object or ISO datetime string with time.
-    
-    Args:
-        value: Datetime object or ISO datetime string
-        format_string: Datetime format
-        
-    Returns:
-        str: Formatted datetime string
-    """
+    """Format a datetime object or ISO datetime string with time."""
     return format_date(value, format_string)
 
 def relative_time(value):
-    """Convert a datetime or ISO date string to a relative time string.
-    
-    Args:
-        value: Datetime object or ISO date string
-        
-    Returns:
-        str: Relative time (e.g., "2 hours ago", "3 days ago")
-    """
+    """Convert a datetime or ISO date string to a relative time string."""
     if not value:
         return ""
     
@@ -167,28 +122,14 @@ def relative_time(value):
         return f"{years} year{'s' if years != 1 else ''} ago"
 
 def strip_html(text):
-    """Remove HTML tags from text.
-    
-    Args:
-        text (str): Text potentially containing HTML tags
-        
-    Returns:
-        str: Text with HTML tags removed
-    """
+    """Remove HTML tags from text."""
     if not text:
         return ""
     
     return re.sub(r'<[^>]*>', '', text)
 
 def markdown_to_html(text):
-    """Convert simple markdown syntax to HTML.
-    
-    Args:
-        text (str): Text containing markdown syntax
-        
-    Returns:
-        str: HTML formatted text
-    """
+    """Convert simple markdown syntax to HTML."""
     if not text:
         return ""
     
@@ -210,15 +151,7 @@ def markdown_to_html(text):
     return text
 
 def number_format(value, decimal_places=0):
-    """Format a number with thousands separators.
-    
-    Args:
-        value: Number to format
-        decimal_places: Number of decimal places
-        
-    Returns:
-        str: Formatted number
-    """
+    """Format a number with thousands separators."""
     if value is None:
         return "0"
     
@@ -229,15 +162,7 @@ def number_format(value, decimal_places=0):
         return "0"
 
 def get_asset_url(path, version=None):
-    """Generate URL for static assets with cache busting.
-    
-    Args:
-        path (str): Asset path relative to static directory
-        version (str): Optional version string for cache busting
-        
-    Returns:
-        str: URL with cache busting parameter
-    """
+    """Generate URL for static assets with cache busting."""
     # Use provided version or generate a hash based on the current date
     if not version:
         version = os.environ.get('APP_VERSION', 'v1.5.2')
@@ -250,25 +175,11 @@ def get_asset_url(path, version=None):
     return f"/static/{path}?v={version}"
 
 def json_stringify(obj):
-    """Convert a Python object to a JSON string.
-    
-    Args:
-        obj: Python object to convert
-        
-    Returns:
-        str: JSON string representation
-    """
+    """Convert a Python object to a JSON string."""
     return json.dumps(obj)
 
 def file_size_format(size_bytes):
-    """Format file size in human readable format.
-    
-    Args:
-        size_bytes (int): Size in bytes
-        
-    Returns:
-        str: Formatted size (e.g., "2.5 MB")
-    """
+    """Format file size in human readable format."""
     if size_bytes is None:
         return "0 B"
     
@@ -288,16 +199,7 @@ def file_size_format(size_bytes):
     return f"{size:.2f} {units[unit_index]}"
 
 def gravatar_url(email, size=100, default='mp'):
-    """Generate Gravatar URL for an email address.
-    
-    Args:
-        email (str): User's email address
-        size (int): Image size in pixels
-        default (str): Default image type (mp, identicon, monsterid, wavatar, retro, robohash, blank)
-        
-    Returns:
-        str: Gravatar URL
-    """
+    """Generate Gravatar URL for an email address."""
     if not email:
         return f"https://www.gravatar.com/avatar/00000000000000000000000000000000?s={size}&d={default}"
     
@@ -305,7 +207,7 @@ def gravatar_url(email, size=100, default='mp'):
     email_hash = hashlib.md5(email.encode('utf-8')).hexdigest()
     return f"https://www.gravatar.com/avatar/{email_hash}?s={size}&d={default}"
 
-# Register all the filters
+# Dictionary of all filters
 template_filters = {
     'format_currency': format_currency,
     'format_percentage': format_percentage,
@@ -322,22 +224,43 @@ template_filters = {
     'gravatar_url': gravatar_url
 }
 
-# Function to register all filters with a Flask app
 def register_filters(app):
-    """Register all template filters with a Flask app.
-    
-    Args:
-        app: Flask application instance
     """
-    for name, func in template_filters.items():
-        app.jinja_env.filters[name] = func
-
-# Function to register all filters with a FastAPI Jinja2Templates
-def register_jinja2_filters(templates):
-    """Register all template filters with FastAPI Jinja2Templates.
+    Register all template filters with the application.
+    This function is called from main.py after templates are set up.
     
-    Args:
-        templates: FastAPI Jinja2Templates instance
+    In FastAPI, filters need to be registered with the Jinja2Templates object,
+    not with the app itself.
     """
-    for name, func in template_filters.items():
-        templates.env.filters[name] = func
+    import logging
+    logger = logging.getLogger("quantumvestai_ui.filters")
+    
+    try:
+        # Check if app has state.templates (FastAPI approach)
+        if hasattr(app, 'state') and hasattr(app.state, 'templates'):
+            templates = app.state.templates
+            logger.info("Registering filters with FastAPI templates")
+            
+            # Register all filters with the templates.env
+            for name, func in template_filters.items():
+                templates.env.filters[name] = func
+                logger.debug(f"Registered filter: {name}")
+                
+            return True
+        # Check if app has jinja_env directly (Flask approach)
+        elif hasattr(app, 'jinja_env'):
+            logger.info("Registering filters with Flask jinja_env")
+            
+            # Register all filters with app.jinja_env
+            for name, func in template_filters.items():
+                app.jinja_env.filters[name] = func
+                logger.debug(f"Registered filter: {name}")
+                
+            return True
+        else:
+            # If app doesn't have templates or jinja_env, log an error
+            logger.error("Cannot register filters: app has no templates attribute")
+            return False
+    except Exception as e:
+        logger.error(f"Error registering filters: {str(e)}")
+        return False
