@@ -94,12 +94,44 @@
             background-color: rgba(220, 53, 69, 0.2);
             border: 1px solid rgba(220, 53, 69, 0.3);
         }
+        .alert-success {
+            background-color: rgba(40, 167, 69, 0.2);
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
         .logo {
             text-align: center;
             margin-bottom: 20px;
         }
         .logo img {
             max-width: 120px;
+        }
+        .form-check {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .form-check-input {
+            margin-right: 8px;
+        }
+        .form-check-label {
+            color: #ddd;
+            font-size: 14px;
+        }
+        .password-input-container {
+            position: relative;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+        }
+        .password-toggle:hover {
+            color: #fff;
         }
     </style>
 </head>
@@ -113,20 +145,41 @@
             <p class="tagline">Quantum-powered investment analytics</p>
         </div>
         
-        {% if error %}
-        <div class="alert alert-danger">
-            {{ error }}
+        {% if msg %}
+        <div class="alert alert-{{ msg_type or 'danger' }}">
+            {% if msg is string %}
+                {{ msg }}
+            {% else %}
+                {% for item in msg %}
+                    {% if item is mapping %}
+                        {% for k, v in item.items() %}
+                            <div>{{ k }}: {{ v }}</div>
+                        {% endfor %}
+                    {% else %}
+                        <div>{{ item }}</div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
         </div>
         {% endif %}
         
-        <form id="loginForm" method="post" action="/auth/login">
+        <form method="post" action="/auth/login">
             <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" class="form-control" id="email" name="email" required>
+                <label for="username">Username</label>
+                <input type="text" class="form-control" id="username" name="username" value="{{ username or '' }}" required autofocus>
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" class="form-control" id="password" name="password" required>
+                <div class="password-input-container">
+                    <input type="password" class="form-control" id="password" name="password" required>
+                    <button type="button" class="password-toggle" data-target="password">
+                        <i>👁️</i>
+                    </button>
+                </div>
+            </div>
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="remember" name="remember" value="true">
+                <label class="form-check-label" for="remember">Remember me</label>
             </div>
             <div class="form-group">
                 <button type="submit" class="btn">Login</button>
@@ -135,49 +188,41 @@
         
         <div class="login-footer">
             <p>Don't have an account? <a href="/auth/register" style="color: #4a90e2;">Register</a></p>
-            <p><a href="/auth/forgot-password" style="color: #aaa;">Forgot your password?</a></p>
+            <p><a href="/auth/password-reset" style="color: #aaa;">Forgot your password?</a></p>
         </div>
     </div>
 
     <script>
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            try {
-                const response = await fetch('/auth/token', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        email: email,
-                        password: password
-                    })
-                });
+        // Password visibility toggle
+        document.querySelectorAll('.password-toggle').forEach(button => {
+            button.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                if (!input) return;
                 
-                const data = await response.json();
-                
-                if (response.ok) {
-                    // Store token in localStorage
-                    localStorage.setItem('auth_token', data.access_token);
-                    
-                    // Redirect to the page they were trying to access, or to dashboard
-                    const redirectUrl = new URLSearchParams(window.location.search).get('redirect_to') || '/';
-                    window.location.href = redirectUrl;
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    this.innerHTML = '<i>🔓</i>';
                 } else {
-                    // Display error message
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'alert alert-danger';
-                    errorDiv.textContent = data.detail || 'Login failed. Please check your credentials.';
-                    
-                    const form = document.getElementById('loginForm');
-                    form.insertBefore(errorDiv, form.firstChild);
+                    input.type = 'password';
+                    this.innerHTML = '<i>👁️</i>';
                 }
-            } catch (error) {
-                console.error('Login error:', error);
+            });
+        });
+        
+        // Get URL parameters and handle redirects
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set redirect_to parameter if present in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectTo = urlParams.get('next') || urlParams.get('redirect_to');
+            
+            if (redirectTo) {
+                // Add a hidden field to the form for the redirect
+                const redirectInput = document.createElement('input');
+                redirectInput.type = 'hidden';
+                redirectInput.name = 'next';
+                redirectInput.value = redirectTo;
+                document.querySelector('form').appendChild(redirectInput);
             }
         });
     </script>

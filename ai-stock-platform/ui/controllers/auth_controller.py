@@ -1,7 +1,7 @@
 """
 Authentication Controller for QuantumVestAI
-Updated: 2025-06-20 06:04:23
-Author: daparthi001auth_controller.py
+Updated: 2025-06-20 22:52:16
+Author: daparthi001
 """
 import os
 import requests
@@ -49,6 +49,12 @@ def format_error_message(error_data):
                 if isinstance(detail, list):
                     return format_error_message(detail)
                 return str(detail)
+            
+            # Format dictionary
+            messages = []
+            for key, value in error_data.items():
+                messages.append(f"{key}: {value}")
+            return ", ".join(messages)
         
         # Default case: convert to string
         return str(error_data)
@@ -188,6 +194,8 @@ async def login_post(
                     error_data = response.json()
                     if "detail" in error_data:
                         error_msg = error_data["detail"]
+                    else:
+                        error_msg = format_error_message(error_data)
                 except:
                     pass
             
