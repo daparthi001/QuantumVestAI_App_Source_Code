@@ -1,7 +1,7 @@
 """
 Template filters for QuantumVestAI UI
 Created: 2025-06-17 01:50:11
-Updated: 2025-06-20 03:48:17
+Updated: 2025-06-20 14:51:36
 Author: daparthi001
 """
 
@@ -207,6 +207,111 @@ def gravatar_url(email, size=100, default='mp'):
     email_hash = hashlib.md5(email.encode('utf-8')).hexdigest()
     return f"https://www.gravatar.com/avatar/{email_hash}?s={size}&d={default}"
 
+def stringify(value):
+    """
+    Convert any value to a human-readable string representation.
+    This is particularly useful for error messages and debugging.
+    
+    Handles:
+    - Dictionaries (recursively formats as key-value pairs)
+    - Lists (joins items with commas)
+    - Objects (converts to string)
+    - None (returns empty string)
+    """
+    if value is None:
+        return ""
+    
+    if isinstance(value, dict):
+        # Format dictionary as key-value pairs
+        formatted_items = []
+        for k, v in value.items():
+            formatted_items.append(f"{k}: {stringify(v)}")
+        return ", ".join(formatted_items)
+    
+    elif isinstance(value, list):
+        # Format list items and join with commas
+        formatted_items = [stringify(item) for item in value]
+        return ", ".join(formatted_items)
+    
+    elif hasattr(value, 'items'):
+        # Handle object with .items() method like dict
+        try:
+            formatted_items = []
+            for k, v in value.items():
+                formatted_items.append(f"{k}: {stringify(v)}")
+            return ", ".join(formatted_items)
+        except:
+            pass
+    
+    # Default: convert to string
+    return str(value)
+
+def error_format(error_data):
+    """
+    Format error data specifically for display in templates.
+    This function is designed to handle common API error formats.
+    
+    Returns formatted HTML string with error messages.
+    """
+    if not error_data:
+        return ""
+
+    html_parts = []
+    
+    try:
+        # Handle string errors
+        if isinstance(error_data, str):
+            return f"<div>{error_data}</div>"
+            
+        # Handle list of errors
+        if isinstance(error_data, list):
+            for item in error_data:
+                if isinstance(item, dict):
+                    # Extract field and message
+                    field = None
+                    msg = None
+                    
+                    if "loc" in item and isinstance(item["loc"], list):
+                        field = item["loc"][-1]
+                    
+                    if "msg" in item:
+                        msg = item["msg"]
+                    
+                    if field and msg:
+                        html_parts.append(f"<div><strong>{field}:</strong> {msg}</div>")
+                    elif msg:
+                        html_parts.append(f"<div>{msg}</div>")
+                    else:
+                        html_parts.append(f"<div>{stringify(item)}</div>")
+                else:
+                    html_parts.append(f"<div>{stringify(item)}</div>")
+            
+            return "".join(html_parts)
+        
+        # Handle dictionary with 'detail' field (common in FastAPI errors)
+        if isinstance(error_data, dict):
+            if "detail" in error_data:
+                detail = error_data["detail"]
+                
+                # Handle list of validation errors
+                if isinstance(detail, list):
+                    return error_format(detail)
+                
+                # Handle string detail
+                return f"<div>{stringify(detail)}</div>"
+            
+            # Handle dictionary without 'detail'
+            for key, value in error_data.items():
+                html_parts.append(f"<div><strong>{key}:</strong> {stringify(value)}</div>")
+            
+            return "".join(html_parts)
+        
+        # Fallback
+        return f"<div>{stringify(error_data)}</div>"
+    
+    except Exception as e:
+        return f"<div>Error processing error message: {str(e)}</div>"
+
 # Dictionary of all filters
 template_filters = {
     'format_currency': format_currency,
@@ -221,7 +326,9 @@ template_filters = {
     'get_asset_url': get_asset_url,
     'json_stringify': json_stringify,
     'file_size_format': file_size_format,
-    'gravatar_url': gravatar_url
+    'gravatar_url': gravatar_url,
+    'stringify': stringify,          # Added stringify filter
+    'error_format': error_format     # Added error_format filter
 }
 
 def register_filters(app):
