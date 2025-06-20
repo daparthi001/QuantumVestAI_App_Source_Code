@@ -1,6 +1,6 @@
 """
 Main application file for QuantumVestAI UI
-Updated: 2025-06-20 18:41:30
+Updated: 2025-06-20 19:31:29
 Author: daparthi001
 """
 import os
@@ -17,9 +17,8 @@ from pathlib import Path
 from logging.config import dictConfig
 import sys
 
-# Import controllers
-from controllers import auth_controller
-from utils.template_filters import register_filters  # Make sure this is imported
+# CRITICAL FIX: Define BASE_DIR before using it
+BASE_DIR = Path(__file__).resolve().parent
 
 # Configure logging
 log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -64,6 +63,9 @@ app = FastAPI(
     description="Web UI for QuantumVestAI Platform",
 )
 
+# CRITICAL FIX: Define origins before using it
+origins = os.environ.get("CORS_ORIGINS", "*").split(",")
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -73,27 +75,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files
-app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
-
 # Setup templates and store in app.state - UPDATED
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 app.state.templates = templates  # Store templates in app.state
+
+# Mount static files
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
 # Get API URL from environment or use default for local development
 API_URL = os.environ.get("API_URL", "http://api:8000")
 API_V1_URL = f"{API_URL}/api/v1"
 
-# Import utility functions AFTER app creation to ensure app.state.templates exists
-# FIX: Import template_filters module, not just the register_filters function
+# Import controllers - moved after app creation
 try:
-    import utils.template_filters
+    from controllers import auth_controller
+    from utils.template_filters import register_filters
 
     # Register template filters with app.state.templates
-    utils.template_filters.register_filters(app)
+    register_filters(app)
     logger.info("Template filters registered successfully")
 except Exception as e:
-    logger.error(f"Error registering template filters: {str(e)}")
+    logger.error(f"Error importing controllers or registering filters: {str(e)}")
     
     # Create fallback functions for critical template filters
     def get_asset_url(path, version=None):
@@ -118,9 +120,10 @@ except ImportError as e:
 # Import controllers with error handling
 controllers = {}
 try:
-    from controllers import auth_controller
+    if 'auth_controller' not in locals():
+        from controllers import auth_controller
     controllers["auth_controller"] = auth_controller
-except ImportError as e:
+except Exception as e:
     logger.error(f"Could not import auth_controller: {str(e)}")
 
 try:
