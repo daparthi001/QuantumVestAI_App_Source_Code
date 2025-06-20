@@ -19,12 +19,15 @@ RUN mkdir -p /config
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy package.json and install Node.js dependencies
-COPY package.json .
-RUN npm install
-
 # Copy application code
 COPY . .
+
+# Copy package.json and install Node.js dependencies
+# COPY package.json .
+RUN npm install
+
+# # Copy application code
+# COPY . .
 
 # Set ownership for all files
 RUN chown -R app:app /app
