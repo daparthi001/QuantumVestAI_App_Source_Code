@@ -1,5 +1,5 @@
 # Authentication dependencies
-# Last updated: 2025-06-20 02:53:45
+# Last updated: 2025-06-20 03:05:12
 # Updated by: daparthi001
 
 from fastapi import Depends, HTTPException, status, Request, Response, Cookie

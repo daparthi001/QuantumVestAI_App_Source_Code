@@ -1,49 +1,47 @@
-# QuantumVestAI UI Dockerfile
-# Created: Unknown
-# Updated: 2025-06-18 01:56:23
-# Author: daparthi001
-
-# Use Python 3.10 for consistency with API
+# Use Python 3.10 as base
 FROM python:3.10-slim
 
-# Set working directory
-WORKDIR /app
-
-# Set environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    PYTHONPATH=/app
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
+# Install Node.js and npm
+RUN apt-get update && apt-get install -y \
+    nodejs \
+    npm \
     curl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Create app structure and set permissions
-RUN mkdir -p /app/ui /app/static /app/templates /app/logs \
-    && chmod 755 /app/ui /app/static /app/templates /app/logs
+# Set working directory
+WORKDIR /app
 
-# Create non-root user first so we can use it for all operations
-RUN useradd -m -u 1000 app
+# Create config directory
+RUN mkdir -p /config
 
-# Copy requirements first for better caching
-COPY --chown=app:app requirements.txt .
+# Copy requirements file and install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Python dependencies with explicit dependency additions
-RUN pip install --no-cache-dir -r requirements.txt && \
-    # Ensure critical dependencies are installed regardless of requirements.txt
-    pip install --no-cache-dir fastapi uvicorn aiohttp requests jinja2
+# Copy package.json and install Node.js dependencies
+COPY package.json .
+RUN npm install
 
 # Copy application code
 COPY . .
 
-# Copy the fixed startup script
-COPY startup.sh /app/startup.sh
-RUN chmod +x /app/startup.sh
+# Set ownership for all files
+RUN chown -R app:app /app
 
-# Set the entrypoint
+# Switch to non-root user
+USER app
+
+# Set runtime environment variables
+ENV PORT=3000 \
+    HOST=0.0.0.0
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:${PORT}/health || exit 1
+
+# Set startup command with optional debug mode
 CMD ["/app/scripts/start.sh"]

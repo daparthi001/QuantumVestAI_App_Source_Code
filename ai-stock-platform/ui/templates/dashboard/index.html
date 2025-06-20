@@ -1,244 +1,290 @@
 {% extends "base.html" %}
 
-{% block title %}QuantumVestAI Dashboard{% endblock %}
+{% block title %}Dashboard | QuantumVestAI{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ get_asset_url('css/dashboard.css') }}">
+<script src="{{ get_asset_url('js/dashboard.js') }}" defer></script>
+<meta name="last-updated" content="2025-06-20 02:53:45">
+<meta name="updated-by" content="daparthi001">
+{% endblock %}
+
+{% block body_class %}dashboard-page{% endblock %}
 
 {% block content %}
 <div class="dashboard-container">
-  <div class="row">
-    <div class="col-12">
-      <h1>Welcome, {{ data.user.display_name | default(data.user.username) }}</h1>
-      <p class="text-muted">{{ data.timestamp }}</p>
-    </div>
-  </div>
-
-  <!-- Market Overview Section -->
-  <div class="card mb-4">
-    <div class="card-header">
-      <h2 class="h5 mb-0">Market Overview</h2>
-    </div>
-    <div class="card-body">
-      {% if data.market and data.market.status != "unavailable" and data.market.status != "error" %}
-        <div class="row">
-          {% if data.market.indices %}
-            <div class="col-md-6">
-              <h3 class="h6">Market Indices</h3>
-              <table class="table table-sm">
-                <thead>
-                  <tr>
-                    <th>Index</th>
-                    <th>Value</th>
-                    <th>Change</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for index in data.market.indices %}
-                    <tr>
-                      <td>{{ index.name }}</td>
-                      <td>{{ index.value | format_large_number }}</td>
-                      <td class="{{ 'text-success' if index.change > 0 else 'text-danger' }}">
-                        {{ index.change | format_change_value }}
-                      </td>
-                    </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+    <div class="dashboard-header">
+        <h1>Dashboard</h1>
+        <div class="dashboard-actions">
+            <div class="period-selector">
+                <label for="period-select">Time Period:</label>
+                <select id="period-select" name="period">
+                    {% for period_option in periods %}
+                    <option value="{{ period_option.value }}" {% if period_option.value == selected_period %}selected{% endif %}>
+                        {{ period_option.label }}
+                    </option>
+                    {% endfor %}
+                </select>
             </div>
-          {% endif %}
-          
-          {% if data.market.trends %}
-            <div class="col-md-6">
-              <h3 class="h6">Market Trends</h3>
-              <ul class="list-group">
-                {% for trend in data.market.trends %}
-                  <li class="list-group-item">
-                    {{ trend.description }}
-                  </li>
-                {% endfor %}
-              </ul>
-            </div>
-          {% endif %}
+            <button id="refresh-data" class="btn btn-icon" title="Refresh Data">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 4v6h-6"></path>
+                    <path d="M1 20v-6h6"></path>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
+                    <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path>
+                </svg>
+            </button>
         </div>
-      {% else %}
-        <div class="alert alert-info">Market data currently unavailable.</div>
-      {% endif %}
-    </div>
-  </div>
-
-  <!-- Portfolio Summary Section -->
-  <div class="row">
-    <div class="col-lg-8">
-      {% if data.portfolio and data.portfolio.status != "unavailable" and data.portfolio.status != "error" %}
-        <div class="card mb-4">
-          <div class="card-header">
-            <h2 class="h5 mb-0">Portfolio Summary</h2>
-          </div>
-          <div class="card-body">
-            <div class="row">
-              <div class="col-md-6">
-                <h3 class="h6">Total Value</h3>
-                <p class="display-4">{{ data.portfolio.total_value | format_currency }}</p>
-                
-                <div class="d-flex align-items-center">
-                  <span class="mr-2 {{ 'text-success' if data.portfolio.daily_change > 0 else 'text-danger' }}">
-                    {{ data.portfolio.daily_change | format_change_value }}
-                  </span>
-                  <span class="text-muted">(Today)</span>
-                </div>
-              </div>
-              
-              <div class="col-md-6">
-                <h3 class="h6">Asset Allocation</h3>
-                {% if data.portfolio.allocation %}
-                  <div class="chart-container">
-                    <!-- Placeholder for chart -->
-                    <div id="allocation-chart" style="height: 200px;"></div>
-                  </div>
-                {% else %}
-                  <p>No allocation data available.</p>
-                {% endif %}
-              </div>
-            </div>
-            
-            {% if data.portfolio.holdings %}
-              <h3 class="h6 mt-4">Top Holdings</h3>
-              <table class="table table-sm">
-                <thead>
-                  <tr>
-                    <th>Symbol</th>
-                    <th>Shares</th>
-                    <th>Current Price</th>
-                    <th>Value</th>
-                    <th>Change</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for holding in data.portfolio.holdings %}
-                    <tr>
-                      <td>{{ holding.symbol }}</td>
-                      <td>{{ holding.shares }}</td>
-                      <td>{{ holding.price | format_currency }}</td>
-                      <td>{{ holding.value | format_currency }}</td>
-                      <td class="{{ 'text-success' if holding.change > 0 else 'text-danger' }}">
-                        {{ holding.change | format_change_value }}
-                      </td>
-                    </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            {% endif %}
-          </div>
-        </div>
-      {% else %}
-        <div class="card mb-4">
-          <div class="card-header">
-            <h2 class="h5 mb-0">Portfolio Summary</h2>
-          </div>
-          <div class="card-body">
-            <div class="alert alert-info">Portfolio data currently unavailable.</div>
-          </div>
-        </div>
-      {% endif %}
-      
-      <!-- Recommendations Section -->
-      {% if data.recommendations and data.recommendations.status != "unavailable" and data.recommendations.status != "error" %}
-        {% if data.recommendations.items %}
-          <div class="card mb-4">
-            <div class="card-header">
-              <h2 class="h5 mb-0">Personalized Recommendations</h2>
-            </div>
-            <div class="card-body">
-              <div class="row">
-                {% for recommendation in data.recommendations.items %}
-                  <div class="col-md-4">
-                    <div class="card mb-3">
-                      <div class="card-body">
-                        <h3 class="h6">{{ recommendation.symbol }}</h3>
-                        <p class="mb-1">{{ recommendation.name }}</p>
-                        <p class="text-muted small mb-2">{{ recommendation.sector }}</p>
-                        <div class="d-flex justify-content-between">
-                          <span>{{ recommendation.price | format_currency }}</span>
-                          <span class="{{ 'text-success' if recommendation.potential > 0 else 'text-danger' }}">
-                            {{ recommendation.potential | format_percentage }}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                {% endfor %}
-              </div>
-            </div>
-          </div>
-        {% endif %}
-      {% endif %}
     </div>
     
-    <div class="col-lg-4">
-      <!-- Watchlist Section -->
-      {% if data.watchlist and data.watchlist.status != "unavailable" and data.watchlist.status != "error" %}
-        {% if data.watchlist.items %}
-          <div class="card mb-4">
-            <div class="card-header">
-              <h2 class="h5 mb-0">Watchlist Highlights</h2>
-            </div>
-            <ul class="list-group list-group-flush">
-              {% for item in data.watchlist.items %}
-                <li class="list-group-item">
-                  <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                      <h3 class="h6 mb-0">{{ item.symbol }}</h3>
-                      <p class="text-muted small mb-0">{{ item.name }}</p>
-                    </div>
-                    <div class="text-right">
-                      <div>{{ item.price | format_currency }}</div>
-                      <div class="{{ 'text-success' if item.change > 0 else 'text-danger' }}">
-                        {{ item.change | format_change_value }}
-                      </div>
-                    </div>
-                  </div>
-                </li>
-              {% endfor %}
-            </ul>
-          </div>
-        {% endif %}
-      {% endif %}
-      
-      <!-- News Section -->
-      {% if data.news and data.news.status != "unavailable" and data.news.status != "error" %}
-        {% if data.news.items %}
-          <div class="card mb-4">
-            <div class="card-header">
-              <h2 class="h5 mb-0">Market News</h2>
-            </div>
-            <ul class="list-group list-group-flush">
-              {% for article in data.news.items %}
-                <li class="list-group-item">
-                  <h3 class="h6">{{ article.title }}</h3>
-                  <p class="small mb-0">{{ article.summary }}</p>
-                  <div class="d-flex justify-content-between align-items-center mt-2">
-                    <span class="text-muted small">{{ article.source }}</span>
-                    <span class="text-muted small">{{ article.published | humanize_date }}</span>
-                  </div>
-                </li>
-              {% endfor %}
-            </ul>
-          </div>
-        {% endif %}
-      {% endif %}
+    {% if is_cached %}
+    <div class="cache-notice">
+        <span class="cache-icon">📊</span>
+        <span class="cache-message">Showing cached data. Last updated: {{ last_updated }}</span>
     </div>
-  </div>
+    {% endif %}
+    
+    <div class="dashboard-overview">
+        <div class="overview-card portfolio-value">
+            <h3>Portfolio Value</h3>
+            <div class="value">{{ format_currency(portfolio.total_value) }}</div>
+            <div class="change {% if portfolio.daily_change >= 0 %}positive{% else %}negative{% endif %}">
+                {{ format_percentage(portfolio.daily_change) }}
+                {% if portfolio.daily_change >= 0 %}
+                <span class="icon-up">↑</span>
+                {% else %}
+                <span class="icon-down">↓</span>
+                {% endif %}
+                <span class="label">Today</span>
+            </div>
+        </div>
+        
+        <div class="overview-card total-return">
+            <h3>Total Return</h3>
+            <div class="value">{{ format_currency(portfolio.total_gain) }}</div>
+            <div class="change {% if portfolio.total_gain_percent >= 0 %}positive{% else %}negative{% endif %}">
+                {{ format_percentage(portfolio.total_gain_percent) }}
+                {% if portfolio.total_gain_percent >= 0 %}
+                <span class="icon-up">↑</span>
+                {% else %}
+                <span class="icon-down">↓</span>
+                {% endif %}
+                <span class="label">All Time</span>
+            </div>
+        </div>
+        
+        <div class="overview-card market-status">
+            <h3>Market Status</h3>
+            {% if market.status == "open" %}
+            <div class="market-open">
+                <span class="status-indicator"></span> Markets Open
+            </div>
+            {% else %}
+            <div class="market-closed">
+                <span class="status-indicator"></span> Markets Closed
+            </div>
+            {% endif %}
+            <div class="market-index">
+                <span>S&P 500:</span>
+                <span class="value">{{ format_currency(market.indices.sp500.value, '') }}</span>
+                <span class="change {% if market.indices.sp500.change >= 0 %}positive{% else %}negative{% endif %}">
+                    {{ format_percentage(market.indices.sp500.change) }}
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard-charts-container">
+        <div class="chart-card performance-chart">
+            <div class="card-header">
+                <h3>Portfolio Performance</h3>
+                <div class="card-actions">
+                    <button class="btn-chart-toggle active" data-chart="line">Line</button>
+                    <button class="btn-chart-toggle" data-chart="bar">Bar</button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="performanceChart"></canvas>
+                <div class="chart-loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Loading chart data...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chart-card allocation-chart">
+            <div class="card-header">
+                <h3>Asset Allocation</h3>
+            </div>
+            <div class="chart-container">
+                <canvas id="allocationChart"></canvas>
+            </div>
+            <div class="allocation-legend">
+                {% for asset in portfolio.allocation %}
+                <div class="legend-item">
+                    <span class="color-dot" style="background-color: {{ asset.color }};"></span>
+                    <span class="asset-name">{{ asset.name }}</span>
+                    <span class="asset-percentage">{{ format_percentage(asset.percentage) }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard-widgets-container">
+        <div class="widget-card recent-transactions">
+            <div class="card-header">
+                <h3>Recent Transactions</h3>
+                <a href="/transactions" class="card-link">View All</a>
+            </div>
+            <div class="transactions-list">
+                {% if transactions %}
+                <table class="transactions-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Asset</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in transactions %}
+                        <tr>
+                            <td>{{ format_date(transaction.date) }}</td>
+                            <td class="transaction-type {{ transaction.type.lower() }}">{{ transaction.type }}</td>
+                            <td>{{ transaction.asset }}</td>
+                            <td class="transaction-amount">{{ format_currency(transaction.amount) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <p>No recent transactions</p>
+                    <a href="/transactions/new" class="btn btn-outline">Create Transaction</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="widget-card top-holdings">
+            <div class="card-header">
+                <h3>Top Holdings</h3>
+                <a href="/portfolio" class="card-link">View All</a>
+            </div>
+            <div class="holdings-list">
+                {% if portfolio.top_holdings %}
+                <table class="holdings-table">
+                    <thead>
+                        <tr>
+                            <th>Asset</th>
+                            <th>Value</th>
+                            <th>Change</th>
+                            <th>Allocation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for holding in portfolio.top_holdings %}
+                        <tr>
+                            <td class="holding-name">
+                                <div class="asset-icon">{{ holding.symbol[0] }}</div>
+                                <div class="asset-details">
+                                    <span class="symbol">{{ holding.symbol }}</span>
+                                    <span class="name">{{ holding.name }}</span>
+                                </div>
+                            </td>
+                            <td class="holding-value">{{ format_currency(holding.value) }}</td>
+                            <td class="holding-change {% if holding.change >= 0 %}positive{% else %}negative{% endif %}">
+                                {{ format_percentage(holding.change) }}
+                            </td>
+                            <td class="holding-allocation">
+                                <div class="progress-bar">
+                                    <div class="progress" style="width: {{ holding.allocation * 100 }}%;"></div>
+                                </div>
+                                <span class="allocation-percentage">{{ format_percentage(holding.allocation) }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <p>No holdings found</p>
+                    <a href="/portfolio/add" class="btn btn-outline">Add Holdings</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard-insights">
+        <div class="insights-card">
+            <div class="card-header">
+                <h3>AI Insights</h3>
+                <div class="insights-date">{{ format_date(portfolio.insights_date) }}</div>
+            </div>
+            <div class="insights-content">
+                <div class="insight-item">
+                    <div class="insight-icon recommendation"></div>
+                    <div class="insight-details">
+                        <h4>Recommendation</h4>
+                        <p>{{ portfolio.insights.recommendation }}</p>
+                    </div>
+                </div>
+                <div class="insight-item">
+                    <div class="insight-icon opportunity"></div>
+                    <div class="insight-details">
+                        <h4>Market Opportunity</h4>
+                        <p>{{ portfolio.insights.opportunity }}</p>
+                    </div>
+                </div>
+                <div class="insight-item">
+                    <div class="insight-icon risk"></div>
+                    <div class="insight-details">
+                        <h4>Risk Assessment</h4>
+                        <p>{{ portfolio.insights.risk }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-  // Initialize charts if needed
-  document.addEventListener('DOMContentLoaded', function() {
-    // Add any JavaScript for charts here
+    // Initialize chart data from server
+    const portfolioData = {{ portfolio.performance_data|tojson }};
+    const allocationData = {{ portfolio.allocation|tojson }};
     
-    // Example: Update allocation chart
-    if (document.getElementById('allocation-chart')) {
-      // Chart initialization code would go here
-    }
-  });
+    // Initialize dashboard charts
+    document.addEventListener('DOMContentLoaded', function() {
+        initDashboardCharts(portfolioData, allocationData);
+        
+        // Period selector change handler
+        const periodSelect = document.getElementById('period-select');
+        if (periodSelect) {
+            periodSelect.addEventListener('change', function() {
+                window.location.href = `/dashboard?period=${this.value}`;
+            });
+        }
+        
+        // Refresh button handler
+        const refreshButton = document.getElementById('refresh-data');
+        if (refreshButton) {
+            refreshButton.addEventListener('click', function() {
+                window.location.href = `/dashboard?period=${periodSelect.value}&refresh=true`;
+            });
+        }
+        
+        // Add fade-in animation to cards
+        const cards = document.querySelectorAll('.overview-card, .chart-card, .widget-card, .insights-card');
+        cards.forEach((card, index) => {
+            setTimeout(() => {
+                card.classList.add('visible');
+            }, 100 * index);
+        });
+    });
 </script>
 {% endblock %}

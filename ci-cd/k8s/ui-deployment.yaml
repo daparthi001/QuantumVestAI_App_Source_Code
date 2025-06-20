@@ -7,10 +7,10 @@ metadata:
     app: quantumvestai
     tier: frontend
     environment: development
-    created-by: daparthi001
-    created-date: "2025-06-15"
-    updated-by: daparthi001
-    updated-date: "2025-06-19"
+    version: v1.5.2
+  annotations:
+    kubernetes.io/change-cause: "Updated UI deployment - 2025-06-20 03:11:18"
+    updated-by: "daparthi001"
 spec:
   replicas: 1
   strategy:
@@ -20,6 +20,7 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
+      app: ui
       app: quantumvestai
       tier: frontend
       environment: development
@@ -29,119 +30,17 @@ spec:
         app: quantumvestai
         tier: frontend
         environment: development
+        version: v1.5.2
       annotations:
-        timestamp: "20250619191416"
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
     spec:
-      initContainers:
-      - name: fix-app-issues
-        image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:ui-dev-latest
-        imagePullPolicy: Always
-        command: ["/bin/bash", "-c"]
-        args:
-        - |
-          # Install required packages
-          echo "Installing required packages..."
-          pip install --no-cache-dir markupsafe==2.1.3 jinja2>=3.0.0 fastapi uvicorn python-multipart
-          npm install --no-save axios http-proxy-middleware cors
-          
-          # Create necessary directories
-          mkdir -p /app/utils /app/controllers /app/templates/dashboard /app/templates/auth /app/static/css /app/auth
-          
-          # Copy config files to appropriate locations
-          echo "Copying template_filters.py..."
-          cp /config/utils.template_filters.py /app/utils/template_filters.py
-          
-          echo "Copying dashboard_controller.py..."
-          cp /config/controllers.dashboard_controller.py /app/controllers/dashboard_controller.py
-          
-          echo "Copying dependencies.py..."
-          cp /config/auth.dependencies.py /app/auth/dependencies.py
-          
-          echo "Copying base.html..."
-          cp /config/templates.base.html /app/templates/base.html
-          
-          echo "Copying dashboard/index.html..."
-          cp /config/templates.dashboard.index.html /app/templates/dashboard/index.html
-          
-          echo "Copying error.html..."
-          cp /config/templates.error.html /app/templates/error.html
-          
-          echo "Copying login.html..."
-          cp /config/templates.auth.login.html /app/templates/auth/login.html
-          
-          echo "Copying startup.sh..."
-          cp /config/scripts.startup.sh /app/startup.sh
-          chmod +x /app/startup.sh
-          
-          # Create __init__.py files
-          touch /app/utils/__init__.py
-          touch /app/controllers/__init__.py
-          touch /app/auth/__init__.py
-          
-          # Fix CORS and API connection in server.js
-          if [ -f "/app/server.js" ]; then
-            echo "Setting up API proxy in server.js..."
-            
-            # Create temporary API proxy module
-            cat > /app/api-proxy-setup.js << 'EOF'
-            const { createProxyMiddleware } = require('http-proxy-middleware');
-            const cors = require('cors');
-            
-            // Export setup function
-            module.exports = function setupApi(app) {
-              // Add CORS middleware
-              app.use(cors({
-                origin: '*',
-                methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-                allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-                credentials: true
-              }));
-              
-              // Add API proxy
-              const apiUrl = process.env.API_URL || 'https://dev.quantumvestai.com';
-              app.use('/api', createProxyMiddleware({
-                target: apiUrl,
-                changeOrigin: true,
-                pathRewrite: { '^/api': '/api' },
-                secure: false,
-                logLevel: 'debug'
-              }));
-              
-              console.log(`API proxy configured to: ${apiUrl}`);
-            };
-            EOF
-            
-            # Add require statement at the top of server.js
-            sed -i '1i const setupApi = require("./api-proxy-setup");' /app/server.js
-            
-            # Add API setup call before app.listen
-            sed -i '/app.listen/i // Setup API proxy and CORS\nsetupApi(app);' /app/server.js
-          fi
-          
-          # Add API URL to configuration
-          mkdir -p /app/public
-          echo "window.API_URL = '${API_URL:-https://dev.quantumvestai.com}';" > /app/public/api-config.js
-          
-          # Fix import paths in any __init__.py files
-          echo "Fixing import paths..."
-          find /app -name "__init__.py" -exec sed -i 's/from ui\.utils/from utils/g' {} \;
-          find /app -name "__init__.py" -exec sed -i 's/from ui\.controllers/from controllers/g' {} \;
-          
-          echo "All configuration applied"
-        volumeMounts:
-        - name: app-volume
-          mountPath: /app
-        - name: ui-config
-          mountPath: /config
       containers:
       - name: ui
         image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:ui-dev-latest
         imagePullPolicy: Always
-        ports:
-        - containerPort: 3000
-          name: http
         env:
-        # Kubernetes secrets
         - name: JWT_SECRET_KEY
           valueFrom:
             secretKeyRef:

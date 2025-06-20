@@ -1,26 +1,42 @@
-{% extends "auth_layout.html" %}
+{% extends "base.html" %}
 
-{% block title %}Error - QuantumVestAI{% endblock %}
+{% block title %}Error | QuantumVestAI{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ get_asset_url('css/error.css') }}">
+{% endblock %}
+
+{% block body_class %}error-page{% endblock %}
 
 {% block content %}
-<div class="auth-container">
-    <div class="auth-card text-center">
-        <div class="auth-header">
-            <a href="/" class="auth-logo">
-                <img src="{{ url_for('static', path='/img/logo.svg') }}" alt="QuantumVestAI">
-            </a>
-            <h1 class="auth-title">An Error Occurred</h1>
-            <p class="auth-subtitle">Sorry for the inconvenience</p>
+<div class="error-container">
+    <div class="error-content">
+        <div class="error-icon">
+            <svg width="120" height="120" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M15 9L9 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M9 9L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
         </div>
         
-        <div class="auth-body">
-            <div class="alert alert-danger" role="alert">
-                {{ error }}
-            </div>
-            
-            <div class="d-grid mt-4">
-                <a href="/" class="btn btn-primary">Return to Home</a>
-            </div>
+        <h1>Oops! Something went wrong</h1>
+        
+        <div class="error-message">
+            {% if message %}
+            <p>{{ message }}</p>
+            {% else %}
+            <p>We encountered an unexpected error while processing your request.</p>
+            {% endif %}
+        </div>
+        
+        <div class="error-actions">
+            <a href="javascript:history.back()" class="btn btn-outline">Go Back</a>
+            <a href="/" class="btn btn-primary">Go to Homepage</a>
+        </div>
+        
+        <div class="error-help">
+            <p>If the problem persists, please contact our <a href="/support">support team</a>.</p>
+            <p class="error-code">Error Code: {{ error_code|default('500') }}</p>
         </div>
     </div>
 </div>
