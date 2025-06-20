@@ -1,6 +1,8 @@
-# Dashboard controller
-# Last updated: 2025-06-20 04:01:48
-# Updated by: daparthi001
+"""
+Dashboard Controller for QuantumVestAI UI
+Last updated: 2025-06-20 04:32:00
+Author: daparthi001
+"""
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Query, status
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -486,7 +488,7 @@ async def admin_dashboard(
             "api_response_time": "245ms",
             "environment": os.getenv("ENVIRONMENT", "development"),
             "version": os.getenv("APP_VERSION", "1.5.2"),
-            "last_updated": os.getenv("LAST_UPDATED", "2025-06-20 04:01:48"),
+            "last_updated": os.getenv("LAST_UPDATED", "2025-06-20 04:32:00"),
             "updated_by": os.getenv("UPDATED_BY", "daparthi001")
         }
         
