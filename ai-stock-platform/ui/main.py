@@ -1,8 +1,8 @@
 """
-QuantumVestAI UI Main Module - Fixed Import and Template Issues
+QuantumVestAI UI Main Module - Fixed Logging Configuration Issue
 Created: 2025-06-17 01:50:11
-Updated: 2025-06-20 05:20:00
-Author: daparthi001main
+Updated: 2025-06-20 05:32:32
+Author: daparthi001
 """
 import os
 import json
@@ -11,17 +11,17 @@ from fastapi import FastAPI, HTTPException, Request, Form, status
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.middleware.cors import CORSMiddleware  # Added missing import
+from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timedelta
 import logging
 from pathlib import Path
 
-# Define BASE_DIR correctly
+# Define BASE_DIR
 BASE_DIR = Path(__file__).resolve().parent
 
-# Configure logging
+# Configure logging - FIX: Use getLevelName correctly with a valid level string
 logging.basicConfig(
-    level=logging.getLevelName(os.getenv("LOG_LEVEL", "INFO")),
+    level=logging.getLevelName(os.getenv("LOG_LEVEL", "INFO").upper()),  # Fixed: Use upper() to ensure correct format
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger("quantumvestai_ui")
@@ -56,6 +56,7 @@ API_V1_URL = f"{API_URL}/api/v1"
 # FIX: Import template_filters module, not just the register_filters function
 try:
     import utils.template_filters
+
     # Register template filters with app.state.templates
     utils.template_filters.register_filters(app)
     logger.info("Template filters registered successfully")
