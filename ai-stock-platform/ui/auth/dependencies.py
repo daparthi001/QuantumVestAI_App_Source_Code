@@ -1,5 +1,5 @@
 # Authentication dependencies
-# Last updated: 2025-06-20 02:53:45
+# Last updated: 2025-06-20 04:10:30
 # Updated by: daparthi001
 
 from fastapi import Depends, HTTPException, status, Request, Response, Cookie
@@ -94,6 +94,31 @@ async def get_current_user(
     except jwt.PyJWTError as e:
         logger.error(f"JWT validation error: {str(e)}")
         raise credentials_exception
+
+async def get_optional_current_user(
+    request: Request,
+    response: Response,
+    token: Optional[str] = Depends(oauth2_scheme),
+    session_token: Optional[str] = Cookie(None)
+) -> Optional[Dict[str, Any]]:
+    """
+    Similar to get_current_user but returns None instead of raising an exception
+    if no valid token is found. This is useful for routes that work with or without
+    authentication.
+    
+    Args:
+        request: FastAPI request object
+        response: FastAPI response object
+        token: Bearer token from Authorization header
+        session_token: Token from session cookie
+        
+    Returns:
+        Dict containing user information or None if not authenticated
+    """
+    try:
+        return await get_current_user(request, response, token, session_token)
+    except HTTPException:
+        return None
 
 async def validate_admin_access(user: Dict[str, Any] = Depends(get_current_user)):
     """
