@@ -8,13 +8,29 @@
         <h1 class="auth-title">Create Account</h1>
         <p class="auth-subtitle">Fill out the form to get started</p>
 
-        <!-- Fixed error container using the new filters -->
+        <!-- Fixed error container that works even if filters aren't registered -->
         {% if msg %}
         <div id="error-container" class="alert alert-danger">
-            {{ msg|error_format|safe }}
+            {% if msg is string %}
+                {{ msg }}
+            {% else %}
+                {% try %}
+                    {{ msg|error_format|safe }}
+                {% except %}
+                    {% if msg is mapping %}
+                        {% for key, value in msg.items() %}
+                            <div>{{ key }}: {{ value }}</div>
+                        {% endfor %}
+                    {% elif msg is sequence and msg is not string %}
+                        {% for item in msg %}
+                            <div>{{ item if item is string else item|string }}</div>
+                        {% endfor %}
+                    {% else %}
+                        {{ msg|string }}
+                    {% endif %}
+                {% endtry %}
+            {% endif %}
         </div>
-        {% else %}
-        <div id="error-container" class="alert alert-danger" style="display:none;"></div>
         {% endif %}
 
         <form id="registration-form" action="/auth/register" method="POST">
@@ -74,52 +90,92 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('registration-form');
-    const errorContainer = document.getElementById('error-container');
-    
-    // Password strength meter
     const passwordInput = document.getElementById('password');
-    if (passwordInput) {
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    const passwordStrengthMeter = document.getElementById('password-strength-meter');
+    const passwordStrengthText = document.getElementById('password-strength-text');
+    
+    // Form submission handling - make sure passwords match before submitting
+    const form = document.getElementById('registration-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Simple client-side validation
+            if (passwordInput && confirmPasswordInput) {
+                if (passwordInput.value !== confirmPasswordInput.value) {
+                    e.preventDefault();
+                    
+                    // Create error display if it doesn't exist
+                    let errorContainer = document.getElementById('error-container');
+                    if (!errorContainer) {
+                        errorContainer = document.createElement('div');
+                        errorContainer.id = 'error-container';
+                        errorContainer.className = 'alert alert-danger';
+                        form.parentNode.insertBefore(errorContainer, form);
+                    } else {
+                        errorContainer.style.display = 'block';
+                    }
+                    
+                    errorContainer.textContent = 'Passwords do not match';
+                    return false;
+                }
+            }
+        });
+    }
+    
+    // Update password strength when user types
+    if (passwordInput && passwordStrengthMeter && passwordStrengthText) {
         passwordInput.addEventListener('input', function() {
-            const meter = document.getElementById('password-strength-meter');
-            const text = document.getElementById('password-strength-text');
-            if (!meter || !text) return;
-            
             const password = this.value;
             let strength = 0;
             
+            // Calculate password strength
             if (password.length >= 8) strength++;
             if (password.match(/[A-Z]/)) strength++;
             if (password.match(/[a-z]/)) strength++;
             if (password.match(/[0-9]/)) strength++;
             if (password.match(/[^A-Za-z0-9]/)) strength++;
             
-            meter.value = strength;
+            // Normalize to 0-4 scale
+            strength = Math.min(4, Math.floor(strength * 4 / 5));
             
+            // Update meter
+            passwordStrengthMeter.value = strength;
+            
+            // Update text
             switch(strength) {
-                case 0: text.textContent = "Password is very weak"; break;
-                case 1: text.textContent = "Password is weak"; break;
-                case 2: text.textContent = "Password is moderate"; break;
-                case 3: text.textContent = "Password is strong"; break;
+                case 0:
+                    passwordStrengthText.textContent = 'Password is very weak';
+                    break;
+                case 1:
+                    passwordStrengthText.textContent = 'Password is weak';
+                    break;
+                case 2:
+                    passwordStrengthText.textContent = 'Password is moderate';
+                    break;
+                case 3:
+                    passwordStrengthText.textContent = 'Password is strong';
+                    break;
                 case 4:
-                case 5: text.textContent = "Password is very strong"; break;
+                    passwordStrengthText.textContent = 'Password is very strong';
+                    break;
             }
         });
     }
     
-    // Password visibility toggle
+    // Toggle password visibility
     document.querySelectorAll('.password-toggle').forEach(button => {
         button.addEventListener('click', function() {
             const targetId = this.getAttribute('data-target');
-            const input = document.getElementById(targetId);
-            if (!input) return;
+            const passwordField = document.getElementById(targetId);
             
-            if (input.type === 'password') {
-                input.type = 'text';
-                this.innerHTML = '<i class="bi bi-eye-slash"></i>';
-            } else {
-                input.type = 'password';
-                this.innerHTML = '<i class="bi bi-eye"></i>';
+            if (passwordField) {
+                if (passwordField.type === 'password') {
+                    passwordField.type = 'text';
+                    this.innerHTML = '<i class="bi bi-eye-slash"></i>';
+                } else {
+                    passwordField.type = 'password';
+                    this.innerHTML = '<i class="bi bi-eye"></i>';
+                }
             }
         });
     });

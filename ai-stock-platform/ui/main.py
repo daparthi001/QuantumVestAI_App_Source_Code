@@ -1,7 +1,6 @@
 """
-QuantumVestAI UI Main Module - Fixed Logging Configuration Issue
-Created: 2025-06-17 01:50:11
-Updated: 2025-06-20 05:32:32
+Main application file for QuantumVestAI UI
+Updated: 2025-06-20 18:41:30
 Author: daparthi001
 """
 import os
@@ -15,15 +14,48 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timedelta
 import logging
 from pathlib import Path
+from logging.config import dictConfig
+import sys
 
-# Define BASE_DIR
-BASE_DIR = Path(__file__).resolve().parent
+# Import controllers
+from controllers import auth_controller
+from utils.template_filters import register_filters  # Make sure this is imported
 
-# Configure logging - FIX: Use getLevelName correctly with a valid level string
-logging.basicConfig(
-    level=logging.getLevelName(os.getenv("LOG_LEVEL", "INFO").upper()),  # Fixed: Use upper() to ensure correct format
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
+# Configure logging
+log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
+log_config = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        },
+    },
+    "handlers": {
+        "default": {
+            "level": log_level,
+            "formatter": "standard",
+            "class": "logging.StreamHandler",
+            "stream": sys.stdout,
+        },
+        "file": {
+            "level": log_level,
+            "formatter": "standard", 
+            "class": "logging.FileHandler",
+            "filename": "logs/app.log",
+            "mode": "a",
+        },
+    },
+    "loggers": {
+        "quantumvestai_ui": {
+            "handlers": ["default", "file"],
+            "level": log_level,
+            "propagate": True
+        },
+    }
+}
+
+dictConfig(log_config)
 logger = logging.getLogger("quantumvestai_ui")
 
 # Create FastAPI application for UI
@@ -35,7 +67,7 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -664,4 +696,9 @@ async def dashboard(request: Request):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=3000, reload=True)
+    uvicorn.run(
+        "main:app", 
+        host="0.0.0.0", 
+        port=int(os.environ.get("PORT", 3000)), 
+        reload=os.environ.get("DEBUG", "false").lower() == "true"
+    )
