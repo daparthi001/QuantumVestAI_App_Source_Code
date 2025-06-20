@@ -1,5 +1,5 @@
 # Dashboard controller
-# Last updated: 2025-06-20 02:53:45
+# Last updated: 2025-06-20 03:54:30
 # Updated by: daparthi001
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Query, status
@@ -12,8 +12,56 @@ import time
 import json
 import os
 from datetime import datetime, timedelta
+
+# Import auth dependencies
 from auth.dependencies import get_current_user, validate_admin_access
-from metrics import http_requests_total, http_request_duration_seconds
+
+# Import metrics with fallback for when the module doesn't exist
+try:
+    from metrics import http_requests_total, http_request_duration_seconds
+    metrics_available = True
+except ImportError:
+    # Create mock metrics objects if the metrics module is not available
+    class MockMetric:
+        def labels(self, **kwargs):
+            return self
+        def inc(self):
+            pass
+        def observe(self, value):
+            pass
+    
+    http_requests_total = MockMetric()
+    http_request_duration_seconds = MockMetric()
+    metrics_available = False
+    
+    # Create the metrics module dynamically
+    import sys
+    from prometheus_client import Counter, Histogram
+    
+    # Create the metrics module
+    metrics_module = type(sys)('metrics')
+    
+    # Add the metrics to the module
+    metrics_module.http_requests_total = Counter(
+        'http_requests_total', 
+        'Total number of HTTP requests',
+        ['method', 'endpoint', 'status']
+    )
+    
+    metrics_module.http_request_duration_seconds = Histogram(
+        'http_request_duration_seconds', 
+        'HTTP request duration in seconds',
+        ['method', 'endpoint']
+    )
+    
+    # Add the module to sys.modules
+    sys.modules['metrics'] = metrics_module
+    
+    # Re-import the metrics
+    from metrics import http_requests_total, http_request_duration_seconds
+    metrics_available = True
+    
+    logging.getLogger(__name__).info("Created metrics module dynamically")
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -111,9 +159,12 @@ async def dashboard(
         dashboard_data = None if refresh else get_cached_data(cache_key)
         
         if dashboard_data is None:
+            # Check if app.state has settings attribute
+            api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://api:8000'))
+            
             # Get portfolio data from API
             async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-                api_url = f"{request.app.state.settings.API_URL}/api/portfolio/summary?period={period}"
+                api_url = f"{api_url_base}/api/portfolio/summary?period={period}"
                 response = await client.get(
                     api_url,
                     headers={"Authorization": f"Bearer {user.get('token')}"}
@@ -131,7 +182,7 @@ async def dashboard(
             # Get market overview
             async with httpx.AsyncClient(timeout=TIMEOUT) as client:
                 response = await client.get(
-                    f"{request.app.state.settings.API_URL}/api/market/overview",
+                    f"{api_url_base}/api/market/overview",
                     headers={"Authorization": f"Bearer {user.get('token')}"}
                 )
                 
@@ -144,7 +195,7 @@ async def dashboard(
             # Get recent transactions
             async with httpx.AsyncClient(timeout=TIMEOUT) as client:
                 response = await client.get(
-                    f"{request.app.state.settings.API_URL}/api/transactions/recent?limit=5",
+                    f"{api_url_base}/api/transactions/recent?limit=5",
                     headers={"Authorization": f"Bearer {user.get('token')}"}
                 )
                 
@@ -196,11 +247,18 @@ async def dashboard(
             endpoint="/dashboard"
         ).observe(duration)
         
-        return templates.TemplateResponse("dashboard/index.html", context)
+        # Get correct templates object
+        templates_obj = getattr(request.app.state, 'templates', templates)
+        
+        return templates_obj.TemplateResponse("dashboard/index.html", context)
     
     except httpx.RequestError as e:
         logger.error(f"Request error: {str(e)}")
-        return templates.TemplateResponse(
+        
+        # Get correct templates object
+        templates_obj = getattr(request.app.state, 'templates', templates)
+        
+        return templates_obj.TemplateResponse(
             "error.html", 
             {
                 "request": request,
@@ -213,7 +271,11 @@ async def dashboard(
         raise e
     except Exception as e:
         logger.exception(f"Unexpected error: {str(e)}")
-        return templates.TemplateResponse(
+        
+        # Get correct templates object
+        templates_obj = getattr(request.app.state, 'templates', templates)
+        
+        return templates_obj.TemplateResponse(
             "error.html", 
             {
                 "request": request,
@@ -395,6 +457,9 @@ async def admin_dashboard(
             "api_response_time": "245ms"
         }
         
+        # Get correct templates object
+        templates_obj = getattr(request.app.state, 'templates', templates)
+        
         context = {
             "request": request,
             "user": user,
@@ -402,7 +467,7 @@ async def admin_dashboard(
             "admin_data": admin_data
         }
         
-        return templates.TemplateResponse("admin/dashboard.html", context)
+        return templates_obj.TemplateResponse("admin/dashboard.html", context)
     
     except HTTPException:
         # Re-raise HTTP exceptions (like 403 from validate_admin_access)
