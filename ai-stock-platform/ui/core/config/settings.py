@@ -1,12 +1,13 @@
 """
 QuantumVestAI Application Settings
-Last Updated: 2025-06-18 21:25:28
-Author: daparthi001
+Last Updated: 2025-06-20 05:47:22
+Author: daparthi001settings.py
 """
 import os
 from pathlib import Path
 from dotenv import load_dotenv
 from typing import Dict, Any, List, Optional
+from functools import lru_cache
 
 # Load environment variables from .env file if it exists
 load_dotenv()
@@ -181,3 +182,14 @@ class Settings:
 
 # Create settings instance
 settings = Settings()
+
+# Add the missing get_settings function for forecast routes
+@lru_cache()
+def get_settings() -> Settings:
+    """
+    Returns the settings instance with caching.
+    
+    This function is required by several modules including forecast routes.
+    Using lru_cache decorator ensures we don't create multiple instances.
+    """
+    return settings
