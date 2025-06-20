@@ -1,7 +1,7 @@
 """
 Authentication Controller for QuantumVestAI
-Updated: 2025-06-20 05:50:24
-Author: daparthi001auth_controllers.py
+Updated: 2025-06-20 06:04:23
+Author: daparthi001auth_controller.py
 """
 import os
 import requests
@@ -343,7 +343,8 @@ async def register_post(
                 if response.status_code == 201:
                     registration_successful = True
                     break
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Registration attempt with payload format failed: {str(e)}")
                 continue
                 
         # Check for API errors
@@ -352,10 +353,32 @@ async def register_post(
             try:
                 if response:
                     error_data = response.json()
-                    if "detail" in error_data:
-                        error_msg = error_data["detail"]
-            except:
-                pass
+                    # FIX: Better handling of error messages
+                    if isinstance(error_data, list):
+                        # Handle array of error objects
+                        error_messages = []
+                        for err in error_data:
+                            if isinstance(err, dict):
+                                if "msg" in err:
+                                    error_messages.append(err["msg"])
+                        if error_messages:
+                            error_msg = ". ".join(error_messages)
+                    elif isinstance(error_data, dict):
+                        if "detail" in error_data:
+                            if isinstance(error_data["detail"], list):
+                                # Handle array of error details
+                                error_messages = []
+                                for err in error_data["detail"]:
+                                    if isinstance(err, dict):
+                                        field = err.get("loc", ["unknown"])[-1]
+                                        msg = err.get("msg", "Invalid value")
+                                        error_messages.append(f"{field.capitalize()}: {msg}")
+                                if error_messages:
+                                    error_msg = ". ".join(error_messages)
+                            else:
+                                error_msg = str(error_data["detail"])
+            except Exception as e:
+                logger.error(f"Error parsing API error response: {str(e)}")
                 
             return templates.TemplateResponse(
                 "auth/register.html",

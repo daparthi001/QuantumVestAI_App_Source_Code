@@ -1,8 +1,8 @@
 /**
- * Registration form handler for QuantumVestAI UI
+ * Registration form handler for QuantumVestAI
  * Created: 2025-06-17 01:50:11
- * Updated: 2025-06-20 04:54:15
- * Author: daparthi001yes
+ * Updated: 2025-06-20 14:27:52
+ * Author: daparthi001
  */
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Clear any previous error messages
             if (errorContainer) {
                 errorContainer.style.display = 'none';
-                errorContainer.innerText = '';
+                errorContainer.innerHTML = '';
             }
             
             // Get form values
@@ -51,18 +51,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (validationErrors.length > 0) {
                 // Show validation errors
                 if (errorContainer) {
-                    errorContainer.innerText = validationErrors.join('\n');
+                    // Create error message HTML - FIX: Join array items with <br> for proper display
+                    const errorHTML = validationErrors.map(error => `<div>${error}</div>`).join('');
+                    errorContainer.innerHTML = errorHTML;
                     errorContainer.style.display = 'block';
                 }
                 return;
             }
-            
-            // Create registration data
-            const registrationData = {
-                username: username,
-                email: email,
-                password: password
-            };
             
             // Show loading indicator
             const submitButton = document.querySelector('button[type="submit"]');
@@ -70,28 +65,52 @@ document.addEventListener('DOMContentLoaded', function() {
             submitButton.disabled = true;
             submitButton.innerText = 'Creating Account...';
             
+            // FIX: Use FormData instead of JSON to match server expectations
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('email', email);
+            formData.append('password', password);
+            formData.append('confirm_password', confirmPassword);
+            
             // Send registration request
             fetch('/auth/register', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(registrationData)
+                // FIX: Do not set Content-Type header when using FormData
+                // The browser will automatically set the correct multipart/form-data content type
+                body: formData
             })
             .then(response => {
-                if (response.ok) {
-                    // Registration successful, redirect to login page
-                    window.location.href = '/login?msg=Registration+successful!+Please+log+in.';
-                    return;
+                // Check if the response is a redirect
+                if (response.redirected) {
+                    // Follow the redirect
+                    window.location.href = response.url;
+                    return null;
                 }
                 
-                // Parse response to get error details
-                return response.json().then(errorData => {
-                    throw errorData;
+                // If response is JSON
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                    return response.json().then(data => {
+                        if (!response.ok) {
+                            throw data;
+                        }
+                        return data;
+                    });
+                }
+                
+                // If response is HTML
+                return response.text().then(html => {
+                    if (!response.ok) {
+                        // Try to extract error message from HTML
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = html;
+                        const msgElement = tempDiv.querySelector('[id*="msg"], .alert, [class*="error"]');
+                        throw new Error(msgElement ? msgElement.textContent.trim() : 'Registration failed');
+                    }
+                    return html;
                 });
             })
             .then(data => {
-                // This block will only execute for successful responses
+                // This block will only execute for successful responses that aren't redirects
                 window.location.href = '/login?msg=Registration+successful!+Please+log+in.';
             })
             .catch(error => {
@@ -99,38 +118,55 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitButton.disabled = false;
                 submitButton.innerText = originalText;
                 
-                // Process and display error messages
-                let errorMessage = '';
+                // Process and display error messages properly
+                let errorMessages = [];
                 
-                if (error.detail) {
-                    // Handle FastAPI validation errors
-                    if (Array.isArray(error.detail)) {
-                        // Handle structured validation errors
-                        errorMessage = error.detail.map(item => {
-                            // Extract field name from path (usually the last element)
-                            const field = item.loc.slice(-1)[0];
-                            return `${field}: ${item.msg}`;
-                        }).join('\n');
-                    } else if (typeof error.detail === 'string') {
-                        // Handle string error message
-                        errorMessage = error.detail;
+                // Handle different error formats
+                if (error) {
+                    if (typeof error === 'string') {
+                        // Direct string error
+                        errorMessages.push(error);
+                    } else if (error.detail) {
+                        // Handle FastAPI validation errors
+                        if (Array.isArray(error.detail)) {
+                            // Handle structured validation errors
+                            error.detail.forEach(err => {
+                                // Extract field name from path (usually the last element)
+                                const field = err.loc ? (err.loc.slice(-1)[0] || 'Error') : 'Error';
+                                errorMessages.push(`${field}: ${err.msg || 'Invalid value'}`);
+                            });
+                        } else if (typeof error.detail === 'string') {
+                            // Handle string error message
+                            errorMessages.push(error.detail);
+                        } else {
+                            // Convert object to string if it's an object
+                            errorMessages.push(JSON.stringify(error.detail));
+                        }
+                    } else if (error.message) {
+                        // Object with message property
+                        errorMessages.push(error.message);
                     } else {
-                        // Convert object to string if it's an object
-                        errorMessage = JSON.stringify(error.detail);
+                        // Try to stringify the whole error object
+                        try {
+                            errorMessages.push(JSON.stringify(error));
+                        } catch (e) {
+                            errorMessages.push("An unknown error occurred");
+                        }
                     }
-                } else if (typeof error === 'string') {
-                    // Direct string error
-                    errorMessage = error;
                 } else {
                     // Generic error message as fallback
-                    errorMessage = 'An error occurred during registration. Please try again later.';
-                    console.error('Registration error:', error);
+                    errorMessages.push('An error occurred during registration. Please try again later.');
                 }
                 
                 // Display error message
                 if (errorContainer) {
-                    errorContainer.innerText = errorMessage;
+                    // Create proper HTML for error messages
+                    const errorHTML = errorMessages.map(msg => `<div>${msg}</div>`).join('');
+                    errorContainer.innerHTML = errorHTML;
                     errorContainer.style.display = 'block';
+                    
+                    // Scroll to error container
+                    errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             });
         });
