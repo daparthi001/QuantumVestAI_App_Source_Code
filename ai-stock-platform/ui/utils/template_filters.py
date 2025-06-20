@@ -1,7 +1,7 @@
 """
 Template filters for QuantumVestAI UI
 Created: 2025-06-17 01:50:11
-Updated: 2025-06-20 14:51:36
+Updated: 2025-06-20 20:04:17
 Author: daparthi001
 """
 
@@ -211,12 +211,6 @@ def stringify(value):
     """
     Convert any value to a human-readable string representation.
     This is particularly useful for error messages and debugging.
-    
-    Handles:
-    - Dictionaries (recursively formats as key-value pairs)
-    - Lists (joins items with commas)
-    - Objects (converts to string)
-    - None (returns empty string)
     """
     if value is None:
         return ""
@@ -249,9 +243,7 @@ def stringify(value):
 def error_format(error_data):
     """
     Format error data specifically for display in templates.
-    This function is designed to handle common API error formats.
-    
-    Returns formatted HTML string with error messages.
+    Handles FastAPI validation errors and other API error formats.
     """
     if not error_data:
         return ""
@@ -335,9 +327,6 @@ def register_filters(app):
     """
     Register all template filters with the application.
     This function is called from main.py after templates are set up.
-    
-    In FastAPI, filters need to be registered with the Jinja2Templates object,
-    not with the app itself.
     """
     import logging
     logger = logging.getLogger("quantumvestai_ui.filters")

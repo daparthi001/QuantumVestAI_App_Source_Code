@@ -1,58 +1,61 @@
-{% extends "auth_layout.html" %}
+{% extends "base.html" %}
 
-{% block title %}Login - QuantumVestAI{% endblock %}
+{% block title %}Login | QuantumVestAI{% endblock %}
 
 {% block content %}
 <div class="auth-container">
     <div class="auth-card">
-        <div class="auth-header">
-            <a href="/" class="auth-logo">
-                <img src="{{ url_for('static', path='/img/logo.svg') }}" alt="QuantumVestAI">
-            </a>
-            <h1 class="auth-title">Welcome Back</h1>
-            <p class="auth-subtitle">Sign in to continue to QuantumVestAI</p>
-        </div>
-        
+        <h1 class="auth-title">Sign In</h1>
+        <p class="auth-subtitle">Access your QuantumVestAI account</p>
+
         {% if msg %}
-        <div class="alert alert-{% if 'success' in msg %}success{% else %}danger{% endif %} alert-dismissible fade show" role="alert">
-            {{ msg }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="alert alert-{{ msg_type or 'danger' }}">
+            {% if msg is string %}
+                {{ msg }}
+            {% else %}
+                {% for item in msg %}
+                    {% if item is mapping %}
+                        {% for k, v in item.items() %}
+                            <div>{{ k }}: {{ v }}</div>
+                        {% endfor %}
+                    {% else %}
+                        <div>{{ item }}</div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
         </div>
         {% endif %}
-        
-        <div class="auth-body">
-            <form method="post" action="/login" id="loginForm">
-                <div class="mb-3">
-                    <label for="username" class="form-label">Username</label>
-                    <input type="text" class="form-control" id="username" name="username" required autofocus>
+
+        <form action="/auth/login" method="POST">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" class="form-control" value="{{ username or '' }}" required autofocus>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="password-input-container">
+                    <input type="password" id="password" name="password" class="form-control" required>
+                    <button type="button" class="password-toggle" data-target="password">
+                        <i class="bi bi-eye"></i>
+                    </button>
                 </div>
-                
-                <div class="mb-4">
-                    <label for="password" class="form-label">Password</label>
-                    <div class="password-input">
-                        <input type="password" class="form-control" id="password" name="password" required>
-                        <button type="button" class="password-toggle" tabindex="-1">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="mb-3 d-flex justify-content-between align-items-center">
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="remember" name="remember">
-                        <label class="form-check-label" for="remember">Remember me</label>
-                    </div>
-                    <a href="/forgot-password" class="text-reset small">Forgot Password?</a>
-                </div>
-                
-                <div class="d-grid">
-                    <button type="submit" class="btn btn-primary" id="loginBtn">Sign In</button>
-                </div>
-            </form>
-        </div>
+            </div>
+            
+            <div class="form-group form-check">
+                <input type="checkbox" class="form-check-input" id="remember" name="remember" value="true">
+                <label class="form-check-label" for="remember">Remember me</label>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+            
+            <div class="auth-links">
+                <a href="/auth/password-reset">Forgot password?</a>
+            </div>
+        </form>
         
         <div class="auth-footer">
-            <p class="text-center">Don't have an account? <a href="/register">Sign up</a></p>
+            Don't have an account? <a href="/auth/register">Sign up</a>
         </div>
     </div>
 </div>
@@ -60,148 +63,23 @@
 
 {% block scripts %}
 <script>
-/**
- * Enhanced Login Form JavaScript - Updated for Direct Routes
- * Date: 2025-06-17 20:20:15
- * Author: daparthi001
- */
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Login page script loaded');
-    
     // Password visibility toggle
-    const toggleButton = document.querySelector('.password-toggle');
-    
-    if (toggleButton) {
-        toggleButton.addEventListener('click', function() {
-            const input = this.parentNode.querySelector('input');
-            const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-            input.setAttribute('type', type);
+    document.querySelectorAll('.password-toggle').forEach(button => {
+        button.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const input = document.getElementById(targetId);
+            if (!input) return;
             
-            // Toggle icon
-            const icon = this.querySelector('i');
-            icon.classList.toggle('bi-eye');
-            icon.classList.toggle('bi-eye-slash');
+            if (input.type === 'password') {
+                input.type = 'text';
+                this.innerHTML = '<i class="bi bi-eye-slash"></i>';
+            } else {
+                input.type = 'password';
+                this.innerHTML = '<i class="bi bi-eye"></i>';
+            }
         });
-    }
-
-    // Emergency login function
-    async function emergencyLogin(username, password) {
-        try {
-            console.log('Attempting emergency login for:', username);
-            
-            const response = await fetch('/emergency-login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    username: username,
-                    password: password
-                })
-            });
-            
-            console.log('Emergency login response status:', response.status);
-            
-            if (response.ok) {
-                try {
-                    const data = await response.json();
-                    console.log('Emergency login response:', data);
-                    
-                    if (data.success) {
-                        // Store the token
-                        localStorage.setItem('auth_token', data.access_token);
-                        
-                        // Redirect to dashboard
-                        window.location.href = data.redirect_url || '/dashboard';
-                        return true;
-                    }
-                } catch (parseErr) {
-                    console.error('Error parsing JSON:', parseErr);
-                    // If JSON parsing fails but response was OK, still consider it successful
-                    if (response.redirected) {
-                        window.location.href = response.url;
-                        return true;
-                    }
-                }
-            }
-            return false;
-        } catch (error) {
-            console.error('Emergency login error:', error);
-            return false;
-        }
-    }
-
-    // Handle login form submission
-    const loginForm = document.getElementById('loginForm');
-    const loginBtn = document.getElementById('loginBtn');
-    
-    if (loginForm) {
-        console.log('Login form found, attaching submit handler');
-        
-        loginForm.addEventListener('submit', function(e) {
-            // Let the form submit normally - this will send the form POST to /login
-            console.log('Form submitting normally to:', loginForm.action);
-            
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            
-            // Just do basic validation
-            if (!username || !password) {
-                e.preventDefault();
-                showAlert('Please enter both username and password', 'danger');
-                return false;
-            }
-            
-            // Show loading state
-            if (loginBtn) {
-                loginBtn.disabled = true;
-                loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Signing in...';
-            }
-            
-            // Let the form submit normally
-            return true;
-        });
-    }
-    
-    function showAlert(message, type = 'danger') {
-        // Remove any existing alerts
-        const existingAlerts = document.querySelectorAll('.alert');
-        existingAlerts.forEach(alert => alert.remove());
-        
-        // Create new alert
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-        alertDiv.role = 'alert';
-        alertDiv.innerHTML = message;
-        
-        const closeButton = document.createElement('button');
-        closeButton.type = 'button';
-        closeButton.className = 'btn-close';
-        closeButton.setAttribute('data-bs-dismiss', 'alert');
-        closeButton.setAttribute('aria-label', 'Close');
-        
-        alertDiv.appendChild(closeButton);
-        
-        // Insert before the form
-        const authHeader = document.querySelector('.auth-header');
-        if (authHeader && authHeader.parentNode) {
-            authHeader.parentNode.insertBefore(alertDiv, authHeader.nextSibling);
-        }
-    }
-    
-    // Check for query parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    // Show registration success message
-    if (urlParams.get('registered') === 'true') {
-        showAlert('Registration successful! Please sign in with your new account.', 'success');
-    }
-    
-    // Show message if present in URL
-    if (urlParams.get('msg')) {
-        showAlert(urlParams.get('msg'), urlParams.get('msg').includes('success') ? 'success' : 'danger');
-    }
+    });
 });
 </script>
 {% endblock %}
