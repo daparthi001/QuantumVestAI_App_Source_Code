@@ -1,59 +1,229 @@
 """
-Forecasting routes for QuantumVestAI
-Created: 2025-05-19 03:44:39
-Author: daparthi001
-Updated: 2025-06-16 22:11:00 by daparthi001
+Forecast routes for QuantumVestAI UI
+Last updated: 2025-06-20 04:18:52
+Updated by: daparthi001
 """
-from fastapi import APIRouter, Request, Depends, HTTPException
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
+
+from fastapi import APIRouter, Request, Depends, HTTPException, Query, Path
+from fastapi.responses import HTMLResponse, JSONResponse
 import logging
-from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
+import httpx
+import os
+from datetime import datetime, timedelta
+import json
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
 # Create router
-router = APIRouter()
+router = APIRouter(
+    prefix="/forecast",
+    tags=["forecast"]
+)
 
-# Try to import settings and auth dependencies
+# Try to import dependencies
 try:
-    from core.config import settings
-    
-    # Direct dependency function to avoid importing from routes.auth
-    async def get_user_from_token(token: str):
-        from routes.auth import get_current_user
-        return await get_current_user(token)
-    
-    # Define custom dependency
-    oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
-    
-    async def get_current_user(token: str = Depends(oauth2_scheme)):
-        return await get_user_from_token(token)
-    
+    from core.config.settings import get_settings
+    settings = get_settings()
+    logger.info(f"Successfully loaded settings for forecast routes")
 except ImportError as e:
-    logger.error(f"Error importing dependencies: {e}")
-    
-    # Fallback dependencies
-    async def get_current_user(token = None):
-        return {"username": "unknown", "role": "guest"}
+    logger.error(f"Error importing dependencies: {str(e)}")
+    # Create mock settings
+    settings = {
+        "API_URL": os.getenv("API_URL", "http://api:8000"),
+        "DEBUG": os.getenv("DEBUG", "false").lower() == "true",
+        "ENVIRONMENT": os.getenv("ENVIRONMENT", "development")
+    }
+    logger.warning(f"Using fallback settings in forecast routes: {settings}")
+except NameError as e:
+    logger.error(f"Error setting up templates: {str(e)}")
+    # Create mock settings
+    settings = {
+        "API_URL": os.getenv("API_URL", "http://api:8000"),
+        "DEBUG": os.getenv("DEBUG", "false").lower() == "true",
+        "ENVIRONMENT": os.getenv("ENVIRONMENT", "development")
+    }
+    logger.warning(f"Using fallback settings in forecast routes: {settings}")
 
-# Set up templates
+# Try to import auth dependencies
 try:
-    from pathlib import Path
-    templates_dir = Path(settings.TEMPLATES_DIR)
-    templates = Jinja2Templates(directory=templates_dir)
-except Exception as e:
-    logger.error(f"Error setting up templates: {e}")
-    # Fallback to a basic path
-    from pathlib import Path
-    templates = Jinja2Templates(directory="templates")
+    from auth.dependencies import get_current_user, get_optional_current_user
+except ImportError:
+    logger.warning("Auth dependencies not found. Using mock functions.")
+    
+    async def get_current_user(request: Request, response=None):
+        """Mock function that returns a default user"""
+        return {"username": "defaultuser", "token": "mock_token"}
+    
+    async def get_optional_current_user(request: Request, response=None):
+        """Mock function that optionally returns a default user"""
+        return {"username": "defaultuser", "token": "mock_token"}
 
-# Forecast routes
-@router.get("/", response_class=HTMLResponse)
-async def forecast_home(request: Request, current_user = Depends(get_current_user)):
-    return templates.TemplateResponse(
-        "forecast/index.html", 
-        {"request": request, "user": current_user}
-    )
+# Helper function to get templates
+def get_templates(request):
+    """Helper function to get templates from app state or create a new instance."""
+    templates = getattr(request.app.state, 'templates', None)
+    if templates is None:
+        from fastapi.templating import Jinja2Templates
+        templates = Jinja2Templates(directory="templates")
+    return templates
+
+@router.get("", response_class=HTMLResponse)
+async def forecast_home(
+    request: Request,
+    user = Depends(get_current_user)
+):
+    """
+    Render the forecast home page.
+    """
+    try:
+        # Get templates
+        templates = get_templates(request)
+        
+        # Get API URL from settings or environment
+        api_url = getattr(settings, "API_URL", os.getenv("API_URL", "http://api:8000"))
+        
+        # Render template
+        return templates.TemplateResponse(
+            "forecast/index.html",
+            {
+                "request": request,
+                "user": user,
+                "page_title": "AI Market Forecasts",
+                "current_date": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+            }
+        )
+    except Exception as e:
+        logger.exception(f"Error rendering forecast home: {str(e)}")
+        
+        # Get templates
+        templates = get_templates(request)
+        
+        # Render error template
+        return templates.TemplateResponse(
+            "error.html",
+            {
+                "request": request,
+                "user": user,
+                "message": "An error occurred loading the forecast page.",
+                "error_code": "FORECAST_ERR"
+            },
+            status_code=500
+        )
+
+@router.get("/stock/{symbol}", response_class=HTMLResponse)
+async def stock_forecast(
+    request: Request,
+    symbol: str = Path(..., description="Stock symbol"),
+    period: str = Query("month", description="Forecast period (day, week, month, quarter, year)"),
+    user = Depends(get_current_user)
+):
+    """
+    Render the stock forecast page for a specific stock.
+    """
+    try:
+        # Get templates
+        templates = get_templates(request)
+        
+        # Get API URL from settings or environment
+        api_url = getattr(settings, "API_URL", os.getenv("API_URL", "http://api:8000"))
+        
+        # Create mock forecast data (in a real app, this would come from an API)
+        forecast_data = {
+            "symbol": symbol.upper(),
+            "name": f"{symbol.upper()} Corporation",
+            "current_price": 178.50,
+            "forecast_price": 195.25,
+            "forecast_change": 16.75,
+            "forecast_change_percent": 9.38,
+            "confidence": 72,
+            "period": period,
+            "generated_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "chart_data": {
+                "labels": ["Today", "Week 1", "Week 2", "Week 3", "Week 4"],
+                "values": [178.50, 182.25, 186.75, 190.50, 195.25],
+                "confidence_intervals": [
+                    [176.50, 180.50],
+                    [179.00, 185.50],
+                    [182.25, 191.25],
+                    [185.00, 196.00],
+                    [189.75, 200.75]
+                ]
+            },
+            "factors": [
+                {"name": "Technical Analysis", "impact": 0.65, "direction": "positive"},
+                {"name": "Market Sentiment", "impact": 0.45, "direction": "positive"},
+                {"name": "Sector Performance", "impact": 0.25, "direction": "positive"},
+                {"name": "Economic Indicators", "impact": 0.15, "direction": "negative"}
+            ]
+        }
+        
+        # Render template
+        return templates.TemplateResponse(
+            "forecast/stock.html",
+            {
+                "request": request,
+                "user": user,
+                "page_title": f"{symbol.upper()} Forecast",
+                "stock_symbol": symbol.upper(),
+                "forecast": forecast_data,
+                "periods": [
+                    {"value": "day", "label": "1 Day"},
+                    {"value": "week", "label": "1 Week"},
+                    {"value": "month", "label": "1 Month"},
+                    {"value": "quarter", "label": "3 Months"},
+                    {"value": "year", "label": "1 Year"}
+                ],
+                "selected_period": period
+            }
+        )
+    except Exception as e:
+        logger.exception(f"Error rendering stock forecast: {str(e)}")
+        
+        # Get templates
+        templates = get_templates(request)
+        
+        # Render error template
+        return templates.TemplateResponse(
+            "error.html",
+            {
+                "request": request,
+                "user": user,
+                "message": f"An error occurred loading the forecast for {symbol}.",
+                "error_code": "STOCK_FORECAST_ERR"
+            },
+            status_code=500
+        )
+
+@router.get("/api/forecast/{symbol}", response_model=dict)
+async def api_stock_forecast(
+    request: Request,
+    symbol: str = Path(..., description="Stock symbol"),
+    period: str = Query("month", description="Forecast period"),
+    user = Depends(get_current_user)
+):
+    """
+    API endpoint to get forecast data for a stock.
+    """
+    try:
+        # Create mock forecast data (in a real app, this would come from an API)
+        forecast_data = {
+            "symbol": symbol.upper(),
+            "forecast_price": 195.25,
+            "forecast_change_percent": 9.38,
+            "confidence": 72,
+            "period": period,
+            "generated_at": datetime.utcnow().isoformat(),
+            "chart_data": {
+                "labels": ["Today", "Week 1", "Week 2", "Week 3", "Week 4"],
+                "values": [178.50, 182.25, 186.75, 190.50, 195.25]
+            }
+        }
+        
+        return forecast_data
+    except Exception as e:
+        logger.exception(f"API forecast error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error generating forecast"
+        )

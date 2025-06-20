@@ -1,6 +1,6 @@
 """
 Market Controller for QuantumVestAI UI
-Last updated: 2025-06-20 04:11:30
+Last updated: 2025-06-20 04:18:52
 Updated by: daparthi001
 """
 
@@ -327,7 +327,7 @@ async def search_stocks(
                 async with httpx.AsyncClient(timeout=TIMEOUT) as client:
                     headers = {}
                     if user:
-                        headers["Authorization"] = f"Bearer {user.get('token')}"}
+                        headers["Authorization"] = f"Bearer {user.get('token')}"
                     
                     response = await client.get(
                         f"{api_url_base}/api/stocks/search?query={query}",
