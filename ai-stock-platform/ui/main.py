@@ -1,8 +1,8 @@
 """
 QuantumVestAI UI Main Module - Fixed Import and Template Issues
 Created: 2025-06-17 01:50:11
-Updated: 2025-06-20 03:48:17
-Author: daparthi001
+Updated: 2025-06-20 05:20:00
+Author: daparthi001main
 """
 import os
 import json
@@ -11,9 +11,20 @@ from fastapi import FastAPI, HTTPException, Request, Form, status
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware  # Added missing import
 from datetime import datetime, timedelta
 import logging
 from pathlib import Path
+
+# Define BASE_DIR correctly
+BASE_DIR = Path(__file__).resolve().parent
+
+# Configure logging
+logging.basicConfig(
+    level=logging.getLevelName(os.getenv("LOG_LEVEL", "INFO")),
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger("quantumvestai_ui")
 
 # Create FastAPI application for UI
 app = FastAPI(
@@ -21,15 +32,14 @@ app = FastAPI(
     description="Web UI for QuantumVestAI Platform",
 )
 
-# Get base directory
-BASE_DIR = Path(__file__).resolve().parent
-
-# Setup logging
-logging.basicConfig(
-    level=logging.DEBUG,  # Changed to DEBUG for more verbose logging
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
-logger = logging.getLogger("quantumvestai_ui")
 
 # Mount static files
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
@@ -44,27 +54,89 @@ API_V1_URL = f"{API_URL}/api/v1"
 
 # Import utility functions AFTER app creation to ensure app.state.templates exists
 # FIX: Import template_filters module, not just the register_filters function
-import utils.template_filters
+try:
+    import utils.template_filters
+    # Register template filters with app.state.templates
+    utils.template_filters.register_filters(app)
+    logger.info("Template filters registered successfully")
+except Exception as e:
+    logger.error(f"Error registering template filters: {str(e)}")
+    
+    # Create fallback functions for critical template filters
+    def get_asset_url(path, version=None):
+        if not version:
+            version = os.environ.get('APP_VERSION', 'v1.5.2')
+        timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+        return f"/static/{path}?v={version}&t={timestamp}"
+    
+    # Add to Jinja environment
+    templates.env.filters['get_asset_url'] = get_asset_url
+    logger.info("Added fallback for get_asset_url filter")
 
-# Register template filters with app.state.templates
-utils.template_filters.register_filters(app)
+# Import proxy router - with error handling
+try:
+    from routes import api_proxy
+except ImportError as e:
+    logger.error(f"Could not import api_proxy: {str(e)}")
+    # Create dummy router as fallback
+    from fastapi import APIRouter
+    api_proxy = APIRouter()
 
-# Import proxy router
-from routes import api_proxy 
+# Import controllers with error handling
+controllers = {}
+try:
+    from controllers import auth_controller
+    controllers["auth_controller"] = auth_controller
+except ImportError as e:
+    logger.error(f"Could not import auth_controller: {str(e)}")
 
-# THEN import controllers after templates are set up
-# Import controllers
-from controllers import (
-    auth_controller, 
-    dashboard_controller,
-    market_controller,
-    stock_controller,
-    watchlist_controller,
-    profile_controller,
-    forecast_controller,
-    news_controller,
-    feature_controller  # Fixed import syntax
-)
+try:
+    from controllers import dashboard_controller
+    controllers["dashboard_controller"] = dashboard_controller
+except ImportError as e:
+    logger.error(f"Could not import dashboard_controller: {str(e)}")
+
+try:
+    from controllers import market_controller
+    controllers["market_controller"] = market_controller
+except ImportError as e:
+    logger.error(f"Could not import market_controller: {str(e)}")
+
+try:
+    from controllers import stock_controller
+    controllers["stock_controller"] = stock_controller
+except ImportError as e:
+    logger.error(f"Could not import stock_controller: {str(e)}")
+
+try:
+    from controllers import watchlist_controller
+    controllers["watchlist_controller"] = watchlist_controller
+except ImportError as e:
+    logger.error(f"Could not import watchlist_controller: {str(e)}")
+
+try:
+    from controllers import profile_controller
+    controllers["profile_controller"] = profile_controller
+except ImportError as e:
+    logger.error(f"Could not import profile_controller: {str(e)}")
+
+try:
+    from controllers import forecast_controller
+    controllers["forecast_controller"] = forecast_controller
+except ImportError as e:
+    logger.error(f"Could not import forecast_controller: {str(e)}")
+
+try:
+    from controllers import news_controller
+    controllers["news_controller"] = news_controller
+except ImportError as e:
+    logger.error(f"Could not import news_controller: {str(e)}")
+
+try:
+    from controllers import feature_controller
+    controllers["feature_controller"] = feature_controller
+except ImportError as e:
+    logger.error(f"Could not import feature_controller: {str(e)}")
 
 # Debug middleware to log all requests
 @app.middleware("http")
@@ -247,13 +319,27 @@ async def index(request: Request):
         logger.info(f"Rendering index page. API URL: {API_URL}")
         return app.state.templates.TemplateResponse(
             "index.html", 
-            {"request": request}
+            {
+                "request": request,
+                # Add get_asset_url directly to context if not registered
+                "get_asset_url": app.state.templates.env.filters.get("get_asset_url", 
+                    lambda path, version=None: f"/static/{path}?v={version or os.environ.get('APP_VERSION', 'v1.5.2')}"
+                )
+            }
         )
     except Exception as e:
         logger.error(f"Error rendering index page: {str(e)}")
-        return app.state.templates.TemplateResponse(
-            "error.html",
-            {"request": request, "error": str(e)},
+        return HTMLResponse(
+            content=f"""
+            <html>
+                <head><title>Error</title></head>
+                <body>
+                    <h1>Error rendering page</h1>
+                    <p>{str(e)}</p>
+                    <a href="/">Try again</a>
+                </body>
+            </html>
+            """,
             status_code=500
         )
 
@@ -263,13 +349,28 @@ async def register_page(request: Request, msg: str = None):
     try:
         return app.state.templates.TemplateResponse(
             "register.html", 
-            {"request": request, "msg": msg}
+            {
+                "request": request, 
+                "msg": msg,
+                # Add get_asset_url directly to context if not registered
+                "get_asset_url": app.state.templates.env.filters.get("get_asset_url", 
+                    lambda path, version=None: f"/static/{path}?v={version or os.environ.get('APP_VERSION', 'v1.5.2')}"
+                )
+            }
         )
     except Exception as e:
         logger.error(f"Error rendering register page: {str(e)}")
-        return app.state.templates.TemplateResponse(
-            "error.html",
-            {"request": request, "error": str(e)},
+        return HTMLResponse(
+            content=f"""
+            <html>
+                <head><title>Error</title></head>
+                <body>
+                    <h1>Error rendering registration page</h1>
+                    <p>{str(e)}</p>
+                    <a href="/">Go to home</a>
+                </body>
+            </html>
+            """,
             status_code=500
         )
 
@@ -289,7 +390,11 @@ async def process_registration(
             "register.html", 
             {
                 "request": request, 
-                "msg": "Passwords do not match"
+                "msg": "Passwords do not match",
+                # Add get_asset_url directly to context if not registered
+                "get_asset_url": app.state.templates.env.filters.get("get_asset_url", 
+                    lambda path, version=None: f"/static/{path}?v={version or os.environ.get('APP_VERSION', 'v1.5.2')}"
+                )
             },
             status_code=400
         )
@@ -299,7 +404,11 @@ async def process_registration(
             "register.html", 
             {
                 "request": request, 
-                "msg": "You must accept the Terms of Service"
+                "msg": "You must accept the Terms of Service",
+                # Add get_asset_url directly to context if not registered
+                "get_asset_url": app.state.templates.env.filters.get("get_asset_url", 
+                    lambda path, version=None: f"/static/{path}?v={version or os.environ.get('APP_VERSION', 'v1.5.2')}"
+                )
             },
             status_code=400
         )
@@ -316,7 +425,8 @@ async def process_registration(
         # Call API register endpoint
         response = requests.post(
             f"{API_V1_URL}/auth/register", 
-            json=user_data
+            json=user_data,
+            timeout=5
         )
         
         if response.status_code == 201:
@@ -331,14 +441,21 @@ async def process_registration(
             )
         else:
             # API returned an error
-            error_data = response.json()
-            error_message = error_data.get("detail", "Registration failed")
+            try:
+                error_data = response.json()
+                error_message = error_data.get("detail", "Registration failed")
+            except:
+                error_message = f"Registration failed with status {response.status_code}"
             
             return app.state.templates.TemplateResponse(
                 "register.html", 
                 {
                     "request": request, 
-                    "msg": error_message
+                    "msg": error_message,
+                    # Add get_asset_url directly to context if not registered
+                    "get_asset_url": app.state.templates.env.filters.get("get_asset_url", 
+                        lambda path, version=None: f"/static/{path}?v={version or os.environ.get('APP_VERSION', 'v1.5.2')}"
+                    )
                 },
                 status_code=400
             )
@@ -350,7 +467,11 @@ async def process_registration(
             "register.html", 
             {
                 "request": request, 
-                "msg": f"Error connecting to authentication service: {str(e)}"
+                "msg": f"Error connecting to authentication service: {str(e)}",
+                # Add get_asset_url directly to context if not registered
+                "get_asset_url": app.state.templates.env.filters.get("get_asset_url", 
+                    lambda path, version=None: f"/static/{path}?v={version or os.environ.get('APP_VERSION', 'v1.5.2')}"
+                )
             },
             status_code=500
         )
@@ -361,13 +482,28 @@ async def login_page(request: Request, msg: str = None):
     try:
         return app.state.templates.TemplateResponse(
             "login.html", 
-            {"request": request, "msg": msg}
+            {
+                "request": request, 
+                "msg": msg,
+                # Add get_asset_url directly to context if not registered
+                "get_asset_url": app.state.templates.env.filters.get("get_asset_url", 
+                    lambda path, version=None: f"/static/{path}?v={version or os.environ.get('APP_VERSION', 'v1.5.2')}"
+                )
+            }
         )
     except Exception as e:
         logger.error(f"Error rendering login page: {str(e)}")
-        return app.state.templates.TemplateResponse(
-            "error.html",
-            {"request": request, "error": str(e)},
+        return HTMLResponse(
+            content=f"""
+            <html>
+                <head><title>Error</title></head>
+                <body>
+                    <h1>Error rendering login page</h1>
+                    <p>{str(e)}</p>
+                    <a href="/">Go to home</a>
+                </body>
+            </html>
+            """,
             status_code=500
         )
 
@@ -424,7 +560,14 @@ async def not_found_exception_handler(request: Request, exc: HTTPException):
     try:
         return app.state.templates.TemplateResponse(
             "404.html", 
-            {"request": request, "path": request.url.path},
+            {
+                "request": request, 
+                "path": request.url.path,
+                # Add get_asset_url directly to context if not registered
+                "get_asset_url": app.state.templates.env.filters.get("get_asset_url", 
+                    lambda path, version=None: f"/static/{path}?v={version or os.environ.get('APP_VERSION', 'v1.5.2')}"
+                )
+            },
             status_code=404
         )
     except Exception as e:
@@ -441,7 +584,14 @@ async def server_error_handler(request: Request, exc: HTTPException):
     try:
         return app.state.templates.TemplateResponse(
             "error.html", 
-            {"request": request, "error": str(exc)},
+            {
+                "request": request, 
+                "error": str(exc),
+                # Add get_asset_url directly to context if not registered
+                "get_asset_url": app.state.templates.env.filters.get("get_asset_url", 
+                    lambda path, version=None: f"/static/{path}?v={version or os.environ.get('APP_VERSION', 'v1.5.2')}"
+                )
+            },
             status_code=500
         )
     except:
@@ -451,15 +601,19 @@ async def server_error_handler(request: Request, exc: HTTPException):
         )
 
 # Include controllers AFTER defining direct routes to avoid conflicts
-app.include_router(api_proxy.router)
-app.include_router(auth_controller.router) 
-app.include_router(dashboard_controller.router)
-app.include_router(feature_controller.router)  
-app.include_router(stock_controller.router)
-app.include_router(watchlist_controller.router)
-app.include_router(profile_controller.router)
-app.include_router(forecast_controller.router)
-app.include_router(news_controller.router)
+try:
+    app.include_router(api_proxy.router)
+    logger.info("Included API proxy router")
+except Exception as e:
+    logger.error(f"Failed to include api_proxy router: {str(e)}")
+
+# Only include controllers that were successfully imported
+for name, controller in controllers.items():
+    try:
+        app.include_router(controller.router)
+        logger.info(f"Included {name} router")
+    except Exception as e:
+        logger.error(f"Failed to include {name} router: {str(e)}")
 
 # Add route to serve dashboard placeholder (will be overridden by dashboard_controller if implemented)
 @app.get("/dashboard", response_class=HTMLResponse)
@@ -468,7 +622,14 @@ async def dashboard(request: Request):
     try:
         return app.state.templates.TemplateResponse(
             "dashboard/index.html",
-            {"request": request, "username": "User"}
+            {
+                "request": request, 
+                "username": "User",
+                # Add get_asset_url directly to context if not registered
+                "get_asset_url": app.state.templates.env.filters.get("get_asset_url", 
+                    lambda path, version=None: f"/static/{path}?v={version or os.environ.get('APP_VERSION', 'v1.5.2')}"
+                )
+            }
         )
     except Exception as e:
         logger.error(f"Error rendering dashboard: {str(e)}")

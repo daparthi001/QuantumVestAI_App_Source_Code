@@ -3,7 +3,11 @@
 {% block title %}Error | QuantumVestAI{% endblock %}
 
 {% block head_extra %}
+{% if get_asset_url is defined %}
 <link rel="stylesheet" href="{{ get_asset_url('css/error.css') }}">
+{% else %}
+<link rel="stylesheet" href="/static/css/error.css?v=1.5.2">
+{% endif %}
 {% endblock %}
 
 {% block body_class %}error-page{% endblock %}
@@ -30,13 +34,12 @@
         </div>
         
         <div class="error-actions">
-            <a href="javascript:history.back()" class="btn btn-outline">Go Back</a>
-            <a href="/" class="btn btn-primary">Go to Homepage</a>
-        </div>
-        
-        <div class="error-help">
-            <p>If the problem persists, please contact our <a href="/support">support team</a>.</p>
-            <p class="error-code">Error Code: {{ error_code|default('500') }}</p>
+            <a href="javascript:history.back()" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> Go Back
+            </a>
+            <a href="/dashboard" class="btn btn-primary">
+                <i class="bi bi-house"></i> Go to Dashboard
+            </a>
         </div>
     </div>
 </div>

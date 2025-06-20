@@ -1,11 +1,11 @@
 """
 Dashboard Controller for QuantumVestAI UI
-Last updated: 2025-06-20 04:32:00
+Last updated: 2025-06-20 05:25:00
 Author: daparthi001
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Query, status
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import APIRouter, Depends, HTTPException, Request, Query, status, Response
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional, List, Dict, Any, Union
 import httpx
@@ -17,13 +17,17 @@ from datetime import datetime, timedelta
 
 # Import auth dependencies - use try/except in case they're not available
 try:
-    from auth.dependencies import get_current_user, validate_admin_access
+    from auth.dependencies import get_current_user, validate_admin_access, get_optional_current_user
 except ImportError:
     # Mock auth dependencies if they don't exist
     logging.getLogger(__name__).warning("Auth dependencies not found. Using mock functions.")
     
-    async def get_current_user(request: Request):
+    async def get_current_user(request: Request, response: Response = None):
         """Mock function that returns a default user"""
+        return {"username": "defaultuser", "token": "mock_token"}
+    
+    async def get_optional_current_user(request: Request, response: Response = None):
+        """Mock function that optionally returns a default user"""
         return {"username": "defaultuser", "token": "mock_token"}
     
     async def validate_admin_access(request: Request):
@@ -126,7 +130,8 @@ def set_cached_data(key: str, data: Dict[str, Any], ttl: int = CACHE_TTL) -> Non
 @router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(
     request: Request, 
-    user=Depends(get_current_user),
+    response: Response,
+    user=Depends(get_optional_current_user),  # Changed to get_optional_current_user
     period: Optional[str] = Query("month", description="Time period for data analysis"),
     refresh: Optional[bool] = Query(False, description="Force refresh data from API")
 ):
@@ -135,13 +140,21 @@ async def dashboard(
     
     Args:
         request: FastAPI request object
-        user: Current authenticated user
+        user: Current authenticated user (can be None)
         period: Time period for analysis (day, week, month, year, all)
         refresh: Whether to force refresh data from API
         
     Returns:
         HTMLResponse: Rendered dashboard template
     """
+    # Check if user is authenticated
+    if user is None:
+        # Redirect to login page with return URL
+        return RedirectResponse(
+            url=f"/login?next=/dashboard?period={period}",
+            status_code=302
+        )
+    
     try:
         # Start timing for metrics
         start_time = time.time()
@@ -154,7 +167,9 @@ async def dashboard(
         ).inc()
         
         # Create cache key based on user and period
-        cache_key = f"dashboard_{user.get('username')}_{period}"
+        # Use safe username access with default value
+        username = user.get('username', 'anonymous')
+        cache_key = f"dashboard_{username}_{period}"
         
         # Try to get data from cache unless refresh is requested
         dashboard_data = None if refresh else get_cached_data(cache_key)
@@ -246,7 +261,7 @@ async def dashboard(
             # Cache the dashboard data
             set_cached_data(cache_key, dashboard_data)
         else:
-            logger.info(f"Using cached dashboard data for user {user.get('username')}")
+            logger.info(f"Using cached dashboard data for user {username}")
             portfolio_data = dashboard_data["portfolio"]
             market_data = dashboard_data["market"]
             transactions = dashboard_data["transactions"]
@@ -268,7 +283,9 @@ async def dashboard(
                 {"value": "all", "label": "All Time"}
             ],
             "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
-            "is_cached": not refresh and dashboard_data is not None
+            "is_cached": not refresh and dashboard_data is not None,
+            # Ensure template filters are available directly in context
+            "get_asset_url": lambda path, version=None: f"/static/{path}?v={version or os.environ.get('APP_VERSION', 'v1.5.2')}&t={datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
         }
         
         # Record timing for metrics
@@ -281,6 +298,16 @@ async def dashboard(
         # Get correct templates object - check if app.state.templates exists
         templates_obj = getattr(request.app.state, 'templates', templates)
         
+        # Ensure template filters are registered
+        try:
+            from utils.template_filters import template_filters
+            for name, func in template_filters.items():
+                if name not in templates_obj.env.filters:
+                    templates_obj.env.filters[name] = func
+                    logger.debug(f"Registered missing filter in dashboard: {name}")
+        except ImportError:
+            logger.warning("Could not import template_filters in dashboard")
+        
         return templates_obj.TemplateResponse("dashboard/index.html", context)
     
     except httpx.RequestError as e:
@@ -289,12 +316,21 @@ async def dashboard(
         # Get correct templates object
         templates_obj = getattr(request.app.state, 'templates', templates)
         
+        # Add get_asset_url to context directly
+        def get_asset_url(path, version=None):
+            if not version:
+                version = os.environ.get('APP_VERSION', 'v1.5.2')
+            timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+            return f"/static/{path}?v={version}&t={timestamp}"
+        
         return templates_obj.TemplateResponse(
             "error.html", 
             {
                 "request": request,
+                "user": user,
                 "message": "Service temporarily unavailable. Please try again later.",
-                "error_code": "API_CONN_ERR"
+                "error_code": "API_CONN_ERR",
+                "get_asset_url": get_asset_url  # Add function directly to context
             }
         )
     except HTTPException as e:
@@ -306,12 +342,21 @@ async def dashboard(
         # Get correct templates object
         templates_obj = getattr(request.app.state, 'templates', templates)
         
+        # Add get_asset_url to context directly
+        def get_asset_url(path, version=None):
+            if not version:
+                version = os.environ.get('APP_VERSION', 'v1.5.2')
+            timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+            return f"/static/{path}?v={version}&t={timestamp}"
+        
         return templates_obj.TemplateResponse(
             "error.html", 
             {
                 "request": request,
+                "user": user,
                 "message": "An unexpected error occurred while loading the dashboard.",
-                "error_code": "DASHBOARD_ERR"
+                "error_code": "DASHBOARD_ERR",
+                "get_asset_url": get_asset_url  # Add function directly to context
             }
         )
 
@@ -488,7 +533,7 @@ async def admin_dashboard(
             "api_response_time": "245ms",
             "environment": os.getenv("ENVIRONMENT", "development"),
             "version": os.getenv("APP_VERSION", "1.5.2"),
-            "last_updated": os.getenv("LAST_UPDATED", "2025-06-20 04:32:00"),
+            "last_updated": os.getenv("LAST_UPDATED", "2025-06-20 05:25:00"),
             "updated_by": os.getenv("UPDATED_BY", "daparthi001")
         }
         
@@ -499,7 +544,9 @@ async def admin_dashboard(
             "request": request,
             "user": user,
             "page_title": "Admin Dashboard",
-            "admin_data": admin_data
+            "admin_data": admin_data,
+            # Add get_asset_url directly to context
+            "get_asset_url": lambda path, version=None: f"/static/{path}?v={version or os.environ.get('APP_VERSION', 'v1.5.2')}&t={datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
         }
         
         return templates_obj.TemplateResponse("admin/dashboard.html", context)
