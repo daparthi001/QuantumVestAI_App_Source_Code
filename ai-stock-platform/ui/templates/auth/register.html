@@ -7,6 +7,11 @@
     <div class="auth-card">
         <h1 class="auth-title">Create Account</h1>
         <p class="auth-subtitle">Fill out the form to get started</p>
+        
+        <!-- Add date reference safely -->
+        {% if now is defined %}
+        <p class="auth-timestamp" style="font-size: 10px; opacity: 0.5;">{{ now.strftime('%Y-%m-%d') }}</p>
+        {% endif %}
 
         <!-- Error display with basic formatting -->
         {% if msg %}
@@ -32,13 +37,13 @@
         <form id="registration-form" action="/auth/register" method="POST">
             <div class="form-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" name="username" class="form-control" value="{{ username or '' }}" required>
+                <input type="text" id="username" name="username" class="form-control" value="{{ username|default('') }}" required>
                 <small class="form-text text-muted">Username must be between 3-20 characters and contain only letters, numbers, and underscores.</small>
             </div>
             
             <div class="form-group">
                 <label for="email">Email Address</label>
-                <input type="email" id="email" name="email" class="form-control" value="{{ email or '' }}" required>
+                <input type="email" id="email" name="email" class="form-control" value="{{ email|default('') }}" required>
             </div>
             
             <div class="form-group">
@@ -85,6 +90,9 @@
 
 {% block scripts %}
 <script>
+// Add global now variable to prevent any JavaScript errors
+const now = new Date();
+
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('registration-form');
     

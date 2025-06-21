@@ -1,6 +1,6 @@
 """
 Authentication Controller for QuantumVestAI
-Updated: 2025-06-20 22:52:16
+Updated: 2025-06-20 23:13:04
 Author: daparthi001
 """
 import os
@@ -134,7 +134,14 @@ async def login_page(request: Request, next: str = "/dashboard", msg: str = None
     templates = get_templates()
     return templates.TemplateResponse(
         "auth/login.html", 
-        {"request": request, "next": next, "msg": msg}
+        {
+            "request": request, 
+            "next": next, 
+            "msg": msg,
+            "now": datetime.utcnow(),  # Add current datetime
+            "username": "",  # Ensure username is always defined
+            "msg_type": "info"  # Default message type
+        }
     )
 
 @router.post("/auth/login")
@@ -230,7 +237,8 @@ async def login_post(
                 {
                     "request": request, 
                     "msg": error_msg,
-                    "username": username
+                    "username": username,
+                    "now": datetime.utcnow()  # Add current datetime
                 },
                 status_code=status.HTTP_401_UNAUTHORIZED
             )
@@ -287,7 +295,8 @@ async def login_post(
             {
                 "request": request, 
                 "msg": f"API connection error: {str(e)}",
-                "username": username
+                "username": username,
+                "now": datetime.utcnow()  # Add current datetime
             },
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
@@ -298,7 +307,8 @@ async def login_post(
             {
                 "request": request, 
                 "msg": f"An unexpected error occurred",
-                "username": username
+                "username": username,
+                "now": datetime.utcnow()  # Add current datetime
             },
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
@@ -321,7 +331,12 @@ async def register_page(request: Request):
     templates = get_templates()
     return templates.TemplateResponse(
         "auth/register.html", 
-        {"request": request}
+        {
+            "request": request,
+            "now": datetime.utcnow(),  # Add current datetime
+            "username": "",
+            "email": ""
+        }
     )
 
 @router.post("/auth/register")
@@ -345,7 +360,8 @@ async def register_post(
                 "request": request, 
                 "msg": "You must accept the Terms of Service", 
                 "username": username,
-                "email": email
+                "email": email,
+                "now": datetime.utcnow()  # Add current datetime
             },
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
         )
@@ -358,7 +374,8 @@ async def register_post(
                 "request": request, 
                 "msg": "Passwords don't match", 
                 "username": username,
-                "email": email
+                "email": email,
+                "now": datetime.utcnow()  # Add current datetime
             },
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
         )
@@ -429,7 +446,8 @@ async def register_post(
                     "request": request, 
                     "msg": error_msg,
                     "username": username,
-                    "email": email
+                    "email": email,
+                    "now": datetime.utcnow()  # Add current datetime
                 },
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
             )
@@ -451,7 +469,8 @@ async def register_post(
                     "request": request, 
                     "msg": f"Registration service unavailable. Please try again later.",
                     "username": username,
-                    "email": email
+                    "email": email,
+                    "now": datetime.utcnow()  # Add current datetime
                 },
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE
             )
@@ -463,7 +482,8 @@ async def register_post(
                 "request": request, 
                 "msg": "An unexpected error occurred during registration",
                 "username": username,
-                "email": email
+                "email": email,
+                "now": datetime.utcnow()  # Add current datetime
             },
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
@@ -474,7 +494,10 @@ async def password_reset_page(request: Request):
     templates = get_templates()
     return templates.TemplateResponse(
         "auth/password_reset.html", 
-        {"request": request}
+        {
+            "request": request,
+            "now": datetime.utcnow()  # Add current datetime
+        }
     )
 
 @router.post("/auth/password-reset")
@@ -508,7 +531,8 @@ async def password_reset_post(request: Request, email: str = Form(...)):
             {
                 "request": request,
                 "msg": "If an account with that email exists, we've sent password reset instructions.",
-                "msg_type": "success"
+                "msg_type": "success",
+                "now": datetime.utcnow()  # Add current datetime
             }
         )
         
@@ -520,7 +544,8 @@ async def password_reset_post(request: Request, email: str = Form(...)):
             {
                 "request": request,
                 "msg": "If an account with that email exists, we've sent password reset instructions.",
-                "msg_type": "success"
+                "msg_type": "success",
+                "now": datetime.utcnow()  # Add current datetime
             }
         )
 
