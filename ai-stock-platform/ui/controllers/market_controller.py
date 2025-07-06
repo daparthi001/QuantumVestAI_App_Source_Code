@@ -78,6 +78,38 @@ async def market_overview(
     Market overview page showing indices, trends, and top movers.
     This page is accessible to both logged-in and anonymous users.
     """
+    try:
+        # Get API URL from app state or environment
+        api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://api:8000'))
+        
+        # Create cache key - include user info if available for personalized content
+        cache_key = f"market_overview_{user.get('username') if user else 'anonymous'}"
+        
+        # Try to get data from cache
+        market_data = get_cached_data(cache_key)
+        
+        if market_data is None:
+            try:
+                # Fetch market data from API using centralized HTTP client
+                from core.http_client import safe_get_json
+                
+                auth_token = user.get('token') if user else None
+                market_data = await safe_get_json(
+                    url=f"{api_url_base}/api/market/overview",
+                    auth_token=auth_token
+                )
+                
+                if market_data is None:
+                    logger.error("Failed to fetch market data from API")
+                    raise HTTPException(
+                        status_code=503,
+                        detail="Error fetching market data"
+                    )
+                
+                # Cache the data
+                set_cached_data(cache_key, market_data)
+            except Exception as e:
+                logger.error(f"Market data fetch error: {str(e)}")
                 logger.error(f"API request error: {str(e)}")
                 # Use fallback data
                 market_data = {
@@ -149,7 +181,41 @@ async def stock_details(
     Stock details page showing price, charts, news, and fundamentals for a specific stock.
     This page is accessible to both logged-in and anonymous users.
     """
+    try:
+        # Get API URL from app state or environment
+        api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://api:8000'))
+        
+        # Create cache key - include user info if available for personalized content
+        cache_key = f"stock_details_{symbol.upper()}_{user.get('username') if user else 'anonymous'}"
+        
+        # Try to get data from cache
+        stock_data = get_cached_data(cache_key)
+        
+        if stock_data is None:
+            try:
+                # Fetch stock data from API using centralized HTTP client
+                from core.http_client import safe_get_json
+                
+                auth_token = user.get('token') if user else None
+                stock_data = await safe_get_json(
+                    url=f"{api_url_base}/api/stocks/{symbol.upper()}",
+                    auth_token=auth_token
+                )
+                
+                if stock_data is None:
+                    logger.error(f"Failed to fetch stock data for {symbol}")
+                    raise HTTPException(
+                        status_code=503,
+                        detail=f"Error fetching data for {symbol}"
+                    )
+                
+                # Cache the data
+                set_cached_data(cache_key, stock_data)
+            except Exception as e:
+                logger.error(f"Stock data fetch error: {str(e)}")
+
                 logger.error(f"API request error: {str(e)}")
+
                 # Use fallback data
                 stock_data = {
                     "symbol": symbol.upper(),
@@ -170,6 +236,17 @@ async def stock_details(
         # Check if user has this stock in watchlist
         is_in_watchlist = False
         if user:
+            try:
+                from core.http_client import safe_get_json
+                
+                watchlist_data = await safe_get_json(
+                    url=f"{api_url_base}/api/watchlist/check/{symbol.upper()}",
+                    auth_token=user.get('token')
+                )
+                
+                if watchlist_data:
+                    is_in_watchlist = watchlist_data.get("in_watchlist", False)
+            except Exception as e:
                 logger.warning(f"Error checking watchlist status: {str(e)}")
                 is_in_watchlist = False
         
@@ -217,6 +294,39 @@ async def search_stocks(
     API endpoint to search for stocks by name or symbol.
     Used for autocomplete functionality.
     """
+    try:
+        # Get API URL from app state or environment
+        api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://api:8000'))
+        
+        # Create cache key
+        cache_key = f"stock_search_{query.lower()}"
+        
+        # Try to get data from cache
+        search_results = get_cached_data(cache_key)
+        
+        if search_results is None:
+            try:
+                # Fetch search results from API using centralized HTTP client
+                from core.http_client import safe_get_json
+                
+                auth_token = user.get('token') if user else None
+                search_results = await safe_get_json(
+                    url=f"{api_url_base}/api/stocks/search",
+                    params={"query": query},
+                    auth_token=auth_token
+                )
+                
+                if search_results is None:
+                    logger.error("Failed to fetch search results from API")
+                    raise HTTPException(
+                        status_code=503,
+                        detail="Error searching stocks"
+                    )
+                
+                # Cache the data
+                set_cached_data(cache_key, search_results)
+            except Exception as e:
+                logger.error(f"Stock search error: {str(e)}")
                 logger.error(f"API request error: {str(e)}")
                 # Use fallback data based on query
                 search_results = {

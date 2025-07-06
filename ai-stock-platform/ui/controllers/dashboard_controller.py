@@ -129,6 +129,79 @@ async def dashboard(
     Returns:
         HTMLResponse: Rendered dashboard template
     """
+    # Check if user is authenticated
+    if user is None:
+        # Redirect to login page with return URL
+        return RedirectResponse(
+            url=f"/login?next=/dashboard?period={period}",
+            status_code=302
+        )
+    
+    try:
+        # Start timing for metrics
+        start_time = time.time()
+        
+        # Record metric
+        http_requests_total.labels(
+            method="GET", 
+            endpoint="/dashboard", 
+            status=200
+        ).inc()
+        
+        # Create cache key based on user and period
+        # Use safe username access with default value
+        username = user.get('username', 'anonymous')
+        cache_key = f"dashboard_{username}_{period}"
+        
+        # Try to get data from cache unless refresh is requested
+        dashboard_data = None if refresh else get_cached_data(cache_key)
+        
+        if dashboard_data is None:
+            # Check if app.state has settings attribute
+            api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://api:8000'))
+            
+            try:
+                # Get portfolio data from API using centralized HTTP client
+                from core.http_client import safe_get_json
+                
+                auth_token = user.get('token')
+                portfolio_data = await safe_get_json(
+                    url=f"{api_url_base}/api/portfolio/summary",
+                    params={"period": period},
+                    auth_token=auth_token
+                )
+                
+                if portfolio_data is None:
+                    logger.error("Failed to fetch portfolio data from API")
+                    raise HTTPException(
+                        status_code=503,
+                        detail="Error fetching portfolio data"
+                    )
+                
+                # Get market overview
+                market_data = await safe_get_json(
+                    url=f"{api_url_base}/api/market/overview",
+                    auth_token=auth_token
+                )
+                
+                if market_data is None:
+                    logger.warning("Market data unavailable")
+                    market_data = {"status": "unavailable"}
+                
+                # Get recent transactions
+                transactions_data = await safe_get_json(
+                    url=f"{api_url_base}/api/transactions/recent",
+                    params={"limit": 5},
+                    auth_token=auth_token
+                )
+                
+                if transactions_data is None:
+                    logger.warning("Transactions data unavailable")
+                    transactions = []
+                else:
+                    transactions = transactions_data.get("transactions", [])
+                
+            except Exception as e:
                 logger.error(f"API request error: {str(e)}")
                 # Use fallback data
                 portfolio_data = {
@@ -231,7 +304,8 @@ async def dashboard(
                 "message": "Service temporarily unavailable. Please try again later.",
                 "error_code": "API_CONN_ERR",
                 "get_asset_url": get_asset_url  # Add function directly to context
-            }
+            },
+            status_code=503  # Changed from default to indicate service unavailable
         )
     except HTTPException as e:
         # Re-raise HTTP exceptions
