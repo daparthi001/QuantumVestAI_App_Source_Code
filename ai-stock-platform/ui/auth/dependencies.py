@@ -26,6 +26,11 @@ TOKEN_EXPIRE_MINUTES = int(os.getenv("TOKEN_EXPIRE_MINUTES", "60"))
 # API Configuration
 API_URL = os.getenv("API_URL", "http://quantumvestai-dev-api:8000/api/v1")
 
+# get_current_user function removed as per requirements
+
+# get_optional_current_user function removed as per requirements
+
+# validate_admin_access function removed as per requirements
 async def get_current_user(
     request: Request,
     response: Response,
@@ -210,22 +215,6 @@ async def verify_token_with_api(token: str) -> Dict[str, Any]:
     Raises:
         HTTPException: If token verification fails
     """
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{API_URL}/api/auth/verify",
-                json={"token": token},
-                timeout=5.0
-            )
-            
-            if response.status_code != 200:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid token"
-                )
-            
-            return response.json()
-    except httpx.RequestError as e:
         logger.error(f"API connection error during token verification: {str(e)}")
         # Fall back to local verification if API is unavailable
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])

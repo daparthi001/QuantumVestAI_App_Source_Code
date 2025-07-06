@@ -8,21 +8,6 @@ import os
 from typing import Any, Dict, List, Optional
 
 # Try to import settings from different possible locations
-try:
-    from config.settings import settings
-    logger = logging.getLogger(__name__)
-    logger.info("Successfully imported settings from config.settings")
-except ImportError:
-    try:
-        from core.config.settings import settings
-        logger = logging.getLogger(__name__)
-        logger.info("Successfully imported settings from core.config.settings")
-    except ImportError:
-        try:
-            from core.config import settings
-            logger = logging.getLogger(__name__)
-            logger.info("Successfully imported settings from core.config")
-        except ImportError:
             # Create fallback settings if all imports fail
             logger = logging.getLogger(__name__)
             logger.error("Failed to import settings, using fallback settings")

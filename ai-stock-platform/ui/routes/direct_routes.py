@@ -34,34 +34,6 @@ async def direct_login_post(
     """Direct login handler that forwards to API and handles the response"""
     logger.info(f"Direct login route hit for: {username}")
     
-    try:
-        # Try multiple payload formats to find the one that works
-        payload_formats = [
-            # Format 1: Body-wrapped fields (matches the API error format seen in logs)
-            {"body": {"username": username, "password": password}},
-            
-            # Format 2: Direct fields 
-            {"username": username, "password": password},
-            
-            # Format 3: OAuth2 style
-            {"username": username, "password": password, "grant_type": "password"}
-        ]
-        
-        api_response = None
-        for payload in payload_formats:
-            try:
-                # Call API login endpoint
-                response = requests.post(
-                    f"{API_V1_URL}/auth/login", 
-                    json=payload,
-                    timeout=5
-                )
-                
-                if response.status_code == 200:
-                    api_response = response
-                    logger.info(f"Found working API payload format for {username}")
-                    break
-            except Exception:
                 continue
         
         if api_response and api_response.status_code == 200:
@@ -86,10 +58,6 @@ async def direct_login_post(
             return redirect_response
         else:
             # Login failed
-            try:
-                error_data = api_response.json() if api_response else {"detail": "Login failed"}
-                error_message = error_data.get("detail", "Login failed")
-            except:
                 error_message = "Login failed"
             
             # Fall back to emergency login
