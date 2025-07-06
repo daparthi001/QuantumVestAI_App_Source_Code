@@ -187,9 +187,15 @@ async def login_page(request: Request, next: str = "/", msg: str = None, registe
     if registered == "true":
         msg = "Registration successful! Please sign in with your new account."
         
+    # Pass 'now' to the template context for use in login.html
     return templates.TemplateResponse(
         "login.html", 
-        {"request": request, "next": next, "msg": msg}
+        {
+            "request": request,
+            "next": next,
+            "msg": msg,
+            "now": datetime.utcnow()  # <-- THIS FIXES THE 'now' IS UNDEFINED ERROR
+        }
     )
 
 # Route for token generation
