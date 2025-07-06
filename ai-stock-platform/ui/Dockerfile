@@ -61,6 +61,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code (which may include an actual package.json that will overwrite our placeholder)
 COPY . .
 
+RUN if [ -f package.json ] && grep -q '"dependencies"' package.json; then \
+      npm install && npm run build; \
+    else \
+      echo "No frontend dependencies found. Skipping npm install and build."; \
+    fi
+
 # Set ownership for all files
 RUN chown -R app:app /app
 
