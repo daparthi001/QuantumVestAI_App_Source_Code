@@ -12,7 +12,7 @@ from utils.formatters import (
     format_currency, 
     format_percentage, 
     format_date, 
-    # format_large_number,  # Commented out since this function doesn't exist
+    format_large_number,  # Commented out since this function doesn't exist
     format_change_value
 )
 

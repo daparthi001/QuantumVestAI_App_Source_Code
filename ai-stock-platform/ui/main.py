@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 import logging
 from pathlib import Path
 from logging.config import dictConfig
+from utils import format_large_number
 import sys
 
 # CRITICAL FIX: Define BASE_DIR before using it
@@ -105,8 +106,13 @@ except Exception as e:
         return f"/static/{path}?v={version}&t={timestamp}"
     
     # Add to Jinja environment
+# Add to Jinja environment
     templates.env.filters['get_asset_url'] = get_asset_url
+    templates.env.filters["format_large_number"] = format_large_number
+
     logger.info("Added fallback for get_asset_url filter")
+    logger.info("Added fallback for format_large_number filter")
+
 
 # Import proxy router - with error handling
 try:
