@@ -13,20 +13,7 @@ import time
 import os
 from datetime import datetime, timedelta
 API_URL = "http://quantumvestai-dev-api:8000/api/v1"
-# Import dependencies with fallback
-try:
-    from auth.dependencies import get_current_user, get_optional_current_user
-except ImportError:
-    # Create mock auth functions if they don't exist
-    logging.getLogger(__name__).warning("Auth dependencies not found. Using mock functions.")
-    
-    async def get_current_user(request: Request, response: Response = None):
-        """Mock function that returns a default user"""
-        return {"username": "defaultuser", "token": "mock_token"}
-    
-    async def get_optional_current_user(request: Request, response: Response = None):
-        """Mock function that optionally returns a default user"""
-        return {"username": "defaultuser", "token": "mock_token"}
+# Auth dependencies removed as per requirements
 
 # Set up router
 router = APIRouter(
@@ -85,8 +72,7 @@ def get_templates(request: Request):
 @router.get("", response_class=HTMLResponse)
 async def market_overview(
     request: Request,
-    response: Response,
-    user=Depends(get_optional_current_user)
+    response: Response
 ):
     """
     Market overview page showing indices, trends, and top movers.
@@ -124,6 +110,7 @@ async def market_overview(
                 set_cached_data(cache_key, market_data)
             except Exception as e:
                 logger.error(f"Market data fetch error: {str(e)}")
+                logger.error(f"API request error: {str(e)}")
                 # Use fallback data
                 market_data = {
                     "indices": [
@@ -158,7 +145,7 @@ async def market_overview(
             "market/overview.html",
             {
                 "request": request,
-                "user": user,
+                "user": None,
                 "page_title": "Market Overview",
                 "market_data": market_data,
                 "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
@@ -188,7 +175,7 @@ async def stock_details(
     request: Request,
     response: Response,
     symbol: str = Path(..., description="Stock symbol"),
-    user=Depends(get_optional_current_user)
+    
 ):
     """
     Stock details page showing price, charts, news, and fundamentals for a specific stock.
@@ -226,6 +213,9 @@ async def stock_details(
                 set_cached_data(cache_key, stock_data)
             except Exception as e:
                 logger.error(f"Stock data fetch error: {str(e)}")
+
+                logger.error(f"API request error: {str(e)}")
+
                 # Use fallback data
                 stock_data = {
                     "symbol": symbol.upper(),
@@ -268,7 +258,7 @@ async def stock_details(
             "market/stock_details.html",
             {
                 "request": request,
-                "user": user,
+                "user": None,
                 "page_title": f"{stock_data.get('name')} ({stock_data.get('symbol')})",
                 "stock": stock_data,
                 "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
@@ -298,7 +288,7 @@ async def stock_details(
 async def search_stocks(
     request: Request,
     query: str = Query(..., description="Search query"),
-    user=Depends(get_optional_current_user)
+    
 ):
     """
     API endpoint to search for stocks by name or symbol.
@@ -337,6 +327,7 @@ async def search_stocks(
                 set_cached_data(cache_key, search_results)
             except Exception as e:
                 logger.error(f"Stock search error: {str(e)}")
+                logger.error(f"API request error: {str(e)}")
                 # Use fallback data based on query
                 search_results = {
                     "results": [

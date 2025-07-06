@@ -26,94 +26,9 @@ TOKEN_EXPIRE_MINUTES = int(os.getenv("TOKEN_EXPIRE_MINUTES", "60"))
 # API Configuration
 API_URL = os.getenv("API_URL", "http://quantumvestai-dev-api:8000/api/v1")
 
-async def get_current_user(
-    request: Request,
-    response: Response,
-    token: Optional[str] = Depends(oauth2_scheme),
-    session_token: Optional[str] = Cookie(None)
-) -> Dict[str, Any]:
-    """
-    Validate user authentication from JWT token or session cookie.
-    
-    Args:
-        request: FastAPI request object
-        response: FastAPI response object
-        token: Bearer token from Authorization header
-        session_token: Token from session cookie
-        
-    Returns:
-        Dict containing user information
-        
-    Raises:
-        HTTPException: If authentication fails
-    """
-    # Use token from Authorization header or cookie
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Invalid authentication credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    
-    # Prioritize token from Authorization header
-    token_to_use = token or session_token
-    
-    if not token_to_use:
-        # Redirect to login page if no token
-        if request.url.path != "/login":
-            return response.headers.append("Location", f"/login?next={request.url.path}")
-        raise credentials_exception
-    
-    try:
-        # Verify token with JWT
-        payload = jwt.decode(token_to_use, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-        username: str = payload.get("sub")
-        exp_timestamp: int = payload.get("exp")
-        
-        if username is None:
-            raise credentials_exception
-        
-        # Check if token is expired
-        if exp_timestamp and time.time() > exp_timestamp:
-            logger.info(f"Token expired for user {username}")
-            if request.url.path != "/login":
-                return response.headers.append("Location", f"/login?next={request.url.path}")
-            raise credentials_exception
-        
-        # In a real implementation, validate with the API
-        # This is a simplified example for demonstration
-        user_data = {
-            "username": username,
-            "email": payload.get("email"),
-            "full_name": payload.get("name"),
-            "permissions": payload.get("permissions", []),
-            "token": token_to_use
-        }
-        
-        return user_data
-        
-    except jwt.PyJWTError as e:
-        logger.error(f"JWT validation error: {str(e)}")
-        raise credentials_exception
+# get_current_user function removed as per requirements
 
-async def validate_admin_access(user: Dict[str, Any] = Depends(get_current_user)):
-    """
-    Validate that the current user has admin permissions.
-    
-    Args:
-        user: User information from get_current_user
-        
-    Returns:
-        The user dict if they have admin permissions
-        
-    Raises:
-        HTTPException: If user doesn't have admin permissions
-    """
-    if "admin" not in user.get("permissions", []):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions"
-        )
-    return user
+# validate_admin_access function removed as per requirements
 
 def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None):
     """
@@ -145,6 +60,7 @@ async def verify_token_with_api(token: str) -> Dict[str, Any]:
     Raises:
         HTTPException: If token verification fails
     """
+
     try:
         from core.http_client import safe_post_json
         
@@ -165,6 +81,7 @@ async def verify_token_with_api(token: str) -> Dict[str, Any]:
         
     except Exception as e:
         logger.error(f"API token verification failed: {str(e)}")
+        logger.error(f"API connection error during token verification: {str(e)}")
         # Fall back to local verification if API is unavailable
         try:
             payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])

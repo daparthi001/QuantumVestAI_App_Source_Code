@@ -17,9 +17,6 @@ from typing import Optional, Dict, Any, List, Union
 logger = logging.getLogger(__name__)
 
 # Try to import settings safely
-try:
-    from core.config import settings
-except ImportError:
     # Fallback settings
     class Settings:
         SECRET_KEY = "supersecretkey123456789abcdef"
@@ -91,26 +88,6 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 return self._handle_no_auth()
 
         # Validate token
-        try:
-            # Handle "Bearer" prefix
-            if " " in authorization:
-                token_type, token = authorization.split(None, 1)
-                if token_type.lower() != "bearer":
-                    return self._handle_invalid_token_type()
-            else:
-                # No token type prefix
-                token = authorization
-            
-            # Decode and validate token
-            user = await self._validate_token(token)
-            
-            # Add user to request state
-            request.state.user = user
-            
-            # Continue with the request
-            return await call_next(request)
-        
-        except Exception as e:
             logger.error(f"Auth middleware error: {e}", exc_info=True)
             return self._handle_auth_error(str(e))
 
@@ -120,14 +97,6 @@ class AuthMiddleware(BaseHTTPMiddleware):
     
     async def _validate_token(self, token: str) -> Dict[str, Any]:
         """Validate JWT token and return user info"""
-        try:
-            payload = jwt.decode(
-                token, 
-                settings.SECRET_KEY, 
-                algorithms=[settings.JWT_ALGORITHM]
-            )
-            return payload
-        except JWTError as e:
             logger.error(f"Token validation error: {e}")
             raise HTTPException(
                 status_code=401, 

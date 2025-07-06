@@ -13,9 +13,6 @@ import json
 import hashlib
 
 # Set locale for currency formatting
-try:
-    locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
-except locale.Error:
     # Fallback for environments where the locale is not available
     locale.setlocale(locale.LC_ALL, '')
 
@@ -24,9 +21,6 @@ def format_currency(value, symbol='$'):
     if value is None:
         return f"{symbol}0.00"
     
-    try:
-        return f"{symbol}{locale.format_string('%,.2f', float(value), grouping=True)}"
-    except (ValueError, TypeError):
         # Handle case where value cannot be converted to float
         return f"{symbol}0.00"
 
@@ -35,12 +29,6 @@ def format_percentage(value, precision=2):
     if value is None:
         return f"0.{precision * '0'}%"
     
-    try:
-        # Convert to percentage and round
-        percentage = float(value) * 100
-        format_string = f"%.{precision}f%%"
-        return format_string % percentage
-    except (ValueError, TypeError):
         # Handle case where value cannot be converted to float
         return f"0.{precision * '0'}%"
 
@@ -61,18 +49,6 @@ def format_date(value, format_string="%b %d, %Y"):
         return ""
     
     if isinstance(value, str):
-        try:
-            # Try parsing ISO format with timezone
-            value = datetime.fromisoformat(value.replace('Z', '+00:00'))
-        except ValueError:
-            try:
-                # Try parsing common formats
-                value = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
-            except ValueError:
-                try:
-                    # Try parsing date only format
-                    value = datetime.strptime(value, "%Y-%m-%d")
-                except ValueError:
                     # Return original string if parsing fails
                     return value
     
@@ -88,12 +64,6 @@ def relative_time(value):
         return ""
     
     if isinstance(value, str):
-        try:
-            value = datetime.fromisoformat(value.replace('Z', '+00:00'))
-        except ValueError:
-            try:
-                value = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
-            except ValueError:
                 return value
     
     now = datetime.utcnow()
@@ -155,10 +125,6 @@ def number_format(value, decimal_places=0):
     if value is None:
         return "0"
     
-    try:
-        format_string = f"%,.{decimal_places}f"
-        return locale.format_string(format_string, float(value), grouping=True)
-    except (ValueError, TypeError):
         return "0"
 
 def get_asset_url(path, version=None):
@@ -183,9 +149,6 @@ def file_size_format(size_bytes):
     if size_bytes is None:
         return "0 B"
     
-    try:
-        size_bytes = float(size_bytes)
-    except (ValueError, TypeError):
         return "0 B"
     
     units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
@@ -229,12 +192,6 @@ def stringify(value):
     
     elif hasattr(value, 'items'):
         # Handle object with .items() method like dict
-        try:
-            formatted_items = []
-            for k, v in value.items():
-                formatted_items.append(f"{k}: {stringify(v)}")
-            return ", ".join(formatted_items)
-        except:
             pass
     
     # Default: convert to string
@@ -250,58 +207,6 @@ def error_format(error_data):
 
     html_parts = []
     
-    try:
-        # Handle string errors
-        if isinstance(error_data, str):
-            return f"<div>{error_data}</div>"
-            
-        # Handle list of errors
-        if isinstance(error_data, list):
-            for item in error_data:
-                if isinstance(item, dict):
-                    # Extract field and message
-                    field = None
-                    msg = None
-                    
-                    if "loc" in item and isinstance(item["loc"], list):
-                        field = item["loc"][-1]
-                    
-                    if "msg" in item:
-                        msg = item["msg"]
-                    
-                    if field and msg:
-                        html_parts.append(f"<div><strong>{field}:</strong> {msg}</div>")
-                    elif msg:
-                        html_parts.append(f"<div>{msg}</div>")
-                    else:
-                        html_parts.append(f"<div>{stringify(item)}</div>")
-                else:
-                    html_parts.append(f"<div>{stringify(item)}</div>")
-            
-            return "".join(html_parts)
-        
-        # Handle dictionary with 'detail' field (common in FastAPI errors)
-        if isinstance(error_data, dict):
-            if "detail" in error_data:
-                detail = error_data["detail"]
-                
-                # Handle list of validation errors
-                if isinstance(detail, list):
-                    return error_format(detail)
-                
-                # Handle string detail
-                return f"<div>{stringify(detail)}</div>"
-            
-            # Handle dictionary without 'detail'
-            for key, value in error_data.items():
-                html_parts.append(f"<div><strong>{key}:</strong> {stringify(value)}</div>")
-            
-            return "".join(html_parts)
-        
-        # Fallback
-        return f"<div>{stringify(error_data)}</div>"
-    
-    except Exception as e:
         return f"<div>Error processing error message: {str(e)}</div>"
 
 # Dictionary of all filters
@@ -331,32 +236,5 @@ def register_filters(app):
     import logging
     logger = logging.getLogger("quantumvestai_ui.filters")
     
-    try:
-        # Check if app has state.templates (FastAPI approach)
-        if hasattr(app, 'state') and hasattr(app.state, 'templates'):
-            templates = app.state.templates
-            logger.info("Registering filters with FastAPI templates")
-            
-            # Register all filters with the templates.env
-            for name, func in template_filters.items():
-                templates.env.filters[name] = func
-                logger.debug(f"Registered filter: {name}")
-                
-            return True
-        # Check if app has jinja_env directly (Flask approach)
-        elif hasattr(app, 'jinja_env'):
-            logger.info("Registering filters with Flask jinja_env")
-            
-            # Register all filters with app.jinja_env
-            for name, func in template_filters.items():
-                app.jinja_env.filters[name] = func
-                logger.debug(f"Registered filter: {name}")
-                
-            return True
-        else:
-            # If app doesn't have templates or jinja_env, log an error
-            logger.error("Cannot register filters: app has no templates attribute")
-            return False
-    except Exception as e:
         logger.error(f"Error registering filters: {str(e)}")
         return False

@@ -122,11 +122,6 @@ def parse_timeframe(timeframe: str) -> Optional[Tuple[datetime, datetime]]:
     # Try to parse custom timeframes in format 'YYYY-MM-DD..YYYY-MM-DD'
     custom_match = re.match(r'(\d{4}-\d{2}-\d{2})\.\.(\d{4}-\d{2}-\d{2})', timeframe)
     if custom_match:
-        try:
-            start_date = datetime.strptime(custom_match.group(1), '%Y-%m-%d')
-            end_date = datetime.strptime(custom_match.group(2), '%Y-%m-%d')
-            return start_date, end_date
-        except ValueError:
             return None
     
     # Invalid timeframe
@@ -180,9 +175,6 @@ def safe_json_loads(json_str: str, default_value: Any = None) -> Any:
     if not json_str:
         return default_value
         
-    try:
-        return json.loads(json_str)
-    except json.JSONDecodeError:
         return default_value
 
 def generate_unique_id(prefix: str = '') -> str:

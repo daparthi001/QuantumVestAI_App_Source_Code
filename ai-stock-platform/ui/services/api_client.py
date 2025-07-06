@@ -46,10 +46,6 @@ class APIClient:
         
     def _handle_response(self, response: requests.Response) -> Dict[str, Any]:
         """Handle API response and errors"""
-        try:
-            response.raise_for_status()
-            return response.json()
-        except json.JSONDecodeError:
             self.logger.error("Failed to decode JSON from API response")
             if response.content:
                 self.logger.error(f"Response content: {response.content[:500]}...")
@@ -58,13 +54,6 @@ class APIClient:
             error_detail = "Unknown error"
             
             # Try to extract error details from response
-            try:
-                error_data = response.json()
-                if "detail" in error_data:
-                    error_detail = error_data["detail"]
-                elif "message" in error_data:
-                    error_detail = error_data["message"]
-            except:
                 if response.content:
                     error_detail = response.content.decode('utf-8')[:200]
                     
@@ -79,15 +68,6 @@ class APIClient:
         url = f"{self.base_url}{normalized_endpoint}"
         
         self.logger.debug(f"Making GET request to {url}")
-        try:
-            response = requests.get(
-                url,
-                headers=self._get_headers(),
-                params=params,
-                timeout=(5, 30)  # (connect, read) timeouts
-            )
-            return self._handle_response(response)
-        except Timeout:
             self.logger.error(f"Request to {normalized_endpoint} timed out")
             raise Timeout(f"Request to API timed out: {normalized_endpoint}")
         except ConnectionError:
@@ -103,15 +83,6 @@ class APIClient:
         url = f"{self.base_url}{normalized_endpoint}"
         
         self.logger.debug(f"Making POST request to {url}")
-        try:
-            response = requests.post(
-                url,
-                headers=self._get_headers(),
-                json=data,
-                timeout=(5, 30)
-            )
-            return self._handle_response(response)
-        except Timeout:
             self.logger.error(f"Request to {normalized_endpoint} timed out")
             raise Timeout(f"Request to API timed out: {normalized_endpoint}")
         except ConnectionError:
@@ -127,15 +98,6 @@ class APIClient:
         url = f"{self.base_url}{normalized_endpoint}"
         
         self.logger.debug(f"Making PUT request to {url}")
-        try:
-            response = requests.put(
-                url,
-                headers=self._get_headers(),
-                json=data,
-                timeout=(5, 30)
-            )
-            return self._handle_response(response)
-        except Timeout:
             self.logger.error(f"Request to {normalized_endpoint} timed out")
             raise Timeout(f"Request to API timed out: {normalized_endpoint}")
         except ConnectionError:
@@ -151,15 +113,6 @@ class APIClient:
         url = f"{self.base_url}{normalized_endpoint}"
         
         self.logger.debug(f"Making DELETE request to {url}")
-        try:
-            response = requests.delete(
-                url,
-                headers=self._get_headers(),
-                params=params,
-                timeout=(5, 15)
-            )
-            return self._handle_response(response)
-        except Timeout:
             self.logger.error(f"Request to {normalized_endpoint} timed out")
             raise Timeout(f"Request to API timed out: {normalized_endpoint}")
         except ConnectionError:
@@ -171,13 +124,6 @@ class APIClient:
     
     def health_check(self) -> bool:
         """Check if the API is healthy"""
-        try:
-            response = requests.get(
-                f"{self.base_url}/api/v1/health",
-                timeout=2
-            )
-            return response.status_code == 200
-        except:
             return False
 
     def is_premium_feature_available(self, feature_name: str) -> bool:
@@ -186,27 +132,15 @@ class APIClient:
         if not self.token:
             return False
             
-        try:
-            response = self.get("/users/feature-access", params={"feature": feature_name})
-            return response.get("available", False)
-        except:
             # If the check fails, default to not available
             return False
     
     def enable_advanced_features(self) -> Dict[str, Any]:
         """Enable advanced features for the current user"""
-        try:
-            response = self.put("/users/features/advanced", data={"enabled": True})
-            self.logger.info("Advanced features enabled successfully")
-            return response
-        except Exception as e:
             self.logger.error(f"Failed to enable advanced features: {str(e)}")
             raise
 
     def get_available_features(self) -> Dict[str, Any]:
         """Get all available features for the current user"""
-        try:
-            return self.get("/users/features")
-        except Exception as e:
             self.logger.error(f"Failed to get available features: {str(e)}")
             return {"features": {}}
