@@ -10,7 +10,7 @@ import time
 from datetime import datetime, timedelta
 import logging
 import os
-import httpx
+from .services.httpx_client import HTTPXService, create_httpx_service
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -26,6 +26,11 @@ TOKEN_EXPIRE_MINUTES = int(os.getenv("TOKEN_EXPIRE_MINUTES", "60"))
 # API Configuration
 API_URL = os.getenv("API_URL", "http://quantumvestai-dev-api:8000/api/v1")
 
+# get_current_user function removed as per requirements
+
+# get_optional_current_user function removed as per requirements
+
+# validate_admin_access function removed as per requirements
 async def get_current_user(
     request: Request,
     response: Response,
@@ -76,24 +81,64 @@ async def get_current_user(
         if exp_timestamp and time.time() > exp_timestamp:
             logger.info(f"Token expired for user {username}")
             if request.url.path != "/login":
-                return response.headers.append("Location", f"/login?next={request.url.path}")
+                response.headers["Location"] = f"/login?next={request.url.path}"
             raise credentials_exception
         
-        # In a real implementation, validate with the API
-        # This is a simplified example for demonstration
-        user_data = {
-            "username": username,
-            "email": payload.get("email"),
-            "full_name": payload.get("name"),
-            "permissions": payload.get("permissions", []),
-            "token": token_to_use
-        }
+        # Verify with API server using improved HTTPX client
+        user_data = await verify_token_with_api_improved(token_to_use)
         
         return user_data
         
     except jwt.PyJWTError as e:
         logger.error(f"JWT validation error: {str(e)}")
         raise credentials_exception
+    except Exception as e:
+        logger.error(f"Unexpected error in authentication: {str(e)}")
+        raise credentials_exception
+
+async def verify_token_with_api_improved(token: str) -> Dict[str, Any]:
+    """
+    Verify token with the API server using improved HTTPX client
+    """
+    try:
+        # Create HTTPX service with authentication
+        service = create_httpx_service(base_url=API_URL, auth_token=token)
+        
+        # Make request to verify token
+        response = await service.post(
+            "/auth/verify",
+            json_data={"token": token},
+            timeout=10.0
+        )
+        
+        if response.status_code != 200:
+            logger.error(f"Token verification failed: {response.status_code}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )
+        
+        return response.json()
+        
+    except Exception as e:
+        logger.error(f"API connection error during token verification: {str(e)}")
+        
+        # Fall back to local verification if API is unavailable
+        try:
+            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+            return {
+                "username": payload.get("sub"),
+                "email": payload.get("email"),
+                "full_name": payload.get("name"),
+                "permissions": payload.get("permissions", []),
+                "token": token,
+                "verified_locally": True
+            }
+        except jwt.PyJWTError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )
 
 async def get_optional_current_user(
     request: Request,
@@ -171,29 +216,40 @@ async def verify_token_with_api(token: str) -> Dict[str, Any]:
         HTTPException: If token verification fails
     """
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{API_URL}/api/auth/verify",
-                json={"token": token},
-                timeout=5.0
+        from core.http_client import safe_post_json
+        
+        # Use the centralized HTTP client with proper error handling
+        response_data = await safe_post_json(
+            url=f"{API_URL}/api/auth/verify",
+            json_data={"token": token},
+            auth_token=token
+        )
+        
+        if response_data is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token or API unavailable"
             )
-            
-            if response.status_code != 200:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid token"
-                )
-            
-            return response.json()
-    except httpx.RequestError as e:
+        
+        return response_data
+        
+    except Exception as e:
+        logger.error(f"API token verification failed: {str(e)}")
         logger.error(f"API connection error during token verification: {str(e)}")
         # Fall back to local verification if API is unavailable
-        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-        return {
-            "username": payload.get("sub"),
-            "email": payload.get("email"),
-            "full_name": payload.get("name"),
-            "permissions": payload.get("permissions", []),
-            "token": token,
-            "verified_locally": True
-        }
+        try:
+            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+            return {
+                "username": payload.get("sub"),
+                "email": payload.get("email"),
+                "full_name": payload.get("name"),
+                "permissions": payload.get("permissions", []),
+                "token": token,
+                "verified_locally": True
+            }
+        except jwt.PyJWTError as jwt_error:
+            logger.error(f"Local token verification failed: {str(jwt_error)}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )

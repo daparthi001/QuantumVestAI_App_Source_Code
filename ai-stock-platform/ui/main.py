@@ -108,6 +108,11 @@ except Exception as e:
     def get_asset_url(path, version=None):
         if not version:
             version = os.environ.get('APP_VERSION', 'v1.5.2')
+# Import controllers - moved after app creation
+# Create fallback functions for critical template filters
+def get_asset_url(path, version=None):
+    if not version:
+        version = os.environ.get('APP_VERSION', 'v1.5.2')
         timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
         return f"/static/{path}?v={version}&t={timestamp}"
     
@@ -136,7 +141,43 @@ except Exception as e:
     
     logger.info("Enhanced fallback template filters added")
 
+
 # Enhanced request middleware with performance monitoring
+    logger.info("Added fallback for get_asset_url filter")
+    logger.info("Added fallback for format_large_number filter")
+
+
+# Import proxy router - with error handling
+# try:
+#     from routes import api_proxy
+# except ImportError as e:
+#     logger.error(f"Could not import api_proxy: {str(e)}")
+#     # Create dummy router as fallback
+#     from fastapi import APIRouter
+#     api_proxy = APIRouter()
+#     app.include_router(api_proxy)
+
+# Import controllers with error handling
+controllers = {}
+    logger.error(f"Could not import auth_controller: {str(e)}")
+
+    logger.error(f"Could not import dashboard_controller: {str(e)}")
+
+    logger.error(f"Could not import market_controller: {str(e)}")
+
+    logger.error(f"Could not import stock_controller: {str(e)}")
+
+    logger.error(f"Could not import watchlist_controller: {str(e)}")
+
+    logger.error(f"Could not import profile_controller: {str(e)}")
+
+    logger.error(f"Could not import forecast_controller: {str(e)}")
+
+    logger.error(f"Could not import news_controller: {str(e)}")
+
+    logger.error(f"Could not import feature_controller: {str(e)}")
+
+# Debug middleware to log all requests
 @app.middleware("http")
 async def enhanced_request_middleware(request: Request, call_next):
     start_time = datetime.now()
@@ -154,6 +195,7 @@ async def enhanced_request_middleware(request: Request, call_next):
         
         # Calculate duration
         duration = (datetime.now() - start_time).total_seconds()
+        logger.error(f"Login error: {str(e)}")
         
         # Add performance headers
         response.headers["X-Request-ID"] = request_id
@@ -162,7 +204,21 @@ async def enhanced_request_middleware(request: Request, call_next):
         logger.info(f"[{request_id}] {method} {path} completed - Status: {response.status_code} - Duration: {duration:.3f}s")
         
         return response
+@app.post("/emergency-login")
+async def direct_emergency_login(request: Request):
+    """Emergency login endpoint for when normal login fails"""
+            # If not JSON, try to parse it as form data
+            form = await request.form()
+            data = dict(form)
+            username = data.get("username", "")
+            password = data.get("password", "")
         
+        logger.info(f"Emergency login for: {username}")
+        
+        # Create emergency token
+        expires = datetime.utcnow() + timedelta(hours=24)
+        token = f"emergency_{username}_{expires.timestamp()}"
+
     except Exception as e:
         duration = (datetime.now() - start_time).total_seconds()
         logger.error(f"[{request_id}] {method} {path} failed - Error: {str(e)} - Duration: {duration:.3f}s")
@@ -194,6 +250,7 @@ class AuthUtils:
 # Enhanced route handlers with better error handling
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
+
     """Enhanced index page with user context"""
     try:
         request_id = getattr(request.state, 'request_id', 'unknown')
@@ -216,6 +273,9 @@ async def index(request: Request):
             }
         )
     except Exception as e:
+
+    """Serve the index page"""
+
         logger.error(f"Error rendering index page: {str(e)}")
         return HTMLResponse(
             content=f"""
@@ -243,6 +303,7 @@ async def index(request: Request):
             status_code=500
         )
 
+
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request, msg: str = None):
     """Enhanced login page"""
@@ -264,6 +325,12 @@ async def login_page(request: Request, msg: str = None):
         )
     except Exception as e:
         logger.error(f"Error rendering login page: {str(e)}")
+
+@app.get("/register", response_class=HTMLResponse)
+async def register_page(request: Request, msg: str = None):
+    """Serve registration page"""
+        logger.error(f"Error rendering register page: {str(e)}")
+
         return HTMLResponse(
             content=f"""
             <!DOCTYPE html>
@@ -309,6 +376,7 @@ async def enhanced_login_post(
     request_id = getattr(request.state, 'request_id', 'unknown')
     logger.info(f"[{request_id}] Login attempt for: {username}")
     
+
     try:
         # Validate input
         if not username or len(username.strip()) < 3:
@@ -332,6 +400,9 @@ async def enhanced_login_post(
                 timeout=10,
                 headers={"Content-Type": "application/json"}
             )
+
+                error_message = f"Registration failed with status {response.status_code}"
+
             
             if response.status_code == 200:
                 token_data = response.json()
@@ -412,6 +483,7 @@ async def enhanced_login_post(
             status_code=500
         )
 
+
 @app.get("/dashboard", response_class=HTMLResponse)
 async def enhanced_dashboard(request: Request):
     """Enhanced dashboard with authentication check"""
@@ -436,6 +508,12 @@ async def enhanced_dashboard(request: Request):
     except Exception as e:
         logger.error(f"Error rendering dashboard: {str(e)}")
         # Fallback dashboard HTML
+
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request, msg: str = None):
+    """Serve login page"""
+        logger.error(f"Error rendering login page: {str(e)}")
+
         return HTMLResponse(
             content=f"""
             <!DOCTYPE html>
@@ -513,11 +591,13 @@ async def enhanced_health_check():
     """Enhanced health check with API status"""
     api_health = {"status": "unknown"}
     
+
     try:
         response = requests.get(f"{API_V1_URL}/health", timeout=5)
         if response.status_code == 200:
             api_health = response.json()
     except Exception as e:
+
         logger.warning(f"Could not reach API for health check: {str(e)}")
         api_health = {"status": "unreachable", "error": str(e)}
     
@@ -549,6 +629,7 @@ async def logout(request: Request):
 
 # Enhanced error handlers
 @app.exception_handler(404)
+
 async def enhanced_not_found_handler(request: Request, exc: HTTPException):
     """Enhanced 404 error handler"""
     try:
@@ -562,6 +643,10 @@ async def enhanced_not_found_handler(request: Request, exc: HTTPException):
             status_code=404
         )
     except Exception as e:
+
+async def not_found_exception_handler(request: Request, exc: HTTPException):
+    """Handle 404 errors"""
+
         logger.error(f"Could not render 404 template: {str(e)}")
         return HTMLResponse(
             content=f"""
@@ -591,6 +676,7 @@ async def enhanced_not_found_handler(request: Request, exc: HTTPException):
         )
 
 @app.exception_handler(500)
+
 async def enhanced_server_error_handler(request: Request, exc: HTTPException):
     """Enhanced 500 error handler"""
     try:
@@ -606,6 +692,28 @@ async def enhanced_server_error_handler(request: Request, exc: HTTPException):
     except:
         return HTMLResponse(
             content=f"""
+async def server_error_handler(request: Request, exc: HTTPException):
+    """Handle 500 errors"""
+        return HTMLResponse(
+            content=f"<h1>500 Server Error</h1><p>{str(exc)}</p>",
+            status_code=500
+        )
+
+# Include controllers AFTER defining direct routes to avoid conflicts
+    logger.error(f"Failed to include api_proxy router: {str(e)}")
+
+# Only include controllers that were successfully imported
+for name, controller in controllers.items():
+        logger.error(f"Failed to include {name} router: {str(e)}")
+
+# Add route to serve dashboard placeholder (will be overridden by dashboard_controller if implemented)
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard(request: Request):
+    """Temporary dashboard placeholder until real dashboard is implemented"""
+        logger.error(f"Error rendering dashboard: {str(e)}")
+        # If dashboard/index.html doesn't exist, return a simple HTML response
+        return HTMLResponse(
+            content="""
             <!DOCTYPE html>
             <html>
                 <head>

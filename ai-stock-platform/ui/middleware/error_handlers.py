@@ -13,17 +13,10 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 # Set up templates
-try:
-    from core.config import settings
-    templates_dir = Path(settings.TEMPLATES_DIR)
-except ImportError:
     # Fallback settings
     templates_dir = Path("templates")
     logger.warning("Using fallback template directory")
 
-try:
-    templates = Jinja2Templates(directory=templates_dir)
-except Exception as e:
     logger.error(f"Error setting up templates: {e}")
     templates = None
 

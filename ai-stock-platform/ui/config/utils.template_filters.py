@@ -10,9 +10,6 @@ import json
 import hashlib
 
 # Set locale for currency formatting
-try:
-    locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
-except locale.Error:
     # Fallback for environments where the locale is not available
     locale.setlocale(locale.LC_ALL, '')
 
@@ -29,9 +26,6 @@ def format_currency(value, symbol='$'):
     if value is None:
         return f"{symbol}0.00"
     
-    try:
-        return f"{symbol}{locale.format_string('%,.2f', float(value), grouping=True)}"
-    except (ValueError, TypeError):
         # Handle case where value cannot be converted to float
         return f"{symbol}0.00"
 
@@ -48,12 +42,6 @@ def format_percentage(value, precision=2):
     if value is None:
         return f"0.{precision * '0'}%"
     
-    try:
-        # Convert to percentage and round
-        percentage = float(value) * 100
-        format_string = f"%.{precision}f%%"
-        return format_string % percentage
-    except (ValueError, TypeError):
         # Handle case where value cannot be converted to float
         return f"0.{precision * '0'}%"
 
@@ -91,18 +79,6 @@ def format_date(value, format_string="%b %d, %Y"):
         return ""
     
     if isinstance(value, str):
-        try:
-            # Try parsing ISO format with timezone
-            value = datetime.fromisoformat(value.replace('Z', '+00:00'))
-        except ValueError:
-            try:
-                # Try parsing common formats
-                value = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
-            except ValueError:
-                try:
-                    # Try parsing date only format
-                    value = datetime.strptime(value, "%Y-%m-%d")
-                except ValueError:
                     # Return original string if parsing fails
                     return value
     
@@ -133,12 +109,6 @@ def relative_time(value):
         return ""
     
     if isinstance(value, str):
-        try:
-            value = datetime.fromisoformat(value.replace('Z', '+00:00'))
-        except ValueError:
-            try:
-                value = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
-            except ValueError:
                 return value
     
     now = datetime.utcnow()
@@ -222,10 +192,6 @@ def number_format(value, decimal_places=0):
     if value is None:
         return "0"
     
-    try:
-        format_string = f"%,.{decimal_places}f"
-        return locale.format_string(format_string, float(value), grouping=True)
-    except (ValueError, TypeError):
         return "0"
 
 def get_asset_url(path, version=None):
@@ -272,9 +238,6 @@ def file_size_format(size_bytes):
     if size_bytes is None:
         return "0 B"
     
-    try:
-        size_bytes = float(size_bytes)
-    except (ValueError, TypeError):
         return "0 B"
     
     units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
