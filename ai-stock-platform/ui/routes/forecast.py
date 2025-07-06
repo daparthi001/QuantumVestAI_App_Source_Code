@@ -44,6 +44,13 @@ except NameError as e:
 # Try to import auth dependencies
     logger.warning("Auth dependencies not found. Using mock functions.")
     
+    async def get_current_user(request: Request, response=None):
+        """Mock function that returns None (demo mode)"""
+        return None
+    
+    async def get_optional_current_user(request: Request, response=None):
+        """Mock function that returns None (demo mode)"""
+        return None
     
     async def (request: Request, response=None):
         """Mock function that optionally returns a default user"""
@@ -60,12 +67,33 @@ def get_templates(request):
 
 @router.get("", response_class=HTMLResponse)
 async def forecast_home(
+    request: Request
     request: Request,
     
 ):
     """
-    Render the forecast home page.
+    Render the forecast home page (demo mode).
     """
+    try:
+        # Get templates
+        templates = get_templates(request)
+        
+        # Get API URL from settings or environment
+        api_url = getattr(settings, "API_URL", os.getenv("API_URL", "http://api:8000"))
+        
+        # Render template
+        return templates.TemplateResponse(
+            "forecast/index.html",
+            {
+                "request": request,
+                "user": None,
+                "demo_mode": True,
+                "page_title": "AI Market Forecasts",
+                "current_date": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+            }
+        )
+    except Exception as e:
+
         logger.exception(f"Error rendering forecast home: {str(e)}")
         
         # Get templates
@@ -77,6 +105,8 @@ async def forecast_home(
             {
                 "request": request,
                 "user": None,
+                "demo_mode": True,
+
                 "message": "An error occurred loading the forecast page.",
                 "error_code": "FORECAST_ERR"
             },
@@ -87,12 +117,73 @@ async def forecast_home(
 async def stock_forecast(
     request: Request,
     symbol: str = Path(..., description="Stock symbol"),
+    period: str = Query("month", description="Forecast period (day, week, month, quarter, year)")
+
     period: str = Query("month", description="Forecast period (day, week, month, quarter, year)"),
     
 ):
     """
-    Render the stock forecast page for a specific stock.
+    Render the stock forecast page for a specific stock (demo mode).
     """
+    try:
+        # Get templates
+        templates = get_templates(request)
+        
+        # Get API URL from settings or environment
+        api_url = getattr(settings, "API_URL", os.getenv("API_URL", "http://api:8000"))
+        
+        # Create mock forecast data (in a real app, this would come from an API)
+        forecast_data = {
+            "symbol": symbol.upper(),
+            "name": f"{symbol.upper()} Corporation",
+            "current_price": 178.50,
+            "forecast_price": 195.25,
+            "forecast_change": 16.75,
+            "forecast_change_percent": 9.38,
+            "confidence": 72,
+            "period": period,
+            "generated_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "chart_data": {
+                "labels": ["Today", "Week 1", "Week 2", "Week 3", "Week 4"],
+                "values": [178.50, 182.25, 186.75, 190.50, 195.25],
+                "confidence_intervals": [
+                    [176.50, 180.50],
+                    [179.00, 185.50],
+                    [182.25, 191.25],
+                    [185.00, 196.00],
+                    [189.75, 200.75]
+                ]
+            },
+            "factors": [
+                {"name": "Technical Analysis", "impact": 0.65, "direction": "positive"},
+                {"name": "Market Sentiment", "impact": 0.45, "direction": "positive"},
+                {"name": "Sector Performance", "impact": 0.25, "direction": "positive"},
+                {"name": "Economic Indicators", "impact": 0.15, "direction": "negative"}
+            ]
+        }
+        
+        # Render template
+        return templates.TemplateResponse(
+            "forecast/stock.html",
+            {
+                "request": request,
+                "user": None,
+                "demo_mode": True,
+                "page_title": f"{symbol.upper()} Forecast",
+                "stock_symbol": symbol.upper(),
+                "forecast": forecast_data,
+                "periods": [
+                    {"value": "day", "label": "1 Day"},
+                    {"value": "week", "label": "1 Week"},
+                    {"value": "month", "label": "1 Month"},
+                    {"value": "quarter", "label": "3 Months"},
+                    {"value": "year", "label": "1 Year"}
+                ],
+                "selected_period": period
+            }
+        )
+    except Exception as e:
+
         logger.exception(f"Error rendering stock forecast: {str(e)}")
         
         # Get templates
@@ -104,6 +195,8 @@ async def stock_forecast(
             {
                 "request": request,
                 "user": None,
+                "demo_mode": True,
+
                 "message": f"An error occurred loading the forecast for {symbol}.",
                 "error_code": "STOCK_FORECAST_ERR"
             },
@@ -114,11 +207,12 @@ async def stock_forecast(
 async def api_stock_forecast(
     request: Request,
     symbol: str = Path(..., description="Stock symbol"),
+    period: str = Query("month", description="Forecast period")
     period: str = Query("month", description="Forecast period"),
     
 ):
     """
-    API endpoint to get forecast data for a stock.
+    API endpoint to get forecast data for a stock (demo mode).
     """
         logger.exception(f"API forecast error: {str(e)}")
         raise HTTPException(

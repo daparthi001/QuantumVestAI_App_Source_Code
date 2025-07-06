@@ -1,3 +1,4 @@
+=======
 """
 QuantumVestAI Features Routes
 Last Updated: 2025-06-18 21:25:28
@@ -10,13 +11,17 @@ from services.api_client import APIClient
 from pathlib import Path
 import logging
 
-# Setup router and templates
-router = APIRouter(prefix="/features", tags=["features"])
-templates = Jinja2Templates(directory=str(Path("/app/templates")))
-logger = logging.getLogger(__name__)
+from fastapi import APIRouter, Request
+from fastapi.responses import RedirectResponse
 
-API_URL = "http://quantumvestai-dev-api:8000/api/v1"
+router = APIRouter(tags=["features"])
 
+@router.get("/features")
+async def features_page(request: Request):
+    """Features page (demo mode)"""
+    return RedirectResponse(url="/login?msg=Features+require+authentication+(demo+mode)", status_code=302)
+
+=======
 @router.get("/sentiment", response_class=HTMLResponse)
 async def sentiment_analysis(
     request: Request,

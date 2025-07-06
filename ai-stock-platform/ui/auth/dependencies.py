@@ -2,21 +2,17 @@
 # Last updated: 2025-06-20 04:10:30
 # Updated by: daparthi001
 
-from fastapi import Depends, HTTPException, status, Request, Response, Cookie
-from fastapi.security import OAuth2PasswordBearer
 from typing import Optional, Dict, Any
 import jwt
-import time
 from datetime import datetime, timedelta
 import logging
 import os
+
 from .services.httpx_client import HTTPXService, create_httpx_service
+
 
 # Setup logging
 logger = logging.getLogger(__name__)
-
-# OAuth2 scheme for token extraction
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 
 # JWT Configuration
 JWT_SECRET_KEY = os.getenv("SECRET_KEY", "default-dev-key")
@@ -202,20 +198,26 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
     return encoded_jwt
 
-async def verify_token_with_api(token: str) -> Dict[str, Any]:
+def decode_token(token: str) -> Dict[str, Any]:
     """
-    Verify token with the API server (more secure approach for production).
+    Decode a JWT token.
     
     Args:
-        token: JWT token to verify
+        token: JWT token to decode
         
     Returns:
-        Dict containing user information from API
+        Dict containing token payload
         
     Raises:
-        HTTPException: If token verification fails
+        JWTError: If token is invalid or expired
     """
     try:
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        return payload
+    except jwt.PyJWTError as e:
+        logger.error(f"JWT decode error: {str(e)}")
+        raise
+
         from core.http_client import safe_post_json
         
         # Use the centralized HTTP client with proper error handling

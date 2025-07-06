@@ -3,7 +3,7 @@ QuantumVestAI Feature Controller
 Updated: 2025-06-19 02:20:19
 Author: daparthi001
 """
-from fastapi import APIRouter, Request, Depends, HTTPException, Form
+from fastapi import APIRouter, Request, HTTPException, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 import requests
@@ -27,6 +27,32 @@ API_V1_URL = f"{API_URL}/api/v1"
 
 @router.get("/advanced", response_class=HTMLResponse)
 async def advanced_features(request: Request):
+    """Advanced features page (demo mode)"""
+    
+    # Demo mode - redirect to login with a message
+    return RedirectResponse(url="/login?msg=Advanced+features+require+authentication+(demo+mode)", status_code=302)
+
+@router.post("/activate")
+async def activate_features(request: Request):
+    """Activate features (demo mode)"""
+    
+    # Demo mode - redirect to login with a message
+    return RedirectResponse(url="/login?msg=Feature+activation+requires+authentication+(demo+mode)", status_code=302)
+
+@router.get("/status")
+async def feature_status(request: Request):
+    """Feature status (demo mode)"""
+    
+    # Demo mode - redirect to login with a message
+    return RedirectResponse(url="/login?msg=Feature+status+requires+authentication+(demo+mode)", status_code=302)
+
+@router.get("/debug", response_class=HTMLResponse)
+async def debug_features(request: Request):
+    """Debug features page (demo mode)"""
+    
+    # Demo mode - redirect to login with a message
+    return RedirectResponse(url="/login?msg=Debug+features+require+authentication+(demo+mode)", status_code=302)
+=======
     """Advanced features page"""
     templates = get_templates()
     if not user:

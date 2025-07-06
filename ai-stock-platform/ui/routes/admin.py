@@ -1,3 +1,4 @@
+=======
 """
 QuantumVestAI Admin Routes
 Last Updated: 2025-06-18 21:48:41
@@ -9,15 +10,15 @@ from fastapi.templating import Jinja2Templates
 from config.settings import settings
 from services.api_client import APIClient
 
-API_URL = "http://quantumvestai-dev-api:8000/api/v1"
-# Admin role constant
-USER_ROLE_ADMIN = "admin"
+from fastapi import APIRouter, Request
+from fastapi.responses import RedirectResponse
 
-# Templates setup
-templates = Jinja2Templates(directory="templates")
+router = APIRouter(tags=["admin"])
 
-# Router setup
-router = APIRouter(prefix="/admin", tags=["admin"])
+@router.get("/admin")
+async def admin_page(request: Request):
+    """Admin page (demo mode)"""
+    return RedirectResponse(url="/login?msg=Admin+features+require+authentication+(demo+mode)", status_code=302)
 
 # Admin access middleware
 def admin_required(request: Request):

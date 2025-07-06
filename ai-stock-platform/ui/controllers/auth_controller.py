@@ -359,5 +359,9 @@ async def password_reset_post(request: Request, email: str = Form(...)):
 
 @router.get("/auth/whoami")
 async def whoami(request: Request):
+    """Test route to show current user info (demo mode)"""
+    
+    # Demo mode - always return unauthenticated
+    return JSONResponse({"authenticated": False, "demo_mode": True}, status_code=401)
     """Test route to show current user info"""
     return JSONResponse({"authenticated": False}, status_code=401)

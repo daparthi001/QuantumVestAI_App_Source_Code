@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Depends, Query
+from fastapi import APIRouter, Request, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional, List
@@ -15,6 +15,29 @@ templates = Jinja2Templates(directory="templates")
 router = APIRouter(tags=["dashboard"])
 
 @router.get("/", response_class=HTMLResponse)
+async def dashboard_page(request: Request):
+    """Render dashboard page (demo mode)"""
+    try:
+        # Demo mode - no authentication required
+        api_client = APIClient(token=None)
+        
+        # Get market summary
+        market_summary = YahooFinanceService.get_market_summary()
+        
+        # Get popular stocks
+        popular_stocks = [
+            YahooFinanceService.get_stock_info(ticker) 
+            for ticker in ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
+        ]
+        
+        # Get news
+        news_items = []
+        for ticker in ["AAPL", "MSFT", "GOOGL"]:
+            try:
+                news = YahooFinanceService.get_stock_news(ticker, limit=2)
+                news_items.extend(news)
+            except:
+
 async def dashboard_page(
     request: Request,
     
@@ -42,6 +65,8 @@ async def dashboard_page(
             {
                 "request": request,
                 "user": None,
+                "demo_mode": True,
+
                 "market_summary": market_summary,
                 "popular_stocks": popular_stocks,
                 "news": news_items,
@@ -60,6 +85,8 @@ async def dashboard_page(
             {
                 "request": request,
                 "user": None,
+                "demo_mode": True,
+
                 "market_summary": {"indices": {}, "sectors": {}, "top_movers": {}},
                 "popular_stocks": [],
                 "news": [],

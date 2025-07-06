@@ -1,3 +1,4 @@
+
 from fastapi import APIRouter, Request, Query, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -9,11 +10,15 @@ from services.api_client import APIClient
 from services.yahoo_finance import YahooFinanceService
 API_URL = "http://quantumvestai-dev-api:8000/api/v1"
 
-# Templates setup
-templates = Jinja2Templates(directory="templates")
+from fastapi import APIRouter, Request
+from fastapi.responses import RedirectResponse
 
-# Router setup
 router = APIRouter(tags=["predictability"])
+
+@router.get("/predictability")
+async def predictability_page(request: Request):
+    """Predictability page (demo mode)"""
+    return RedirectResponse(url="/login?msg=Predictability+features+require+authentication+(demo+mode)", status_code=302)
 
 @router.get("/predictability", response_class=HTMLResponse)
 async def predictability_page(
