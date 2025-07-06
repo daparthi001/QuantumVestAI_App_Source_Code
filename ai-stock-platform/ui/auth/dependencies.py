@@ -8,6 +8,9 @@ from datetime import datetime, timedelta
 import logging
 import os
 
+from .services.httpx_client import HTTPXService, create_httpx_service
+
+
 # Setup logging
 logger = logging.getLogger(__name__)
 
@@ -18,6 +21,160 @@ TOKEN_EXPIRE_MINUTES = int(os.getenv("TOKEN_EXPIRE_MINUTES", "60"))
 
 # API Configuration
 API_URL = os.getenv("API_URL", "http://quantumvestai-dev-api:8000/api/v1")
+
+async def get_current_user(
+    request: Request,
+    response: Response,
+    token: Optional[str] = Depends(oauth2_scheme),
+    session_token: Optional[str] = Cookie(None)
+) -> Dict[str, Any]:
+    """
+    Validate user authentication from JWT token or session cookie.
+    
+    Args:
+        request: FastAPI request object
+        response: FastAPI response object
+        token: Bearer token from Authorization header
+        session_token: Token from session cookie
+        
+    Returns:
+        Dict containing user information
+        
+    Raises:
+        HTTPException: If authentication fails
+    """
+    # Use token from Authorization header or cookie
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid authentication credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    # Prioritize token from Authorization header
+    token_to_use = token or session_token
+    
+    if not token_to_use:
+        # Redirect to login page if no token
+        if request.url.path != "/login":
+            return response.headers.append("Location", f"/login?next={request.url.path}")
+        raise credentials_exception
+    
+    try:
+        # Verify token with JWT
+        payload = jwt.decode(token_to_use, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        username: str = payload.get("sub")
+        exp_timestamp: int = payload.get("exp")
+        
+        if username is None:
+            raise credentials_exception
+        
+        # Check if token is expired
+        if exp_timestamp and time.time() > exp_timestamp:
+            logger.info(f"Token expired for user {username}")
+            if request.url.path != "/login":
+                response.headers["Location"] = f"/login?next={request.url.path}"
+            raise credentials_exception
+        
+        # Verify with API server using improved HTTPX client
+        user_data = await verify_token_with_api_improved(token_to_use)
+        
+        return user_data
+        
+    except jwt.PyJWTError as e:
+        logger.error(f"JWT validation error: {str(e)}")
+        raise credentials_exception
+    except Exception as e:
+        logger.error(f"Unexpected error in authentication: {str(e)}")
+        raise credentials_exception
+
+async def verify_token_with_api_improved(token: str) -> Dict[str, Any]:
+    """
+    Verify token with the API server using improved HTTPX client
+    """
+    try:
+        # Create HTTPX service with authentication
+        service = create_httpx_service(base_url=API_URL, auth_token=token)
+        
+        # Make request to verify token
+        response = await service.post(
+            "/auth/verify",
+            json_data={"token": token},
+            timeout=10.0
+        )
+        
+        if response.status_code != 200:
+            logger.error(f"Token verification failed: {response.status_code}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )
+        
+        return response.json()
+        
+    except Exception as e:
+        logger.error(f"API connection error during token verification: {str(e)}")
+        
+        # Fall back to local verification if API is unavailable
+        try:
+            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+            return {
+                "username": payload.get("sub"),
+                "email": payload.get("email"),
+                "full_name": payload.get("name"),
+                "permissions": payload.get("permissions", []),
+                "token": token,
+                "verified_locally": True
+            }
+        except jwt.PyJWTError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )
+
+async def get_optional_current_user(
+    request: Request,
+    response: Response,
+    token: Optional[str] = Depends(oauth2_scheme),
+    session_token: Optional[str] = Cookie(None)
+) -> Optional[Dict[str, Any]]:
+    """
+    Similar to get_current_user but returns None instead of raising an exception
+    if no valid token is found. This is useful for routes that work with or without
+    authentication.
+    
+    Args:
+        request: FastAPI request object
+        response: FastAPI response object
+        token: Bearer token from Authorization header
+        session_token: Token from session cookie
+        
+    Returns:
+        Dict containing user information or None if not authenticated
+    """
+    try:
+        return await get_current_user(request, response, token, session_token)
+    except HTTPException:
+        return None
+
+async def validate_admin_access(user: Dict[str, Any] = Depends(get_current_user)):
+    """
+    Validate that the current user has admin permissions.
+    
+    Args:
+        user: User information from get_current_user
+        
+    Returns:
+        The user dict if they have admin permissions
+        
+    Raises:
+        HTTPException: If user doesn't have admin permissions
+    """
+    if "admin" not in user.get("permissions", []):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions"
+        )
+    return user
 
 def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None):
     """
