@@ -132,4 +132,7 @@ def format_volume(volume: float) -> str:
         return f"{volume / 1_000_000_000:.2f}B"
     elif volume >= 1_000_000:
         return f"{volume / 1_000_000:.2f}M"
-    elif volume
+    elif volume >= 1_000:
+        return f"{volume / 1_000:.2f}K"
+    else:
+        return f"{volume:.0f}"

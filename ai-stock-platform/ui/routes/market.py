@@ -3,10 +3,9 @@ QuantumVestAI Market Routes
 Last Updated: 2025-06-18 22:03:16
 Author: daparthi001
 """
-from fastapi import APIRouter, Request, Depends, Query
+from fastapi import APIRouter, Request, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from routes.auth import get_current_user
 from services.api_client import APIClient
 from pathlib import Path
 import logging
@@ -18,14 +17,11 @@ logger = logging.getLogger(__name__)
 API_URL = "http://quantumvestai-dev-api:8000/api/v1"
 
 @router.get("/market", response_class=HTMLResponse)
-async def market_overview(
-    request: Request,
-    current_user: dict = Depends(get_current_user)
-):
-    """Market overview page"""
+async def market_overview(request: Request):
+    """Market overview page (demo mode)"""
     try:
-        # Create API client with auth token
-        api_client = APIClient(token=request.cookies.get("access_token"))
+        # Demo mode - no authentication required
+        api_client = APIClient(token=None)
         
         # Get market data from API
         market_data = api_client.get("/market/data")
@@ -37,7 +33,7 @@ async def market_overview(
             "market/overview.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None, "demo_mode": True,
                 "market_data": market_data,
                 "market_news": market_news
             }
@@ -48,7 +44,7 @@ async def market_overview(
             "market/overview.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None, "demo_mode": True,
                 "error": "Failed to load market data"
             },
             status_code=500
@@ -79,7 +75,7 @@ async def ticker_details(
             "market/ticker_details.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None, "demo_mode": True,
                 "ticker_data": ticker_data,
                 "ticker_news": ticker_news,
                 "ticker_predictions": ticker_predictions,
@@ -92,7 +88,7 @@ async def ticker_details(
             "market/ticker_details.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None, "demo_mode": True,
                 "ticker": ticker,
                 "error": f"Failed to load data for {ticker}"
             },
@@ -148,7 +144,7 @@ async def market_sentiment(
             "market/sentiment.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None, "demo_mode": True,
                 "sentiment_data": sentiment_data,
                 "sentiment_trends": sentiment_trends,
                 "sentiment_tickers": sentiment_tickers,
@@ -161,7 +157,7 @@ async def market_sentiment(
             "market/sentiment.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None, "demo_mode": True,
                 "error": "Failed to load market sentiment data"
             },
             status_code=500
