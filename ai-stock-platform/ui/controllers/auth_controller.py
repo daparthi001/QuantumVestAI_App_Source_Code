@@ -63,70 +63,7 @@ def format_error_message(error_data):
         return "An error occurred during registration"
 
 # Function to get the current user from the token in the cookie
-async def get_current_user(request: Request):
-    """Get the current user from the token in the cookie"""
-    token = request.cookies.get("access_token", "")
-    
-    # If no token, return None (not authenticated)
-    if not token:
-        return None
-    
-    # If it's an emergency token, parse username from it
-    if token.startswith("emergency_") or token.startswith("Bearer emergency_"):
-        parts = token.split("_")
-        if len(parts) >= 2:
-            username = parts[1]
-            # Create minimal user object
-            return {
-                "username": username,
-                "email": f"{username}@example.com",
-                "full_name": username.capitalize(),
-                "id": 0,
-                "is_emergency": True
-            }
-    
-    # For regular tokens, verify with API
-    try:
-        # Use consistent headers format
-        if token.startswith("Bearer "):
-            headers = {"Authorization": token}
-        else:
-            headers = {"Authorization": f"Bearer {token}"}
-        
-        # Call API to get current user
-        response = requests.get(
-            f"{API_V1_URL}/users/me", 
-            headers=headers,
-            timeout=3
-        )
-        
-        if response.status_code == 200:
-            user_data = response.json()
-            # Add token for convenience
-            user_data["token"] = token
-            return user_data
-        else:
-            logger.warning(f"Failed to get user from API: {response.status_code}")
-            return None
-            
-    except Exception as e:
-        logger.error(f"Error getting current user: {str(e)}")
-        
-        # For emergency cases, create a dummy user
-        if token.startswith("Bearer emergency_"):
-            parts = token[15:].split("_")
-            if len(parts) >= 1:
-                username = parts[0]
-                # Create minimal user object
-                return {
-                    "username": username,
-                    "email": f"{username}@example.com",
-                    "full_name": username.capitalize(),
-                    "id": 0,
-                    "is_emergency": True
-                }
-        
-        return None
+# get_current_user function removed as per requirements
 
 @router.get("/auth/login", response_class=HTMLResponse)
 async def login_page(request: Request, next: str = "/dashboard", msg: str = None):
@@ -550,12 +487,6 @@ async def password_reset_post(request: Request, email: str = Form(...)):
         )
 
 @router.get("/auth/whoami")
-async def whoami(request: Request, user: dict = Depends(get_current_user)):
+async def whoami(request: Request):
     """Test route to show current user info"""
-    if user:
-        return JSONResponse({
-            "authenticated": True,
-            "user": {k: v for k, v in user.items() if k != "token"}  # Don't expose token
-        })
-    else:
-        return JSONResponse({"authenticated": False}, status_code=401)
+    return JSONResponse({"authenticated": False}, status_code=401)
