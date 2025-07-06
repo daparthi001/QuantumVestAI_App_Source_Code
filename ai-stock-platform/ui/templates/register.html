@@ -2,6 +2,11 @@
 
 {% block title %}Register - QuantumVestAI{% endblock %}
 
+{% block head_extra %}
+<!-- Enhanced UI scripts -->
+<script src="{{ url_for('static', path='/js/enhanced-ui.js') }}"></script>
+{% endblock %}
+
 {% block content %}
 <div class="auth-container">
     <div class="auth-card">
@@ -10,7 +15,7 @@
                 <img src="{{ url_for('static', path='/img/logo.svg') }}" alt="QuantumVestAI">
             </a>
             <h1 class="auth-title">Create Account</h1>
-            <p class="auth-subtitle">Fill out the form to get started</p>
+            <p class="auth-subtitle">Join QuantumVestAI to start your investment journey</p>
         </div>
         
         {% if msg %}
@@ -21,33 +26,322 @@
         {% endif %}
         
         <div class="auth-body">
-            <form method="post" action="/auth/register" id="registerForm">
+            <form method="post" action="/register" id="registerForm" novalidate>
                 <div class="mb-3">
                     <label for="username" class="form-label">Username</label>
-                    <input type="text" class="form-control" id="username" name="username" required autofocus value="{{ username or '' }}">
-                    <div class="form-text">Username must be between 3-20 characters and contain only letters, numbers, and underscores.</div>
+                    <input type="text" 
+                           class="form-control" 
+                           id="username" 
+                           name="username" 
+                           required 
+                           autofocus 
+                           value="{{ username or '' }}"
+                           pattern="[a-zA-Z0-9_-]{3,30}"
+                           autocomplete="username">
+                    <div class="form-text">Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens.</div>
+                    <div class="invalid-feedback"></div>
                 </div>
                 
                 <div class="mb-3">
                     <label for="email" class="form-label">Email Address</label>
-                    <input type="email" class="form-control" id="email" name="email" required value="{{ email or '' }}">
+                    <input type="email" 
+                           class="form-control" 
+                           id="email" 
+                           name="email" 
+                           required 
+                           value="{{ email or '' }}"
+                           autocomplete="email">
+                    <div class="invalid-feedback"></div>
                 </div>
                 
                 <div class="mb-3">
                     <label for="password" class="form-label">Password</label>
-                    <div class="password-input">
-                        <input type="password" class="form-control" id="password" name="password" required>
-                        <button type="button" class="password-toggle" tabindex="-1">
+                    <div class="password-input position-relative">
+                        <input type="password" 
+                               class="form-control" 
+                               id="password" 
+                               name="password" 
+                               required
+                               autocomplete="new-password">
+                        <button type="button" 
+                                class="password-toggle position-absolute top-50 end-0 translate-middle-y border-0 bg-transparent" 
+                                style="margin-right: 10px;"
+                                tabindex="-1">
                             <i class="bi bi-eye"></i>
                         </button>
                     </div>
                     <div class="password-strength mt-2">
-                        <div class="progress">
+                        <div class="progress" style="height: 5px;">
                             <div class="progress-bar" role="progressbar" style="width: 0%"></div>
                         </div>
-                        <div class="password-feedback text-muted mt-1">Password must be at least 8 characters</div>
+                        <div class="password-feedback text-muted mt-1 small">Password must be at least 8 characters with mixed case, numbers, and symbols</div>
                     </div>
+                    <div class="invalid-feedback"></div>
                 </div>
+                
+                <div class="mb-3">
+                    <label for="confirm_password" class="form-label">Confirm Password</label>
+                    <div class="password-input position-relative">
+                        <input type="password" 
+                               class="form-control" 
+                               id="confirm_password" 
+                               name="confirm_password" 
+                               required
+                               autocomplete="new-password">
+                        <button type="button" 
+                                class="password-toggle position-absolute top-50 end-0 translate-middle-y border-0 bg-transparent" 
+                                style="margin-right: 10px;"
+                                tabindex="-1">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                    <div class="invalid-feedback"></div>
+                </div>
+                
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="terms" name="terms" required>
+                    <label class="form-check-label" for="terms">
+                        I agree to the <a href="/terms" target="_blank" class="text-decoration-none">Terms of Service</a> 
+                        and <a href="/privacy" target="_blank" class="text-decoration-none">Privacy Policy</a>
+                    </label>
+                    <div class="invalid-feedback"></div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100 mb-3">
+                    Create Account
+                </button>
+            </form>
+        </div>
+        
+        <div class="auth-footer text-center">
+            Already have an account? <a href="/login" class="text-decoration-none">Sign in here</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Set API base URL
+window.API_BASE_URL = '/api/v1';
+
+document.addEventListener('DOMContentLoaded', function() {
+    const registerForm = document.getElementById('registerForm');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    const usernameInput = document.getElementById('username');
+    const emailInput = document.getElementById('email');
+    const termsCheckbox = document.getElementById('terms');
+    
+    // Password strength indicator
+    function updatePasswordStrength(password) {
+        const progressBar = document.querySelector('.password-strength .progress-bar');
+        const feedback = document.querySelector('.password-feedback');
+        
+        let strength = 0;
+        let feedback_text = '';
+        let color = 'danger';
+        
+        if (password.length >= 8) strength += 20;
+        if (password.match(/[a-z]/)) strength += 20;
+        if (password.match(/[A-Z]/)) strength += 20;
+        if (password.match(/[0-9]/)) strength += 20;
+        if (password.match(/[^a-zA-Z0-9]/)) strength += 20;
+        
+        if (strength < 40) {
+            feedback_text = 'Weak password';
+            color = 'danger';
+        } else if (strength < 80) {
+            feedback_text = 'Medium strength password';
+            color = 'warning';
+        } else {
+            feedback_text = 'Strong password';
+            color = 'success';
+        }
+        
+        progressBar.style.width = strength + '%';
+        progressBar.className = `progress-bar bg-${color}`;
+        feedback.textContent = feedback_text;
+        feedback.className = `password-feedback text-${color} mt-1 small`;
+    }
+    
+    if (passwordInput) {
+        passwordInput.addEventListener('input', function() {
+            updatePasswordStrength(this.value);
+            
+            // Clear password match error when typing
+            if (confirmPasswordInput.value) {
+                validatePasswordMatch();
+            }
+        });
+    }
+    
+    // Real-time validation
+    function validatePasswordMatch() {
+        if (passwordInput.value !== confirmPasswordInput.value) {
+            UIErrorHandler.showFormError('confirm_password', 'Passwords do not match');
+            return false;
+        } else {
+            UIErrorHandler.clearFormError('confirm_password');
+            return true;
+        }
+    }
+    
+    if (confirmPasswordInput) {
+        confirmPasswordInput.addEventListener('blur', validatePasswordMatch);
+    }
+    
+    if (usernameInput) {
+        usernameInput.addEventListener('blur', function() {
+            const username = this.value.trim();
+            UIErrorHandler.clearFormError('username');
+            
+            if (username && !username.match(/^[a-zA-Z0-9_-]{3,30}$/)) {
+                UIErrorHandler.showFormError('username', 'Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens');
+            }
+        });
+    }
+    
+    if (emailInput) {
+        emailInput.addEventListener('blur', function() {
+            const email = this.value.trim();
+            UIErrorHandler.clearFormError('email');
+            
+            if (email && !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                UIErrorHandler.showFormError('email', 'Please enter a valid email address');
+            }
+        });
+    }
+    
+    // Enhanced form submission
+    if (registerForm) {
+        registerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Clear previous errors
+            UIErrorHandler.clearFormErrors(registerForm);
+            
+            // Get form data
+            const formData = new FormData(registerForm);
+            const data = {
+                username: formData.get('username').trim(),
+                email: formData.get('email').trim(),
+                password: formData.get('password'),
+                confirm_password: formData.get('confirm_password'),
+                terms: formData.get('terms') === 'on'
+            };
+            
+            // Validate form
+            let hasErrors = false;
+            
+            if (!data.username || !data.username.match(/^[a-zA-Z0-9_-]{3,30}$/)) {
+                UIErrorHandler.showFormError('username', 'Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens');
+                hasErrors = true;
+            }
+            
+            if (!data.email || !data.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                UIErrorHandler.showFormError('email', 'Please enter a valid email address');
+                hasErrors = true;
+            }
+            
+            if (!data.password || data.password.length < 8) {
+                UIErrorHandler.showFormError('password', 'Password must be at least 8 characters long');
+                hasErrors = true;
+            }
+            
+            if (data.password !== data.confirm_password) {
+                UIErrorHandler.showFormError('confirm_password', 'Passwords do not match');
+                hasErrors = true;
+            }
+            
+            if (!data.terms) {
+                UIErrorHandler.showFormError('terms', 'You must accept the Terms of Service');
+                hasErrors = true;
+            }
+            
+            if (hasErrors) {
+                return;
+            }
+            
+            // Show loading state
+            const submitButton = registerForm.querySelector('button[type="submit"]');
+            LoadingManager.showButtonLoading(submitButton, 'Creating Account...');
+            
+            try {
+                // Try API registration first
+                const response = await APIClient.post('/auth/register', {
+                    username: data.username,
+                    email: data.email,
+                    password: data.password,
+                    full_name: data.username
+                });
+                
+                if (response.status === 'success') {
+                    UIErrorHandler.showSuccess('Account created successfully! Redirecting to login...', { duration: 3000 });
+                    
+                    setTimeout(() => {
+                        window.location.href = '/login?msg=Registration successful! Please log in.';
+                    }, 2000);
+                } else {
+                    throw new Error(response.message || 'Registration failed');
+                }
+            } catch (error) {
+                console.error('API registration failed:', error);
+                
+                // Mark error as handled
+                error.handled = true;
+                
+                // Try fallback form submission
+                UIErrorHandler.showWarning('Using fallback registration...', { duration: 2000 });
+                
+                // Submit form normally
+                const fallbackForm = document.createElement('form');
+                fallbackForm.method = 'POST';
+                fallbackForm.action = '/register';
+                
+                Object.keys(data).forEach(key => {
+                    if (key !== 'terms') {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = key;
+                        input.value = data[key];
+                        fallbackForm.appendChild(input);
+                    }
+                });
+                
+                const termsInput = document.createElement('input');
+                termsInput.type = 'hidden';
+                termsInput.name = 'terms';
+                termsInput.value = data.terms;
+                fallbackForm.appendChild(termsInput);
+                
+                document.body.appendChild(fallbackForm);
+                fallbackForm.submit();
+                
+            } finally {
+                LoadingManager.hideButtonLoading(submitButton);
+            }
+        });
+    }
+    
+    // Password visibility toggles
+    document.querySelectorAll('.password-toggle').forEach(button => {
+        button.addEventListener('click', function() {
+            const input = this.parentNode.querySelector('input');
+            if (!input) return;
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                this.innerHTML = '<i class="bi bi-eye-slash"></i>';
+            } else {
+                input.type = 'password';
+                this.innerHTML = '<i class="bi bi-eye"></i>';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
                 
                 <div class="mb-4">
                     <label for="confirm_password" class="form-label">Confirm Password</label>

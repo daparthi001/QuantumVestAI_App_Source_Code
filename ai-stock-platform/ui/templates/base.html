@@ -15,14 +15,19 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', path='/css/dark-mode.css') }}">
+    <!-- Enhanced Responsive Design -->
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/responsive.css') }}">
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='/img/favicon.svg') }}">
     {% block head_extra %}{% endblock %}
 </head>
 <body class="{% if dark_mode %}dark-mode{% endif %}">
+    <!-- Skip navigation link for accessibility -->
+    <a href="#main-content" class="skip-nav">Skip to main content</a>
+    
     <div class="app-container">
         <!-- Sidebar Navigation -->
-        <aside class="sidebar" id="sidebar">
+        <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
             <div class="sidebar-header">
                 <a href="/" class="sidebar-logo">
                     <img src="{{ url_for('static', path='/img/logo.svg') }}" alt="QuantumVestAI Logo" class="logo-default">
@@ -139,7 +144,7 @@
         </aside>
 
         <!-- Main Content Area -->
-        <main class="main-content">
+        <main class="main-content" id="main-content" role="main">
             <!-- Top Navigation -->
             <header class="top-nav">
                 <div class="nav-left">
@@ -248,8 +253,14 @@
     <!-- JavaScript Libraries -->
     <script src="{{ url_for('static', path='/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', path='/vendors/chart.js/chart.min.js') }}"></script>
+    <!-- Enhanced UI Error Handling and Loading States -->
+    <script src="{{ url_for('static', path='/js/enhanced-ui.js') }}"></script>
+    <!-- Enhanced Navigation -->
+    <script src="{{ url_for('static', path='/js/navigation.js') }}"></script>
     <!-- Core Application JavaScript -->
     <script src="{{ url_for('static', path='/js/app.js') }}"></script>
+    <!-- Authentication utilities -->
+    <script src="{{ url_for('static', path='/js/auth.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

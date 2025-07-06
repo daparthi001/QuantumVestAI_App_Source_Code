@@ -1,6 +1,7 @@
 """
-QuantumVestAI API - Main Application
+QuantumVestAI API - Main Application (Enhanced)
 Updated: 2025-06-19 15:34:18
+Enhanced: 2025-01-09 (AI Assistant)
 Author: daparthi001
 """
 import os
@@ -9,11 +10,21 @@ import socket
 import logging
 from datetime import datetime
 import json
+import uuid
 
 from fastapi import FastAPI, Request, HTTPException, status, Depends, Response
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
+
+# Import enhanced core modules
+from core.middleware.error_handler import ErrorHandlerMiddleware
+from core.middleware.rate_limit import RateLimitMiddleware
+from core.middleware.cors import configure_cors
+from core.responses import create_success_response, create_error_response
+from core.validation import validate_user_login, validate_stock_symbol_param, validate_pagination_params
+from core.database import initialize_database, get_database_health, check_database_connection
+from core.exceptions import ValidationError, AuthenticationError, NotFoundError
 
 # Configure logging
 logging.basicConfig(
@@ -23,10 +34,9 @@ logging.basicConfig(
 logger = logging.getLogger("quantumvestai_api")
 
 # Print startup debugging information
-logger.info(f"Starting API server (FIXED VERSION)...")
+logger.info(f"Starting Enhanced QuantumVestAI API server...")
 logger.info(f"Python version: {sys.version}")
 logger.info(f"Current directory: {os.getcwd()}")
-logger.info(f"System path: {sys.path}")
 
 # Create FastAPI application
 API_ENV = os.environ.get("API_ENV", "development")
@@ -36,43 +46,32 @@ API_VERSION = "1.0.0"
 app = FastAPI(
     title="QuantumVestAI API",
     version=API_VERSION,
-    description="Stock Market Analysis Platform API",
+    description="Stock Market Analysis Platform API - Enhanced with proper error handling, validation, and rate limiting",
     docs_url="/docs",
     redoc_url="/redoc",
     debug=DEBUG
 )
 
-# CORS configuration
-origins = [
-    "http://localhost",
-    "http://localhost:3000",  # React development server
-    "http://localhost:5173",  # Vite development server
-    "https://quantumvestai.com",
-    "https://www.quantumvestai.com",
-    "https://dev.quantumvestai.com", 
-    "http://dev.quantumvestai.com",   # Include HTTP version
-    "*"  # Remove in production
-]
+# Configure CORS
+app = configure_cors(app)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "X-API-Key", "Accept"],
-    expose_headers=["X-Request-ID", "X-Process-Time"],
-    max_age=600,  # Cache preflight requests for 10 minutes
-)
+# Add enhanced middleware
+app.add_middleware(ErrorHandlerMiddleware)
+app.add_middleware(RateLimitMiddleware)
 
-# Log requests middleware
+# Request logging middleware
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
+    # Generate request ID if not present
+    request_id = getattr(request.state, 'request_id', str(uuid.uuid4()))
+    request.state.request_id = request_id
+    
     path = request.url.path
     method = request.method
     start_time = datetime.now()
     
     # Log the request
-    logger.info(f"Request: {method} {path}")
+    logger.info(f"[{request_id}] Request: {method} {path}")
     
     try:
         # Process the request
@@ -82,199 +81,262 @@ async def log_requests(request: Request, call_next):
         duration = (datetime.now() - start_time).total_seconds()
         
         # Log the response
-        logger.info(f"Response: {method} {path} - Status: {response.status_code} - Duration: {duration:.3f}s")
+        logger.info(f"[{request_id}] Response: {method} {path} - Status: {response.status_code} - Duration: {duration:.3f}s")
         
         # Add custom headers
         response.headers["X-Process-Time"] = str(duration)
+        response.headers["X-Request-ID"] = request_id
+        
         return response
+        
     except Exception as e:
-        logger.error(f"Error processing request {method} {path}: {e}")
         duration = (datetime.now() - start_time).total_seconds()
-        logger.info(f"Response: {method} {path} - Status: 500 - Duration: {duration:.3f}s")
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-            content={"detail": str(e)}
-        )
+        logger.error(f"[{request_id}] Error processing request {method} {path}: {e}")
+        # Re-raise to let ErrorHandlerMiddleware handle it
+        raise
 
-# --- CRITICAL ENDPOINTS ---
+
+# --- ENHANCED CRITICAL ENDPOINTS ---
 
 @app.get("/")
-async def root():
-    """API root endpoint"""
+async def root(request: Request):
+    """API root endpoint with enhanced response"""
     logger.info("Root endpoint accessed")
-    return {
-        "name": "QuantumVestAI API",
-        "version": API_VERSION,
-        "status": "running",
-        "environment": API_ENV,
-        "documentation": "/docs"
-    }
+    
+    return create_success_response(
+        data={
+            "name": "QuantumVestAI API",
+            "version": API_VERSION,
+            "status": "running",
+            "environment": API_ENV,
+            "documentation": "/docs",
+            "features": [
+                "Enhanced error handling",
+                "Input validation",
+                "Rate limiting",
+                "Standardized responses",
+                "CORS security"
+            ]
+        },
+        message="Welcome to QuantumVestAI API",
+        request_id=getattr(request.state, 'request_id', None)
+    )
+
 
 @app.get("/health")
-async def health_check():
-    """Basic health check endpoint for Kubernetes probes"""
+async def health_check(request: Request):
+    """Enhanced health check endpoint"""
     logger.info("Health check endpoint accessed")
-    return {"status": "healthy"}
+    
+    # Check database connection
+    db_health = get_database_health()
+    db_connected = check_database_connection()
+    
+    # Overall health status
+    overall_status = "healthy" if db_connected else "degraded"
+    
+    health_data = {
+        "status": overall_status,
+        "timestamp": datetime.now().isoformat(),
+        "version": API_VERSION,
+        "environment": API_ENV,
+        "system": {
+            "hostname": socket.gethostname(),
+            "python_version": sys.version.split()[0]
+        },
+        "database": {
+            "connected": db_connected,
+            "host": db_health.get("host", "unknown"),
+            "status": "connected" if db_connected else "disconnected"
+        }
+    }
+    
+    return create_success_response(
+        data=health_data,
+        request_id=getattr(request.state, 'request_id', None)
+    )
+
 
 @app.get("/api/v1/health")
-async def api_health_check():
-    """API v1 health check endpoint"""
+async def api_health_check(request: Request):
+    """API v1 health check endpoint with detailed system info"""
     logger.info("API v1 health check endpoint accessed")
+    
     try:
-        # Basic system information
+        # Get system information
+        db_health = get_database_health()
+        db_connected = check_database_connection()
+        
         system_info = {
             "hostname": socket.gethostname(),
             "timestamp": datetime.now().isoformat(),
-            "python_version": sys.version,
+            "python_version": sys.version.split()[0],
             "environment": API_ENV,
-            "db_host": os.environ.get("DB_HOST", "unknown").split(".")[0]  # Only include first part of hostname for security
+            "uptime": "N/A",  # Could be implemented if needed
+            "db_host": db_health.get("host", "unknown").split(".")[0]
         }
         
-        return {
-            "status": "healthy",
+        health_data = {
+            "status": "healthy" if db_connected else "degraded",
             "version": API_VERSION,
-            "system": system_info
+            "system": system_info,
+            "database": {
+                "connected": db_connected,
+                "status": "connected" if db_connected else "disconnected"
+            },
+            "features": {
+                "error_handling": "enabled",
+                "rate_limiting": "enabled",
+                "input_validation": "enabled",
+                "cors": "configured"
+            }
         }
+        
+        return create_success_response(
+            data=health_data,
+            request_id=getattr(request.state, 'request_id', None)
+        )
+        
     except Exception as e:
         logger.error(f"Health check error: {e}")
-        return {
-            "status": "unhealthy",
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
+        return create_error_response(
+            message=f"Health check failed: {str(e)}",
+            error_code="HEALTH_CHECK_ERROR",
+            request_id=getattr(request.state, 'request_id', None)
+        )
 
-# Import routers
-try:
-    from routers.v1 import router as v1_router
-    app.include_router(v1_router)
-    logger.info("Included v1 router")
-except ImportError as e:
-    logger.error(f"Could not import v1 router: {e}")
 
-# Try to import routes if they exist, with graceful fallback
-try:
-    from routes.sentiment import router as sentiment_router
-    app.include_router(sentiment_router)
-    logger.info("Included sentiment router")
-except ImportError as e:
-    logger.warning(f"Could not import sentiment router: {e}")
-
-try:
-    from routes.admin import router as admin_router
-    app.include_router(admin_router)
-    logger.info("Included admin router")
-except ImportError as e:
-    logger.warning(f"Could not import admin router: {e}")
-
-try:
-    from routes.whitepaper_analysis import router as whitepaper_router
-    app.include_router(whitepaper_router)
-    logger.info("Included whitepaper router")
-except ImportError as e:
-    logger.warning(f"Could not import whitepaper router: {e}")
-
-# --- BUILT-IN ENDPOINTS ---
-
-@app.get("/api/v1/forecast")
-async def forecast():
-    """Forecast endpoint"""
-    logger.info("Forecast endpoint accessed")
-    return {
-        "status": "success",
-        "data": {
-            "forecast_date": datetime.now().isoformat(),
-            "market_outlook": "bullish",
-            "top_picks": ["AAPL", "MSFT", "GOOGL"],
-            "market_trends": [
-                {"sector": "Technology", "trend": "positive", "change_percent": 2.3},
-                {"sector": "Healthcare", "trend": "neutral", "change_percent": 0.5},
-                {"sector": "Finance", "trend": "positive", "change_percent": 1.7}
-            ]
-        }
-    }
-
-# --- AUTHENTICATION ENDPOINTS ---
+# --- ENHANCED AUTHENTICATION ENDPOINTS ---
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
 
+
 @app.post("/api/v1/auth/login")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    """Login endpoint"""
-    logger.info(f"Login attempt for user: {form_data.username}")
+async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
+    """Enhanced login endpoint with proper validation"""
+    request_id = getattr(request.state, 'request_id', None)
+    logger.info(f"[{request_id}] Login attempt for user: {form_data.username}")
     
-    # This is a mock implementation - in production, you'd validate against your database
-    if form_data.username == "demo" and form_data.password == "password":
-        return {
-            "status": "success",
-            "message": "Login successful",
-            "data": {
-                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZW1vIiwicm9sZSI6InVzZXIifQ.sample_token",
-                "token_type": "bearer"
-            }
+    try:
+        # Validate login data
+        login_data = {
+            "username": form_data.username,
+            "password": form_data.password
         }
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        validate_user_login(login_data)
+        
+        # Mock authentication - in production, validate against database
+        if form_data.username == "demo" and form_data.password == "password":
+            return create_success_response(
+                data={
+                    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZW1vIiwicm9sZSI6InVzZXIifQ.sample_token",
+                    "token_type": "bearer",
+                    "expires_in": 3600,
+                    "user": {
+                        "username": "demo",
+                        "role": "user"
+                    }
+                },
+                message="Login successful",
+                request_id=request_id
+            )
+        else:
+            raise AuthenticationError("Invalid username or password")
+            
+    except ValidationError as e:
+        logger.warning(f"[{request_id}] Login validation failed: {e.detail}")
+        raise e
+    except Exception as e:
+        logger.error(f"[{request_id}] Login error: {str(e)}")
+        raise AuthenticationError("Login failed")
+
 
 @app.get("/api/v1/auth/login")
-async def login_get():
+async def login_get(request: Request):
     """GET handler for login endpoint - shows helpful message"""
-    return {
-        "status": "error",
-        "message": "This endpoint only accepts POST requests with form data. Please use a proper client or curl: curl -X POST -d 'username=demo&password=password' http://dev.quantumvestai.com/api/v1/auth/login",
-        "example": {
-            "curl": "curl -X POST -d 'username=demo&password=password' http://dev.quantumvestai.com/api/v1/auth/login",
+    return create_error_response(
+        message="This endpoint only accepts POST requests with form data",
+        error_code="METHOD_NOT_ALLOWED",
+        details={
+            "required_method": "POST",
             "required_fields": ["username", "password"],
-            "method": "POST"
-        }
-    }
+            "example": "curl -X POST -d 'username=demo&password=password' /api/v1/auth/login"
+        },
+        request_id=getattr(request.state, 'request_id', None)
+    )
 
-@app.options("/api/v1/auth/login")
-async def login_options():
-    """Handle CORS preflight requests for login endpoint"""
-    return Response(status_code=200)
 
 @app.get("/api/v1/auth/me")
-async def get_current_user(token: str = Depends(oauth2_scheme)):
-    """Get current user endpoint"""
+async def get_current_user(request: Request, token: str = Depends(oauth2_scheme)):
+    """Get current user endpoint with enhanced response"""
     logger.info("Current user endpoint accessed")
-    return {
-        "status": "success",
-        "data": {
+    
+    # Mock user data - in production, decode token and get user from database
+    return create_success_response(
+        data={
             "username": "demo",
             "email": "demo@example.com",
             "full_name": "Demo User",
             "role": "user",
-            "is_active": True
-        }
-    }
+            "is_active": True,
+            "permissions": ["read", "write"],
+            "last_login": datetime.now().isoformat()
+        },
+        request_id=getattr(request.state, 'request_id', None)
+    )
 
-# --- STOCKS ENDPOINTS ---
+
+# --- ENHANCED STOCKS ENDPOINTS ---
 
 @app.get("/api/v1/stocks/trending")
-async def trending_stocks():
-    """Get trending stocks"""
+async def trending_stocks(request: Request, page: int = 1, limit: int = 10):
+    """Get trending stocks with pagination validation"""
     logger.info("Trending stocks endpoint accessed")
-    return {
-        "status": "success",
-        "data": [
-            {"symbol": "AAPL", "name": "Apple Inc.", "change_percent": 2.1, "price": 198.45},
-            {"symbol": "MSFT", "name": "Microsoft Corporation", "change_percent": 1.8, "price": 425.63},
-            {"symbol": "AMZN", "name": "Amazon.com Inc.", "change_percent": 1.5, "price": 187.12},
-            {"symbol": "GOOGL", "name": "Alphabet Inc.", "change_percent": 1.2, "price": 176.89},
-            {"symbol": "NVDA", "name": "NVIDIA Corporation", "change_percent": 3.2, "price": 1024.78}
-        ]
-    }
+    
+    # Validate pagination parameters
+    pagination = validate_pagination_params(page, limit)
+    
+    # Mock data with pagination
+    all_stocks = [
+        {"symbol": "AAPL", "name": "Apple Inc.", "change_percent": 2.1, "price": 198.45},
+        {"symbol": "MSFT", "name": "Microsoft Corporation", "change_percent": 1.8, "price": 425.63},
+        {"symbol": "AMZN", "name": "Amazon.com Inc.", "change_percent": 1.5, "price": 187.12},
+        {"symbol": "GOOGL", "name": "Alphabet Inc.", "change_percent": 1.2, "price": 176.89},
+        {"symbol": "NVDA", "name": "NVIDIA Corporation", "change_percent": 3.2, "price": 1024.78},
+        {"symbol": "TSLA", "name": "Tesla Inc.", "change_percent": -0.5, "price": 248.50},
+        {"symbol": "META", "name": "Meta Platforms Inc.", "change_percent": 2.3, "price": 385.20},
+        {"symbol": "NFLX", "name": "Netflix Inc.", "change_percent": 0.8, "price": 445.75}
+    ]
+    
+    # Apply pagination
+    start_idx = (pagination["page"] - 1) * pagination["limit"]
+    end_idx = start_idx + pagination["limit"]
+    paginated_stocks = all_stocks[start_idx:end_idx]
+    
+    return create_success_response(
+        data={
+            "stocks": paginated_stocks,
+            "pagination": {
+                "page": pagination["page"],
+                "limit": pagination["limit"],
+                "total": len(all_stocks),
+                "has_next": end_idx < len(all_stocks),
+                "has_prev": pagination["page"] > 1
+            }
+        },
+        request_id=getattr(request.state, 'request_id', None)
+    )
+
 
 @app.get("/api/v1/stocks/{symbol}")
-async def get_stock(symbol: str):
-    """Get stock details"""
+async def get_stock(request: Request, symbol: str):
+    """Get stock details with symbol validation"""
     logger.info(f"Stock details endpoint accessed for symbol: {symbol}")
     
-    # Mock data for demo purposes
+    # Validate stock symbol
+    validated_symbol = validate_stock_symbol_param(symbol)
+    
+    # Mock stock data
     stock_data = {
         "AAPL": {
             "symbol": "AAPL",
@@ -286,7 +348,9 @@ async def get_stock(symbol: str):
             "pe_ratio": 32.5,
             "dividend_yield": 0.53,
             "52_week_high": 205.87,
-            "52_week_low": 142.18
+            "52_week_low": 142.18,
+            "volume": 45678900,
+            "avg_volume": 52000000
         },
         "MSFT": {
             "symbol": "MSFT",
@@ -298,187 +362,44 @@ async def get_stock(symbol: str):
             "pe_ratio": 37.1,
             "dividend_yield": 0.72,
             "52_week_high": 430.82,
-            "52_week_low": 285.45
+            "52_week_low": 285.45,
+            "volume": 23456789,
+            "avg_volume": 28000000
         }
     }
     
-    if symbol.upper() in stock_data:
-        return {
-            "status": "success",
-            "data": stock_data[symbol.upper()]
-        }
+    if validated_symbol in stock_data:
+        return create_success_response(
+            data=stock_data[validated_symbol],
+            request_id=getattr(request.state, 'request_id', None)
+        )
     else:
-        return {
-            "status": "error",
-            "message": f"Stock with symbol {symbol} not found",
-            "data": None
-        }
+        raise NotFoundError(f"Stock with symbol {validated_symbol} not found")
 
-# --- PREDICTIONS ENDPOINTS ---
-
-@app.get("/api/v1/predictions/{symbol}")
-async def get_prediction(symbol: str):
-    """Get stock price prediction"""
-    logger.info(f"Prediction endpoint accessed for symbol: {symbol}")
-    return {
-        "status": "success",
-        "data": {
-            "symbol": symbol.upper(),
-            "current_price": 198.45 if symbol.upper() == "AAPL" else 425.63,
-            "prediction_date": datetime.now().isoformat(),
-            "predictions": [
-                {"date": "2025-06-20", "price": 201.23, "confidence": 0.85},
-                {"date": "2025-06-21", "price": 203.45, "confidence": 0.82},
-                {"date": "2025-06-22", "price": 205.12, "confidence": 0.78},
-                {"date": "2025-06-23", "price": 204.87, "confidence": 0.75},
-                {"date": "2025-06-24", "price": 206.54, "confidence": 0.72}
-            ],
-            "recommendation": "buy",
-            "confidence_score": 0.85,
-            "analysis": "Strong upward trend based on technical indicators and positive market sentiment."
-        }
-    }
-
-# --- WATCHLISTS ENDPOINTS ---
-
-@app.get("/api/v1/watchlists")
-async def get_watchlists(token: str = Depends(oauth2_scheme)):
-    """Get user watchlists"""
-    logger.info("Watchlists endpoint accessed")
-    return {
-        "status": "success",
-        "data": [
-            {
-                "id": 1,
-                "name": "Tech Stocks",
-                "stocks": [
-                    {"symbol": "AAPL", "name": "Apple Inc.", "price": 198.45, "change_percent": 2.1},
-                    {"symbol": "MSFT", "name": "Microsoft Corporation", "price": 425.63, "change_percent": 1.8},
-                    {"symbol": "GOOGL", "name": "Alphabet Inc.", "price": 176.89, "change_percent": 1.2}
-                ]
-            },
-            {
-                "id": 2,
-                "name": "Green Energy",
-                "stocks": [
-                    {"symbol": "TSLA", "name": "Tesla, Inc.", "price": 248.12, "change_percent": -0.8},
-                    {"symbol": "ENPH", "name": "Enphase Energy, Inc.", "price": 113.56, "change_percent": 1.5}
-                ]
-            }
-        ]
-    }
-
-# --- SENTIMENT ENDPOINTS ---
-
-@app.get("/api/v1/sentiment/{symbol}")
-async def get_sentiment(symbol: str):
-    """Get market sentiment for a stock"""
-    logger.info(f"Sentiment endpoint accessed for symbol: {symbol}")
-    return {
-        "status": "success",
-        "data": {
-            "symbol": symbol.upper(),
-            "overall_sentiment": "positive",
-            "sentiment_score": 0.78,
-            "date": datetime.now().isoformat(),
-            "sources": {
-                "news": 0.82,
-                "social_media": 0.76,
-                "analyst_ratings": 0.74
-            },
-            "recent_changes": {
-                "1_day": 0.03,
-                "1_week": 0.07,
-                "1_month": 0.12
-            }
-        }
-    }
-
-# --- ANALYTICS ENDPOINTS ---
-
-@app.get("/api/v1/analytics/market-overview")
-async def market_overview():
-    """Get market overview analytics"""
-    logger.info("Market overview endpoint accessed")
-    return {
-        "status": "success",
-        "data": {
-            "date": datetime.now().isoformat(),
-            "indices": [
-                {"name": "S&P 500", "value": 5421.53, "change_percent": 0.8},
-                {"name": "Nasdaq", "value": 17658.23, "change_percent": 1.2},
-                {"name": "Dow Jones", "value": 39875.12, "change_percent": 0.5}
-            ],
-            "sectors": [
-                {"name": "Technology", "change_percent": 1.4},
-                {"name": "Healthcare", "change_percent": 0.3},
-                {"name": "Finance", "change_percent": 0.7},
-                {"name": "Energy", "change_percent": -0.2},
-                {"name": "Consumer Staples", "change_percent": 0.1}
-            ],
-            "market_sentiment": "bullish",
-            "volatility_index": 15.3
-        }
-    }
-
-# --- BACKTEST ENDPOINTS ---
-
-@app.post("/api/v1/backtest")
-async def run_backtest(token: str = Depends(oauth2_scheme)):
-    """Run a backtest on a trading strategy"""
-    logger.info("Backtest endpoint accessed")
-    return {
-        "status": "success",
-        "data": {
-            "strategy_id": "momentum_strategy_v1",
-            "start_date": "2024-01-01",
-            "end_date": "2025-06-01",
-            "initial_capital": 100000,
-            "final_capital": 124567.89,
-            "total_return": 24.57,
-            "annualized_return": 16.8,
-            "sharpe_ratio": 1.45,
-            "max_drawdown": -8.2,
-            "trades": 78,
-            "winning_trades": 52,
-            "losing_trades": 26,
-            "win_rate": 66.7
-        }
-    }
-
-# --- ERROR HANDLING ---
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
-    logger.error(f"HTTP exception: {exc.detail}")
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": exc.detail},
-    )
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Global exception: {exc}")
-    return JSONResponse(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": str(exc)},
-    )
 
 # --- STARTUP EVENT ---
 @app.on_event("startup")
 async def startup_event():
-    """Log app startup and registered routes"""
+    """Enhanced startup event with database initialization"""
     logger.info(f"Starting QuantumVestAI API v{API_VERSION}")
     logger.info(f"Environment: {API_ENV}")
     logger.info(f"Debug mode: {DEBUG}")
     
-    # Log all registered routes
-    route_paths = []
-    for route in app.routes:
-        methods = getattr(route, "methods", {"GET"})
-        for method in methods:
-            route_paths.append(f"{method} {route.path}")
+    # Initialize database
+    if initialize_database():
+        logger.info("Database initialized successfully")
+    else:
+        logger.warning("Database initialization failed - running in degraded mode")
     
-    logger.info(f"Registered routes: {route_paths}")
+    # Log registered routes
+    route_count = 0
+    for route in app.routes:
+        if hasattr(route, "methods"):
+            route_count += len(route.methods)
+    
+    logger.info(f"Registered {route_count} API endpoints")
+    logger.info("Enhanced QuantumVestAI API startup complete")
+
 
 # Check if this script is executed directly
 if __name__ == "__main__":
