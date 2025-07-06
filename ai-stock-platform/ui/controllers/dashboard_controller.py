@@ -180,49 +180,47 @@ async def dashboard(
             api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://api:8000'))
             
             try:
-                # Get portfolio data from API
-                async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-                    api_url = f"{api_url_base}/api/portfolio/summary?period={period}"
-                    response = await client.get(
-                        api_url,
-                        headers={"Authorization": f"Bearer {user.get('token')}"}
+                # Get portfolio data from API using centralized HTTP client
+                from core.http_client import safe_get_json
+                
+                auth_token = user.get('token')
+                portfolio_data = await safe_get_json(
+                    url=f"{api_url_base}/api/portfolio/summary",
+                    params={"period": period},
+                    auth_token=auth_token
+                )
+                
+                if portfolio_data is None:
+                    logger.error("Failed to fetch portfolio data from API")
+                    raise HTTPException(
+                        status_code=503,
+                        detail="Error fetching portfolio data"
                     )
-                    
-                    if response.status_code != 200:
-                        logger.error(f"API error: {response.status_code} - {response.text}")
-                        raise HTTPException(
-                            status_code=response.status_code,
-                            detail="Error fetching portfolio data"
-                        )
-                    
-                    portfolio_data = response.json()
                 
                 # Get market overview
-                async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-                    response = await client.get(
-                        f"{api_url_base}/api/market/overview",
-                        headers={"Authorization": f"Bearer {user.get('token')}"}
-                    )
-                    
-                    if response.status_code != 200:
-                        logger.warning(f"Market data error: {response.status_code}")
-                        market_data = {"status": "unavailable"}
-                    else:
-                        market_data = response.json()
+                market_data = await safe_get_json(
+                    url=f"{api_url_base}/api/market/overview",
+                    auth_token=auth_token
+                )
+                
+                if market_data is None:
+                    logger.warning("Market data unavailable")
+                    market_data = {"status": "unavailable"}
                 
                 # Get recent transactions
-                async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-                    response = await client.get(
-                        f"{api_url_base}/api/transactions/recent?limit=5",
-                        headers={"Authorization": f"Bearer {user.get('token')}"}
-                    )
-                    
-                    if response.status_code != 200:
-                        logger.warning(f"Transactions data error: {response.status_code}")
-                        transactions = []
-                    else:
-                        transactions = response.json().get("transactions", [])
-            except httpx.RequestError as e:
+                transactions_data = await safe_get_json(
+                    url=f"{api_url_base}/api/transactions/recent",
+                    params={"limit": 5},
+                    auth_token=auth_token
+                )
+                
+                if transactions_data is None:
+                    logger.warning("Transactions data unavailable")
+                    transactions = []
+                else:
+                    transactions = transactions_data.get("transactions", [])
+                
+            except Exception as e:
                 logger.error(f"API request error: {str(e)}")
                 # Use fallback data
                 portfolio_data = {
@@ -332,7 +330,8 @@ async def dashboard(
                 "message": "Service temporarily unavailable. Please try again later.",
                 "error_code": "API_CONN_ERR",
                 "get_asset_url": get_asset_url  # Add function directly to context
-            }
+            },
+            status_code=503  # Changed from default to indicate service unavailable
         )
     except HTTPException as e:
         # Re-raise HTTP exceptions

@@ -25,15 +25,18 @@ async def login_page(request: Request, msg: str = None):
 # Handle login post
 @router.post("/login")
 async def login_post(request: Request, username: str = Form(...), password: str = Form(...), remember: bool = Form(False)):
-    async with httpx.AsyncClient() as client:
-        payload = {"username": username, "password": password}
-        response = await client.post(f"{API_BASE_URL}/login-ui", json=payload)
+    from core.http_client import safe_post_json
+    
+    payload = {"username": username, "password": password}
+    response_data = await safe_post_json(
+        url=f"{API_BASE_URL}/login-ui",
+        json_data=payload
+    )
 
-    if response.status_code != 200:
+    if response_data is None:
         return templates.TemplateResponse("login.html", {"request": request, "msg": "Invalid username or password", "username": username}, status_code=status.HTTP_401_UNAUTHORIZED)
 
-    data = response.json()
-    access_token = data.get("access_token")
+    access_token = response_data.get("access_token")
     if not access_token:
         return templates.TemplateResponse("login.html", {"request": request, "msg": "Invalid response from server"}, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -71,11 +74,15 @@ async def register_post(request: Request, username: str = Form(...), email: str 
         "password": password
     }
 
-    async with httpx.AsyncClient() as client:
-        response = await client.post(f"{API_BASE_URL}/register-ui", json=payload)
+    from core.http_client import safe_post_json
+    
+    response_data = await safe_post_json(
+        url=f"{API_BASE_URL}/register-ui",
+        json_data=payload
+    )
 
-    if response.status_code != 201:
-        msg = response.json().get("detail", "Registration failed")
+    if response_data is None:
+        msg = "Registration failed - please try again"
         return templates.TemplateResponse("register.html", {"request": request, "msg": msg, "username": username, "email": email}, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     return templates.TemplateResponse("login.html", {"request": request, "msg": "Registration successful! Please sign in."})

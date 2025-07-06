@@ -146,29 +146,39 @@ async def verify_token_with_api(token: str) -> Dict[str, Any]:
         HTTPException: If token verification fails
     """
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{API_URL}/api/auth/verify",
-                json={"token": token},
-                timeout=5.0
+        from core.http_client import safe_post_json
+        
+        # Use the centralized HTTP client with proper error handling
+        response_data = await safe_post_json(
+            url=f"{API_URL}/api/auth/verify",
+            json_data={"token": token},
+            auth_token=token
+        )
+        
+        if response_data is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token or API unavailable"
             )
-            
-            if response.status_code != 200:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid token"
-                )
-            
-            return response.json()
-    except httpx.RequestError as e:
-        logger.error(f"API connection error during token verification: {str(e)}")
+        
+        return response_data
+        
+    except Exception as e:
+        logger.error(f"API token verification failed: {str(e)}")
         # Fall back to local verification if API is unavailable
-        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-        return {
-            "username": payload.get("sub"),
-            "email": payload.get("email"),
-            "full_name": payload.get("name"),
-            "permissions": payload.get("permissions", []),
-            "token": token,
-            "verified_locally": True
-        }
+        try:
+            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+            return {
+                "username": payload.get("sub"),
+                "email": payload.get("email"),
+                "full_name": payload.get("name"),
+                "permissions": payload.get("permissions", []),
+                "token": token,
+                "verified_locally": True
+            }
+        except jwt.PyJWTError as jwt_error:
+            logger.error(f"Local token verification failed: {str(jwt_error)}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )
