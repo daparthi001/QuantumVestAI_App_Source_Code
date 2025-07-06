@@ -5,9 +5,9 @@
 import React, { useState } from 'react';
 import { Navbar, Nav, Container, Offcanvas, Button } from 'react-bootstrap';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/providers/ThemeProvider';
-import { ROUTES } from '@/config/constants';
+import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../providers/ThemeProvider';
+import { ROUTES } from '../../config/constants';
 
 interface LayoutProps {
   children: React.ReactNode;

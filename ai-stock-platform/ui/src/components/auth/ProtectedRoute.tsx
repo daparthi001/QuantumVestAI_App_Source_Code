@@ -4,8 +4,8 @@
  */
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { ROUTES } from '@/config/constants';
+import { useAuth } from '../../contexts/AuthContext';
+import { ROUTES } from '../../config/constants';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
