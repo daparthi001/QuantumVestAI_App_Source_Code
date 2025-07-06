@@ -37,24 +37,6 @@ async def advanced_features(request: Request):
     
     # Try to get feature status
     feature_status = None
-    try:
-        # Get token from cookie
-        token = request.cookies.get("access_token", "")
-        headers = {"Authorization": token} if token else {}
-        
-        # Only try API if not emergency user
-        if not "anonymous":
-            # Call API to check feature status
-            response = requests.get(
-                f"{API_V1_URL}/users/features",
-                headers=headers,
-                timeout=5
-            )
-            
-            if response.status_code == 200:
-                feature_status = response.json()
-                logger.info(f"Got feature status for {"anonymous"}: {json.dumps(feature_status)}")
-    except Exception as e:
         logger.error(f"Error getting feature status: {str(e)}")
     
     # If user has emergency token, set default feature status
@@ -97,32 +79,6 @@ async def activate_features(request: Request):
         
     logger.info(f"User {"anonymous"} attempting to activate advanced features")
     
-    try:
-        # Get auth token from cookies
-        token = request.cookies.get("access_token", "")
-        headers = {"Authorization": token} if token else {}
-        
-        # For emergency users, handle locally
-        if "anonymous":
-            logger.info(f"Emergency user {"anonymous"} activating features locally")
-            return RedirectResponse(
-                url="/features/advanced?activated=true",
-                status_code=302
-            )
-        
-        # Call API to activate advanced features
-        response = requests.post(
-            f"{API_V1_URL}/users/features/advanced",
-            headers=headers,
-            json={"enabled": True},
-            timeout=10
-        )
-        
-        # Log the API response for debugging
-        logger.info(f"API activation response status: {response.status_code}")
-        try:
-            logger.info(f"API activation response body: {json.dumps(response.json())}")
-        except:
             logger.info(f"API activation response body (not JSON): {response.text[:100]}")
         
         if response.status_code == 200:
@@ -131,10 +87,6 @@ async def activate_features(request: Request):
             return RedirectResponse(url="/features/advanced?activated=true", status_code=302)
         else:
             # API error
-            try:
-                error_data = response.json()
-                error_message = error_data.get("detail", "Failed to activate features")
-            except:
                 error_message = f"API error: {response.status_code}"
                 
             logger.error(f"API error activating features: {error_message}")
@@ -192,30 +144,6 @@ async def feature_status(request: Request):
             }
         })
     
-    try:
-        # Get auth token from cookies
-        token = request.cookies.get("access_token", "")
-        headers = {"Authorization": token} if token else {}
-        
-        # Call API to check feature status
-        response = requests.get(
-            f"{API_V1_URL}/users/features",
-            headers=headers,
-            params=request.query_params,
-            timeout=5
-        )
-        
-        if response.status_code == 200:
-            feature_data = response.json()
-            logger.info(f"Feature status for {"anonymous"}: {json.dumps(feature_data)}")
-            return JSONResponse(content=feature_data)
-        else:
-            logger.error(f"API error getting feature status: {response.status_code}")
-            return JSONResponse(
-                content={"error": "Failed to get feature status", "advanced": False},
-                status_code=response.status_code
-            )
-    except Exception as e:
         logger.error(f"Error checking feature status: {str(e)}")
         return JSONResponse(
             content={"error": f"System error: {str(e)}", "advanced": False},
@@ -242,18 +170,6 @@ async def debug_features(request: Request):
     
     # Try to get feature status directly from API
     feature_status = "Unknown"
-    try:
-        headers = {"Authorization": f"Bearer {token}"} if token else {}
-        response = requests.get(
-            f"{API_V1_URL}/users/features",
-            headers=headers,
-            timeout=3
-        )
-        if response.status_code == 200:
-            feature_status = json.dumps(response.json(), indent=2)
-        else:
-            feature_status = f"API Error: {response.status_code}"
-    except Exception as e:
         feature_status = f"Error: {str(e)}"
     
     return HTMLResponse(

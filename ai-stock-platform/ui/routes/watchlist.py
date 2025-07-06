@@ -20,44 +20,16 @@ async def watchlist_page(
 ):
     """Render watchlist page"""
     
-    try:
-        # Create API client with auth token
-        api_client = APIClient(token=request.cookies.get("token"))
-        
-        # Get user's watchlist
-        watchlist = api_client.get("/api/watchlist")
-        
-        # Fetch current data for stocks in watchlist
-        stocks_data = []
-        if watchlist:
-            for item in watchlist:
-                ticker = item["ticker"]
-                try:
-                    # Get stock info from Yahoo Finance
-                    stock_info = YahooFinanceService.get_stock_info(ticker)
-                    
-                    # Add stock info to watchlist item
-                    stocks_data.append({
-                        **item,
-                        "info": stock_info
-                    })
-                except Exception:
                     # If stock info fetch fails, still include the ticker
                     stocks_data.append(item)
         
         # Get watchlist summary if available
         summary = None
-        try:
-            summary = api_client.get("/api/watchlist/summary")
-        except:
             # If summary fails, continue without it
             pass
             
         # Get alerts for the watchlist
         alerts = None
-        try:
-            alerts = api_client.get("/api/watchlist/alerts")
-        except:
             # If alerts fetch fails, continue without them
             pass
             
@@ -76,11 +48,6 @@ async def watchlist_page(
     except Exception as e:
         error_message = str(e)
         if hasattr(e, "response") and hasattr(e.response, "json"):
-            try:
-                error_json = e.response.json()
-                if "detail" in error_json:
-                    error_message = error_json["detail"]
-            except:
                 pass
                 
         return templates.TemplateResponse(
@@ -99,34 +66,15 @@ async def add_to_watchlist(
     request: Request,
     ticker: str = Form(...),
     notes: Optional[str] = Form(None),
-    current_
+    request: Request
 ):
     """Add a stock to the watchlist"""
             content={"success": False, "message": "Authentication required"},
             status_code=401
         )
     
-    try:
-        # Create API client with auth token
-        api_client = APIClient(token=request.cookies.get("token"))
-        
-        # Add stock to watchlist
-        data = {"ticker": ticker}
-        if notes:
-            data["notes"] = notes
-            
-        api_client.post("/api/watchlist/add", data=data)
-            
-        return JSONResponse(content={"success": True})
-        
-    except Exception as e:
         error_message = "Failed to add stock to watchlist"
         if hasattr(e, "response") and hasattr(e.response, "json"):
-            try:
-                error_json = e.response.json()
-                if "detail" in error_json:
-                    error_message = error_json["detail"]
-            except:
                 pass
                 
         return JSONResponse(
@@ -138,30 +86,15 @@ async def add_to_watchlist(
 async def remove_from_watchlist(
     request: Request,
     ticker: str = Form(...),
-    current_
+    request: Request
 ):
     """Remove a stock from the watchlist"""
             content={"success": False, "message": "Authentication required"},
             status_code=401
         )
     
-    try:
-        # Create API client with auth token
-        api_client = APIClient(token=request.cookies.get("token"))
-        
-        # Remove stock from watchlist
-        api_client.post("/api/watchlist/remove", data={"ticker": ticker})
-            
-        return JSONResponse(content={"success": True})
-        
-    except Exception as e:
         error_message = "Failed to remove stock from watchlist"
         if hasattr(e, "response") and hasattr(e.response, "json"):
-            try:
-                error_json = e.response.json()
-                if "detail" in error_json:
-                    error_message = error_json["detail"]
-            except:
                 pass
                 
         return JSONResponse(
@@ -175,33 +108,15 @@ async def set_price_alert(
     ticker: str = Form(...),
     price: float = Form(...),
     direction: str = Form(...),  # "above" or "below"
-    current_
+    request: Request
 ):
     """Set a price alert for a stock"""
             content={"success": False, "message": "Authentication required"},
             status_code=401
         )
     
-    try:
-        # Create API client with auth token
-        api_client = APIClient(token=request.cookies.get("token"))
-        
-        # Set price alert
-        api_client.post(
-            "/api/watchlist/alert", 
-            data={"ticker": ticker, "price": price, "direction": direction}
-        )
-            
-        return JSONResponse(content={"success": True})
-        
-    except Exception as e:
         error_message = "Failed to set price alert"
         if hasattr(e, "response") and hasattr(e.response, "json"):
-            try:
-                error_json = e.response.json()
-                if "detail" in error_json:
-                    error_message = error_json["detail"]
-            except:
                 pass
                 
         return JSONResponse(
@@ -213,30 +128,15 @@ async def set_price_alert(
 async def remove_price_alert(
     request: Request,
     alert_id: str = Form(...),
-    current_
+    request: Request
 ):
     """Remove a price alert"""
             content={"success": False, "message": "Authentication required"},
             status_code=401
         )
     
-    try:
-        # Create API client with auth token
-        api_client = APIClient(token=request.cookies.get("token"))
-        
-        # Remove price alert
-        api_client.post("/api/watchlist/alert/remove", data={"alert_id": alert_id})
-            
-        return JSONResponse(content={"success": True})
-        
-    except Exception as e:
         error_message = "Failed to remove price alert"
         if hasattr(e, "response") and hasattr(e.response, "json"):
-            try:
-                error_json = e.response.json()
-                if "detail" in error_json:
-                    error_message = error_json["detail"]
-            except:
                 pass
                 
         return JSONResponse(
@@ -249,33 +149,15 @@ async def update_stock_notes(
     request: Request,
     ticker: str = Form(...),
     notes: str = Form(...),
-    current_
+    request: Request
 ):
     """Update notes for a stock in the watchlist"""
             content={"success": False, "message": "Authentication required"},
             status_code=401
         )
     
-    try:
-        # Create API client with auth token
-        api_client = APIClient(token=request.cookies.get("token"))
-        
-        # Update stock notes
-        api_client.post(
-            "/api/watchlist/update-notes",
-            data={"ticker": ticker, "notes": notes}
-        )
-            
-        return JSONResponse(content={"success": True})
-        
-    except Exception as e:
         error_message = "Failed to update notes"
         if hasattr(e, "response") and hasattr(e.response, "json"):
-            try:
-                error_json = e.response.json()
-                if "detail" in error_json:
-                    error_message = error_json["detail"]
-            except:
                 pass
                 
         return JSONResponse(

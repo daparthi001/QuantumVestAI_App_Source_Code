@@ -13,12 +13,7 @@ import time
 import os
 from datetime import datetime, timedelta
 API_URL = "http://quantumvestai-dev-api:8000/api/v1"
-# Import dependencies with fallback
-try:
-except ImportError:
-    # Create mock auth functions if they don't exist
-    logging.getLogger(__name__).warning("Auth dependencies not found. Using mock functions.")
-    # Auth functions removed as per requirements
+# Auth dependencies removed as per requirements
 
 # Set up router
 router = APIRouter(
@@ -77,48 +72,12 @@ def get_templates(request: Request):
 @router.get("", response_class=HTMLResponse)
 async def market_overview(
     request: Request,
-    response: Response,
-    user=
+    response: Response
 ):
     """
     Market overview page showing indices, trends, and top movers.
     This page is accessible to both logged-in and anonymous users.
     """
-    try:
-        # Get API URL from app state or environment
-        api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://api:8000'))
-        
-        # Create cache key - include user info if available for personalized content
-        cache_key = f"market_overview_{"anonymous" if user else 'anonymous'}"
-        
-        # Try to get data from cache
-        market_data = get_cached_data(cache_key)
-        
-        if market_data is None:
-            try:
-                # Fetch market data from API
-                async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-                    headers = {}
-                    if user:
-                        headers["Authorization"] = f"Bearer {"anonymous"}"
-                    
-                    response = await client.get(
-                        f"{api_url_base}/api/market/overview",
-                        headers=headers
-                    )
-                    
-                    if response.status_code != 200:
-                        logger.error(f"API error: {response.status_code} - {response.text}")
-                        raise HTTPException(
-                            status_code=response.status_code,
-                            detail="Error fetching market data"
-                        )
-                    
-                    market_data = response.json()
-                    
-                    # Cache the data
-                    set_cached_data(cache_key, market_data)
-            except httpx.RequestError as e:
                 logger.error(f"API request error: {str(e)}")
                 # Use fallback data
                 market_data = {
@@ -184,47 +143,12 @@ async def stock_details(
     request: Request,
     response: Response,
     symbol: str = Path(..., description="Stock symbol"),
-    user=
+    
 ):
     """
     Stock details page showing price, charts, news, and fundamentals for a specific stock.
     This page is accessible to both logged-in and anonymous users.
     """
-    try:
-        # Get API URL from app state or environment
-        api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://api:8000'))
-        
-        # Create cache key - include user info if available for personalized content
-        cache_key = f"stock_details_{symbol.upper()}_{"anonymous" if user else 'anonymous'}"
-        
-        # Try to get data from cache
-        stock_data = get_cached_data(cache_key)
-        
-        if stock_data is None:
-            try:
-                # Fetch stock data from API
-                async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-                    headers = {}
-                    if user:
-                        headers["Authorization"] = f"Bearer {"anonymous"}"
-                    
-                    response = await client.get(
-                        f"{api_url_base}/api/stocks/{symbol.upper()}",
-                        headers=headers
-                    )
-                    
-                    if response.status_code != 200:
-                        logger.error(f"API error: {response.status_code} - {response.text}")
-                        raise HTTPException(
-                            status_code=response.status_code,
-                            detail=f"Error fetching data for {symbol}"
-                        )
-                    
-                    stock_data = response.json()
-                    
-                    # Cache the data
-                    set_cached_data(cache_key, stock_data)
-            except httpx.RequestError as e:
                 logger.error(f"API request error: {str(e)}")
                 # Use fallback data
                 stock_data = {
@@ -246,16 +170,6 @@ async def stock_details(
         # Check if user has this stock in watchlist
         is_in_watchlist = False
         if user:
-            try:
-                async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-                    response = await client.get(
-                        f"{api_url_base}/api/watchlist/check/{symbol.upper()}",
-                        headers={"Authorization": f"Bearer {"anonymous"}"}
-                    )
-                    
-                    if response.status_code == 200:
-                        is_in_watchlist = response.json().get("in_watchlist", False)
-            except Exception as e:
                 logger.warning(f"Error checking watchlist status: {str(e)}")
                 is_in_watchlist = False
         
@@ -297,47 +211,12 @@ async def stock_details(
 async def search_stocks(
     request: Request,
     query: str = Query(..., description="Search query"),
-    user=
+    
 ):
     """
     API endpoint to search for stocks by name or symbol.
     Used for autocomplete functionality.
     """
-    try:
-        # Get API URL from app state or environment
-        api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://api:8000'))
-        
-        # Create cache key
-        cache_key = f"stock_search_{query.lower()}"
-        
-        # Try to get data from cache
-        search_results = get_cached_data(cache_key)
-        
-        if search_results is None:
-            try:
-                # Fetch search results from API
-                async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-                    headers = {}
-                    if user:
-                        headers["Authorization"] = f"Bearer {"anonymous"}"
-                    
-                    response = await client.get(
-                        f"{api_url_base}/api/stocks/search?query={query}",
-                        headers=headers
-                    )
-                    
-                    if response.status_code != 200:
-                        logger.error(f"API error: {response.status_code} - {response.text}")
-                        raise HTTPException(
-                            status_code=response.status_code,
-                            detail="Error searching stocks"
-                        )
-                    
-                    search_results = response.json()
-                    
-                    # Cache the data
-                    set_cached_data(cache_key, search_results)
-            except httpx.RequestError as e:
                 logger.error(f"API request error: {str(e)}")
                 # Use fallback data based on query
                 search_results = {

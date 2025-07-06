@@ -24,24 +24,6 @@ API_V1_URL = f"{API_URL}/api/v1"
 async def forecast_home(request: Request):
     """Forecast dashboard page"""
     
-    try:
-        # Get auth token from cookies
-        token = request.cookies.get("access_token", "")
-        headers = {"Authorization": token} if token else {}
-        
-        # Fetch forecast overview data
-        try:
-            response = requests.get(
-                f"{API_V1_URL}/forecast/overview", 
-                headers=headers,
-                timeout=5
-            )
-            
-            if response.status_code == 200:
-                forecast_data = response.json()
-            else:
-                forecast_data = {"error": f"API returned status {response.status_code}"}
-        except Exception as e:
             logger.warning(f"Error fetching forecast overview: {str(e)}")
             forecast_data = {"error": str(e)}
         

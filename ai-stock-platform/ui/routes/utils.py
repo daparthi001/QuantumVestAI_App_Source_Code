@@ -14,10 +14,6 @@ async def get_ticker_info(
     
 ):
     """Get basic information for a stock ticker"""
-    try:
-        stock_info = YahooFinanceService.get_stock_info(ticker)
-        return JSONResponse(content=stock_info)
-    except Exception as e:
         return JSONResponse(
             content={"error": f"Could not retrieve ticker info: {str(e)}"},
             status_code=500
@@ -30,10 +26,6 @@ async def search_tickers(
     
 ):
     """Search for ticker symbols"""
-    try:
-        results = YahooFinanceService.search_tickers(query, limit)
-        return JSONResponse(content={"results": results})
-    except Exception as e:
         return JSONResponse(
             content={"error": f"Search failed: {str(e)}"},
             status_code=500
@@ -45,28 +37,6 @@ async def get_market_indices(
     
 ):
     """Get current market indices data"""
-    try:
-        from core.config.constants import MARKET_INDICES
-        
-        # If specific indices are requested, use those
-        index_tickers = indices.split(",") if indices else list(MARKET_INDICES.values())
-        
-        results = {}
-        for ticker in index_tickers:
-            try:
-                index_data = YahooFinanceService.get_stock_info(ticker)
-                # Extract only the necessary fields for indices
-                results[ticker] = {
-                    "name": index_data.get("shortName", ticker),
-                    "price": index_data.get("regularMarketPrice", 0),
-                    "change": index_data.get("regularMarketChange", 0),
-                    "change_percent": index_data.get("regularMarketChangePercent", 0),
-                    "previous_close": index_data.get("regularMarketPreviousClose", 0),
-                    "open": index_data.get("regularMarketOpen", 0),
-                    "day_high": index_data.get("regularMarketDayHigh", 0),
-                    "day_low": index_data.get("regularMarketDayLow", 0)
-                }
-            except:
                 results[ticker] = {"error": f"Could not retrieve data for {ticker}"}
                 
         return JSONResponse(content=results)
@@ -84,10 +54,6 @@ async def get_historical_data(
     
 ):
     """Get historical price data for a ticker"""
-    try:
-        data = YahooFinanceService.get_historical_data(ticker, period, interval)
-        return JSONResponse(content=data.to_dict(orient="records"))
-    except Exception as e:
         return JSONResponse(
             content={"error": f"Could not retrieve historical data: {str(e)}"},
             status_code=500
@@ -100,10 +66,6 @@ async def get_stock_news(
     
 ):
     """Get news for a specific stock"""
-    try:
-        news = YahooFinanceService.get_stock_news(ticker, limit)
-        return JSONResponse(content={"news": news})
-    except Exception as e:
         return JSONResponse(
             content={"error": f"Could not retrieve news: {str(e)}"},
             status_code=500
@@ -131,4 +93,4 @@ def format_volume(volume: float) -> str:
         return f"{volume / 1_000_000_000:.2f}B"
     elif volume >= 1_000_000:
         return f"{volume / 1_000_000:.2f}M"
-    elif volume
+    elif volume:

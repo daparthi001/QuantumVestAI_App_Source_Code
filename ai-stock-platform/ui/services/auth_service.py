@@ -1,68 +1,32 @@
-# Import directly from services instead of ui.services
-from services.api_client import APIClient
-
+"""
+Auth Service - Authentication functionality removed
+"""
+import logging
+from datetime import datetime, timedelta, timezone
+from typing import Optional, Dict, Any
 import jwt
-import datetime
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from passlib.context import CryptContext
+from fastapi import HTTPException, status
 from pydantic import BaseModel
-from config.settings import settings
 
-API_URL = "http://quantumvestai-dev-api:8000/api/v1"
-
-# Authentication models
-class UserCredentials(BaseModel):
-    username: str
-    password: str
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
+logger = logging.getLogger(__name__)
 
 class TokenData(BaseModel):
-    username: str | None = None
-
-# Security utilities
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    username: Optional[str] = None
 
 class AuthService:
-    """Service for handling authentication and authorization"""
-
-    def __init__(self, api_client=None):
-        self.api_client = api_client or APIClient()
-        
-    def verify_password(self, plain_password, hashed_password):
-        return pwd_context.verify(plain_password, hashed_password)
+    """Authentication service with removed user functions"""
     
-    def get_password_hash(self, password):
-        return pwd_context.hash(password)
+    def __init__(self, secret_key: str, algorithm: str = "HS256"):
+        self.secret_key = secret_key
+        self.algorithm = algorithm
     
-    async def authenticate_user(self, username: str, password: str):
-        """Authenticate a user with username and password"""
-        user = await self.api_client.get_user(username)
-        if not self.verify_password(password, user.hashed_password):
-            return False
-        return user
-    
-    def create_access_token(self, data: dict, expires_delta: datetime.timedelta = None):
-        """Create a JWT token for authenticated users"""
+    def create_access_token(self, data: dict, expires_delta: Optional[timedelta] = None):
+        """Create JWT token"""
         to_encode = data.copy()
         if expires_delta:
-            expire = datetime.datetime.utcnow() + expires_delta
+            expire = datetime.now(timezone.utc) + expires_delta
         else:
-            expire = datetime.datetime.utcnow() + datetime.timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
+            expire = datetime.now(timezone.utc) + timedelta(minutes=15)
         to_encode.update({"exp": expire})
-        encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+        encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
         return encoded_jwt
-    
-            token_data = TokenData(username=username)
-        except jwt.PyJWTError:
-            raise credentials_exception
-        user = await self.api_client.get_user(token_data.username)
-        if user is None:
-            raise credentials_exception
-        return user
-    
-    

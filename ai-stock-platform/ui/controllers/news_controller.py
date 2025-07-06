@@ -25,47 +25,9 @@ async def news_page(
     request: Request,
     category: str = Query("market", regex="^(market|stocks|crypto|economy)$"),
     page: int = Query(1, ge=1),
-    user: Optional[dict] = 
+    request: Request
 ):
     """Display news page"""
-    try:
-        news_data = {
-            "category": category,
-            "page": page
-        }
-        
-        headers = {}
-        if user and "token" in user:
-            headers["Authorization"] = f"Bearer {user['token']}"
-        
-        async with aiohttp.ClientSession() as session:
-            # Get news articles
-            async with session.get(
-                f"{API_V1_URL}/news?category={category}&page={page}&limit=20",
-                headers=headers,
-                timeout=5
-            ) as response:
-                if response.status == 200:
-                    news_data["articles"] = await response.json()
-                else:
-                    news_data["articles"] = []
-            
-            # Get trending topics
-            async with session.get(
-                f"{API_V1_URL}/news/trending",
-                headers=headers,
-                timeout=5
-            ) as response:
-                if response.status == 200:
-                    news_data["trending"] = await response.json()
-                else:
-                    news_data["trending"] = []
-        
-        return templates.TemplateResponse(
-            "news/index.html",
-            {"request": request, "data": news_data, "user": user}
-        )
-    except Exception as e:
         logger.error(f"News page error: {str(e)}")
         return templates.TemplateResponse(
             "error.html",
@@ -77,58 +39,9 @@ async def news_page(
 async def news_article(
     request: Request,
     article_id: str,
-    user: Optional[dict] = 
+    request: Request
 ):
     """Display specific news article"""
-    try:
-        article_data = {}
-        
-        headers = {}
-        if user and "token" in user:
-            headers["Authorization"] = f"Bearer {user['token']}"
-        
-        async with aiohttp.ClientSession() as session:
-            # Get article details
-            async with session.get(
-                f"{API_V1_URL}/news/article/{article_id}",
-                headers=headers,
-                timeout=5
-            ) as response:
-                if response.status == 200:
-                    article_data["article"] = await response.json()
-                elif response.status == 404:
-                    raise HTTPException(status_code=404, detail="Article not found")
-                else:
-                    raise HTTPException(status_code=response.status, detail="Failed to retrieve article")
-            
-            # Get related articles
-            async with session.get(
-                f"{API_V1_URL}/news/related/{article_id}",
-                headers=headers,
-                timeout=5
-            ) as response:
-                if response.status == 200:
-                    article_data["related"] = await response.json()
-                else:
-                    article_data["related"] = []
-            
-            # Get sentiment analysis if premium user
-            if user and "anonymous" in ["premium", "admin"]:
-                async with session.get(
-                    f"{API_V1_URL}/news/sentiment/{article_id}",
-                    headers=headers,
-                    timeout=5
-                ) as response:
-                    if response.status == 200:
-                        article_data["sentiment"] = await response.json()
-                    else:
-                        article_data["sentiment"] = {"status": "unavailable"}
-        
-        return templates.TemplateResponse(
-            "news/article.html",
-            {"request": request, "data": article_data, "user": user}
-        )
-    except HTTPException as e:
         raise e
     except Exception as e:
         logger.error(f"News article error for {article_id}: {str(e)}")
