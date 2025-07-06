@@ -88,7 +88,7 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
 
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request, msg: str = None):
-    return templates.TemplateResponse("login.html", {"request": request, "msg": msg, "now": datetime.utcnow()})
+    return templates.TemplateResponse("login.html", {"request": request})
 
 @router.post("/token")
 async def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):

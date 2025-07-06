@@ -122,6 +122,7 @@ except ImportError as e:
     # Create dummy router as fallback
     from fastapi import APIRouter
     api_proxy = APIRouter()
+    app.include_router(api_proxy)
 
 # Import controllers with error handling
 controllers = {}
