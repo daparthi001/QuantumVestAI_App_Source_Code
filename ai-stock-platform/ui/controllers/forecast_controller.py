@@ -3,14 +3,13 @@ QuantumVestAI Forecast Controller
 Last Updated: 2025-06-18 22:36:43
 Author: daparthi001
 """
-from fastapi import APIRouter, Request, Depends, HTTPException, Query
+from fastapi import APIRouter, Request, HTTPException, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 import requests
 import logging
 from pathlib import Path
 import os
-from controllers.auth_controller import get_current_user
 
 # Setup router
 router = APIRouter(prefix="/forecast", tags=["forecast"])
@@ -22,38 +21,31 @@ API_URL = os.environ.get("API_URL", "http://quantumvestai-dev-api:8000/api/v1")
 API_V1_URL = f"{API_URL}/api/v1"
 
 @router.get("/", response_class=HTMLResponse)
-async def forecast_home(request: Request, user: dict = Depends(get_current_user)):
-    """Forecast dashboard page"""
-    if not user:
-        return RedirectResponse(url="/login?next=/forecast", status_code=302)
+async def forecast_home(request: Request):
+    """Forecast dashboard page (demo mode)"""
     
     try:
-        # Get auth token from cookies
-        token = request.cookies.get("access_token", "")
-        headers = {"Authorization": token} if token else {}
+        # Demo mode - no authentication required
         
-        # Fetch forecast overview data
-        try:
-            response = requests.get(
-                f"{API_V1_URL}/forecast/overview", 
-                headers=headers,
-                timeout=5
-            )
-            
-            if response.status_code == 200:
-                forecast_data = response.json()
-            else:
-                forecast_data = {"error": f"API returned status {response.status_code}"}
-        except Exception as e:
-            logger.warning(f"Error fetching forecast overview: {str(e)}")
-            forecast_data = {"error": str(e)}
+        # Use demo forecast data
+        forecast_data = {
+            "status": "success",
+            "predictions": [
+                {"symbol": "AAPL", "prediction": "bullish", "confidence": 0.85, "target_price": 195.25},
+                {"symbol": "MSFT", "prediction": "bullish", "confidence": 0.78, "target_price": 375.50},
+                {"symbol": "GOOGL", "prediction": "neutral", "confidence": 0.65, "target_price": 142.75}
+            ],
+            "market_sentiment": "positive",
+            "ai_accuracy": 0.82
+        }
         
         # Render the forecast dashboard
         return templates.TemplateResponse(
             "forecast/index.html",  # UPDATED: Make sure this path is correct
             {
                 "request": request,
-                "user": user,
+                "user": None,
+                "demo_mode": True,
                 "data": forecast_data
             }
         )
@@ -63,14 +55,15 @@ async def forecast_home(request: Request, user: dict = Depends(get_current_user)
             "error.html",
             {
                 "request": request,
-                "user": user,
+                "user": None,
+                "demo_mode": True,
                 "error": f"Error loading forecast dashboard: {str(e)}"
             },
             status_code=500
         )
 
 @router.get("/dashboard", response_class=HTMLResponse)  # THIS ROUTE NEEDS UPDATING
-async def forecast_dashboard(request: Request, user: dict = Depends(get_current_user)):
-    """Forecast dashboard (alias route)"""
+async def forecast_dashboard(request: Request):
+    """Forecast dashboard (alias route - demo mode)"""
     # Redirect to main forecast page for consistency
     return RedirectResponse(url="/forecast", status_code=302)

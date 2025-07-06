@@ -2,7 +2,7 @@
 # Last updated: 2025-06-20 02:53:45
 # Updated by: daparthi001
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Query, status
+from fastapi import APIRouter, HTTPException, Request, Query, status
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional, List, Dict, Any, Union
@@ -12,7 +12,6 @@ import time
 import json
 import os
 from datetime import datetime, timedelta
-from auth.dependencies import get_current_user, validate_admin_access
 from metrics import http_requests_total, http_request_duration_seconds
 API_URL = "http://quantumvestai-dev-api:8000/api/v1"
 # Set up logging
@@ -77,16 +76,14 @@ def set_cached_data(key: str, data: Dict[str, Any], ttl: int = CACHE_TTL) -> Non
 @router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(
     request: Request, 
-    user=Depends(get_current_user),
     period: Optional[str] = Query("month", description="Time period for data analysis"),
     refresh: Optional[bool] = Query(False, description="Force refresh data from API")
 ):
     """
-    Dashboard main view showing portfolio performance and analytics.
+    Dashboard main view showing portfolio performance and analytics (demo mode).
     
     Args:
         request: FastAPI request object
-        user: Current authenticated user
         period: Time period for analysis (day, week, month, year, all)
         refresh: Whether to force refresh data from API
         
@@ -104,55 +101,40 @@ async def dashboard(
             status=200
         ).inc()
         
-        # Create cache key based on user and period
-        cache_key = f"dashboard_{user.get('username')}_{period}"
+        # Create cache key for demo mode
+        cache_key = f"dashboard_demo_{period}"
         
         # Try to get data from cache unless refresh is requested
         dashboard_data = None if refresh else get_cached_data(cache_key)
         
         if dashboard_data is None:
-            # Get portfolio data from API
-            async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-                api_url = f"{request.app.state.settings.API_URL}/api/portfolio/summary?period={period}"
-                response = await client.get(
-                    api_url,
-                    headers={"Authorization": f"Bearer {user.get('token')}"}
-                )
-                
-                if response.status_code != 200:
-                    logger.error(f"API error: {response.status_code} - {response.text}")
-                    raise HTTPException(
-                        status_code=response.status_code,
-                        detail="Error fetching portfolio data"
-                    )
-                
-                portfolio_data = response.json()
+            # Use demo data instead of API calls
+            portfolio_data = {
+                "total_value": 125350.75,
+                "daily_change": 2845.50,
+                "daily_change_percent": 2.34,
+                "holdings": [
+                    {"symbol": "AAPL", "name": "Apple Inc.", "shares": 50, "value": 8925.00, "change_percent": 1.2},
+                    {"symbol": "MSFT", "name": "Microsoft Corp.", "shares": 30, "value": 10807.50, "change_percent": 0.8},
+                    {"symbol": "GOOGL", "name": "Alphabet Inc.", "shares": 25, "value": 6725.25, "change_percent": -0.5}
+                ]
+            }
             
-            # Get market overview
-            async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-                response = await client.get(
-                    f"{request.app.state.settings.API_URL}/api/market/overview",
-                    headers={"Authorization": f"Bearer {user.get('token')}"}
-                )
-                
-                if response.status_code != 200:
-                    logger.warning(f"Market data error: {response.status_code}")
-                    market_data = {"status": "unavailable"}
-                else:
-                    market_data = response.json()
+            # Demo market overview
+            market_data = {
+                "indices": [
+                    {"name": "S&P 500", "value": 4752.75, "change_percent": 0.8},
+                    {"name": "NASDAQ", "value": 16234.50, "change_percent": 1.2}
+                ],
+                "status": "available"
+            }
             
-            # Get recent transactions
-            async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-                response = await client.get(
-                    f"{request.app.state.settings.API_URL}/api/transactions/recent?limit=5",
-                    headers={"Authorization": f"Bearer {user.get('token')}"}
-                )
-                
-                if response.status_code != 200:
-                    logger.warning(f"Transactions data error: {response.status_code}")
-                    transactions = []
-                else:
-                    transactions = response.json().get("transactions", [])
+            # Demo recent transactions
+            transactions = [
+                {"date": "2025-06-20", "type": "BUY", "symbol": "AAPL", "shares": 10, "price": 178.50},
+                {"date": "2025-06-19", "type": "SELL", "symbol": "TSLA", "shares": 5, "price": 215.40},
+                {"date": "2025-06-18", "type": "BUY", "symbol": "MSFT", "shares": 15, "price": 360.25}
+            ]
             
             # Combine all data
             dashboard_data = {
@@ -164,7 +146,7 @@ async def dashboard(
             # Cache the dashboard data
             set_cached_data(cache_key, dashboard_data)
         else:
-            logger.info(f"Using cached dashboard data for user {user.get('username')}")
+            logger.info(f"Using cached dashboard data for demo mode")
             portfolio_data = dashboard_data["portfolio"]
             market_data = dashboard_data["market"]
             transactions = dashboard_data["transactions"]
@@ -172,7 +154,8 @@ async def dashboard(
         # Combine data for template
         context = {
             "request": request,
-            "user": user,
+            "user": None,
+            "demo_mode": True,
             "page_title": "Dashboard",
             "portfolio": portfolio_data,
             "market": market_data,
@@ -225,17 +208,15 @@ async def dashboard(
 @router.get("/api/dashboard/data", response_model=Dict[str, Any])
 async def dashboard_data(
     request: Request,
-    user=Depends(get_current_user),
     period: Optional[str] = Query("month"),
     refresh: Optional[bool] = Query(False)
 ):
     """
-    API endpoint to get dashboard data for the frontend.
+    API endpoint to get dashboard data for the frontend (demo mode).
     Used for AJAX requests to update the dashboard dynamically.
     
     Args:
         request: FastAPI request object
-        user: Current authenticated user
         period: Time period for analysis
         refresh: Whether to force refresh data from API
         
@@ -253,8 +234,8 @@ async def dashboard_data(
             status=200
         ).inc()
         
-        # Create cache key
-        cache_key = f"dashboard_api_{user.get('username')}_{period}"
+        # Create cache key for demo mode
+        cache_key = f"dashboard_api_demo_{period}"
         
         # Try to get data from cache unless refresh is requested
         data = None if refresh else get_cached_data(cache_key)
@@ -323,15 +304,10 @@ async def dashboard_data(
         )
 
 @router.get("/api/dashboard/insights", response_model=Dict[str, Any])
-async def dashboard_insights(
-    user=Depends(get_current_user)
-):
+async def dashboard_insights():
     """
-    API endpoint to get AI-generated insights for the dashboard.
+    API endpoint to get AI-generated insights for the dashboard (demo mode).
     
-    Args:
-        user: Current authenticated user
-        
     Returns:
         Dict[str, Any]: AI insights in JSON format
     """
@@ -358,58 +334,4 @@ async def dashboard_insights(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error retrieving AI insights"
-        )
-
-@router.get("/admin/dashboard", response_class=HTMLResponse)
-async def admin_dashboard(
-    request: Request,
-    user=Depends(validate_admin_access)
-):
-    """
-    Admin dashboard view showing system metrics and user statistics.
-    
-    Args:
-        request: FastAPI request object
-        user: Current authenticated admin user
-        
-    Returns:
-        HTMLResponse: Rendered admin dashboard template
-    """
-    try:
-        # This is an admin-only endpoint protected by validate_admin_access
-        
-        # Record metric
-        http_requests_total.labels(
-            method="GET", 
-            endpoint="/admin/dashboard", 
-            status=200
-        ).inc()
-        
-        # Sample admin data - in a real implementation, this would come from the database
-        admin_data = {
-            "active_users": 1250,
-            "new_users_today": 38,
-            "total_transactions": 15623,
-            "system_health": "Good",
-            "server_uptime": "12 days, 5 hours",
-            "api_response_time": "245ms"
-        }
-        
-        context = {
-            "request": request,
-            "user": user,
-            "page_title": "Admin Dashboard",
-            "admin_data": admin_data
-        }
-        
-        return templates.TemplateResponse("admin/dashboard.html", context)
-    
-    except HTTPException:
-        # Re-raise HTTP exceptions (like 403 from validate_admin_access)
-        raise
-    except Exception as e:
-        logger.exception(f"Admin dashboard error: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error loading admin dashboard"
         )

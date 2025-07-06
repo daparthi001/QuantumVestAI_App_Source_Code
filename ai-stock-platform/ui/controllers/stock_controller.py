@@ -6,11 +6,10 @@ Author: daparthi001
 import os
 import aiohttp
 import logging
-from fastapi import APIRouter, Request, Depends, Query, HTTPException, Form
+from fastapi import APIRouter, Request, Query, HTTPException, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
-from auth.dependencies import get_current_user
 
 router = APIRouter()
 templates = Jinja2Templates(directory=str(Path("/app/templates")))
@@ -25,10 +24,9 @@ async def stock_detail(
     request: Request,
     ticker: str,
     timeframe: str = Query("1d", regex="^(1d|1w|1m|3m|6m|1y|5y)$"),
-    forecast_days: int = Query(7, ge=1, le=30),
-    user: dict = Depends(get_current_user)
+    forecast_days: int = Query(7, ge=1, le=30)
 ):
-    """Display stock detail page"""
+    """Display stock detail page (demo mode)"""
     try:
         stock_data = {
             "ticker": ticker.upper(),
@@ -36,7 +34,7 @@ async def stock_detail(
             "forecast_days": forecast_days
         }
         
-        headers = {"Authorization": f"Bearer {user.get('token', '')}"}
+        # Demo mode - no authentication headers
         
         async with aiohttp.ClientSession() as session:
             # Get stock details
@@ -95,7 +93,8 @@ async def stock_detail(
             {
                 "request": request, 
                 "stock": stock_data,
-                "user": user
+                "user": None,
+                "demo_mode": True
             }
         )
     except HTTPException as e:
@@ -104,17 +103,16 @@ async def stock_detail(
         logger.error(f"Stock detail error for {ticker}: {str(e)}")
         return templates.TemplateResponse(
             "error.html",
-            {"request": request, "error": str(e)},
+            {"request": request, "error": str(e), "user": None, "demo_mode": True},
             status_code=500
         )
 
 @router.get("/stock/search", response_class=HTMLResponse)
 async def stock_search(
     request: Request,
-    q: str = Query(None),
-    user: dict = Depends(get_current_user)
+    q: str = Query(None)
 ):
-    """Search for stocks"""
+    """Search for stocks (demo mode)"""
     try:
         search_results = []
         
@@ -133,7 +131,8 @@ async def stock_search(
                 "request": request,
                 "query": q,
                 "results": search_results,
-                "user": user
+                "user": None,
+                "demo_mode": True
             }
         )
     except Exception as e:
@@ -145,41 +144,17 @@ async def stock_search(
                 "query": q,
                 "error": str(e),
                 "results": [],
-                "user": user
+                "user": None,
+                "demo_mode": True
             }
         )
 
 @router.post("/stock/{ticker}/add-to-watchlist")
 async def add_to_watchlist(
     request: Request,
-    ticker: str,
-    user: dict = Depends(get_current_user)
+    ticker: str
 ):
-    """Add stock to watchlist"""
-    try:
-        headers = {"Authorization": f"Bearer {user.get('token', '')}"}
-        
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                f"{API_V1_URL}/watchlist/{user['username']}/add",
-                json={"symbol": ticker},
-                headers=headers,
-                timeout=5
-            ) as response:
-                if response.status not in [200, 201]:
-                    error_text = await response.text()
-                    raise HTTPException(
-                        status_code=response.status,
-                        detail=f"Failed to add to watchlist: {error_text}"
-                    )
-        
-        # Redirect back to stock detail page
-        return RedirectResponse(
-            url=f"/stock/{ticker}?added=1",
-            status_code=303
-        )
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        logger.error(f"Add to watchlist error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+    """Add stock to watchlist (demo mode)"""
+    
+    # Demo mode - redirect to login with a message
+    return RedirectResponse(url="/login?msg=Watchlist+features+require+authentication+(demo+mode)", status_code=302)
