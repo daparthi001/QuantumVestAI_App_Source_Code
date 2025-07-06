@@ -2,7 +2,6 @@ from fastapi import APIRouter, Request, Depends, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional, List
-from routes.auth import get_current_user
 from services.api_client import APIClient
 from services.yahoo_finance import YahooFinanceService
 from config.settings import settings
@@ -18,7 +17,7 @@ router = APIRouter(tags=["dashboard"])
 @router.get("/", response_class=HTMLResponse)
 async def dashboard_page(
     request: Request,
-    current_user: Optional[dict] = Depends(get_current_user)
+    
 ):
     """Render dashboard page"""
     try:
@@ -79,7 +78,7 @@ async def dashboard_page(
             "dashboard/index.html", 
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "market_summary": market_summary,
                 "popular_stocks": popular_stocks,
                 "news": news_items,
@@ -102,7 +101,7 @@ async def dashboard_page(
             "dashboard/index.html", 
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "market_summary": {"indices": {}, "sectors": {}, "top_movers": {}},
                 "popular_stocks": [],
                 "news": [],

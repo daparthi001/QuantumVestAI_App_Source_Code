@@ -3,7 +3,6 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional, Dict, Any
 # Fix the import to use the local namespace
-from routes.auth import get_current_user
 from config.settings import settings
 # Fix the import to use the local namespace
 from services.api_client import APIClient
@@ -22,7 +21,7 @@ async def predictability_page(
     ticker: str = Query(default="AAPL"), 
     timeframe: str = Query(default="1y"),
     model: str = Query(default="all"),
-    current_user: Optional[dict] = Depends(get_current_user)
+    
 ):
     """
     Render the stock predictability analysis page
@@ -49,7 +48,7 @@ async def predictability_page(
             "predictability.html", 
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "ticker": ticker,
                 "timeframe": timeframe,
                 "model": model,
@@ -73,7 +72,7 @@ async def predictability_page(
             "predictability.html", 
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "ticker": ticker,
                 "timeframe": timeframe,
                 "model": model,
@@ -104,7 +103,7 @@ async def predictability_ranking_page(
     request: Request,
     sector: Optional[str] = Query(default=None),
     limit: int = Query(default=20, ge=5, le=50),
-    current_user: Optional[dict] = Depends(get_current_user)
+    
 ):
     """
     Render the predictability ranking page
@@ -133,7 +132,7 @@ async def predictability_ranking_page(
             "predictability_ranking.html", 
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "sector": sector,
                 "sectors": sectors,
                 "limit": limit,
@@ -164,7 +163,7 @@ async def predictability_ranking_page(
             "predictability_ranking.html", 
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "sector": sector,
                 "sectors": sectors,
                 "limit": limit,
@@ -178,7 +177,7 @@ async def predictability_comparison_page(
     request: Request,
     tickers: str = Query(...),  # Comma-separated list of tickers
     timeframe: str = Query(default="1y"),
-    current_user: Optional[dict] = Depends(get_current_user)
+    
 ):
     """
     Render the predictability comparison page for multiple stocks
@@ -213,7 +212,7 @@ async def predictability_comparison_page(
             "predictability_comparison.html", 
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "tickers": ticker_list,
                 "timeframe": timeframe,
                 "stocks_info": stocks_info,
@@ -235,7 +234,7 @@ async def predictability_comparison_page(
             "predictability_comparison.html", 
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "tickers": tickers.split(","),
                 "timeframe": timeframe,
                 "error": error_message

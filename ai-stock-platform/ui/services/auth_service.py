@@ -42,8 +42,6 @@ class AuthService:
     async def authenticate_user(self, username: str, password: str):
         """Authenticate a user with username and password"""
         user = await self.api_client.get_user(username)
-        if not user:
-            return False
         if not self.verify_password(password, user.hashed_password):
             return False
         return user
@@ -59,18 +57,6 @@ class AuthService:
         encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
         return encoded_jwt
     
-    async def get_current_user(self, token: str = Depends(oauth2_scheme)):
-        """Get the current user from a JWT token"""
-        credentials_exception = HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-        try:
-            payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-            username: str = payload.get("sub")
-            if username is None:
-                raise credentials_exception
             token_data = TokenData(username=username)
         except jwt.PyJWTError:
             raise credentials_exception
@@ -79,17 +65,4 @@ class AuthService:
             raise credentials_exception
         return user
     
-    async def get_current_active_user(self, current_user = Depends(get_current_user)):
-        """Check if the current user is active"""
-        if not current_user.is_active:
-            raise HTTPException(status_code=400, detail="Inactive user")
-        return current_user
     
-    async def check_admin_access(self, current_user = Depends(get_current_user)):
-        """Check if the current user has admin privileges"""
-        if not current_user.is_admin:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, 
-                detail="Insufficient permissions"
-            )
-        return current_user

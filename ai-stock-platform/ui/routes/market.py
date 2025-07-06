@@ -6,7 +6,6 @@ Author: daparthi001
 from fastapi import APIRouter, Request, Depends, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from routes.auth import get_current_user
 from services.api_client import APIClient
 from pathlib import Path
 import logging
@@ -20,7 +19,7 @@ API_URL = "http://quantumvestai-dev-api:8000/api/v1"
 @router.get("/market", response_class=HTMLResponse)
 async def market_overview(
     request: Request,
-    current_user: dict = Depends(get_current_user)
+    current_
 ):
     """Market overview page"""
     try:
@@ -37,7 +36,7 @@ async def market_overview(
             "market/overview.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "market_data": market_data,
                 "market_news": market_news
             }
@@ -48,7 +47,7 @@ async def market_overview(
             "market/overview.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "error": "Failed to load market data"
             },
             status_code=500
@@ -59,7 +58,7 @@ async def ticker_details(
     request: Request,
     ticker: str,
     period: str = Query("1m"),
-    current_user: dict = Depends(get_current_user)
+    current_
 ):
     """Ticker details page"""
     try:
@@ -79,7 +78,7 @@ async def ticker_details(
             "market/ticker_details.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "ticker_data": ticker_data,
                 "ticker_news": ticker_news,
                 "ticker_predictions": ticker_predictions,
@@ -92,7 +91,7 @@ async def ticker_details(
             "market/ticker_details.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "ticker": ticker,
                 "error": f"Failed to load data for {ticker}"
             },
@@ -128,7 +127,7 @@ async def ticker_search(
 async def market_sentiment(
     request: Request,
     period: str = Query("1w"),
-    current_user: dict = Depends(get_current_user)
+    current_
 ):
     """Market sentiment page"""
     try:
@@ -148,7 +147,7 @@ async def market_sentiment(
             "market/sentiment.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "sentiment_data": sentiment_data,
                 "sentiment_trends": sentiment_trends,
                 "sentiment_tickers": sentiment_tickers,
@@ -161,7 +160,7 @@ async def market_sentiment(
             "market/sentiment.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "error": "Failed to load market sentiment data"
             },
             status_code=500

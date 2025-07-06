@@ -6,7 +6,6 @@ Author: daparthi001
 from fastapi import APIRouter, Request, Depends, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from routes.auth import get_current_user
 from services.api_client import APIClient
 from pathlib import Path
 import logging
@@ -23,11 +22,9 @@ async def sentiment_analysis(
     request: Request,
     ticker: str = Query(None),
     period: str = Query("1m"),  # 1d, 1w, 1m, 3m, 6m, 1y
-    current_user: dict = Depends(get_current_user)
+    current_
 ):
     """AI Market Sentiment Analysis Feature"""
-    if not current_user:
-        return RedirectResponse(url="/login?next=/features/sentiment", status_code=302)
 
     try:
         # Create API client with auth token
@@ -63,7 +60,7 @@ async def sentiment_analysis(
             "features/sentiment.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "market_sentiment": market_sentiment,
                 "ticker_sentiment": ticker_sentiment,
                 "trending_topics": trending_topics,
@@ -77,7 +74,7 @@ async def sentiment_analysis(
             "features/sentiment.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "error": "Failed to load sentiment analysis data",
                 "selected_ticker": ticker,
                 "selected_period": period
@@ -89,11 +86,9 @@ async def sentiment_analysis(
 async def multi_factor_analysis(
     request: Request,
     ticker: str = Query(None),
-    current_user: dict = Depends(get_current_user)
+    current_
 ):
     """Multi-factor Analysis Feature"""
-    if not current_user:
-        return RedirectResponse(url="/login?next=/features/multi-factor", status_code=302)
 
     try:
         # Create API client with auth token
@@ -123,7 +118,7 @@ async def multi_factor_analysis(
             "features/multi_factor.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "factors": factors,
                 "user_models": user_models,
                 "ticker_analysis": ticker_analysis,
@@ -136,7 +131,7 @@ async def multi_factor_analysis(
             "features/multi_factor.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "error": "Failed to load multi-factor analysis data",
                 "selected_ticker": ticker
             },
@@ -146,11 +141,9 @@ async def multi_factor_analysis(
 @router.get("/portfolio-optimization", response_class=HTMLResponse)
 async def portfolio_optimization(
     request: Request,
-    current_user: dict = Depends(get_current_user)
+    current_
 ):
     """Portfolio Optimization Feature"""
-    if not current_user:
-        return RedirectResponse(url="/login?next=/features/portfolio-optimization", status_code=302)
 
     try:
         # Create API client with auth token
@@ -172,7 +165,7 @@ async def portfolio_optimization(
             "features/portfolio_optimization.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "portfolios": portfolios,
                 "optimization_models": optimization_models
             }
@@ -183,7 +176,7 @@ async def portfolio_optimization(
             "features/portfolio_optimization.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "error": "Failed to load portfolio optimization data"
             },
             status_code=500
@@ -194,11 +187,9 @@ async def extended_predictions(
     request: Request,
     ticker: str = Query(None),
     interval: str = Query("12m"),
-    current_user: dict = Depends(get_current_user)
+    current_
 ):
     """Extended Prediction Intervals Feature"""
-    if not current_user:
-        return RedirectResponse(url="/login?next=/features/extended-predictions", status_code=302)
 
     try:
         # Create API client with auth token
@@ -228,7 +219,7 @@ async def extended_predictions(
             "features/extended_predictions.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "prediction_data": prediction_data,
                 "recent_predictions": recent_predictions,
                 "selected_ticker": ticker,
@@ -241,7 +232,7 @@ async def extended_predictions(
             "features/extended_predictions.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "error": "Failed to load extended prediction data",
                 "selected_ticker": ticker,
                 "selected_interval": interval
@@ -252,11 +243,9 @@ async def extended_predictions(
 @router.get("/custom-indicators", response_class=HTMLResponse)
 async def custom_indicators(
     request: Request,
-    current_user: dict = Depends(get_current_user)
+    current_
 ):
     """Custom Technical Indicators Feature"""
-    if not current_user:
-        return RedirectResponse(url="/login?next=/features/custom-indicators", status_code=302)
 
     try:
         # Create API client with auth token
@@ -278,7 +267,7 @@ async def custom_indicators(
             "features/custom_indicators.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "user_indicators": user_indicators,
                 "components": components
             }
@@ -289,7 +278,7 @@ async def custom_indicators(
             "features/custom_indicators.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "error": "Failed to load custom indicators data"
             },
             status_code=500

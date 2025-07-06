@@ -48,15 +48,11 @@ except NameError as e:
 
 # Try to import auth dependencies
 try:
-    from auth.dependencies import get_current_user, get_optional_current_user
 except ImportError:
     logger.warning("Auth dependencies not found. Using mock functions.")
     
-    async def get_current_user(request: Request, response=None):
-        """Mock function that returns a default user"""
-        return {"username": "defaultuser", "token": "mock_token"}
     
-    async def get_optional_current_user(request: Request, response=None):
+    async def (request: Request, response=None):
         """Mock function that optionally returns a default user"""
         return {"username": "defaultuser", "token": "mock_token"}
 
@@ -72,7 +68,7 @@ def get_templates(request):
 @router.get("", response_class=HTMLResponse)
 async def forecast_home(
     request: Request,
-    user = Depends(get_current_user)
+    
 ):
     """
     Render the forecast home page.
@@ -89,7 +85,7 @@ async def forecast_home(
             "forecast/index.html",
             {
                 "request": request,
-                "user": user,
+                "user": None,
                 "page_title": "AI Market Forecasts",
                 "current_date": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
             }
@@ -105,7 +101,7 @@ async def forecast_home(
             "error.html",
             {
                 "request": request,
-                "user": user,
+                "user": None,
                 "message": "An error occurred loading the forecast page.",
                 "error_code": "FORECAST_ERR"
             },
@@ -117,7 +113,7 @@ async def stock_forecast(
     request: Request,
     symbol: str = Path(..., description="Stock symbol"),
     period: str = Query("month", description="Forecast period (day, week, month, quarter, year)"),
-    user = Depends(get_current_user)
+    
 ):
     """
     Render the stock forecast page for a specific stock.
@@ -164,7 +160,7 @@ async def stock_forecast(
             "forecast/stock.html",
             {
                 "request": request,
-                "user": user,
+                "user": None,
                 "page_title": f"{symbol.upper()} Forecast",
                 "stock_symbol": symbol.upper(),
                 "forecast": forecast_data,
@@ -189,7 +185,7 @@ async def stock_forecast(
             "error.html",
             {
                 "request": request,
-                "user": user,
+                "user": None,
                 "message": f"An error occurred loading the forecast for {symbol}.",
                 "error_code": "STOCK_FORECAST_ERR"
             },
@@ -201,7 +197,7 @@ async def api_stock_forecast(
     request: Request,
     symbol: str = Path(..., description="Stock symbol"),
     period: str = Query("month", description="Forecast period"),
-    user = Depends(get_current_user)
+    
 ):
     """
     API endpoint to get forecast data for a stock.

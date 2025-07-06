@@ -6,7 +6,6 @@ Author: daparthi001
 from fastapi import APIRouter, Request, Depends, HTTPException, Form, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from routes.auth import get_current_user
 from config.settings import settings
 from services.api_client import APIClient
 
@@ -21,11 +20,9 @@ templates = Jinja2Templates(directory="templates")
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 # Admin access middleware
-def admin_required(current_user: dict = Depends(get_current_user)):
+def admin_required(current_):
     """Verify the user has admin privileges"""
-    if not current_user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    if current_user.get("role") != USER_ROLE_ADMIN:
+    if current_"anonymous" != USER_ROLE_ADMIN:
         raise HTTPException(status_code=403, detail="Not authorized")
     return current_user
 
@@ -52,7 +49,7 @@ async def admin_dashboard(request: Request, current_user: dict = Depends(admin_r
             "admin/dashboard/index.html", 
             {
                 "request": request, 
-                "user": current_user, 
+                "user": None, 
                 "stats": stats,
                 "recent_users": recent_users,
                 "health_metrics": health_metrics,
@@ -74,7 +71,7 @@ async def admin_dashboard(request: Request, current_user: dict = Depends(admin_r
             "admin/dashboard/index.html", 
             {
                 "request": request, 
-                "user": current_user, 
+                "user": None, 
                 "error": error_message
             },
             status_code=500
@@ -105,7 +102,7 @@ async def user_management(
             "admin/users.html", 
             {
                 "request": request, 
-                "user": current_user, 
+                "user": None, 
                 "users": users_data.get("items", []), 
                 "pagination": users_data.get("pagination", {}),
                 "search": search
@@ -126,7 +123,7 @@ async def user_management(
             "admin/users.html", 
             {
                 "request": request, 
-                "user": current_user, 
+                "user": None, 
                 "users": [], 
                 "pagination": {"page": page, "size": size, "total": 0, "pages": 0},
                 "error": error_message
@@ -158,7 +155,7 @@ async def user_detail(
             "admin/user_detail.html", 
             {
                 "request": request, 
-                "user": current_user,
+                "user": None,
                 "user_details": user_details,
                 "user_activity": user_activity,
                 "feature_usage": feature_usage
@@ -179,7 +176,7 @@ async def user_detail(
             "admin/user_detail.html", 
             {
                 "request": request, 
-                "user": current_user,
+                "user": None,
                 "error": error_message
             },
             status_code=500
@@ -303,7 +300,7 @@ async def model_management(
             "admin/models.html", 
             {
                 "request": request, 
-                "user": current_user, 
+                "user": None, 
                 "models": models,
                 "training_status": training_status
             }
@@ -323,7 +320,7 @@ async def model_management(
             "admin/models.html", 
             {
                 "request": request, 
-                "user": current_user, 
+                "user": None, 
                 "models": [],
                 "error": error_message
             },
@@ -381,7 +378,7 @@ async def api_status_page(
             "admin/api_status.html", 
             {
                 "request": request, 
-                "user": current_user, 
+                "user": None, 
                 **status_data,
                 "logs": logs
             }
@@ -401,7 +398,7 @@ async def api_status_page(
             "admin/api_status.html", 
             {
                 "request": request, 
-                "user": current_user, 
+                "user": None, 
                 "services": [],
                 "metrics": {"uptime": "N/A", "response_time": "N/A", "request_count": 0, "error_rate": 0},
                 "logs": [],
@@ -430,7 +427,7 @@ async def admin_settings_page(
             "admin/settings.html", 
             {
                 "request": request, 
-                "user": current_user, 
+                "user": None, 
                 "settings": system_settings,
                 "feature_settings": feature_settings
             }
@@ -450,7 +447,7 @@ async def admin_settings_page(
             "admin/settings.html", 
             {
                 "request": request, 
-                "user": current_user, 
+                "user": None, 
                 "settings": {},
                 "error": error_message
             },
@@ -500,7 +497,7 @@ async def update_system_settings(
             "admin/settings.html", 
             {
                 "request": request, 
-                "user": current_user, 
+                "user": None, 
                 "settings": system_settings,
                 "error": error_message
             },
@@ -565,7 +562,7 @@ async def features_management(
             "admin/features.html", 
             {
                 "request": request, 
-                "user": current_user, 
+                "user": None, 
                 "usage_stats": usage_stats,
                 "feature_settings": feature_settings,
                 "usage_by_user": usage_by_user
@@ -586,7 +583,7 @@ async def features_management(
             "admin/features.html", 
             {
                 "request": request, 
-                "user": current_user, 
+                "user": None, 
                 "error": error_message
             },
             status_code=500

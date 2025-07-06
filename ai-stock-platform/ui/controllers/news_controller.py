@@ -11,7 +11,6 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from typing import Optional
-from auth.dependencies import get_current_user, get_optional_current_user
 
 router = APIRouter()
 templates = Jinja2Templates(directory=str(Path("/app/templates")))
@@ -26,7 +25,7 @@ async def news_page(
     request: Request,
     category: str = Query("market", regex="^(market|stocks|crypto|economy)$"),
     page: int = Query(1, ge=1),
-    user: Optional[dict] = Depends(get_optional_current_user)
+    user: Optional[dict] = 
 ):
     """Display news page"""
     try:
@@ -78,7 +77,7 @@ async def news_page(
 async def news_article(
     request: Request,
     article_id: str,
-    user: Optional[dict] = Depends(get_optional_current_user)
+    user: Optional[dict] = 
 ):
     """Display specific news article"""
     try:
@@ -114,7 +113,7 @@ async def news_article(
                     article_data["related"] = []
             
             # Get sentiment analysis if premium user
-            if user and user.get("role") in ["premium", "admin"]:
+            if user and "anonymous" in ["premium", "admin"]:
                 async with session.get(
                     f"{API_V1_URL}/news/sentiment/{article_id}",
                     headers=headers,

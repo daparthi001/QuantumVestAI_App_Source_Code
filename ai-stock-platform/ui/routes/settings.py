@@ -2,7 +2,6 @@ from fastapi import APIRouter, Request, Depends, Form, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional
-from routes.auth import get_current_user
 from services.api_client import APIClient
 from config.settings import settings
 
@@ -17,11 +16,9 @@ router = APIRouter(tags=["settings"])
 @router.get("/", response_class=HTMLResponse)
 async def settings_page(
     request: Request,
-    current_user: dict = Depends(get_current_user)
+    current_
 ):
     """Render user settings page"""
-    if not current_user:
-        return RedirectResponse(url="/login?next=/settings", status_code=302)
     
     try:
         # Create API client with auth token
@@ -37,7 +34,7 @@ async def settings_page(
             "settings.html", 
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "settings": user_settings,
                 "themes": themes
             }
@@ -57,7 +54,7 @@ async def settings_page(
             "settings.html", 
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "settings": {},
                 "themes": [],
                 "error": error_message
@@ -67,14 +64,12 @@ async def settings_page(
 @router.post("/update", response_class=HTMLResponse)
 async def update_settings(
     request: Request,
-    current_user: dict = Depends(get_current_user),
+    current_request: Request,
     theme: str = Form(...),
     notification_enabled: bool = Form(False),
     email_notifications: bool = Form(False)
 ):
     """Update user settings"""
-    if not current_user:
-        return RedirectResponse(url="/login?next=/settings", status_code=302)
     
     try:
         # Create API client with auth token
@@ -115,7 +110,7 @@ async def update_settings(
             "settings.html", 
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "settings": {
                     "theme": theme,
                     "notification_enabled": notification_enabled,

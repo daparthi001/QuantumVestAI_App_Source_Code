@@ -10,7 +10,6 @@ import requests
 import logging
 from pathlib import Path
 import os
-from controllers.auth_controller import get_current_user
 
 # Setup router
 router = APIRouter(prefix="/forecast", tags=["forecast"])
@@ -22,10 +21,8 @@ API_URL = os.environ.get("API_URL", "http://quantumvestai-dev-api:8000/api/v1")
 API_V1_URL = f"{API_URL}/api/v1"
 
 @router.get("/", response_class=HTMLResponse)
-async def forecast_home(request: Request, user: dict = Depends(get_current_user)):
+async def forecast_home(request: Request):
     """Forecast dashboard page"""
-    if not user:
-        return RedirectResponse(url="/login?next=/forecast", status_code=302)
     
     try:
         # Get auth token from cookies
@@ -53,7 +50,7 @@ async def forecast_home(request: Request, user: dict = Depends(get_current_user)
             "forecast/index.html",  # UPDATED: Make sure this path is correct
             {
                 "request": request,
-                "user": user,
+                "user": None,
                 "data": forecast_data
             }
         )
@@ -63,14 +60,14 @@ async def forecast_home(request: Request, user: dict = Depends(get_current_user)
             "error.html",
             {
                 "request": request,
-                "user": user,
+                "user": None,
                 "error": f"Error loading forecast dashboard: {str(e)}"
             },
             status_code=500
         )
 
 @router.get("/dashboard", response_class=HTMLResponse)  # THIS ROUTE NEEDS UPDATING
-async def forecast_dashboard(request: Request, user: dict = Depends(get_current_user)):
+async def forecast_dashboard(request: Request):
     """Forecast dashboard (alias route)"""
     # Redirect to main forecast page for consistency
     return RedirectResponse(url="/forecast", status_code=302)

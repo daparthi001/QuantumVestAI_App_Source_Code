@@ -15,18 +15,10 @@ from datetime import datetime, timedelta
 API_URL = "http://quantumvestai-dev-api:8000/api/v1"
 # Import dependencies with fallback
 try:
-    from auth.dependencies import get_current_user, get_optional_current_user
 except ImportError:
     # Create mock auth functions if they don't exist
     logging.getLogger(__name__).warning("Auth dependencies not found. Using mock functions.")
-    
-    async def get_current_user(request: Request, response: Response = None):
-        """Mock function that returns a default user"""
-        return {"username": "defaultuser", "token": "mock_token"}
-    
-    async def get_optional_current_user(request: Request, response: Response = None):
-        """Mock function that optionally returns a default user"""
-        return {"username": "defaultuser", "token": "mock_token"}
+    # Auth functions removed as per requirements
 
 # Set up router
 router = APIRouter(
@@ -86,7 +78,7 @@ def get_templates(request: Request):
 async def market_overview(
     request: Request,
     response: Response,
-    user=Depends(get_optional_current_user)
+    user=
 ):
     """
     Market overview page showing indices, trends, and top movers.
@@ -97,7 +89,7 @@ async def market_overview(
         api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://api:8000'))
         
         # Create cache key - include user info if available for personalized content
-        cache_key = f"market_overview_{user.get('username') if user else 'anonymous'}"
+        cache_key = f"market_overview_{"anonymous" if user else 'anonymous'}"
         
         # Try to get data from cache
         market_data = get_cached_data(cache_key)
@@ -108,7 +100,7 @@ async def market_overview(
                 async with httpx.AsyncClient(timeout=TIMEOUT) as client:
                     headers = {}
                     if user:
-                        headers["Authorization"] = f"Bearer {user.get('token')}"
+                        headers["Authorization"] = f"Bearer {"anonymous"}"
                     
                     response = await client.get(
                         f"{api_url_base}/api/market/overview",
@@ -162,7 +154,7 @@ async def market_overview(
             "market/overview.html",
             {
                 "request": request,
-                "user": user,
+                "user": None,
                 "page_title": "Market Overview",
                 "market_data": market_data,
                 "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
@@ -192,7 +184,7 @@ async def stock_details(
     request: Request,
     response: Response,
     symbol: str = Path(..., description="Stock symbol"),
-    user=Depends(get_optional_current_user)
+    user=
 ):
     """
     Stock details page showing price, charts, news, and fundamentals for a specific stock.
@@ -203,7 +195,7 @@ async def stock_details(
         api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://api:8000'))
         
         # Create cache key - include user info if available for personalized content
-        cache_key = f"stock_details_{symbol.upper()}_{user.get('username') if user else 'anonymous'}"
+        cache_key = f"stock_details_{symbol.upper()}_{"anonymous" if user else 'anonymous'}"
         
         # Try to get data from cache
         stock_data = get_cached_data(cache_key)
@@ -214,7 +206,7 @@ async def stock_details(
                 async with httpx.AsyncClient(timeout=TIMEOUT) as client:
                     headers = {}
                     if user:
-                        headers["Authorization"] = f"Bearer {user.get('token')}"
+                        headers["Authorization"] = f"Bearer {"anonymous"}"
                     
                     response = await client.get(
                         f"{api_url_base}/api/stocks/{symbol.upper()}",
@@ -258,7 +250,7 @@ async def stock_details(
                 async with httpx.AsyncClient(timeout=TIMEOUT) as client:
                     response = await client.get(
                         f"{api_url_base}/api/watchlist/check/{symbol.upper()}",
-                        headers={"Authorization": f"Bearer {user.get('token')}"}
+                        headers={"Authorization": f"Bearer {"anonymous"}"}
                     )
                     
                     if response.status_code == 200:
@@ -275,7 +267,7 @@ async def stock_details(
             "market/stock_details.html",
             {
                 "request": request,
-                "user": user,
+                "user": None,
                 "page_title": f"{stock_data.get('name')} ({stock_data.get('symbol')})",
                 "stock": stock_data,
                 "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
@@ -305,7 +297,7 @@ async def stock_details(
 async def search_stocks(
     request: Request,
     query: str = Query(..., description="Search query"),
-    user=Depends(get_optional_current_user)
+    user=
 ):
     """
     API endpoint to search for stocks by name or symbol.
@@ -327,7 +319,7 @@ async def search_stocks(
                 async with httpx.AsyncClient(timeout=TIMEOUT) as client:
                     headers = {}
                     if user:
-                        headers["Authorization"] = f"Bearer {user.get('token')}"
+                        headers["Authorization"] = f"Bearer {"anonymous"}"
                     
                     response = await client.get(
                         f"{api_url_base}/api/stocks/search?query={query}",

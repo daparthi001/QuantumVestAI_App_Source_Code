@@ -10,7 +10,6 @@ from fastapi import APIRouter, Request, Depends, Form, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
-from auth.dependencies import get_current_user
 
 router = APIRouter()
 templates = Jinja2Templates(directory=str(Path("/app/templates")))
@@ -21,10 +20,10 @@ API_URL = os.environ.get("API_URL", "http://quantumvestai-dev-api:8000/api/v1")
 API_V1_URL = f"{API_URL}/api/v1"
 
 @router.get("/watchlist", response_class=HTMLResponse)
-async def watchlist(request: Request, user: dict = Depends(get_current_user)):
+async def watchlist(request: Request):
     """Display user's watchlist"""
     try:
-        headers = {"Authorization": f"Bearer {user.get('token', '')}"}
+        headers = {"Authorization": f"Bearer {"anonymous"}"}
         
         async with aiohttp.ClientSession() as session:
             # Get user's watchlist
@@ -73,11 +72,11 @@ async def watchlist(request: Request, user: dict = Depends(get_current_user)):
 async def add_to_watchlist(
     request: Request,
     ticker: str = Form(...),
-    user: dict = Depends(get_current_user)
+    
 ):
     """Add stock to watchlist"""
     try:
-        headers = {"Authorization": f"Bearer {user.get('token', '')}"}
+        headers = {"Authorization": f"Bearer {"anonymous"}"}
         
         async with aiohttp.ClientSession() as session:
             async with session.post(
@@ -105,11 +104,11 @@ async def add_to_watchlist(
 async def remove_from_watchlist(
     request: Request,
     ticker: str = Form(...),
-    user: dict = Depends(get_current_user)
+    
 ):
     """Remove stock from watchlist"""
     try:
-        headers = {"Authorization": f"Bearer {user.get('token', '')}"}
+        headers = {"Authorization": f"Bearer {"anonymous"}"}
         
         async with aiohttp.ClientSession() as session:
             async with session.post(

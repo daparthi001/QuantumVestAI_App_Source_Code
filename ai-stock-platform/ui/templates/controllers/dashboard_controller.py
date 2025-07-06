@@ -12,7 +12,6 @@ import time
 import json
 import os
 from datetime import datetime, timedelta
-from auth.dependencies import get_current_user, validate_admin_access
 from metrics import http_requests_total, http_request_duration_seconds
 API_URL = "http://quantumvestai-dev-api:8000/api/v1"
 # Set up logging
@@ -77,7 +76,7 @@ def set_cached_data(key: str, data: Dict[str, Any], ttl: int = CACHE_TTL) -> Non
 @router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(
     request: Request, 
-    user=Depends(get_current_user),
+    request: Request,
     period: Optional[str] = Query("month", description="Time period for data analysis"),
     refresh: Optional[bool] = Query(False, description="Force refresh data from API")
 ):
@@ -105,7 +104,7 @@ async def dashboard(
         ).inc()
         
         # Create cache key based on user and period
-        cache_key = f"dashboard_{user.get('username')}_{period}"
+        cache_key = f"dashboard_{"anonymous"}_{period}"
         
         # Try to get data from cache unless refresh is requested
         dashboard_data = None if refresh else get_cached_data(cache_key)
@@ -116,7 +115,7 @@ async def dashboard(
                 api_url = f"{request.app.state.settings.API_URL}/api/portfolio/summary?period={period}"
                 response = await client.get(
                     api_url,
-                    headers={"Authorization": f"Bearer {user.get('token')}"}
+                    headers={"Authorization": f"Bearer {"anonymous"}"}
                 )
                 
                 if response.status_code != 200:
@@ -132,7 +131,7 @@ async def dashboard(
             async with httpx.AsyncClient(timeout=TIMEOUT) as client:
                 response = await client.get(
                     f"{request.app.state.settings.API_URL}/api/market/overview",
-                    headers={"Authorization": f"Bearer {user.get('token')}"}
+                    headers={"Authorization": f"Bearer {"anonymous"}"}
                 )
                 
                 if response.status_code != 200:
@@ -145,7 +144,7 @@ async def dashboard(
             async with httpx.AsyncClient(timeout=TIMEOUT) as client:
                 response = await client.get(
                     f"{request.app.state.settings.API_URL}/api/transactions/recent?limit=5",
-                    headers={"Authorization": f"Bearer {user.get('token')}"}
+                    headers={"Authorization": f"Bearer {"anonymous"}"}
                 )
                 
                 if response.status_code != 200:
@@ -164,7 +163,7 @@ async def dashboard(
             # Cache the dashboard data
             set_cached_data(cache_key, dashboard_data)
         else:
-            logger.info(f"Using cached dashboard data for user {user.get('username')}")
+            logger.info(f"Using cached dashboard data for user {"anonymous"}")
             portfolio_data = dashboard_data["portfolio"]
             market_data = dashboard_data["market"]
             transactions = dashboard_data["transactions"]
@@ -172,7 +171,7 @@ async def dashboard(
         # Combine data for template
         context = {
             "request": request,
-            "user": user,
+            "user": None,
             "page_title": "Dashboard",
             "portfolio": portfolio_data,
             "market": market_data,
@@ -225,7 +224,7 @@ async def dashboard(
 @router.get("/api/dashboard/data", response_model=Dict[str, Any])
 async def dashboard_data(
     request: Request,
-    user=Depends(get_current_user),
+    request: Request,
     period: Optional[str] = Query("month"),
     refresh: Optional[bool] = Query(False)
 ):
@@ -254,7 +253,7 @@ async def dashboard_data(
         ).inc()
         
         # Create cache key
-        cache_key = f"dashboard_api_{user.get('username')}_{period}"
+        cache_key = f"dashboard_api_{"anonymous"}_{period}"
         
         # Try to get data from cache unless refresh is requested
         data = None if refresh else get_cached_data(cache_key)
@@ -324,7 +323,7 @@ async def dashboard_data(
 
 @router.get("/api/dashboard/insights", response_model=Dict[str, Any])
 async def dashboard_insights(
-    user=Depends(get_current_user)
+    
 ):
     """
     API endpoint to get AI-generated insights for the dashboard.
@@ -363,7 +362,7 @@ async def dashboard_insights(
 @router.get("/admin/dashboard", response_class=HTMLResponse)
 async def admin_dashboard(
     request: Request,
-    user=Depends(validate_admin_access)
+    
 ):
     """
     Admin dashboard view showing system metrics and user statistics.
@@ -397,7 +396,7 @@ async def admin_dashboard(
         
         context = {
             "request": request,
-            "user": user,
+            "user": None,
             "page_title": "Admin Dashboard",
             "admin_data": admin_data
         }

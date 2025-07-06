@@ -2,7 +2,6 @@ from fastapi import APIRouter, Request, Depends, Form, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional
-from routes.auth import get_current_user
 from services.api_client import APIClient
 from services.yahoo_finance import YahooFinanceService
 API_URL = "http://quantumvestai-dev-api:8000/api/v1"
@@ -16,12 +15,10 @@ router = APIRouter(tags=["watchlist"])
 @router.get("/watchlist", response_class=HTMLResponse)
 async def watchlist_page(
     request: Request, 
-    current_user: dict = Depends(get_current_user),
+    current_request: Request,
     view: str = Query("grid", regex="^(grid|list)$")
 ):
     """Render watchlist page"""
-    if not current_user:
-        return RedirectResponse(url="/login?next=/watchlist", status_code=302)
     
     try:
         # Create API client with auth token
@@ -68,7 +65,7 @@ async def watchlist_page(
             "watchlist.html", 
             {
                 "request": request, 
-                "user": current_user, 
+                "user": None, 
                 "watchlist": stocks_data, 
                 "summary": summary,
                 "alerts": alerts,
@@ -90,7 +87,7 @@ async def watchlist_page(
             "watchlist.html", 
             {
                 "request": request, 
-                "user": current_user, 
+                "user": None, 
                 "watchlist": [], 
                 "error": error_message,
                 "view": view
@@ -102,11 +99,9 @@ async def add_to_watchlist(
     request: Request,
     ticker: str = Form(...),
     notes: Optional[str] = Form(None),
-    current_user: dict = Depends(get_current_user)
+    current_
 ):
     """Add a stock to the watchlist"""
-    if not current_user:
-        return JSONResponse(
             content={"success": False, "message": "Authentication required"},
             status_code=401
         )
@@ -143,11 +138,9 @@ async def add_to_watchlist(
 async def remove_from_watchlist(
     request: Request,
     ticker: str = Form(...),
-    current_user: dict = Depends(get_current_user)
+    current_
 ):
     """Remove a stock from the watchlist"""
-    if not current_user:
-        return JSONResponse(
             content={"success": False, "message": "Authentication required"},
             status_code=401
         )
@@ -182,11 +175,9 @@ async def set_price_alert(
     ticker: str = Form(...),
     price: float = Form(...),
     direction: str = Form(...),  # "above" or "below"
-    current_user: dict = Depends(get_current_user)
+    current_
 ):
     """Set a price alert for a stock"""
-    if not current_user:
-        return JSONResponse(
             content={"success": False, "message": "Authentication required"},
             status_code=401
         )
@@ -222,11 +213,9 @@ async def set_price_alert(
 async def remove_price_alert(
     request: Request,
     alert_id: str = Form(...),
-    current_user: dict = Depends(get_current_user)
+    current_
 ):
     """Remove a price alert"""
-    if not current_user:
-        return JSONResponse(
             content={"success": False, "message": "Authentication required"},
             status_code=401
         )
@@ -260,11 +249,9 @@ async def update_stock_notes(
     request: Request,
     ticker: str = Form(...),
     notes: str = Form(...),
-    current_user: dict = Depends(get_current_user)
+    current_
 ):
     """Update notes for a stock in the watchlist"""
-    if not current_user:
-        return JSONResponse(
             content={"success": False, "message": "Authentication required"},
             status_code=401
         )

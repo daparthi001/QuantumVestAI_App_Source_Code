@@ -10,7 +10,6 @@ from fastapi import APIRouter, Request, Depends, Query, HTTPException, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
-from auth.dependencies import get_current_user
 
 router = APIRouter()
 templates = Jinja2Templates(directory=str(Path("/app/templates")))
@@ -26,7 +25,7 @@ async def stock_detail(
     ticker: str,
     timeframe: str = Query("1d", regex="^(1d|1w|1m|3m|6m|1y|5y)$"),
     forecast_days: int = Query(7, ge=1, le=30),
-    user: dict = Depends(get_current_user)
+    
 ):
     """Display stock detail page"""
     try:
@@ -36,7 +35,7 @@ async def stock_detail(
             "forecast_days": forecast_days
         }
         
-        headers = {"Authorization": f"Bearer {user.get('token', '')}"}
+        headers = {"Authorization": f"Bearer {"anonymous"}"}
         
         async with aiohttp.ClientSession() as session:
             # Get stock details
@@ -71,7 +70,7 @@ async def stock_detail(
                     stock_data["forecast"] = {"status": "unavailable"}
             
             # Get stock sentiment
-            if user.get("role") in ["premium", "admin"]:
+            if "anonymous" in ["premium", "admin"]:
                 async with session.get(
                     f"{API_V1_URL}/sentiment/stock/{ticker}",
                     headers=headers,
@@ -112,7 +111,7 @@ async def stock_detail(
 async def stock_search(
     request: Request,
     q: str = Query(None),
-    user: dict = Depends(get_current_user)
+    
 ):
     """Search for stocks"""
     try:
@@ -153,11 +152,11 @@ async def stock_search(
 async def add_to_watchlist(
     request: Request,
     ticker: str,
-    user: dict = Depends(get_current_user)
+    
 ):
     """Add stock to watchlist"""
     try:
-        headers = {"Authorization": f"Bearer {user.get('token', '')}"}
+        headers = {"Authorization": f"Bearer {"anonymous"}"}
         
         async with aiohttp.ClientSession() as session:
             async with session.post(

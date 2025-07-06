@@ -2,7 +2,6 @@ from fastapi import APIRouter, Request, Query, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional, List, Dict, Any
-from ui.routes.auth import get_current_user
 from ui.services.yahoo_finance import YahooFinanceService
 API_URL = "http://quantumvestai-dev-api:8000/api/v1"
 
@@ -12,7 +11,7 @@ router = APIRouter(prefix="/utils", tags=["utilities"])
 @router.get("/ticker-info")
 async def get_ticker_info(
     ticker: str = Query(...),
-    current_user: Optional[dict] = Depends(get_current_user)
+    
 ):
     """Get basic information for a stock ticker"""
     try:
@@ -28,7 +27,7 @@ async def get_ticker_info(
 async def search_tickers(
     query: str = Query(..., min_length=1),
     limit: int = Query(10, ge=1, le=20),
-    current_user: Optional[dict] = Depends(get_current_user)
+    
 ):
     """Search for ticker symbols"""
     try:
@@ -43,7 +42,7 @@ async def search_tickers(
 @router.get("/market-indices")
 async def get_market_indices(
     indices: Optional[str] = Query(None),  # Comma-separated list of index tickers
-    current_user: Optional[dict] = Depends(get_current_user)
+    
 ):
     """Get current market indices data"""
     try:
@@ -82,7 +81,7 @@ async def get_historical_data(
     ticker: str = Query(...),
     period: str = Query("1y"),
     interval: str = Query("1d"),
-    current_user: Optional[dict] = Depends(get_current_user)
+    
 ):
     """Get historical price data for a ticker"""
     try:
@@ -98,7 +97,7 @@ async def get_historical_data(
 async def get_stock_news(
     ticker: str = Query(...),
     limit: int = Query(10, ge=1, le=50),
-    current_user: Optional[dict] = Depends(get_current_user)
+    
 ):
     """Get news for a specific stock"""
     try:
