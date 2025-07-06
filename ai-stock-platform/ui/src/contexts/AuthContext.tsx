@@ -10,7 +10,7 @@ import authService, { User } from '../services/auth.service';
 // Define context interface
 interface AuthContextType {
   user: User | null;
-  loading: boolean;
+  isLoading: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -19,11 +19,20 @@ interface AuthContextType {
 // Create context with default values
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  loading: true,
+  isLoading: true,
   login: async () => {},
   logout: () => {},
   isAuthenticated: false,
 });
+
+// Hook to use auth context
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
 // Props interface for the provider
 interface AuthProviderProps {
@@ -91,3 +100,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsAuthenticated(false);
     navigate('/login');
   };
+
+  const value: AuthContextType = {
+    user,
+    isLoading: loading,
+    isAuthenticated,
+    login,
+    logout,
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};

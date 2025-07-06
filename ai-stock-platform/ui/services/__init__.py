@@ -15,17 +15,11 @@ from .auth_service import AuthService
 from .cache_service import CacheService
 
 # Only import these if they exist
-try:
-    from .forecast_service import ForecastService
-except ImportError:
     # Create a stub if the service doesn't exist
     class ForecastService:
         """Stub for forecast service"""
         pass
 
-try:
-    from .yahoo_finance import YahooFinanceService
-except ImportError:
     # Create a stub if the service doesn't exist
     class YahooFinanceService:
         """Stub for Yahoo Finance service"""

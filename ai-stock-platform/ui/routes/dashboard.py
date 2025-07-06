@@ -37,6 +37,12 @@ async def dashboard_page(request: Request):
                 news = YahooFinanceService.get_stock_news(ticker, limit=2)
                 news_items.extend(news)
             except:
+
+async def dashboard_page(
+    request: Request,
+    
+):
+    """Render dashboard page"""
                 continue
                 
         # Sort news by published date (newest first)
@@ -50,22 +56,6 @@ async def dashboard_page(request: Request):
         personalized_data = {}
         watchlist_items = []
         if current_user:
-            try:
-                # Get personalized analytics
-                personalized_data = api_client.get("/api/users/analytics")
-                
-                # Get watchlist items
-                watchlist = api_client.get("/api/watchlist")
-                if watchlist:
-                    for item in watchlist[:5]:  # Get first 5 items
-                        ticker = item["ticker"]
-                        try:
-                            stock_info = YahooFinanceService.get_stock_info(ticker)
-                            watchlist_items.append({
-                                **item,
-                                "info": stock_info
-                            })
-                        except:
                             continue
             except:
                 pass
@@ -76,6 +66,7 @@ async def dashboard_page(request: Request):
                 "request": request,
                 "user": None,
                 "demo_mode": True,
+
                 "market_summary": market_summary,
                 "popular_stocks": popular_stocks,
                 "news": news_items,
@@ -87,11 +78,6 @@ async def dashboard_page(request: Request):
     except Exception as e:
         error_message = str(e)
         if hasattr(e, "response") and hasattr(e.response, "json"):
-            try:
-                error_json = e.response.json()
-                if "detail" in error_json:
-                    error_message = error_json["detail"]
-            except:
                 pass
                 
         return templates.TemplateResponse(
@@ -100,6 +86,7 @@ async def dashboard_page(request: Request):
                 "request": request,
                 "user": None,
                 "demo_mode": True,
+
                 "market_summary": {"indices": {}, "sectors": {}, "top_movers": {}},
                 "popular_stocks": [],
                 "news": [],

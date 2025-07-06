@@ -98,6 +98,11 @@ async def stock_detail(
             }
         )
     except HTTPException as e:
+
+    forecast_days: int = Query(7, ge=1, le=30),
+    
+):
+    """Display stock detail page"""
         raise e
     except Exception as e:
         logger.error(f"Stock detail error for {ticker}: {str(e)}")
@@ -136,6 +141,11 @@ async def stock_search(
             }
         )
     except Exception as e:
+
+    q: str = Query(None),
+    
+):
+    """Search for stocks"""
         logger.error(f"Stock search error: {str(e)}")
         return templates.TemplateResponse(
             "stocks/search.html",
@@ -158,3 +168,12 @@ async def add_to_watchlist(
     
     # Demo mode - redirect to login with a message
     return RedirectResponse(url="/login?msg=Watchlist+features+require+authentication+(demo+mode)", status_code=302)
+
+    ticker: str,
+    
+):
+    """Add stock to watchlist"""
+        raise e
+    except Exception as e:
+        logger.error(f"Add to watchlist error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))

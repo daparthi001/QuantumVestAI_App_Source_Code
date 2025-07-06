@@ -62,6 +62,11 @@ async def news_page(
             {"request": request, "data": news_data, "user": None, "demo_mode": True}
         )
     except Exception as e:
+
+    page: int = Query(1, ge=1),
+    request: Request
+):
+    """Display news page"""
         logger.error(f"News page error: {str(e)}")
         return templates.TemplateResponse(
             "error.html",
@@ -121,6 +126,11 @@ async def news_article(
             {"request": request, "data": article_data, "user": None, "demo_mode": True}
         )
     except HTTPException as e:
+
+    article_id: str,
+    request: Request
+):
+    """Display specific news article"""
         raise e
     except Exception as e:
         logger.error(f"News article error for {article_id}: {str(e)}")

@@ -39,3 +39,35 @@ async def remove_from_watchlist(request: Request):
     
     # Demo mode - redirect to login with a message
     return RedirectResponse(url="/login?msg=Watchlist+features+require+authentication+(demo+mode)", status_code=302)
+=======
+    """Display user's watchlist"""
+        logger.error(f"Watchlist error: {str(e)}")
+        return templates.TemplateResponse(
+            "error.html",
+            {"request": request, "error": str(e)},
+            status_code=500
+        )
+
+@router.post("/watchlist/add")
+async def add_to_watchlist(
+    request: Request,
+    ticker: str = Form(...),
+    
+):
+    """Add stock to watchlist"""
+        raise e
+    except Exception as e:
+        logger.error(f"Add to watchlist error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/watchlist/remove")
+async def remove_from_watchlist(
+    request: Request,
+    ticker: str = Form(...),
+    
+):
+    """Remove stock from watchlist"""
+        raise e
+    except Exception as e:
+        logger.error(f"Remove from watchlist error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))

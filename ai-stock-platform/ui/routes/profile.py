@@ -35,3 +35,103 @@ async def change_password(request: Request):
     
     # Demo mode - redirect to login with a message
     return RedirectResponse(url="/login?msg=Password+changes+require+authentication+(demo+mode)", status_code=302)
+=======
+async def profile_page(
+    request: Request,
+    request: Request
+):
+    """Render user profile page"""
+    
+        error_message = str(e)
+        if hasattr(e, "response") and hasattr(e.response, "json"):
+                pass
+                
+        return templates.TemplateResponse(
+            "profile.html", 
+            {
+                "request": request,
+                "user": None,
+                "profile": {},
+                "activity": [],
+                "error": error_message
+            }
+        )
+
+@router.post("/update", response_class=HTMLResponse)
+async def update_profile(
+    request: Request,
+    current_request: Request,
+    full_name: str = Form(None),
+    bio: str = Form(None),
+    location: str = Form(None),
+    profile_image: UploadFile = File(None)
+):
+    """Update user profile"""
+    
+        error_message = str(e)
+        if hasattr(e, "response") and hasattr(e.response, "json"):
+                pass
+                
+        # Try to get current profile data
+        profile_data = {}
+        activity_data = []
+            pass
+                
+        return templates.TemplateResponse(
+            "profile.html", 
+            {
+                "request": request,
+                "user": None,
+                "profile": profile_data,
+                "activity": activity_data,
+                "error": error_message
+            }
+        )
+
+@router.post("/change-password", response_class=HTMLResponse)
+async def change_password(
+    request: Request,
+    current_request: Request,
+    current_password: str = Form(...),
+    new_password: str = Form(...),
+    confirm_password: str = Form(...)
+):
+    """Change user password"""
+    
+    # Check if passwords match
+    if new_password != confirm_password:
+        # Try to get current profile data
+        profile_data = {}
+        activity_data = []
+            pass
+            
+        return templates.TemplateResponse(
+            "profile.html", 
+            {
+                "request": request,
+                "user": None,
+                "profile": profile_data,
+                "activity": activity_data,
+                "error": "New passwords do not match"
+            }
+        )
+    
+        error_message = str(e)
+        if hasattr(e, "response") and hasattr(e.response, "json"):
+                pass
+                
+        # Try to get current profile data
+        profile_data = {}
+        activity_data = []
+            pass
+                
+        return templates.TemplateResponse(
+            "profile.html", 
+            {
+                "request": request,
+                "user": None,
+                "profile": profile_data,
+                "activity": activity_data,
+                "error": f"Error changing password: {error_message}"
+            }
+        )

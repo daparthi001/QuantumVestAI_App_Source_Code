@@ -38,6 +38,12 @@ async def forecast_home(request: Request):
             "market_sentiment": "positive",
             "ai_accuracy": 0.82
         }
+=======
+    """Forecast dashboard page"""
+    
+            logger.warning(f"Error fetching forecast overview: {str(e)}")
+            forecast_data = {"error": str(e)}
+
         
         # Render the forecast dashboard
         return templates.TemplateResponse(
@@ -46,6 +52,7 @@ async def forecast_home(request: Request):
                 "request": request,
                 "user": None,
                 "demo_mode": True,
+
                 "data": forecast_data
             }
         )
@@ -57,6 +64,7 @@ async def forecast_home(request: Request):
                 "request": request,
                 "user": None,
                 "demo_mode": True,
+
                 "error": f"Error loading forecast dashboard: {str(e)}"
             },
             status_code=500
@@ -65,5 +73,6 @@ async def forecast_home(request: Request):
 @router.get("/dashboard", response_class=HTMLResponse)  # THIS ROUTE NEEDS UPDATING
 async def forecast_dashboard(request: Request):
     """Forecast dashboard (alias route - demo mode)"""
+    """Forecast dashboard (alias route)"""
     # Redirect to main forecast page for consistency
     return RedirectResponse(url="/forecast", status_code=302)

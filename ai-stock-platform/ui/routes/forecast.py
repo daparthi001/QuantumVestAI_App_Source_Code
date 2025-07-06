@@ -23,11 +23,6 @@ router = APIRouter(
 )
 
 # Try to import dependencies
-try:
-    from core.config.settings import get_settings
-    settings = get_settings()
-    logger.info(f"Successfully loaded settings for forecast routes")
-except ImportError as e:
     logger.error(f"Error importing dependencies: {str(e)}")
     # Create mock settings
     settings = {
@@ -47,9 +42,6 @@ except NameError as e:
     logger.warning(f"Using fallback settings in forecast routes: {settings}")
 
 # Try to import auth dependencies
-try:
-    from auth.dependencies import get_current_user, get_optional_current_user
-except ImportError:
     logger.warning("Auth dependencies not found. Using mock functions.")
     
     async def get_current_user(request: Request, response=None):
@@ -59,6 +51,10 @@ except ImportError:
     async def get_optional_current_user(request: Request, response=None):
         """Mock function that returns None (demo mode)"""
         return None
+    
+    async def (request: Request, response=None):
+        """Mock function that optionally returns a default user"""
+        return {"username": "defaultuser", "token": "mock_token"}
 
 # Helper function to get templates
 def get_templates(request):
@@ -72,6 +68,8 @@ def get_templates(request):
 @router.get("", response_class=HTMLResponse)
 async def forecast_home(
     request: Request
+    request: Request,
+    
 ):
     """
     Render the forecast home page (demo mode).
@@ -95,6 +93,7 @@ async def forecast_home(
             }
         )
     except Exception as e:
+
         logger.exception(f"Error rendering forecast home: {str(e)}")
         
         # Get templates
@@ -107,6 +106,7 @@ async def forecast_home(
                 "request": request,
                 "user": None,
                 "demo_mode": True,
+
                 "message": "An error occurred loading the forecast page.",
                 "error_code": "FORECAST_ERR"
             },
@@ -118,6 +118,9 @@ async def stock_forecast(
     request: Request,
     symbol: str = Path(..., description="Stock symbol"),
     period: str = Query("month", description="Forecast period (day, week, month, quarter, year)")
+
+    period: str = Query("month", description="Forecast period (day, week, month, quarter, year)"),
+    
 ):
     """
     Render the stock forecast page for a specific stock (demo mode).
@@ -180,6 +183,7 @@ async def stock_forecast(
             }
         )
     except Exception as e:
+
         logger.exception(f"Error rendering stock forecast: {str(e)}")
         
         # Get templates
@@ -192,6 +196,7 @@ async def stock_forecast(
                 "request": request,
                 "user": None,
                 "demo_mode": True,
+
                 "message": f"An error occurred loading the forecast for {symbol}.",
                 "error_code": "STOCK_FORECAST_ERR"
             },
@@ -203,27 +208,12 @@ async def api_stock_forecast(
     request: Request,
     symbol: str = Path(..., description="Stock symbol"),
     period: str = Query("month", description="Forecast period")
+    period: str = Query("month", description="Forecast period"),
+    
 ):
     """
     API endpoint to get forecast data for a stock (demo mode).
     """
-    try:
-        # Create mock forecast data (in a real app, this would come from an API)
-        forecast_data = {
-            "symbol": symbol.upper(),
-            "forecast_price": 195.25,
-            "forecast_change_percent": 9.38,
-            "confidence": 72,
-            "period": period,
-            "generated_at": datetime.utcnow().isoformat(),
-            "chart_data": {
-                "labels": ["Today", "Week 1", "Week 2", "Week 3", "Week 4"],
-                "values": [178.50, 182.25, 186.75, 190.50, 195.25]
-            }
-        }
-        
-        return forecast_data
-    except Exception as e:
         logger.exception(f"API forecast error: {str(e)}")
         raise HTTPException(
             status_code=500,

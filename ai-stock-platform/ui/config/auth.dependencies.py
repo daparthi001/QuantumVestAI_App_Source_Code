@@ -19,6 +19,12 @@ TOKEN_EXPIRE_MINUTES = int(os.getenv("TOKEN_EXPIRE_MINUTES", "60"))
 # API Configuration
 API_URL = os.getenv("API_URL", "http://quantumvestai-dev-api:8000/api/v1")
 
+
+# get_current_user function removed as per requirements
+
+# validate_admin_access function removed as per requirements
+
+
 def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None):
     """
     Create a new JWT access token.
@@ -50,6 +56,8 @@ def decode_token(token: str) -> Dict[str, Any]:
         JWTError: If token is invalid or expired
     """
     try:
+        logger.error(f"API connection error during token verification: {str(e)}")
+        # Fall back to local verification if API is unavailable
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
         return payload
     except jwt.PyJWTError as e:

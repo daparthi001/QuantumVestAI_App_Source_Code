@@ -1,51 +1,22 @@
 """
-Authentication Module
-Created: 2025-05-21 17:07:45
-Author: daparthi001
+Authentication functionality.
 """
 from datetime import datetime, timedelta
 from typing import Optional
-from jose import jwt
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from sqlalchemy.orm import Session
+from ...db.session import get_db
+from ...schemas.token import TokenData
+from ...schemas.user import User
 
-from core.config import settings
-from core.utils.password_utils import verify_password
-from db.models.user import User
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-def authenticate_user(db_session, username: str, password: str) -> Optional[User]:
-    """
-    Authenticate a user with username and password
-    
-    Args:
-        db_session: Database session
-        username: Username to authenticate
-        password: Password to verify
-        
-    Returns:
-        Optional[User]: User if authenticated, None otherwise
-    """
-    user = db_session.query(User).filter(User.username == username).first()
-    if not user:
-        return None
-    if not verify_password(password, user.hashed_password):
-        return None
-    return user
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """
-    Create JWT access token
-    
-    Args:
-        data: Data to encode in token
-        expires_delta: Optional expiration time
-        
-    Returns:
-        str: Encoded JWT token
-    """
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-    return encoded_jwt
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)

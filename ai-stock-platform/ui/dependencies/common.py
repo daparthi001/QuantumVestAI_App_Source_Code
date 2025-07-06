@@ -10,6 +10,15 @@ API_URL = "http://quantumvestai-dev-api:8000/api/v1"
 async def get_api_client(request: Request) -> APIClient:
     """
     Dependency to get API client without authentication (demo mode)
+# get_current_user function removed as per requirements
+
+# get_current_active_user function removed as per requirements
+
+# get_admin_user function removed as per requirements
+
+async def get_api_client(request: Request) -> APIClient:
+    """
+    Dependency to get API client without authentication
     """
     return APIClient(token=None)
 
@@ -17,7 +26,6 @@ async def get_template_context(request: Request) -> Dict[str, Any]:
     """
     Dependency to get base template context for all templates (demo mode)
     """
-    
     # Basic context without user info
     context = {
         "request": request,

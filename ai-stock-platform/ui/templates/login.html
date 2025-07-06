@@ -2,6 +2,11 @@
 
 {% block title %}Login | QuantumVestAI{% endblock %}
 
+{% block head_extra %}
+<!-- Enhanced UI scripts -->
+<script src="{{ url_for('static', path='/js/enhanced-ui.js') }}"></script>
+{% endblock %}
+
 {% block content %}
 <div class="auth-container">
     <div class="auth-card">
@@ -9,7 +14,7 @@
         <p class="auth-subtitle">Access your QuantumVestAI account</p>
 
         {% if msg %}
-        <div class="alert alert-{{ msg_type or 'danger' }}">
+        <div class="alert alert-{{ msg_type or 'danger' }} alert-dismissible fade show" role="alert">
             {% if msg is string %}
                 {{ msg }}
             {% else %}
@@ -23,39 +28,70 @@
                     {% endif %}
                 {% endfor %}
             {% endif %}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
         {% endif %}
 
-        <form action="/auth/login" method="POST">
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username" class="form-control" value="{{ username or '' }}" required autofocus>
+        <form id="loginForm" action="/auth/login" method="POST" novalidate>
+            <div class="form-group mb-3">
+                <label for="username" class="form-label">Username or Email</label>
+                <input type="text" 
+                       id="username" 
+                       name="username" 
+                       class="form-control" 
+                       value="{{ username or '' }}" 
+                       required 
+                       autofocus
+                       placeholder="Enter your username or email"
+                       autocomplete="username">
+                <div class="invalid-feedback"></div>
             </div>
             
-            <div class="form-group">
-                <label for="password">Password</label>
-                <div class="password-input-container">
-                    <input type="password" id="password" name="password" class="form-control" required>
-                    <button type="button" class="password-toggle" data-target="password">
+            <div class="form-group mb-3">
+                <label for="password" class="form-label">Password</label>
+                <div class="password-input-container position-relative">
+                    <input type="password" 
+                           id="password" 
+                           name="password" 
+                           class="form-control" 
+                           required
+                           placeholder="Enter your password"
+                           autocomplete="current-password">
+                    <button type="button" 
+                            class="password-toggle position-absolute top-50 end-0 translate-middle-y border-0 bg-transparent"
+                            style="margin-right: 10px;"
+                            data-target="password">
                         <i class="bi bi-eye"></i>
                     </button>
                 </div>
+                <div class="invalid-feedback"></div>
             </div>
             
-            <div class="form-group form-check">
+            <div class="form-group form-check mb-3">
                 <input type="checkbox" class="form-check-input" id="remember" name="remember" value="true">
-                <label class="form-check-label" for="remember">Remember me</label>
+                <label class="form-check-label" for="remember">Remember me for 30 days</label>
             </div>
             
-            <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+            <button type="submit" class="btn btn-primary btn-block w-100 mb-3">
+                Sign In
+            </button>
             
-            <div class="auth-links">
-                <a href="/auth/password-reset">Forgot password?</a>
+            <div class="auth-links text-center mb-3">
+                <a href="/password-reset" class="text-decoration-none">Forgot your password?</a>
             </div>
         </form>
         
-        <div class="auth-footer">
-            Don't have an account? <a href="/auth/register">Sign up</a>
+        <!-- Demo credentials info -->
+        <div class="alert alert-info mt-3" role="alert">
+            <small>
+                <strong>Demo credentials:</strong><br>
+                Username: <code>demo</code><br>
+                Password: <code>password</code>
+            </small>
+        </div>
+        
+        <div class="auth-footer text-center">
+            Don't have an account? <a href="/register" class="text-decoration-none">Sign up here</a>
         </div>
     </div>
 </div>
@@ -63,23 +99,31 @@
 
 {% block scripts %}
 <script>
+// Set API base URL for the enhanced UI
+window.API_BASE_URL = '/api/v1';
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Password visibility toggle
-    document.querySelectorAll('.password-toggle').forEach(button => {
-        button.addEventListener('click', function() {
-            const targetId = this.getAttribute('data-target');
-            const input = document.getElementById(targetId);
-            if (!input) return;
+    // Initialize enhanced login handling
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        console.log('Login form enhanced error handling initialized');
+    }
+    
+    // Show any connection issues
+    setTimeout(async () => {
+        try {
+            const response = await fetch('/health');
+            const health = await response.json();
             
-            if (input.type === 'password') {
-                input.type = 'text';
-                this.innerHTML = '<i class="bi bi-eye-slash"></i>';
-            } else {
-                input.type = 'password';
-                this.innerHTML = '<i class="bi bi-eye"></i>';
+            if (health.api && health.api.status !== 'healthy') {
+                UIErrorHandler.showWarning('API service may be experiencing issues. Login may use fallback authentication.', {
+                    duration: 8000
+                });
             }
-        });
-    });
+        } catch (error) {
+            console.warn('Could not check health status:', error);
+        }
+    }, 1000);
 });
 </script>
 {% endblock %}

@@ -27,106 +27,11 @@ API_V1_URL = f"{API_URL}/api/v1"
 
 def format_error_message(error_data):
     """Format error data into a readable message"""
-    try:
-        if isinstance(error_data, str):
-            return error_data
-        
-        if isinstance(error_data, list):
-            messages = []
-            for item in error_data:
-                if isinstance(item, dict) and "msg" in item:
-                    field = item.get("loc", ["field"])[-1] if "loc" in item else "Error"
-                    messages.append(f"{field}: {item['msg']}")
-                elif isinstance(item, str):
-                    messages.append(item)
-                else:
-                    messages.append(str(item))
-            return ", ".join(messages)
-        
-        if isinstance(error_data, dict):
-            if "detail" in error_data:
-                detail = error_data["detail"]
-                if isinstance(detail, list):
-                    return format_error_message(detail)
-                return str(detail)
-            
-            # Format dictionary
-            messages = []
-            for key, value in error_data.items():
-                messages.append(f"{key}: {value}")
-            return ", ".join(messages)
-        
-        # Default case: convert to string
-        return str(error_data)
-    except Exception as e:
         logger.error(f"Error formatting error message: {str(e)}")
         return "An error occurred during registration"
 
 # Function to get the current user from the token in the cookie
-async def get_current_user(request: Request):
-    """Get the current user from the token in the cookie"""
-    token = request.cookies.get("access_token", "")
-    
-    # If no token, return None (not authenticated)
-    if not token:
-        return None
-    
-    # If it's an emergency token, parse username from it
-    if token.startswith("emergency_") or token.startswith("Bearer emergency_"):
-        parts = token.split("_")
-        if len(parts) >= 2:
-            username = parts[1]
-            # Create minimal user object
-            return {
-                "username": username,
-                "email": f"{username}@example.com",
-                "full_name": username.capitalize(),
-                "id": 0,
-                "is_emergency": True
-            }
-    
-    # For regular tokens, verify with API
-    try:
-        # Use consistent headers format
-        if token.startswith("Bearer "):
-            headers = {"Authorization": token}
-        else:
-            headers = {"Authorization": f"Bearer {token}"}
-        
-        # Call API to get current user
-        response = requests.get(
-            f"{API_V1_URL}/users/me", 
-            headers=headers,
-            timeout=3
-        )
-        
-        if response.status_code == 200:
-            user_data = response.json()
-            # Add token for convenience
-            user_data["token"] = token
-            return user_data
-        else:
-            logger.warning(f"Failed to get user from API: {response.status_code}")
-            return None
-            
-    except Exception as e:
-        logger.error(f"Error getting current user: {str(e)}")
-        
-        # For emergency cases, create a dummy user
-        if token.startswith("Bearer emergency_"):
-            parts = token[15:].split("_")
-            if len(parts) >= 1:
-                username = parts[0]
-                # Create minimal user object
-                return {
-                    "username": username,
-                    "email": f"{username}@example.com",
-                    "full_name": username.capitalize(),
-                    "id": 0,
-                    "is_emergency": True
-                }
-        
-        return None
+# get_current_user function removed as per requirements
 
 @router.get("/auth/login", response_class=HTMLResponse)
 async def login_page(request: Request, next: str = "/dashboard", msg: str = None):
@@ -155,41 +60,6 @@ async def login_post(
     logger.info(f"Login attempt for username: {username}")
     templates = get_templates()
     
-    try:
-        # Try multiple payload formats to find the one that works
-        # Based on the error logs, API expects username/password in body field
-        payload_formats = [
-            # Format 1: Body-wrapped format (matches error message)
-            {"body": {"username": username, "password": password}},
-            
-            # Format 2: Direct format (most common)
-            {"username": username, "password": password},
-            
-            # Format 3: OAuth2 style format
-            {"username": username, "password": password, "grant_type": "password"}
-        ]
-        
-        # Try each format until one works
-        access_token = None
-        response = None
-        
-        for payload in payload_formats:
-            try:
-                logger.debug(f"Trying login payload format: {json.dumps(payload)}")
-                response = requests.post(
-                    f"{API_V1_URL}/auth/login",
-                    json=payload,
-                    timeout=5
-                )
-                
-                if response.status_code == 200:
-                    # Get token from response
-                    token_data = response.json()
-                    access_token = token_data.get("access_token")
-                    if access_token:
-                        logger.info(f"Found working API payload format for {username}")
-                        break
-            except Exception as e:
                 logger.warning(f"Login attempt with payload format failed: {str(e)}")
                 continue
         
@@ -197,13 +67,6 @@ async def login_post(
         if not access_token:
             error_msg = "Invalid username or password"
             if response:
-                try:
-                    error_data = response.json()
-                    if "detail" in error_data:
-                        error_msg = error_data["detail"]
-                    else:
-                        error_msg = format_error_message(error_data)
-                except:
                     pass
             
             # Try emergency login for development/testing when API is unavailable
@@ -380,37 +243,6 @@ async def register_post(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
         )
     
-    try:
-        # EMERGENCY FIX: Try emergency direct registration
-        if username in ["demo", "daparthi001", "test", "chavala", "daparthi0012025"] and (
-            os.getenv("EMERGENCY_MODE", "false").lower() == "true" or 
-            os.getenv("ENVIRONMENT", "").lower() == "development"
-        ):
-            logger.warning(f"Using emergency registration for {username}")
-            return RedirectResponse(
-                url="/auth/login?msg=Emergency+registration+successful!+Please+log+in.", 
-                status_code=status.HTTP_302_FOUND
-            )
-            
-        # Regular API registration flow
-        payload = {
-            "username": username,
-            "email": email,
-            "password": password
-        }
-        
-        logger.info(f"Sending registration request for {username}")
-        
-        try:
-            # Call API registration endpoint (try both direct and body-wrapped formats)
-            try:
-                logger.debug("Trying direct payload format")
-                response = requests.post(
-                    f"{API_V1_URL}/auth/register",
-                    json=payload,
-                    timeout=5
-                )
-            except Exception as e:
                 logger.warning(f"Direct payload format failed: {str(e)}")
                 logger.debug("Trying body-wrapped payload format")
                 # Try body-wrapped format
@@ -430,11 +262,6 @@ async def register_post(
             
             # Get error message from response
             error_msg = "Registration failed"
-            try:
-                if response:
-                    error_data = response.json()
-                    error_msg = format_error_message(error_data)
-            except Exception as e:
                 logger.error(f"Failed to parse API error response: {str(e)}")
                 if response and hasattr(response, 'text'):
                     error_msg = f"Registration failed: {response.text[:100]}"
@@ -504,25 +331,6 @@ async def password_reset_page(request: Request):
 async def password_reset_post(request: Request, email: str = Form(...)):
     """Process password reset request"""
     templates = get_templates()
-    try:
-        # Try multiple payload formats for password reset
-        payload_formats = [
-            {"email": email},
-            {"body": {"email": email}}
-        ]
-        
-        for payload in payload_formats:
-            try:
-                # Call API password reset endpoint
-                response = requests.post(
-                    f"{API_V1_URL}/auth/password-reset",
-                    json=payload,
-                    timeout=5
-                )
-                
-                if response.status_code in [200, 202]:
-                    break
-            except:
                 continue
         
         # Always show success message for security (don't reveal if email exists)
@@ -555,3 +363,5 @@ async def whoami(request: Request):
     
     # Demo mode - always return unauthenticated
     return JSONResponse({"authenticated": False, "demo_mode": True}, status_code=401)
+    """Test route to show current user info"""
+    return JSONResponse({"authenticated": False}, status_code=401)

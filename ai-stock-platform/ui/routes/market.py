@@ -39,12 +39,19 @@ async def market_overview(request: Request):
             }
         )
     except Exception as e:
+
+async def market_overview(
+    request: Request,
+    request: Request
+):
+    """Market overview page"""
         logger.error(f"Error loading market overview: {str(e)}")
         return templates.TemplateResponse(
             "market/overview.html",
             {
                 "request": request,
                 "user": None, "demo_mode": True,
+                "user": None,
                 "error": "Failed to load market data"
             },
             status_code=500
@@ -55,7 +62,7 @@ async def ticker_details(
     request: Request,
     ticker: str,
     period: str = Query("1m"),
-    current_user: dict = Depends(get_current_user)
+    request: Request
 ):
     """Ticker details page"""
     try:
@@ -83,12 +90,15 @@ async def ticker_details(
             }
         )
     except Exception as e:
+
         logger.error(f"Error loading ticker details for {ticker}: {str(e)}")
         return templates.TemplateResponse(
             "market/ticker_details.html",
             {
                 "request": request,
                 "user": None, "demo_mode": True,
+
+                "user": None,
                 "ticker": ticker,
                 "error": f"Failed to load data for {ticker}"
             },
@@ -102,18 +112,6 @@ async def ticker_search(
     limit: int = Query(10, ge=1, le=50)
 ):
     """Search for ticker symbols"""
-    try:
-        # Create API client with auth token
-        api_client = APIClient(token=request.cookies.get("access_token"))
-        
-        # Search for tickers via API
-        search_results = api_client.get("/market/ticker-search", params={
-            "query": q,
-            "limit": limit
-        })
-        
-        return JSONResponse(content=search_results)
-    except Exception as e:
         logger.error(f"Error searching tickers with query '{q}': {str(e)}")
         return JSONResponse(
             content={"error": "Failed to search tickers", "detail": str(e)},
@@ -124,7 +122,7 @@ async def ticker_search(
 async def market_sentiment(
     request: Request,
     period: str = Query("1w"),
-    current_user: dict = Depends(get_current_user)
+    request: Request
 ):
     """Market sentiment page"""
     try:
@@ -152,12 +150,14 @@ async def market_sentiment(
             }
         )
     except Exception as e:
+
         logger.error(f"Error loading market sentiment: {str(e)}")
         return templates.TemplateResponse(
             "market/sentiment.html",
             {
                 "request": request,
                 "user": None, "demo_mode": True,
+                "user": None,
                 "error": "Failed to load market sentiment data"
             },
             status_code=500

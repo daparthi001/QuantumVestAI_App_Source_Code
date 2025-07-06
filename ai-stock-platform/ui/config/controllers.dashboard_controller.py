@@ -77,6 +77,8 @@ def set_cached_data(key: str, data: Dict[str, Any], ttl: int = CACHE_TTL) -> Non
 @router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(
     request: Request, 
+
+    request: Request,
     period: Optional[str] = Query("month", description="Time period for data analysis"),
     refresh: Optional[bool] = Query(False, description="Force refresh data from API")
 ):
@@ -183,6 +185,7 @@ async def dashboard(
         return templates.TemplateResponse("dashboard/index.html", context)
     
     except httpx.RequestError as e:
+
         logger.error(f"Request error: {str(e)}")
         return templates.TemplateResponse(
             "error.html", 
@@ -208,6 +211,8 @@ async def dashboard(
 
 @router.get("/api/dashboard/data", response_model=Dict[str, Any])
 async def dashboard_data(
+    request: Request,
+
     request: Request,
     period: Optional[str] = Query("month"),
     refresh: Optional[bool] = Query(False)
@@ -298,6 +303,7 @@ async def dashboard_data(
         return data
     
     except Exception as e:
+
         logger.exception(f"Dashboard data error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -306,33 +312,42 @@ async def dashboard_data(
 
 @router.get("/api/dashboard/insights", response_model=Dict[str, Any])
 async def dashboard_insights():
+async def dashboard_insights(
+    
+):
     """
     API endpoint to get AI-generated insights for the dashboard (demo mode).
     
     Returns:
         Dict[str, Any]: AI insights in JSON format
     """
-    try:
-        # Record metric
-        http_requests_total.labels(
-            method="GET", 
-            endpoint="/api/dashboard/insights", 
-            status=200
-        ).inc()
-        
-        # Sample insights data - in a real implementation, this would come from an AI service
-        insights = {
-            "recommendation": "Consider increasing your bond allocation to reduce portfolio volatility in the current market conditions.",
-            "opportunity": "Tech sector valuations have improved, presenting potential buying opportunities in select high-quality companies.",
-            "risk": "Inflation concerns may impact growth stocks in your portfolio. Consider adding some inflation-resistant assets.",
-            "generated_at": datetime.utcnow().isoformat()
-        }
-        
-        return insights
-    
-    except Exception as e:
         logger.exception(f"Insights error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error retrieving AI insights"
+
+        )
+
+@router.get("/admin/dashboard", response_class=HTMLResponse)
+async def admin_dashboard(
+    request: Request,
+    
+):
+    """
+    Admin dashboard view showing system metrics and user statistics.
+    
+    Args:
+        request: FastAPI request object
+        user: Current authenticated admin user
+        
+    Returns:
+        HTMLResponse: Rendered admin dashboard template
+    """
+        # Re-raise HTTP exceptions (like 403 from validate_admin_access)
+        raise
+    except Exception as e:
+        logger.exception(f"Admin dashboard error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error loading admin dashboard"
         )

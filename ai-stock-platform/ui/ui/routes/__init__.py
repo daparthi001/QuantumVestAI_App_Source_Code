@@ -11,9 +11,6 @@ from routes.admin import *
 from routes.forecast import *
 from routes.predictability import *
 from routes.watchlist import *
-try:
-    from routes.utils import *
-except ImportError:
     pass
 
 __all__ = []
