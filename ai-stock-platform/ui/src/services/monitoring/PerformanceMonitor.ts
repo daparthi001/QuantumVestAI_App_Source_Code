@@ -1,16 +1,10 @@
-/**
- * Performance Monitoring Service
- * Created: 2025-05-19 05:01:47
- * Author: daparthi001
- */
-import { trace, context, SpanStatusCode } from '@opentelemetry/api';
+import { trace, context, SpanStatusCode, metrics, Histogram } from '@opentelemetry/api';
 import * as Sentry from '@sentry/react';
 import { BrowserTracing } from '@sentry/tracing';
-import { Metric } from '@opentelemetry/metrics';
 
 export class PerformanceMonitor {
     private static instance: PerformanceMonitor;
-    private metrics: Map<string, Metric>;
+    private metrics: Map<string, Histogram>;
 
     private constructor() {
         this.metrics = new Map();
@@ -35,9 +29,7 @@ export class PerformanceMonitor {
     }
 
     private initializeTracing() {
-        // Initialize OpenTelemetry tracing
-        const tracer = trace.getTracer('order-management-ui');
-        context.setGlobalContextManager(tracer);
+        trace.getTracer('order-management-ui');
     }
 
     trackOrderOperation(operation: string, duration: number, success: boolean) {
@@ -48,12 +40,11 @@ export class PerformanceMonitor {
             span.setStatus(success ? SpanStatusCode.OK : SpanStatusCode.ERROR);
         }
 
-        // Record metric
         this.recordMetric(`order_operation_${operation}`, duration);
     }
 
     trackRenderTime(componentName: string, duration: number) {
-        if (duration > 16.67) { // Longer than one frame (60fps)
+        if (duration > 16.67) {
             Sentry.captureMessage(
                 `Slow render detected in ${componentName}: ${duration.toFixed(2)}ms`,
                 'warning'
@@ -76,7 +67,7 @@ export class PerformanceMonitor {
 
     private recordMetric(name: string, value: number) {
         if (!this.metrics.has(name)) {
-            const meter = trace.getMeter('order-management-ui');
+            const meter = metrics.getMeter('order-management-ui');
             this.metrics.set(
                 name,
                 meter.createHistogram(name, {
@@ -91,30 +82,4 @@ export class PerformanceMonitor {
             metric.record(value);
         }
     }
-}
-
-// HOC for component performance monitoring
-export function withPerformanceTracking<P extends object>(
-    WrappedComponent: React.ComponentType<P>,
-    componentName: string
-) {
-    return class extends React.Component<P> {
-        private renderStart: number = 0;
-        private monitor = PerformanceMonitor.getInstance();
-
-        componentDidMount() {
-            const renderTime = performance.now() - this.renderStart;
-            this.monitor.trackRenderTime(componentName, renderTime);
-        }
-
-        componentDidUpdate() {
-            const renderTime = performance.now() - this.renderStart;
-            this.monitor.trackRenderTime(componentName, renderTime);
-        }
-
-        render() {
-            this.renderStart = performance.now();
-            return <WrappedComponent {...this.props} />;
-        }
-    };
 }

@@ -249,3 +249,29 @@ class WebSocketService {
   
   // Handle connection error
   private handleError(error: Error): void {
+    console.error('WebSocket error:', error);
+    // You can implement reconnection or error reporting logic here
+  }
+
+  // Handle incoming messages
+  private handleMessage(message: any): void {
+    // Implement message handling if needed
+  }
+
+  // Attempt to reconnect
+  private attemptReconnect(): void {
+    // Implement reconnection logic if needed
+  }
+
+  // Clear the reconnect timer
+  private clearReconnectTimer(): void {
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+  }
+} // <-- THIS closes the class!
+
+// Export the singleton instance
+const wsService = new WebSocketService();
+export default wsService;
