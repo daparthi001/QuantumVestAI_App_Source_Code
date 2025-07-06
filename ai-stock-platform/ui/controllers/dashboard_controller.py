@@ -16,24 +16,7 @@ import os
 from datetime import datetime, timedelta
 
 API_URL = "http://quantumvestai-dev-api:8000/api/v1"
-# Import auth dependencies - use try/except in case they're not available
-try:
-    from auth.dependencies import get_current_user, validate_admin_access, get_optional_current_user
-except ImportError:
-    # Mock auth dependencies if they don't exist
-    logging.getLogger(__name__).warning("Auth dependencies not found. Using mock functions.")
-    
-    async def get_current_user(request: Request, response: Response = None):
-        """Mock function that returns a default user"""
-        return {"username": "defaultuser", "token": "mock_token"}
-    
-    async def get_optional_current_user(request: Request, response: Response = None):
-        """Mock function that optionally returns a default user"""
-        return {"username": "defaultuser", "token": "mock_token"}
-    
-    async def validate_admin_access(request: Request):
-        """Mock function that returns a default admin user"""
-        return {"username": "admin", "token": "mock_token", "is_admin": True}
+# Auth dependencies removed as per requirements
 
 # Define mock metrics classes that do nothing
 class NoOpMetric:
@@ -132,7 +115,6 @@ def set_cached_data(key: str, data: Dict[str, Any], ttl: int = CACHE_TTL) -> Non
 async def dashboard(
     request: Request, 
     response: Response,
-    user=Depends(get_optional_current_user),  # Changed to get_optional_current_user
     period: Optional[str] = Query("month", description="Time period for data analysis"),
     refresh: Optional[bool] = Query(False, description="Force refresh data from API")
 ):
@@ -141,21 +123,12 @@ async def dashboard(
     
     Args:
         request: FastAPI request object
-        user: Current authenticated user (can be None)
         period: Time period for analysis (day, week, month, year, all)
         refresh: Whether to force refresh data from API
         
     Returns:
         HTMLResponse: Rendered dashboard template
     """
-    # Check if user is authenticated
-    if user is None:
-        # Redirect to login page with return URL
-        return RedirectResponse(
-            url=f"/login?next=/dashboard?period={period}",
-            status_code=302
-        )
-    
     try:
         # Start timing for metrics
         start_time = time.time()
@@ -167,10 +140,8 @@ async def dashboard(
             status=200
         ).inc()
         
-        # Create cache key based on user and period
-        # Use safe username access with default value
-        username = user.get('username', 'anonymous')
-        cache_key = f"dashboard_{username}_{period}"
+        # Create cache key based on period
+        cache_key = f"dashboard_anonymous_{period}"
         
         # Try to get data from cache unless refresh is requested
         dashboard_data = None if refresh else get_cached_data(cache_key)
@@ -185,7 +156,7 @@ async def dashboard(
                     api_url = f"{api_url_base}/api/portfolio/summary?period={period}"
                     response = await client.get(
                         api_url,
-                        headers={"Authorization": f"Bearer {user.get('token')}"}
+                        headers={}
                     )
                     
                     if response.status_code != 200:
@@ -201,7 +172,7 @@ async def dashboard(
                 async with httpx.AsyncClient(timeout=TIMEOUT) as client:
                     response = await client.get(
                         f"{api_url_base}/api/market/overview",
-                        headers={"Authorization": f"Bearer {user.get('token')}"}
+                        headers={}
                     )
                     
                     if response.status_code != 200:
@@ -214,7 +185,7 @@ async def dashboard(
                 async with httpx.AsyncClient(timeout=TIMEOUT) as client:
                     response = await client.get(
                         f"{api_url_base}/api/transactions/recent?limit=5",
-                        headers={"Authorization": f"Bearer {user.get('token')}"}
+                        headers={}
                     )
                     
                     if response.status_code != 200:
@@ -270,7 +241,7 @@ async def dashboard(
         # Combine data for template
         context = {
             "request": request,
-            "user": user,
+            "user": None,
             "page_title": "Dashboard",
             "portfolio": portfolio_data,
             "market": market_data,
@@ -328,7 +299,7 @@ async def dashboard(
             "error.html", 
             {
                 "request": request,
-                "user": user,
+                "user": None,
                 "message": "Service temporarily unavailable. Please try again later.",
                 "error_code": "API_CONN_ERR",
                 "get_asset_url": get_asset_url  # Add function directly to context
@@ -354,7 +325,7 @@ async def dashboard(
             "error.html", 
             {
                 "request": request,
-                "user": user,
+                "user": None,
                 "message": "An unexpected error occurred while loading the dashboard.",
                 "error_code": "DASHBOARD_ERR",
                 "get_asset_url": get_asset_url  # Add function directly to context
@@ -364,7 +335,6 @@ async def dashboard(
 @router.get("/api/dashboard/data", response_model=Dict[str, Any])
 async def dashboard_data(
     request: Request,
-    user=Depends(get_current_user),
     period: Optional[str] = Query("month"),
     refresh: Optional[bool] = Query(False)
 ):
@@ -374,7 +344,6 @@ async def dashboard_data(
     
     Args:
         request: FastAPI request object
-        user: Current authenticated user
         period: Time period for analysis
         refresh: Whether to force refresh data from API
         
@@ -393,7 +362,7 @@ async def dashboard_data(
         ).inc()
         
         # Create cache key
-        cache_key = f"dashboard_api_{user.get('username')}_{period}"
+        cache_key = f"dashboard_api_anonymous_{period}"
         
         # Try to get data from cache unless refresh is requested
         data = None if refresh else get_cached_data(cache_key)
@@ -462,15 +431,10 @@ async def dashboard_data(
         )
 
 @router.get("/api/dashboard/insights", response_model=Dict[str, Any])
-async def dashboard_insights(
-    user=Depends(get_current_user)
-):
+async def dashboard_insights():
     """
     API endpoint to get AI-generated insights for the dashboard.
     
-    Args:
-        user: Current authenticated user
-        
     Returns:
         Dict[str, Any]: AI insights in JSON format
     """
@@ -501,15 +465,13 @@ async def dashboard_insights(
 
 @router.get("/admin/dashboard", response_class=HTMLResponse)
 async def admin_dashboard(
-    request: Request,
-    user=Depends(validate_admin_access)
+    request: Request
 ):
     """
     Admin dashboard view showing system metrics and user statistics.
     
     Args:
         request: FastAPI request object
-        user: Current authenticated admin user
         
     Returns:
         HTMLResponse: Rendered admin dashboard template
@@ -543,7 +505,7 @@ async def admin_dashboard(
         
         context = {
             "request": request,
-            "user": user,
+            "user": None,
             "page_title": "Admin Dashboard",
             "admin_data": admin_data,
             # Add get_asset_url directly to context

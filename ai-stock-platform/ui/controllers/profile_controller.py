@@ -9,7 +9,6 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from typing import Optional
-from routes.auth import get_current_user
 from services.api_client import APIClient
 from core.config.settings import settings
 API_URL = "http://quantumvestai-dev-api:8000/api/v1"
@@ -19,55 +18,25 @@ templates = Jinja2Templates(directory=str(Path("/app/templates")))
 logger = logging.getLogger(__name__)
 
 @router.get("/profile", response_class=HTMLResponse)
-async def profile_page(request: Request, current_user: dict = Depends(get_current_user)):
+async def profile_page(request: Request):
     """Display user profile page"""
-    if not current_user:
-        return RedirectResponse(url="/login?next=/profile", status_code=302)
-
-    try:
-        # Create API client with auth token
-        api_client = APIClient(token=request.cookies.get("access_token"))
-        
-        # Get user profile details
-        user_profile = api_client.get("/users/me/profile")
-        
-        # Get user activity history
-        activity_history = api_client.get("/users/me/activity", params={"limit": 10})
-        
-        # Get user's subscription status
-        subscription = api_client.get("/users/me/subscription")
-        
-        # Get user's available features
-        features = api_client.get_available_features()
-        
-        return templates.TemplateResponse(
-            "profile/index.html",
-            {
-                "request": request,
-                "user": current_user,
-                "profile": user_profile,
-                "activity": activity_history,
-                "subscription": subscription,
-                "features": features
-            }
-        )
+    return RedirectResponse(url="/login?next=/profile", status_code=302)
     except Exception as e:
         logger.error(f"Error loading profile page: {str(e)}")
         return templates.TemplateResponse(
             "profile/index.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "error": "Failed to load profile data"
             },
             status_code=500
         )
 
 @router.get("/profile/settings", response_class=HTMLResponse)
-async def profile_settings(request: Request, current_user: dict = Depends(get_current_user)):
+async def profile_settings(request: Request):
     """Display user profile settings page"""
-    if not current_user:
-        return RedirectResponse(url="/login?next=/profile/settings", status_code=302)
+    return RedirectResponse(url="/login?next=/profile/settings", status_code=302)
 
     try:
         # Create API client with auth token
@@ -86,7 +55,7 @@ async def profile_settings(request: Request, current_user: dict = Depends(get_cu
             "profile/settings.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "preferences": preferences,
                 "notifications": notifications,
                 "features": features,
@@ -99,7 +68,7 @@ async def profile_settings(request: Request, current_user: dict = Depends(get_cu
             "profile/settings.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "error": "Failed to load settings"
             },
             status_code=500
@@ -108,14 +77,12 @@ async def profile_settings(request: Request, current_user: dict = Depends(get_cu
 @router.post("/profile/update")
 async def update_profile(
     request: Request,
-    current_user: dict = Depends(get_current_user),
     full_name: str = Form(...),
     bio: Optional[str] = Form(None),
     profile_image: Optional[UploadFile] = File(None)
 ):
     """Update user profile information"""
-    if not current_user:
-        return RedirectResponse(url="/login", status_code=302)
+    return RedirectResponse(url="/login", status_code=302)
 
     try:
         # Create API client with auth token
@@ -145,7 +112,7 @@ async def update_profile(
             "profile/index.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "error": "Failed to update profile"
             },
             status_code=500
@@ -154,15 +121,13 @@ async def update_profile(
 @router.post("/profile/update-preferences")
 async def update_preferences(
     request: Request,
-    current_user: dict = Depends(get_current_user),
     theme: str = Form(...),
     language: str = Form(...),
     timezone: str = Form(...),
     dashboard_view: str = Form(...)
 ):
     """Update user preferences"""
-    if not current_user:
-        return RedirectResponse(url="/login", status_code=302)
+    return RedirectResponse(url="/login", status_code=302)
 
     try:
         # Create API client with auth token
@@ -188,7 +153,7 @@ async def update_preferences(
             "profile/settings.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "error": "Failed to update preferences"
             },
             status_code=500
@@ -197,11 +162,9 @@ async def update_preferences(
 @router.post("/profile/update-notifications")
 async def update_notifications(
     request: Request,
-    current_user: dict = Depends(get_current_user)
+    
 ):
     """Update user notification settings"""
-    if not current_user:
-        return RedirectResponse(url="/login", status_code=302)
 
     try:
         # Parse form data
@@ -229,7 +192,7 @@ async def update_notifications(
             "profile/settings.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "error": "Failed to update notification settings"
             },
             status_code=500
@@ -238,14 +201,12 @@ async def update_notifications(
 @router.post("/profile/change-password")
 async def change_password(
     request: Request,
-    current_user: dict = Depends(get_current_user),
+    request: Request,
     current_password: str = Form(...),
     new_password: str = Form(...),
     confirm_password: str = Form(...)
 ):
     """Change user password"""
-    if not current_user:
-        return RedirectResponse(url="/login", status_code=302)
 
     # Verify passwords match
     if new_password != confirm_password:
@@ -253,7 +214,7 @@ async def change_password(
             "profile/settings.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "error": "New passwords don't match"
             },
             status_code=400
@@ -283,7 +244,7 @@ async def change_password(
             "profile/settings.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "error": error_message
             },
             status_code=400
@@ -292,11 +253,9 @@ async def change_password(
 @router.post("/activate-advanced-features")
 async def activate_advanced_features(
     request: Request,
-    current_user: dict = Depends(get_current_user)
+    
 ):
     """Activate advanced features for the current user"""
-    if not current_user:
-        return RedirectResponse(url="/login", status_code=302)
 
     try:
         # Create API client with auth token
@@ -306,7 +265,7 @@ async def activate_advanced_features(
         response = api_client.enable_advanced_features()
         
         # Log the activation
-        logger.info(f"Advanced features activated for user {current_user.get('username')}")
+        logger.info(f"Advanced features activated for user {"anonymous"
         
         # Redirect to dashboard with success message
         return RedirectResponse(
@@ -331,7 +290,7 @@ async def activate_advanced_features(
             "profile/settings.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "error": f"Failed to activate advanced features: {error_message}"
             },
             status_code=500
@@ -340,11 +299,9 @@ async def activate_advanced_features(
 @router.get("/advanced-features", response_class=HTMLResponse)
 async def advanced_features_page(
     request: Request,
-    current_user: dict = Depends(get_current_user)
+    
 ):
     """Display advanced features page"""
-    if not current_user:
-        return RedirectResponse(url="/login?next=/advanced-features", status_code=302)
 
     try:
         # Create API client with auth token
@@ -367,7 +324,7 @@ async def advanced_features_page(
             "features/advanced.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "features": advanced_features
             }
         )
@@ -377,7 +334,7 @@ async def advanced_features_page(
             "features/advanced.html",
             {
                 "request": request,
-                "user": current_user,
+                "user": None,
                 "error": "Failed to load advanced features"
             },
             status_code=500
