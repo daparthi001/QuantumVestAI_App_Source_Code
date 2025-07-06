@@ -6,6 +6,7 @@ New code should import directly from routes.auth.
 """
 
 # Import directly from the module to avoid circular imports
+API_URL = "http://quantumvestai-dev-api:8000/api/v1"
 from routes.auth import get_current_user, router
 
 __all__ = ['get_current_user', 'router']

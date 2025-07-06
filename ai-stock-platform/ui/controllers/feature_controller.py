@@ -23,7 +23,7 @@ def get_templates():
     return app.state.templates
 
 # Get API URL from environment or use default
-API_URL = os.environ.get("API_URL", "http://api:8000")
+API_URL = os.environ.get("API_URL", "http://quantumvestai-dev-api:8000/api/v1")
 API_V1_URL = f"{API_URL}/api/v1"
 
 @router.get("/advanced", response_class=HTMLResponse)

@@ -15,6 +15,7 @@ import logging
 router = APIRouter(tags=["market"])
 templates = Jinja2Templates(directory=str(Path("/app/templates")))
 logger = logging.getLogger(__name__)
+API_URL = "http://quantumvestai-dev-api:8000/api/v1"
 
 @router.get("/market", response_class=HTMLResponse)
 async def market_overview(

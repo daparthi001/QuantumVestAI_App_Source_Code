@@ -14,6 +14,7 @@ import json
 
 # Configure logging
 logger = logging.getLogger(__name__)
+API_URL = "http://quantumvestai-dev-api:8000/api/v1"
 
 # Create router
 router = APIRouter(

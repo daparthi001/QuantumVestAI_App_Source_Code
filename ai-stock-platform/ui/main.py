@@ -115,14 +115,14 @@ except Exception as e:
 
 
 # Import proxy router - with error handling
-try:
-    from routes import api_proxy
-except ImportError as e:
-    logger.error(f"Could not import api_proxy: {str(e)}")
-    # Create dummy router as fallback
-    from fastapi import APIRouter
-    api_proxy = APIRouter()
-    app.include_router(api_proxy)
+# try:
+#     from routes import api_proxy
+# except ImportError as e:
+#     logger.error(f"Could not import api_proxy: {str(e)}")
+#     # Create dummy router as fallback
+#     from fastapi import APIRouter
+#     api_proxy = APIRouter()
+#     app.include_router(api_proxy)
 
 # Import controllers with error handling
 controllers = {}

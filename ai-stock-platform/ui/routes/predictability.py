@@ -8,6 +8,7 @@ from config.settings import settings
 # Fix the import to use the local namespace
 from services.api_client import APIClient
 from services.yahoo_finance import YahooFinanceService
+API_URL = "http://quantumvestai-dev-api:8000/api/v1"
 
 # Templates setup
 templates = Jinja2Templates(directory="templates")

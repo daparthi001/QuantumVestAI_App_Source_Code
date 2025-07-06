@@ -10,6 +10,7 @@ from routes.auth import get_current_user
 from config.settings import settings
 from services.api_client import APIClient
 
+API_URL = "http://quantumvestai-dev-api:8000/api/v1"
 # Admin role constant
 USER_ROLE_ADMIN = "admin"
 

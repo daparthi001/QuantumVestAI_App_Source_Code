@@ -16,6 +16,8 @@ router = APIRouter(prefix="/features", tags=["features"])
 templates = Jinja2Templates(directory=str(Path("/app/templates")))
 logger = logging.getLogger(__name__)
 
+API_URL = "http://quantumvestai-dev-api:8000/api/v1"
+
 @router.get("/sentiment", response_class=HTMLResponse)
 async def sentiment_analysis(
     request: Request,

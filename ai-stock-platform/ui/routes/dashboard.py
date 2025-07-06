@@ -7,6 +7,8 @@ from services.api_client import APIClient
 from services.yahoo_finance import YahooFinanceService
 from config.settings import settings
 
+API_URL = "http://quantumvestai-dev-api:8000/api/v1"
+
 # Templates setup
 templates = Jinja2Templates(directory="templates")
 

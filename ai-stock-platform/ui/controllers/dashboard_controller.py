@@ -15,6 +15,7 @@ import json
 import os
 from datetime import datetime, timedelta
 
+API_URL = "http://quantumvestai-dev-api:8000/api/v1"
 # Import auth dependencies - use try/except in case they're not available
 try:
     from auth.dependencies import get_current_user, validate_admin_access, get_optional_current_user

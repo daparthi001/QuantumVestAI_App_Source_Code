@@ -6,6 +6,8 @@ from routes.auth import get_current_user
 from services.api_client import APIClient
 from config.settings import settings
 
+API_URL = "http://quantumvestai-dev-api:8000/api/v1"
+
 # Templates setup
 templates = Jinja2Templates(directory="templates")
 

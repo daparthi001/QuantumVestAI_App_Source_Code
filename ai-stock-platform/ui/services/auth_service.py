@@ -9,6 +9,8 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 from config.settings import settings
 
+API_URL = "http://quantumvestai-dev-api:8000/api/v1"
+
 # Authentication models
 class UserCredentials(BaseModel):
     username: str

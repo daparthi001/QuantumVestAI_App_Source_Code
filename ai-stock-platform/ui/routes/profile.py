@@ -8,6 +8,7 @@ from config.settings import settings
 import os
 import shutil
 from pathlib import Path
+API_URL = "http://quantumvestai-dev-api:8000/api/v1"
 
 # Templates setup
 templates = Jinja2Templates(directory="templates")

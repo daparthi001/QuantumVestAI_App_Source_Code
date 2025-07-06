@@ -12,7 +12,7 @@ from typing import Optional
 from routes.auth import get_current_user
 from services.api_client import APIClient
 from core.config.settings import settings
-
+API_URL = "http://quantumvestai-dev-api:8000/api/v1"
 # Setup router and templates
 router = APIRouter()
 templates = Jinja2Templates(directory=str(Path("/app/templates")))

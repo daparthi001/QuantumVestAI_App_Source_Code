@@ -12,7 +12,7 @@ import logging
 import time
 import os
 from datetime import datetime, timedelta
-
+API_URL = "http://quantumvestai-dev-api:8000/api/v1"
 # Import dependencies with fallback
 try:
     from auth.dependencies import get_current_user, get_optional_current_user

@@ -1,6 +1,6 @@
 # This file makes the dependencies directory a proper Python package.
 # It allows for easier imports of dependency components throughout the application.
-
+API_URL = "http://quantumvestai-dev-api:8000/api/v1"
 from ui.dependencies.common import (
     get_current_user,
     get_current_active_user,
