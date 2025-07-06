@@ -21,12 +21,12 @@ except ImportError:
     logging.getLogger(__name__).warning("Auth dependencies not found. Using mock functions.")
     
     async def get_current_user(request: Request, response: Response = None):
-        """Mock function that returns a default user"""
-        return {"username": "defaultuser", "token": "mock_token"}
+        """Mock function that returns None (demo mode)"""
+        return None
     
     async def get_optional_current_user(request: Request, response: Response = None):
-        """Mock function that optionally returns a default user"""
-        return {"username": "defaultuser", "token": "mock_token"}
+        """Mock function that returns None (demo mode)"""
+        return None
 
 # Set up router
 router = APIRouter(
@@ -85,19 +85,18 @@ def get_templates(request: Request):
 @router.get("", response_class=HTMLResponse)
 async def market_overview(
     request: Request,
-    response: Response,
-    user=Depends(get_optional_current_user)
+    response: Response
 ):
     """
-    Market overview page showing indices, trends, and top movers.
-    This page is accessible to both logged-in and anonymous users.
+    Market overview page showing indices, trends, and top movers (demo mode).
+    This page is accessible without authentication.
     """
     try:
         # Get API URL from app state or environment
         api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://api:8000'))
         
-        # Create cache key - include user info if available for personalized content
-        cache_key = f"market_overview_{user.get('username') if user else 'anonymous'}"
+        # Create cache key for demo mode
+        cache_key = f"market_overview_demo"
         
         # Try to get data from cache
         market_data = get_cached_data(cache_key)
@@ -106,13 +105,8 @@ async def market_overview(
             try:
                 # Fetch market data from API
                 async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-                    headers = {}
-                    if user:
-                        headers["Authorization"] = f"Bearer {user.get('token')}"
-                    
                     response = await client.get(
-                        f"{api_url_base}/api/market/overview",
-                        headers=headers
+                        f"{api_url_base}/api/market/overview"
                     )
                     
                     if response.status_code != 200:
@@ -162,11 +156,12 @@ async def market_overview(
             "market/overview.html",
             {
                 "request": request,
-                "user": user,
+                "user": None,
+                "demo_mode": True,
                 "page_title": "Market Overview",
                 "market_data": market_data,
                 "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
-                "is_authenticated": user is not None
+                "is_authenticated": False
             }
         )
     
@@ -182,7 +177,8 @@ async def market_overview(
                 "request": request,
                 "message": "An error occurred while loading market data.",
                 "error_code": "MARKET_ERR",
-                "user": user
+                "user": None,
+                "demo_mode": True
             },
             status_code=500
         )
@@ -191,19 +187,18 @@ async def market_overview(
 async def stock_details(
     request: Request,
     response: Response,
-    symbol: str = Path(..., description="Stock symbol"),
-    user=Depends(get_optional_current_user)
+    symbol: str = Path(..., description="Stock symbol")
 ):
     """
-    Stock details page showing price, charts, news, and fundamentals for a specific stock.
-    This page is accessible to both logged-in and anonymous users.
+    Stock details page showing price, charts, news, and fundamentals for a specific stock (demo mode).
+    This page is accessible without authentication.
     """
     try:
         # Get API URL from app state or environment
         api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://api:8000'))
         
-        # Create cache key - include user info if available for personalized content
-        cache_key = f"stock_details_{symbol.upper()}_{user.get('username') if user else 'anonymous'}"
+        # Create cache key for demo mode
+        cache_key = f"stock_details_{symbol.upper()}_demo"
         
         # Try to get data from cache
         stock_data = get_cached_data(cache_key)
@@ -212,13 +207,8 @@ async def stock_details(
             try:
                 # Fetch stock data from API
                 async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-                    headers = {}
-                    if user:
-                        headers["Authorization"] = f"Bearer {user.get('token')}"
-                    
                     response = await client.get(
-                        f"{api_url_base}/api/stocks/{symbol.upper()}",
-                        headers=headers
+                        f"{api_url_base}/api/stocks/{symbol.upper()}"
                     )
                     
                     if response.status_code != 200:
@@ -251,22 +241,6 @@ async def stock_details(
                     }
                 }
         
-        # Check if user has this stock in watchlist
-        is_in_watchlist = False
-        if user:
-            try:
-                async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-                    response = await client.get(
-                        f"{api_url_base}/api/watchlist/check/{symbol.upper()}",
-                        headers={"Authorization": f"Bearer {user.get('token')}"}
-                    )
-                    
-                    if response.status_code == 200:
-                        is_in_watchlist = response.json().get("in_watchlist", False)
-            except Exception as e:
-                logger.warning(f"Error checking watchlist status: {str(e)}")
-                is_in_watchlist = False
-        
         # Get templates
         templates = get_templates(request)
         
@@ -275,12 +249,13 @@ async def stock_details(
             "market/stock_details.html",
             {
                 "request": request,
-                "user": user,
+                "user": None,
+                "demo_mode": True,
                 "page_title": f"{stock_data.get('name')} ({stock_data.get('symbol')})",
                 "stock": stock_data,
                 "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
-                "is_authenticated": user is not None,
-                "is_in_watchlist": is_in_watchlist
+                "is_authenticated": False,
+                "is_in_watchlist": False
             }
         )
     
@@ -296,7 +271,8 @@ async def stock_details(
                 "request": request,
                 "message": f"An error occurred while loading data for {symbol}.",
                 "error_code": "STOCK_ERR",
-                "user": user
+                "user": None,
+                "demo_mode": True
             },
             status_code=500
         )
@@ -304,19 +280,18 @@ async def stock_details(
 @router.get("/api/stocks/search", response_model=Dict[str, Any])
 async def search_stocks(
     request: Request,
-    query: str = Query(..., description="Search query"),
-    user=Depends(get_optional_current_user)
+    query: str = Query(..., description="Search query")
 ):
     """
-    API endpoint to search for stocks by name or symbol.
+    API endpoint to search for stocks by name or symbol (demo mode).
     Used for autocomplete functionality.
     """
     try:
         # Get API URL from app state or environment
         api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://api:8000'))
         
-        # Create cache key
-        cache_key = f"stock_search_{query.lower()}"
+        # Create cache key for demo mode
+        cache_key = f"stock_search_{query.lower()}_demo"
         
         # Try to get data from cache
         search_results = get_cached_data(cache_key)
@@ -325,13 +300,8 @@ async def search_stocks(
             try:
                 # Fetch search results from API
                 async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-                    headers = {}
-                    if user:
-                        headers["Authorization"] = f"Bearer {user.get('token')}"
-                    
                     response = await client.get(
-                        f"{api_url_base}/api/stocks/search?query={query}",
-                        headers=headers
+                        f"{api_url_base}/api/stocks/search?query={query}"
                     )
                     
                     if response.status_code != 200:
