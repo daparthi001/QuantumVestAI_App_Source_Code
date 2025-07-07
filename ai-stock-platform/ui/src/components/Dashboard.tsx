@@ -4,19 +4,21 @@
  */
 import React from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../config/constants';
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <Container fluid>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>Dashboard</h1>
         <div>
-          <Button as={Link} to={ROUTES.STOCKS} variant="primary" className="me-2">
+          <Button onClick={() => navigate(ROUTES.STOCKS)} variant="primary" className="me-2">
             Explore Stocks
           </Button>
-          <Button as={Link} to={ROUTES.PORTFOLIO} variant="outline-primary">
+          <Button onClick={() => navigate(ROUTES.PORTFOLIO)} variant="outline-primary">
             View Portfolio
           </Button>
         </div>
@@ -81,7 +83,7 @@ const Dashboard: React.FC = () => {
                 <span>Total Gain:</span>
                 <span className="text-success">+$4,567.89</span>
               </div>
-              <Button as={Link} to={ROUTES.PORTFOLIO} variant="primary" className="w-100">
+              <Button onClick={() => navigate(ROUTES.PORTFOLIO)} variant="primary" className="w-100">
                 View Full Portfolio
               </Button>
             </Card.Body>
@@ -119,7 +121,7 @@ const Dashboard: React.FC = () => {
                 ))}
               </div>
               <div className="mt-3">
-                <Button as={Link} to={ROUTES.STOCKS} variant="outline-primary" className="w-100">
+                <Button onClick={() => navigate(ROUTES.STOCKS)} variant="outline-primary" className="w-100">
                   View All Stocks
                 </Button>
               </div>
@@ -149,7 +151,7 @@ const Dashboard: React.FC = () => {
                 ))}
               </div>
               <div className="mt-3">
-                <Button as={Link} to={ROUTES.NEWS} variant="outline-primary" className="w-100">
+                <Button onClick={() => navigate(ROUTES.NEWS)} variant="outline-primary" className="w-100">
                   View All News
                 </Button>
               </div>
@@ -168,22 +170,22 @@ const Dashboard: React.FC = () => {
             <Card.Body>
               <Row>
                 <Col md={3} className="mb-3">
-                  <Button as={Link} to={ROUTES.WATCHLIST} variant="outline-primary" className="w-100">
+                  <Button onClick={() => navigate(ROUTES.WATCHLIST)} variant="outline-primary" className="w-100">
                     📋 Manage Watchlist
                   </Button>
                 </Col>
                 <Col md={3} className="mb-3">
-                  <Button as={Link} to={ROUTES.BACKTEST} variant="outline-success" className="w-100">
+                  <Button onClick={() => navigate(ROUTES.BACKTEST)} variant="outline-success" className="w-100">
                     🔄 Run Backtest
                   </Button>
                 </Col>
                 <Col md={3} className="mb-3">
-                  <Button as={Link} to={ROUTES.ANALYTICS} variant="outline-info" className="w-100">
+                  <Button onClick={() => navigate(ROUTES.ANALYTICS)} variant="outline-info" className="w-100">
                     📊 View Analytics
                   </Button>
                 </Col>
                 <Col md={3} className="mb-3">
-                  <Button as={Link} to={ROUTES.ALERTS} variant="outline-warning" className="w-100">
+                  <Button onClick={() => navigate(ROUTES.ALERTS)} variant="outline-warning" className="w-100">
                     🔔 Set Alerts
                   </Button>
                 </Col>

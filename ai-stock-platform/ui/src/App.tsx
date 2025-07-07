@@ -32,6 +32,7 @@ const Login = React.lazy(() => import('./components/auth/Login'));
 const Register = React.lazy(() => import('./components/auth/Register'));
 const ForgotPassword = React.lazy(() => import('./components/auth/ForgotPassword'));
 const ResetPassword = React.lazy(() => import('./components/auth/ResetPassword'));
+const DesignPreview = React.lazy(() => import('./components/DesignPreview'));
 
 const Dashboard = React.lazy(() => import('./components/Dashboard'));
 const Stocks = React.lazy(() => import('./components/Stocks'));
@@ -73,6 +74,7 @@ function App() {
                       <Route path={ROUTES.REGISTER} element={<Register />} />
                       <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword />} />
                       <Route path={ROUTES.RESET_PASSWORD} element={<ResetPassword />} />
+                      <Route path="/preview" element={<DesignPreview />} />
                       
                       {/* Root redirect */}
                       <Route path="/" element={<Navigate to={ROUTES.DASHBOARD} />} />
@@ -195,7 +197,7 @@ function App() {
                       <Route path="/admin/*" element={
                         <ProtectedRoute requiredRole="admin">
                           <Layout>
-                            {/* Admin components would go here */}
+                            <div>Admin Panel - Coming Soon</div>
                           </Layout>
                         </ProtectedRoute>
                       } />
