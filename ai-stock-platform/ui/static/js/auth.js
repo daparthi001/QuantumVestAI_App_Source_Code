@@ -47,8 +47,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 hasErrors = true;
             }
             
-            if (!password || password.length < 8) {
-                UIErrorHandler.showFormError('password', 'Password must be at least 8 characters long');
+            if (!password || password.length < 3) {
+                UIErrorHandler.showFormError('password', 'Password must be at least 3 characters long');
                 hasErrors = true;
             }
             
@@ -144,8 +144,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (passwordInput) {
             passwordInput.addEventListener('blur', function() {
                 UIErrorHandler.clearFormError('password');
-                if (this.value.length > 0 && this.value.length < 8) {
-                    UIErrorHandler.showFormError('password', 'Password must be at least 8 characters long');
+                if (this.value.length > 0 && this.value.length < 3) {
+                    UIErrorHandler.showFormError('password', 'Password must be at least 3 characters long');
                 }
             });
         }

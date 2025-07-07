@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "auth_layout.html" %}
 
 {% block title %}Login | QuantumVestAI{% endblock %}
 
@@ -10,8 +10,13 @@
 {% block content %}
 <div class="auth-container">
     <div class="auth-card">
-        <h1 class="auth-title">Sign In</h1>
-        <p class="auth-subtitle">Access your QuantumVestAI account</p>
+        <div class="auth-header">
+            <a href="/" class="auth-logo">
+                <img src="{{ url_for('static', path='/img/logo.svg') }}" alt="QuantumVestAI">
+            </a>
+            <h1 class="auth-title">Sign In</h1>
+            <p class="auth-subtitle">Access your QuantumVestAI account</p>
+        </div>
 
         {% if msg %}
         <div class="alert alert-{{ msg_type or 'danger' }} alert-dismissible fade show" role="alert">
@@ -32,7 +37,8 @@
         </div>
         {% endif %}
 
-        <form id="loginForm" action="/auth/login" method="POST" novalidate>
+        <div class="auth-body">
+            <form id="loginForm" action="/login" method="POST" novalidate>
             <div class="form-group mb-3">
                 <label for="username" class="form-label">Username or Email</label>
                 <input type="text" 
@@ -86,8 +92,9 @@
             <small>
                 <strong>Demo credentials:</strong><br>
                 Username: <code>demo</code><br>
-                Password: <code>password</code>
+                Password: <code>demo</code>
             </small>
+        </div>
         </div>
         
         <div class="auth-footer text-center">
@@ -108,22 +115,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (loginForm) {
         console.log('Login form enhanced error handling initialized');
     }
-    
-    // Show any connection issues
-    setTimeout(async () => {
-        try {
-            const response = await fetch('/health');
-            const health = await response.json();
-            
-            if (health.api && health.api.status !== 'healthy') {
-                UIErrorHandler.showWarning('API service may be experiencing issues. Login may use fallback authentication.', {
-                    duration: 8000
-                });
-            }
-        } catch (error) {
-            console.warn('Could not check health status:', error);
-        }
-    }, 1000);
 });
 </script>
 {% endblock %}

@@ -315,8 +315,8 @@ async def enhanced_login_post(
         if not username or len(username.strip()) < 3:
             raise ValueError("Username must be at least 3 characters long")
         
-        if not password or len(password) < 6:
-            raise ValueError("Password must be at least 6 characters long")
+        if not password or len(password) < 3:
+            raise ValueError("Password must be at least 3 characters long")
         
         # Demo authentication (accepts demo/demo, admin/admin, test/test)
         valid_users = {
@@ -383,12 +383,19 @@ async def enhanced_login_post(
 async def register_page(request: Request, msg: str = None):
     """Registration page"""
     try:
+        request_id = getattr(request.state, 'request_id', 'unknown')
+        
+        # Check if already authenticated
+        if AuthUtils.is_authenticated(request):
+            return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
+        
         return templates.TemplateResponse(
             "register.html", 
             {
                 "request": request, 
                 "msg": msg,
                 "api_url": API_URL,
+                "request_id": request_id,
                 "demo_mode": True
             }
         )
@@ -398,6 +405,78 @@ async def register_page(request: Request, msg: str = None):
             content=create_fallback_html("Registration - QuantumVestAI",
                 "Registration",
                 "Registration page temporarily unavailable. Please try again later."),
+            status_code=500
+        )
+
+@app.post("/register")
+async def register_post(
+    request: Request,
+    username: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    confirm_password: str = Form(...),
+    terms: bool = Form(False),
+):
+    """Enhanced registration handler"""
+    request_id = getattr(request.state, 'request_id', 'unknown')
+    logger.info(f"[{request_id}] Registration attempt for: {username}")
+    
+    try:
+        # Validate input
+        if not username or len(username.strip()) < 3:
+            raise ValueError("Username must be at least 3 characters long")
+        
+        if not email or "@" not in email:
+            raise ValueError("Please enter a valid email address")
+        
+        if not password or len(password) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        
+        if password != confirm_password:
+            raise ValueError("Passwords do not match")
+        
+        if not terms:
+            raise ValueError("You must accept the Terms of Service and Privacy Policy")
+        
+        # For demo purposes, just redirect to login with success message
+        logger.info(f"[{request_id}] Demo registration successful for {username}")
+        
+        return RedirectResponse(
+            url="/login?msg=Registration successful! Please log in with your new account.",
+            status_code=status.HTTP_302_FOUND
+        )
+        
+    except ValueError as e:
+        logger.warning(f"[{request_id}] Registration validation failed: {str(e)}")
+        return templates.TemplateResponse(
+            "register.html",
+            {
+                "request": request,
+                "msg": str(e),
+                "msg_type": "danger",
+                "username": username,
+                "email": email,
+                "api_url": API_URL,
+                "request_id": request_id,
+                "demo_mode": True
+            },
+            status_code=400
+        )
+    
+    except Exception as e:
+        logger.error(f"[{request_id}] Registration error: {str(e)}")
+        return templates.TemplateResponse(
+            "register.html",
+            {
+                "request": request,
+                "msg": "Registration failed due to a technical error. Please try again.",
+                "msg_type": "danger",
+                "username": username,
+                "email": email,
+                "api_url": API_URL,
+                "request_id": request_id,
+                "demo_mode": True
+            },
             status_code=500
         )
 
