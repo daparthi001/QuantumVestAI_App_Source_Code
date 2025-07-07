@@ -3,7 +3,6 @@
  * Created: 2025-05-19 04:09:47
  * Author: daparthi001
  */
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import TechnicalAnalysis from '../../components/analysis/TechnicalAnalysis';

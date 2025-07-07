@@ -3,9 +3,11 @@
  * Created: 2025-05-19 05:05:29
  * Author: daparthi001
  */
+import React from 'react';
 import { debounce, throttle } from 'lodash';
 import LZString from 'lz-string';
 import { RealTimeMonitor } from '../monitoring/RealTimeMonitor';
+import { hasMemorySupport } from '../../types/global';
 
 export class PerformanceOptimizer {
     private static instance: PerformanceOptimizer;
@@ -39,9 +41,12 @@ export class PerformanceOptimizer {
             clearUnusedData: () => {
                 // Clear unnecessary data from memory
                 window.localStorage.removeItem('temp_cache');
-                if (window.performance && window.performance.memory) {
-                    // Force garbage collection if possible
-                    window.performance.memory.usedJSHeapSize = 0;
+                if (hasMemorySupport(window.performance)) {
+                    // Note: Cannot actually modify usedJSHeapSize - this is read-only
+                    // Instead, trigger garbage collection if possible
+                    if (window.gc) {
+                        window.gc();
+                    }
                 }
             },
 

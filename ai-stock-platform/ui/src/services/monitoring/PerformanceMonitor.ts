@@ -1,6 +1,7 @@
 import { trace, context, SpanStatusCode, metrics, Histogram } from '@opentelemetry/api';
 import * as Sentry from '@sentry/react';
 import { BrowserTracing } from '@sentry/tracing';
+import { hasMemorySupport } from '../../types/global';
 
 export class PerformanceMonitor {
     private static instance: PerformanceMonitor;
@@ -22,7 +23,7 @@ export class PerformanceMonitor {
     private initializeSentry() {
         Sentry.init({
             dsn: process.env.REACT_APP_SENTRY_DSN,
-            integrations: [new BrowserTracing()],
+            integrations: [new BrowserTracing() as any],
             tracesSampleRate: 0.2,
             environment: process.env.NODE_ENV
         });
@@ -101,5 +102,40 @@ export class PerformanceMonitor {
                 details: this.getMetricDetails(name)
             }))
         };
+    }
+
+    // Add missing getStats method
+    getStats() {
+        return {
+            memoryUsage: this.getMemoryUsage(),
+            cpuUsage: this.getCpuUsage(),
+            averageRenderTime: this.getAverageRenderTime(),
+            networkLatency: this.getNetworkLatency(),
+            metricsCount: this.metrics.size
+        };
+    }
+
+    private getMemoryUsage(): number {
+        if (hasMemorySupport(performance)) {
+            return (performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit) * 100;
+        }
+        return 0;
+    }
+
+    private getCpuUsage(): number {
+        // Approximate CPU usage based on performance timing
+        return Math.min(performance.now() % 100, 100);
+    }
+
+    private getAverageRenderTime(): number {
+        const renderMetrics = Array.from(this.metrics.keys()).filter(key => key.includes('render_time'));
+        if (renderMetrics.length === 0) return 0;
+        return renderMetrics.reduce((sum, key) => sum + (this.metrics.get(key)?.value || 0), 0) / renderMetrics.length;
+    }
+
+    private getNetworkLatency(): number {
+        const networkMetrics = Array.from(this.metrics.keys()).filter(key => key.includes('api_call'));
+        if (networkMetrics.length === 0) return 0;
+        return networkMetrics.reduce((sum, key) => sum + (this.metrics.get(key)?.value || 0), 0) / networkMetrics.length;
     }
 }

@@ -3,7 +3,7 @@
  * Created: 2025-05-19 04:54:48
  * Author: daparthi001
  */
-import { AppThunk } from '../store';
+import { AppThunk } from '../index';
 import { orderApi } from '../../services/api';
 import {
     fetchOrdersStart,
@@ -21,7 +21,7 @@ export const fetchOrders = (): AppThunk => async (dispatch) => {
         dispatch(fetchOrdersStart());
         const orders = await orderApi.getOrders();
         dispatch(fetchOrdersSuccess(orders));
-    } catch (error) {
+    } catch (error: any) {
         dispatch(fetchOrdersFailure(error.message));
         throw error;
     }
@@ -33,7 +33,7 @@ export const createOrder = (orderData: Partial<Order>): AppThunk => async (dispa
         const order = await orderApi.createOrder(orderData);
         dispatch(createOrderSuccess(order));
         return order;
-    } catch (error) {
+    } catch (error: any) {
         dispatch(createOrderFailure(error.message));
         throw error;
     }
@@ -46,7 +46,7 @@ export const cancelOrder = (orderId: string): AppThunk => async (dispatch) => {
             orderId,
             status: OrderStatus.CANCELLED
         }));
-    } catch (error) {
+    } catch (error: any) {
         // Handle error
         throw error;
     }
@@ -64,7 +64,7 @@ export const modifyOrder = (
             executionDetails: updatedOrder
         }));
         return updatedOrder;
-    } catch (error) {
+    } catch (error: any) {
         // Handle error
         throw error;
     }

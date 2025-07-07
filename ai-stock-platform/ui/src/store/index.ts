@@ -4,6 +4,7 @@
  * Author: daparthi001
  */
 import { configureStore } from '@reduxjs/toolkit';
+import { ThunkAction, Action } from '@reduxjs/toolkit';
 import orderReducer from './slices/orderSlice';
 
 // Configure the store
@@ -12,6 +13,16 @@ export const store = configureStore({
     orders: orderReducer,
   },
 });
+
+// Export types
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+export type AppThunk<ReturnType = void> = ThunkAction<
+  ReturnType,
+  RootState,
+  unknown,
+  Action<string>
+>;
 
 // Export the main store components
 export * from './orderStore';
@@ -22,7 +33,3 @@ export * from './actions/orderActions';
 
 // Export slices
 export * from './slices/orderSlice';
-
-// Export types
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;

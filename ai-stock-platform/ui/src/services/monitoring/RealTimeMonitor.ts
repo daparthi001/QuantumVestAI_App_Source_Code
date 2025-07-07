@@ -6,6 +6,7 @@
 import { Subject, interval, merge } from 'rxjs';
 import { map, switchMap, catchError } from 'rxjs/operators';
 import { PerformanceMonitor } from './PerformanceMonitor';
+import { hasMemorySupport } from '../../types/global';
 
 export class RealTimeMonitor {
     private static instance: RealTimeMonitor;
@@ -113,7 +114,7 @@ export class RealTimeMonitor {
     }
 
     private async getMemoryUsage(): Promise<number> {
-        if (performance.memory) {
+        if (hasMemorySupport(performance)) {
             return (performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit) * 100;
         }
         return 0;
@@ -133,5 +134,16 @@ export class RealTimeMonitor {
     private async getRenderTimes() {
         const entries = performance.getEntriesByType('measure');
         return entries.filter(entry => entry.name.startsWith('render_'));
+    }
+
+    // Add missing trackMetric method
+    trackMetric(name: string, value: number): void {
+        const metricData = {
+            name,
+            value,
+            timestamp: Date.now(),
+            type: 'metric'
+        };
+        this.metrics$.next(metricData);
     }
 }
