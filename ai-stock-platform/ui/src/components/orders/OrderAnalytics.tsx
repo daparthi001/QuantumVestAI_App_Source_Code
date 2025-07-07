@@ -10,8 +10,7 @@ import {
     Grid,
     Typography,
     Tab,
-    Tabs,
-    Box
+    Tabs
 } from '@mui/material';
 import {
     LineChart,
@@ -27,15 +26,40 @@ import {
     ResponsiveContainer
 } from 'recharts';
 import { Order } from '../../types/order';
-import { formatCurrency, formatPercentage } from '../../utils/formatters';
+import { formatPercentage } from '../../utils/formatters';
 
 interface OrderAnalyticsProps {
     orders: Order[];
 }
 
+interface OrderDistribution {
+    type: string;
+    count: number;
+}
+
+interface DailyVolume {
+    date: string;
+    volume: number;
+}
+
+interface SymbolBreakdown {
+    symbol: string;
+    count: number;
+    percentage: number;
+}
+
+interface AnalyticsData {
+    totalOrders: number;
+    fillRate: number;
+    averageExecutionTime: number;
+    orderTypeDistribution: OrderDistribution[];
+    dailyVolume: DailyVolume[];
+    symbolBreakdown: SymbolBreakdown[];
+}
+
 export const OrderAnalytics: React.FC<OrderAnalyticsProps> = ({ orders }) => {
     const [activeTab, setActiveTab] = useState(0);
-    const [analytics, setAnalytics] = useState({
+    const [analytics, setAnalytics] = useState<AnalyticsData>({
         totalOrders: 0,
         fillRate: 0,
         averageExecutionTime: 0,
@@ -54,13 +78,13 @@ export const OrderAnalytics: React.FC<OrderAnalyticsProps> = ({ orders }) => {
         const fillRate = (filledOrders.length / orders.length) * 100;
 
         // Calculate order type distribution
-        const typeDistribution = orders.reduce((acc, order) => {
+        const typeDistribution = orders.reduce((acc: Record<string, number>, order) => {
             acc[order.orderType] = (acc[order.orderType] || 0) + 1;
             return acc;
         }, {});
 
         // Calculate daily volume
-        const dailyVolume = orders.reduce((acc, order) => {
+        const dailyVolume = orders.reduce((acc: Record<string, number>, order) => {
             const date = order.createdAt.split('T')[0];
             acc[date] = (acc[date] || 0) + (order.quantity * (order.price || 0));
             return acc;

@@ -4,7 +4,6 @@
  * Author: daparthi001
  */
 import io from 'socket.io-client';
-import type { Socket } from 'socket.io-client';
 import { BehaviorSubject } from 'rxjs';
 import authService from './auth.service';
 
@@ -48,13 +47,10 @@ export interface SocketMessage {
 }
 
 class WebSocketService {
-  private socket: Socket | null = null;
+  private socket: ReturnType<typeof io> | null = null;
   private connectionStateSubject = new BehaviorSubject<ConnectionState>(ConnectionState.DISCONNECTED);
   private messagesSubject = new BehaviorSubject<SocketMessage[]>([]);
   private subscribedSymbols = new Set<string>();
-  private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
-  private baseReconnectDelay = 2000; // 2 seconds
   private reconnectTimer: NodeJS.Timeout | null = null;
   
   // Observable streams
@@ -128,7 +124,6 @@ class WebSocketService {
     this.socket = null;
     this.connectionStateSubject.next(ConnectionState.DISCONNECTED);
     this.clearReconnectTimer();
-    this.reconnectAttempts = 0;
   }
   
   /**
@@ -230,7 +225,6 @@ class WebSocketService {
   private handleConnect(): void {
     console.log('WebSocket connected');
     this.connectionStateSubject.next(ConnectionState.CONNECTED);
-    this.reconnectAttempts = 0;
     
     // Subscribe to all previously subscribed symbols
     if (this.subscribedSymbols.size > 0) {
@@ -255,7 +249,7 @@ class WebSocketService {
   }
 
   // Handle incoming messages
-  private handleMessage(message: any): void {
+  private handleMessage(_message: any): void {
     // Implement message handling if needed
   }
 

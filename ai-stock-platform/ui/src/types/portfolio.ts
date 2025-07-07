@@ -13,6 +13,12 @@ export interface Position {
   gainLoss: number;
   gainLossPercent: number;
   type: 'LONG' | 'SHORT';
+  // Additional properties required by the system
+  costBasis: number;
+  averageCost: number;
+  priceChange: number;
+  priceChangePercent: number;
+  marketValue: number;
 }
 
 export interface Transaction {
@@ -34,6 +40,8 @@ export interface PortfolioSummary {
   positions: Position[];
   dayChange: number;
   dayChangePercent: number;
+  // Additional property required by the system
+  cashBalance: number;
 }
 
 export interface PortfolioPerformance {

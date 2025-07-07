@@ -3,7 +3,7 @@
  * Updated: 2025-06-19 18:06:43
  * Author: daparthi001
  */
-import axios, { AxiosInstance, AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import { API_BASE_URL } from '../config/constants';
 import authService from './auth.service';
 
@@ -34,7 +34,7 @@ const apiClient: AxiosInstance = axios.create({
 
 // Request interceptor with advanced features
 apiClient.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config: InternalAxiosRequestConfig) => {
     // Get token and add it to the request
     const token = authService.getToken();
     if (token && config.headers) {
@@ -75,7 +75,7 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     
     if (error.response) {
       // Handle 401 Unauthorized errors with token refresh

@@ -4,6 +4,9 @@
  * Author: daparthi001
  */
 
+// Import Order type first
+import type { Order, OrderStatus, OrderType, TimeInForce, OrderSide } from '../types/order';
+
 export interface RootState {
   orders: OrderState;
 }
@@ -16,4 +19,4 @@ export interface OrderState {
 }
 
 // Re-export common types
-export type { Order, OrderStatus, OrderType, TimeInForce, OrderSide } from '../types/order';
+export type { Order, OrderStatus, OrderType, TimeInForce, OrderSide };
