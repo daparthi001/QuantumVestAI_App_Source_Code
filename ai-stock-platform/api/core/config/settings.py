@@ -65,10 +65,8 @@ class Settings(BaseSettings):
     # Logging
     LOG_LEVEL: str = Field(default="INFO", env='LOG_LEVEL')
     
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
-        extra = 'ignore'
+    # Allow extra fields
+    model_config = {'extra': 'ignore', 'env_file': '.env', 'case_sensitive': False}
     
     def get_db_url(self) -> str:
         """

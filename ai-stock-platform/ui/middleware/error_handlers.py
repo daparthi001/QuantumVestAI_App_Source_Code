@@ -13,12 +13,20 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 # Set up templates
+try:
+    # Try to use templates from app state first
+    templates_dir = Path(__file__).parent.parent / "templates"
+    templates = Jinja2Templates(directory=str(templates_dir))
+    logger.info(f"Templates initialized from: {templates_dir}")
+except Exception as e:
     # Fallback settings
     templates_dir = Path("templates")
-    logger.warning("Using fallback template directory")
-
-    logger.error(f"Error setting up templates: {e}")
-    templates = None
+    logger.warning(f"Using fallback template directory: {templates_dir}")
+    try:
+        templates = Jinja2Templates(directory=str(templates_dir))
+    except Exception as fallback_error:
+        logger.error(f"Error setting up templates: {fallback_error}")
+        templates = None
 
 def setup_error_handlers(app: FastAPI):
     """Set up error handlers for the application"""
