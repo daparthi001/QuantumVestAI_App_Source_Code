@@ -46,3 +46,5 @@ export const portfolioService = {
         return subject;
     }
 };
+
+export default portfolioService;

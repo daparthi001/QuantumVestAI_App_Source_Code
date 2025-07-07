@@ -4,30 +4,26 @@
  * Author: daparthi001
  */
 import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import {
     createOrder,
     cancelOrder,
     modifyOrder,
     fetchOrders
 } from '../../store/actions/orderActions';
+import { 
+    Order
+} from '../../types/order';
 import { OrderForm } from './OrderForm';
 import { OrderList } from './OrderList';
 import { OrderAnalytics } from './OrderAnalytics';
 import { OrderWebSocket } from '../../services/OrderWebSocket';
-import { 
-    Order,
-    OrderType,
-    OrderStatus,
-    TimeInForce
-} from '../../types/order';
-import { RootState } from '../../store/types';
 
 const OrderManagement: React.FC = () => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-    const { orders, loading, error } = useSelector(
-        (state: RootState) => state.orders
+    const { orders, loading, error } = useAppSelector(
+        (state) => state.orders
     );
 
     useEffect(() => {

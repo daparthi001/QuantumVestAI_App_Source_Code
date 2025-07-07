@@ -7,10 +7,10 @@ import React, { useEffect, useState } from 'react';
 import {
     Card,
     CardContent,
-    Grid,
     Typography,
     Tab,
-    Tabs
+    Tabs,
+    Grid
 } from '@mui/material';
 import {
     LineChart,
@@ -55,6 +55,10 @@ interface AnalyticsData {
     orderTypeDistribution: OrderDistribution[];
     dailyVolume: DailyVolume[];
     symbolBreakdown: SymbolBreakdown[];
+}
+
+interface PerformanceMetricsProps {
+    orders: Order[];
 }
 
 export const OrderAnalytics: React.FC<OrderAnalyticsProps> = ({ orders }) => {
@@ -241,3 +245,52 @@ const SymbolBreakdown: React.FC<{ data: any[] }> = ({ data }) => (
         </BarChart>
     </ResponsiveContainer>
 );
+
+const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ orders }) => {
+    const performanceData = React.useMemo(() => {
+        const executedOrders = orders.filter(order => order.status === 'FILLED');
+        const totalLatency = executedOrders.reduce((sum, order) => {
+            if (order.executionTime) {
+                const execTime = new Date(order.executionTime).getTime();
+                const createTime = new Date(order.createdAt).getTime();
+                return sum + (execTime - createTime);
+            }
+            return sum;
+        }, 0);
+
+        return {
+            averageLatency: executedOrders.length > 0 ? totalLatency / executedOrders.length : 0,
+            executionRate: orders.length > 0 ? (executedOrders.length / orders.length) * 100 : 0,
+            totalExecuted: executedOrders.length,
+            totalOrders: orders.length
+        };
+    }, [orders]);
+
+    return (
+        <Card>
+            <CardContent>
+                <Typography variant="h6" gutterBottom>
+                    Performance Metrics
+                </Typography>
+                <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                        <Typography variant="body2" color="textSecondary">
+                            Average Latency
+                        </Typography>
+                        <Typography variant="h5">
+                            {performanceData.averageLatency.toFixed(2)}ms
+                        </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                        <Typography variant="body2" color="textSecondary">
+                            Execution Rate
+                        </Typography>
+                        <Typography variant="h5">
+                            {performanceData.executionRate.toFixed(1)}%
+                        </Typography>
+                    </Grid>
+                </Grid>
+            </CardContent>
+        </Card>
+    );
+};

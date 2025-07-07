@@ -138,4 +138,20 @@ export class PerformanceMonitor {
         if (networkMetrics.length === 0) return 0;
         return networkMetrics.reduce((sum, key) => sum + (this.metrics.get(key)?.value || 0), 0) / networkMetrics.length;
     }
+
+    // Add missing getComponentStats method
+    getComponentStats() {
+        const componentMetrics = Array.from(this.metrics.keys())
+            .filter(key => key.includes('component'))
+            .map(key => {
+                const metric = this.metrics.get(key);
+                return {
+                    componentName: key.replace('component_', ''),
+                    renderTime: metric?.value || 0,
+                    count: 1
+                };
+            });
+        
+        return componentMetrics;
+    }
 }
