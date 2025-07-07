@@ -3,7 +3,7 @@
  * Created: 2025-05-19 05:08:03
  * Author: daparthi001
  */
-import { RealTimeMonitor } from '../monitoring/RealTimeMonitor';
+// import { RealTimeMonitor } from '../monitoring/RealTimeMonitor';
 import { PerformanceMonitor } from '../monitoring/PerformanceMonitor';
 import { CacheManager } from '../cache/CacheManager';
 
@@ -31,14 +31,14 @@ interface CachePattern {
 
 export class AutoOptimizer {
     private static instance: AutoOptimizer;
-    private _monitor: RealTimeMonitor;
+    // private _monitor: RealTimeMonitor;
     private performanceMonitor: PerformanceMonitor;
     private cacheManager: CacheManager;
     private optimizationRules: Map<string, OptimizationRule>;
     private activeOptimizations: Set<string>;
 
     private constructor() {
-        this._monitor = RealTimeMonitor.getInstance();
+        // this._monitor = RealTimeMonitor.getInstance();
         this.performanceMonitor = PerformanceMonitor.getInstance();
         this.cacheManager = CacheManager.getInstance();
         this.optimizationRules = new Map();

@@ -30,6 +30,7 @@ interface OrderListProps {
     orders: Order[];
     onSelect: (order: Order) => void;
     onCancel: (orderId: string) => void;
+    onModify?: (order: Order) => void;
 }
 
 export const OrderList: React.FC<OrderListProps> = ({

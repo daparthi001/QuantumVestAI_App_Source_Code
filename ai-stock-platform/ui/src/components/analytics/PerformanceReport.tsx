@@ -67,7 +67,30 @@ export const PerformanceReport: React.FC = () => {
         try {
             const monitor = PerformanceMonitor.getInstance();
             const data = await monitor.generateReport(dateRange[0], dateRange[1]);
-            setPerformanceData(data);
+            
+            // Ensure the data conforms to PerformanceData interface
+            const performanceData: PerformanceData = {
+                timestamp: new Date().toISOString(),
+                dateRange: {
+                    start: dateRange[0].toISOString(),
+                    end: dateRange[1].toISOString()
+                },
+                componentMetrics: data.componentMetrics || [],
+                operationMetrics: data.operationMetrics || [],
+                apiMetrics: (data.apiMetrics || []).map((metric: any) => ({
+                    name: metric.endpoint || metric.name || 'Unknown',
+                    averageTime: metric.averageResponseTime || metric.averageTime || 0,
+                    errorRate: metric.errorRate || 0,
+                    successRate: metric.successRate || (1 - (metric.errorRate || 0))
+                })),
+                summary: {
+                    totalRequests: 0,
+                    averageResponseTime: 0,
+                    errorCount: 0
+                }
+            };
+            
+            setPerformanceData(performanceData);
         } catch (error) {
             console.error('Failed to generate report:', error);
         }

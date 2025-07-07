@@ -304,13 +304,6 @@ class WebSocketService {
   }
 
   /**
-   * Get connection state
-   */
-  public getConnectionState(): ConnectionState {
-    return this.connectionStateSubject.value;
-  }
-
-  /**
    * Get event stream for specific event type
    */
   public getEventStream(eventType: EventTypes) {
