@@ -38,7 +38,7 @@ class LoadTestWorker {
             await this.executeLoadTest(testId, users, config);
             
         } catch (error) {
-            this.handleTestError(testId, error);
+            this.handleTestError(testId, error instanceof Error ? error : new Error(String(error)));
         }
     }
 
@@ -147,46 +147,88 @@ class VirtualUser {
             }
 
             return {
-                userId: this.userId,
-                scenarioName: scenario.name,
+                id: `${this.userId}-${scenario.id}`,
+                testName: scenario.name,
+                status: 'COMPLETED',
+                metrics: {
+                    totalRequests: 1,
+                    successfulRequests: 1,
+                    failedRequests: 0,
+                    averageResponseTime: Date.now() - startTime,
+                    minResponseTime: Date.now() - startTime,
+                    maxResponseTime: Date.now() - startTime,
+                    requestsPerSecond: 1,
+                    errorRate: 0,
+                    throughput: 1,
+                    concurrency: 1,
+                    startTime,
+                    endTime: Date.now()
+                },
+                errors: [],
+                startTime,
+                endTime: Date.now(),
                 duration: Date.now() - startTime,
-                success: true
+                userId: this.userId.toString()
             };
         } catch (error) {
             return {
-                userId: this.userId,
-                scenarioName: scenario.name,
+                id: `${this.userId}-${scenario.id}`,
+                testName: scenario.name,
+                status: 'FAILED',
+                metrics: {
+                    totalRequests: 1,
+                    successfulRequests: 0,
+                    failedRequests: 1,
+                    averageResponseTime: Date.now() - startTime,
+                    minResponseTime: Date.now() - startTime,
+                    maxResponseTime: Date.now() - startTime,
+                    requestsPerSecond: 1,
+                    errorRate: 1,
+                    throughput: 0,
+                    concurrency: 1,
+                    startTime,
+                    endTime: Date.now()
+                },
+                errors: [{
+                    timestamp: Date.now(),
+                    message: error instanceof Error ? error.message : String(error),
+                    type: 'UNKNOWN'
+                }],
+                startTime,
+                endTime: Date.now(),
                 duration: Date.now() - startTime,
-                success: false,
-                error: error instanceof Error ? error.message : 'Unknown error'
+                userId: this.userId.toString()
             };
         }
     }
 
     private selectScenario(): TestScenario {
-        const totalWeight = this.scenarios.reduce((sum, s) => sum + s.weight, 0);
-        let random = Math.random() * totalWeight;
-
-        for (const scenario of this.scenarios) {
-            random -= scenario.weight;
-            if (random <= 0) return scenario;
-        }
-
-        return this.scenarios[0];
+        // Use currentScenario to rotate through scenarios
+        const scenario = this.scenarios[this.currentScenario % this.scenarios.length];
+        this.currentScenario++;
+        return scenario;
     }
 
     private async executeStep(step: TestStep): Promise<void> {
         switch (step.type) {
-            case 'request':
+            case 'REQUEST':
                 await this.executeRequest(step);
                 break;
-            case 'action':
+            case 'SCRIPT':
                 await this.executeAction(step);
+                break;
+            case 'WAIT':
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                break;
+            case 'ASSERTION':
+                // Handle assertions
                 break;
         }
     }
 
     private async executeRequest(step: TestStep): Promise<void> {
+        if (!step.target) return;
+        
         const response = await fetch(step.target, {
             method: step.method || 'GET',
             body: step.data ? JSON.stringify(step.data) : undefined,

@@ -51,6 +51,11 @@ export interface SentimentData {
     url: string;
     timestamp: string;
   }>;
+  daily_sentiment: Array<{
+    date: string;
+    sentiment: number;
+    volume: number;
+  }>;
 }
 
 class StockService {
@@ -86,6 +91,29 @@ class StockService {
 
   async getMarketData(): Promise<any> {
     const response = await apiClient.get('/api/v1/market/overview');
+    return response.data;
+  }
+
+  async getAvailableSymbols(): Promise<string[]> {
+    const response = await apiClient.get('/api/v1/stocks/symbols');
+    return response.data;
+  }
+
+  async calculateCustomIndicator(symbol: string, formula: string): Promise<any> {
+    const response = await apiClient.post('/api/v1/stocks/indicators/custom', {
+      symbol,
+      formula
+    });
+    return response.data;
+  }
+
+  async getFundamentalMetrics(symbol: string): Promise<any> {
+    const response = await apiClient.get(`/api/v1/stocks/${symbol}/fundamentals`);
+    return response.data;
+  }
+
+  async getHistoricalFundamentals(symbol: string, period: string = '1y'): Promise<any> {
+    const response = await apiClient.get(`/api/v1/stocks/${symbol}/fundamentals/history?period=${period}`);
     return response.data;
   }
 }

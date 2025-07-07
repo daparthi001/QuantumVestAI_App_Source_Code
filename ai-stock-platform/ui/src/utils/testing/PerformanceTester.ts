@@ -3,7 +3,10 @@
  * Created: 2025-05-19 05:06:36
  * Author: daparthi001
  */
+import React from 'react';
+import ReactDOM from 'react-dom';
 import { PerformanceMonitor } from '../../services/monitoring/PerformanceMonitor';
+import { TestResult } from '../../types/loadTest';
 
 export class PerformanceTester {
     private static instance: PerformanceTester;

@@ -28,6 +28,7 @@ export interface TestResult {
   startTime: number;
   endTime?: number;
   duration?: number;
+  userId?: string;
 }
 
 export interface TestError {
@@ -48,6 +49,9 @@ export interface TestStep {
   status?: 'PENDING' | 'RUNNING' | 'PASSED' | 'FAILED';
   duration?: number;
   assertions?: any[];
+  target?: string;
+  method?: string;
+  data?: any;
 }
 
 export interface TestScenario {
@@ -55,6 +59,7 @@ export interface TestScenario {
   name: string;
   description: string;
   steps: TestStep[];
+  weight: number;
   concurrency: number;
   duration: number;
   rampUp: number;
@@ -64,6 +69,10 @@ export interface TestScenario {
 export interface LoadTestConfig {
   name: string;
   scenarios: TestScenario[];
+  users: number;
+  rampUpTime: number;
+  duration: number;
+  thinkTime: number;
   globalTimeout: number;
   maxConcurrency: number;
   reporting: {
