@@ -54,7 +54,7 @@ export class PerformanceTester {
         }
 
         const testResult = this.calculateStats(results);
-        this.storeResult('render', testResult);
+        this.storeTestResult('render', testResult);
         return testResult;
     }
 
@@ -73,7 +73,7 @@ export class PerformanceTester {
         }
 
         const testResult = this.calculateStats(results);
-        this.storeResult(name, testResult);
+        this.storeTestResult(name, testResult);
         return testResult;
     }
 
@@ -86,9 +86,9 @@ export class PerformanceTester {
             throw new Error('Memory measurements not supported in this environment');
         }
 
-        const initialMemory = perfMemory.usedJSHeapSize;
+        const initialMemory = performance.memory.usedJSHeapSize;
         await operation();
-        const finalMemory = perfMemory.usedJSHeapSize;
+        const finalMemory = performance.memory.usedJSHeapSize;
 
         return {
             beforeBytes: initialMemory,
@@ -118,12 +118,16 @@ export class PerformanceTester {
         document.body.appendChild(div);
         
         try {
-
             await new Promise<void>((resolve) => {
                 const element = React.createElement(component, props);
                 ReactDOM.render(element, div, () => {
                     resolve();
                 });
+            });
+        } catch (error) {
+            // Handle rendering errors
+            console.error('Error rendering component:', error);
+            throw error;
         } finally {
             ReactDOM.unmountComponentAtNode(div);
             document.body.removeChild(div);
