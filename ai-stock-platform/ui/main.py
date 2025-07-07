@@ -325,9 +325,6 @@ async def index(request: Request):
             }
         )
     except Exception as e:
-
-    """Serve the index page"""
-
         logger.error(f"Error rendering index page: {str(e)}")
         return HTMLResponse(
             content=f"""
@@ -728,12 +725,11 @@ async def not_found_exception_handler(request: Request, exc: HTTPException):
         )
 
 @app.exception_handler(500)
-
 async def enhanced_server_error_handler(request: Request, exc: HTTPException):
     """Enhanced 500 error handler"""
     try:
         return app.state.templates.TemplateResponse(
-            "error.html", 
+            "errors/500.html", 
             {
                 "request": request, 
                 "error": str(exc),
@@ -743,88 +739,45 @@ async def enhanced_server_error_handler(request: Request, exc: HTTPException):
         )
     except:
         return HTMLResponse(
-            content=f"""
-async def server_error_handler(request: Request, exc: HTTPException):
-    """Handle 500 errors"""
-        return HTMLResponse(
-            content=f"<h1>500 Server Error</h1><p>{str(exc)}</p>",
+            content="""<!DOCTYPE html>
+<html>
+<head>
+    <title>500 Server Error</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 text-center">
+                <h1 class="display-1">500</h1>
+                <h2>Server Error</h2>
+                <p>Something went wrong. Please try again later.</p>
+                <a href="/" class="btn btn-primary">Go Home</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>""",
             status_code=500
         )
 
 # Include controllers AFTER defining direct routes to avoid conflicts
+try:
+    from routes import api_proxy
+    app.include_router(api_proxy.router)
+    logger.info("Included API proxy router")
+except Exception as e:
     logger.error(f"Failed to include api_proxy router: {str(e)}")
 
 # Only include controllers that were successfully imported
 for name, controller in controllers.items():
-        logger.error(f"Failed to include {name} router: {str(e)}")
-
-# Add route to serve dashboard placeholder (will be overridden by dashboard_controller if implemented)
-@app.get("/dashboard", response_class=HTMLResponse)
-async def dashboard(request: Request):
-    """Temporary dashboard placeholder until real dashboard is implemented"""
     try:
-        # Try to use the enhanced error handlers templates first
-        if hasattr(app.state, 'templates'):
-            return app.state.templates.TemplateResponse(
-                "dashboard/index.html",
-                {"request": request}
-            )
-        else:
-            # Fallback HTML response
-            return HTMLResponse(
-                content="""
-                <!DOCTYPE html>
-                <html>
-                    <head>
-                        <title>Dashboard - QuantumVestAI</title>
-                        <meta charset="UTF-8">
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-                    </head>
-                    <body>
-                        <div class="container mt-5">
-                            <div class="row justify-content-center">
-                                <div class="col-md-6 text-center">
-                                    <h1>Dashboard</h1>
-                                    <p>Welcome to QuantumVestAI Dashboard</p>
-                                    <a href="/" class="btn btn-primary">Go Home</a>
-                                </div>
-                            </div>
-                        </div>
-                    </body>
-                </html>
-                """,
-                status_code=200
-            )
+        app.include_router(controller.router)
+        logger.info(f"Included {name} router")
     except Exception as e:
-        logger.error(f"Error rendering dashboard: {str(e)}")
-        # If dashboard/index.html doesn't exist, return a simple HTML response
-        return HTMLResponse(
-            content="""
-            <!DOCTYPE html>
-            <html>
-                <head>
-                    <title>Server Error - QuantumVestAI</title>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-                </head>
-                <body>
-                    <div class="container mt-5">
-                        <div class="row justify-content-center">
-                            <div class="col-md-6 text-center">
-                                <h1 class="display-1">500</h1>
-                                <h2>Server Error</h2>
-                                <p>We're experiencing technical difficulties. Please try again later.</p>
-                                <a href="/" class="btn btn-primary">Go Home</a>
-                            </div>
-                        </div>
-                    </div>
-                </body>
-            </html>
-            """,
-            status_code=500
-        )
+        logger.error(f"Failed to include {name} router: {str(e)}")
 
 # Include any existing controllers that work
 controllers_imported = []
