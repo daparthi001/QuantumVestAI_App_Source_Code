@@ -89,11 +89,28 @@ API_V1_URL = f"{API_URL}/api/v1"
 # Import controllers - moved after app creation
 try:
     from controllers import auth_controller
-    from utils.template_filters import register_filters
+    from utils.template_filters import register_filters, validate_template_filters, get_template_filter_status
 
     # Register template filters with app.state.templates
-    register_filters(app)
-    logger.info("Template filters registered successfully")
+    filter_success = register_filters(app)
+    
+    if filter_success:
+        logger.info("✓ Template filters registered successfully")
+        
+        # Validate template filters
+        validation_success = validate_template_filters(app)
+        if validation_success:
+            logger.info("✓ Template filter validation passed")
+            
+            # Log filter status for debugging
+            status = get_template_filter_status()
+            logger.info(f"✓ {status['total_filters']} template filters ready")
+        else:
+            logger.warning("⚠ Template filter validation failed")
+    else:
+        logger.error("✗ Template filter registration failed")
+        raise Exception("Template filter registration failed")
+        
 except Exception as e:
     logger.error(f"Error importing controllers or registering filters: {str(e)}")
     
@@ -104,9 +121,47 @@ except Exception as e:
         timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
         return f"/static/{path}?v={version}&t={timestamp}"
     
-    # Add to Jinja environment
-    templates.env.filters['get_asset_url'] = get_asset_url
-    logger.info("Added fallback for get_asset_url filter")
+    def format_change_value(value, include_sign=True):
+        """Fallback format_change_value filter"""
+        if value is None:
+            return "—"
+        try:
+            num_value = float(value)
+            formatted = f"{num_value:.2f}"
+            if include_sign and num_value > 0:
+                formatted = f"+{formatted}"
+            return formatted
+        except (ValueError, TypeError):
+            return str(value)
+    
+    def format_large_number(value, decimal_places=1):
+        """Fallback format_large_number filter"""
+        if value is None:
+            return "—"
+        try:
+            num_value = float(value)
+            if abs(num_value) >= 1e9:
+                return f"{num_value / 1e9:.{decimal_places}f}B"
+            elif abs(num_value) >= 1e6:
+                return f"{num_value / 1e6:.{decimal_places}f}M"
+            elif abs(num_value) >= 1e3:
+                return f"{num_value / 1e3:.{decimal_places}f}K"
+            else:
+                return str(num_value)
+        except (ValueError, TypeError):
+            return str(value)
+    
+    # Add fallback filters to Jinja environment
+    fallback_filters = {
+        'get_asset_url': get_asset_url,
+        'format_change_value': format_change_value,
+        'format_large_number': format_large_number
+    }
+    
+    for name, func in fallback_filters.items():
+        templates.env.filters[name] = func
+    
+    logger.info(f"Added {len(fallback_filters)} fallback template filters")
 
 # Import proxy router - with error handling
 try:

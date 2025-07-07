@@ -95,52 +95,90 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="stat
 API_URL = os.environ.get("API_URL", "http://localhost:8000")
 API_V1_URL = f"{API_URL}/api/v1"
 
-# Enhanced template filters and utilities
-def get_asset_url(path, version=None):
-    """Generate versioned asset URLs"""
-    if not version:
-        version = os.environ.get('APP_VERSION', 'v2.0.0')
-        timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
-    return f"/static/{path}?v={version}&t={timestamp}"
-
-def format_currency(amount):
-    """Format currency with proper formatting"""
-    if isinstance(amount, (int, float)):
-        return f"${amount:,.2f}"
-    return str(amount)
-
-def format_percentage(value):
-    """Format percentage with proper sign"""
-    if isinstance(value, (int, float)):
-        sign = "+" if value > 0 else ""
-        return f"{sign}{value:.2f}%"
-    return str(value)
-
-def format_large_number(value):
-    """Format large numbers with K, M, B suffixes"""
-    if not isinstance(value, (int, float)):
-        return str(value)
+# Enhanced template filters and utilities setup
+try:
+    # Import and register comprehensive template filters
+    from utils.template_filters import register_filters, validate_template_filters, get_template_filter_status
     
-    if abs(value) >= 1e9:
-        return f"{value / 1e9:.1f}B"
-    elif abs(value) >= 1e6:
-        return f"{value / 1e6:.1f}M"
-    elif abs(value) >= 1e3:
-        return f"{value / 1e3:.1f}K"
+    # Register all template filters
+    filter_registration_success = register_filters(app)
+    
+    if filter_registration_success:
+        logger.info("✓ Comprehensive template filters registered successfully")
+        
+        # Validate that critical filters are working
+        validation_success = validate_template_filters(app)
+        if validation_success:
+            logger.info("✓ Template filter validation passed")
+        else:
+            logger.warning("⚠ Template filter validation failed, but registration succeeded")
     else:
-        return f"{value:.2f}"
+        logger.error("✗ Template filter registration failed, adding fallback filters")
+        # Add minimal fallback filters if comprehensive registration fails
+        _add_fallback_filters(templates)
 
-# Register template filters
-templates.env.filters['get_asset_url'] = get_asset_url
-templates.env.filters["format_large_number"] = format_large_number
-templates.env.filters["format_currency"] = format_currency
-templates.env.filters["format_percentage"] = format_percentage
+except ImportError as e:
+    logger.error(f"Could not import template filters module: {e}")
+    _add_fallback_filters(templates)
+except Exception as e:
+    logger.error(f"Error setting up template filters: {e}")
+    _add_fallback_filters(templates)
+
+def _add_fallback_filters(templates):
+    """Add minimal fallback filters if comprehensive system fails"""
+    def get_asset_url(path, version=None):
+        """Generate versioned asset URLs"""
+        if not version:
+            version = os.environ.get('APP_VERSION', 'v2.0.0')
+            timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+        return f"/static/{path}?v={version}&t={timestamp}"
+
+    def format_currency(amount):
+        """Format currency with proper formatting"""
+        if isinstance(amount, (int, float)):
+            return f"${amount:,.2f}"
+        return str(amount)
+
+    def format_percentage(value):
+        """Format percentage with proper sign"""
+        if isinstance(value, (int, float)):
+            sign = "+" if value > 0 else ""
+            return f"{sign}{value:.2f}%"
+        return str(value)
+
+    def format_large_number(value):
+        """Format large numbers with K, M, B suffixes"""
+        if not isinstance(value, (int, float)):
+            return str(value)
+        
+        if abs(value) >= 1e9:
+            return f"{value / 1e9:.1f}B"
+        elif abs(value) >= 1e6:
+            return f"{value / 1e6:.1f}M"
+        elif abs(value) >= 1e3:
+            return f"{value / 1e3:.1f}K"
+        else:
+            return f"{value:.2f}"
+    
+    def format_change_value(value):
+        """Format change value with sign"""
+        if isinstance(value, (int, float)):
+            sign = "+" if value > 0 else ""
+            return f"{sign}{value:.2f}"
+        return str(value)
+
+    # Register fallback filters
+    templates.env.filters['get_asset_url'] = get_asset_url
+    templates.env.filters["format_large_number"] = format_large_number
+    templates.env.filters["format_currency"] = format_currency
+    templates.env.filters["format_percentage"] = format_percentage
+    templates.env.filters["format_change_value"] = format_change_value
+    
+    logger.info("✓ Fallback template filters registered")
 
 # Add globals for template context
 templates.env.globals["now"] = datetime.utcnow
 templates.env.globals["API_URL"] = API_URL
-
-logger.info("Template filters registered successfully")
 
 # Enhanced request middleware with performance monitoring
 @app.middleware("http")
@@ -406,8 +444,8 @@ async def logout(request: Request):
 
 @app.get("/health")
 async def enhanced_health_check():
-    """Enhanced health check"""
-    return {
+    """Enhanced health check with template filter status"""
+    health_data = {
         "ui": {
             "status": "healthy",
             "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
@@ -418,10 +456,32 @@ async def enhanced_health_check():
                 "enhanced_error_handling": "enabled",
                 "demo_mode": "enabled",
                 "responsive_design": "enabled",
-                "real_time_updates": "enabled"
+                "real_time_updates": "enabled",
+                "template_filters": "enhanced"
             }
         }
     }
+    
+    # Add template filter status
+    try:
+        from utils.template_filters import get_template_filter_status, validate_template_filters
+        
+        filter_status = get_template_filter_status()
+        validation_result = validate_template_filters(app)
+        
+        health_data["template_filters"] = {
+            "status": "healthy" if validation_result else "degraded",
+            "total_filters": filter_status["total_filters"],
+            "critical_filters_available": validation_result,
+            "available_filters": filter_status["available_filters"]
+        }
+    except Exception as e:
+        health_data["template_filters"] = {
+            "status": "error",
+            "error": str(e)
+        }
+    
+    return health_data
 
 # Utility functions for fallback HTML
 def create_fallback_html(title, heading, message):
