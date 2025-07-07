@@ -48,3 +48,21 @@ export const formatLargeNumber = (value: number): string => {
   
   return value.toString();
 };
+
+/**
+ * Format percentage
+ */
+export const formatPercentage = (value: number): string => {
+  if (typeof value !== "number" || isNaN(value)) {
+    return "0.00%";
+  }
+  
+  return `${value.toFixed(2)}%`;
+};
+
+/**
+ * Format volume
+ */
+export const formatVolume = (volume: number): string => {
+  return formatLargeNumber(volume);
+};

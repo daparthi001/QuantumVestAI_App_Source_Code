@@ -5,6 +5,7 @@
 {% block head_extra %}
 <link rel="stylesheet" href="{{ get_asset_url('css/dashboard.css') }}">
 <script src="{{ get_asset_url('js/dashboard.js') }}" defer></script>
+<script src="{{ url_for('static', path='/js/realtime-dashboard.js') }}" defer></script>
 <meta name="last-updated" content="2025-06-20 02:53:45">
 <meta name="updated-by" content="daparthi001">
 {% endblock %}
@@ -12,93 +13,278 @@
 {% block body_class %}dashboard-page{% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
+<div class="dashboard-container realtime-dashboard">
     <div class="dashboard-header">
-        <h1>Dashboard</h1>
-        <div class="dashboard-actions">
-            <div class="period-selector">
-                <label for="period-select">Time Period:</label>
-                <select id="period-select" name="period">
-                    {% for period_option in periods %}
-                    <option value="{{ period_option.value }}" {% if period_option.value == selected_period %}selected{% endif %}>
-                        {{ period_option.label }}
-                    </option>
-                    {% endfor %}
-                </select>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="quantum-title">QuantumVest Dashboard</h1>
+                <div class="text-muted">
+                    <span class="live-indicator">🔴 LIVE</span>
+                    Real-time market data
+                    {% if is_cached %}
+                    <span class="cache-notice">
+                        <span class="cache-icon">📊</span>
+                        <span class="cache-message">Last updated: {{ last_updated }}</span>
+                    </span>
+                    {% endif %}
+                </div>
             </div>
-            <button id="refresh-data" class="btn btn-icon" title="Refresh Data">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M23 4v6h-6"></path>
-                    <path d="M1 20v-6h6"></path>
-                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
-                    <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path>
-                </svg>
-            </button>
-        </div>
-    </div>
-    
-    {% if is_cached %}
-    <div class="cache-notice">
-        <span class="cache-icon">📊</span>
-        <span class="cache-message">Showing cached data. Last updated: {{ last_updated }}</span>
-    </div>
-    {% endif %}
-    
-    <div class="dashboard-overview">
-        <div class="overview-card portfolio-value">
-            <h3>Portfolio Value</h3>
-            <div class="value">{{ format_currency(portfolio.total_value) }}</div>
-            <div class="change {% if portfolio.daily_change >= 0 %}positive{% else %}negative{% endif %}">
-                {{ format_percentage(portfolio.daily_change) }}
-                {% if portfolio.daily_change >= 0 %}
-                <span class="icon-up">↑</span>
-                {% else %}
-                <span class="icon-down">↓</span>
-                {% endif %}
-                <span class="label">Today</span>
-            </div>
-        </div>
-        
-        <div class="overview-card total-return">
-            <h3>Total Return</h3>
-            <div class="value">{{ format_currency(portfolio.total_gain) }}</div>
-            <div class="change {% if portfolio.total_gain_percent >= 0 %}positive{% else %}negative{% endif %}">
-                {{ format_percentage(portfolio.total_gain_percent) }}
-                {% if portfolio.total_gain_percent >= 0 %}
-                <span class="icon-up">↑</span>
-                {% else %}
-                <span class="icon-down">↓</span>
-                {% endif %}
-                <span class="label">All Time</span>
-            </div>
-        </div>
-        
-        <div class="overview-card market-status">
-            <h3>Market Status</h3>
-            {% if market.status == "open" %}
-            <div class="market-open">
-                <span class="status-indicator"></span> Markets Open
-            </div>
-            {% else %}
-            <div class="market-closed">
-                <span class="status-indicator"></span> Markets Closed
-            </div>
-            {% endif %}
-            <div class="market-index">
-                <span>S&P 500:</span>
-                <span class="value">{{ format_currency(market.indices.sp500.value, '') }}</span>
-                <span class="change {% if market.indices.sp500.change >= 0 %}positive{% else %}negative{% endif %}">
-                    {{ format_percentage(market.indices.sp500.change) }}
-                </span>
+            <div class="dashboard-actions">
+                <div class="period-selector me-3">
+                    <label for="period-select" class="form-label">Time Period:</label>
+                    <select id="period-select" name="period" class="form-select">
+                        {% for period_option in periods %}
+                        <option value="{{ period_option.value }}" {% if period_option.value == selected_period %}selected{% endif %}>
+                            {{ period_option.label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button id="refresh-data" class="btn btn-outline-primary me-2" title="Refresh Data">
+                    <i class="bi bi-arrow-clockwise"></i>
+                    Refresh
+                </button>
+                <a href="/ticker-search" class="btn btn-primary">
+                    🚀 Explore Stocks
+                </a>
             </div>
         </div>
     </div>
-    
-    <div class="dashboard-charts-container">
-        <div class="chart-card performance-chart">
-            <div class="card-header">
-                <h3>Portfolio Performance</h3>
-                <div class="card-actions">
+    <!-- Market Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card quantum-card micro-interaction">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h6 class="text-muted mb-1">S&P 500</h6>
+                            <h4 class="mb-0">SPY</h4>
+                        </div>
+                        <span class="badge quantum-badge">📈</span>
+                    </div>
+                    <div class="mb-2">
+                        <div class="h3 mb-1 price-display">$459.32</div>
+                        <div class="fw-bold text-success">+$2.15 (+0.47%)</div>
+                    </div>
+                    <div class="row text-muted small">
+                        <div class="col-6">
+                            <div>High: $460.12</div>
+                            <div>Low: $456.78</div>
+                        </div>
+                        <div class="col-6">
+                            <div>Vol: 45.2M</div>
+                            <div>Cap: $4.2T</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card quantum-card micro-interaction">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h6 class="text-muted mb-1">NASDAQ 100</h6>
+                            <h4 class="mb-0">QQQ</h4>
+                        </div>
+                        <span class="badge quantum-badge">📉</span>
+                    </div>
+                    <div class="mb-2">
+                        <div class="h3 mb-1 price-display">$398.45</div>
+                        <div class="fw-bold text-danger">-$1.23 (-0.31%)</div>
+                    </div>
+                    <div class="row text-muted small">
+                        <div class="col-6">
+                            <div>High: $401.23</div>
+                            <div>Low: $397.45</div>
+                        </div>
+                        <div class="col-6">
+                            <div>Vol: 32.1M</div>
+                            <div>Cap: $2.8T</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card quantum-card micro-interaction">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h6 class="text-muted mb-1">Dow Jones</h6>
+                            <h4 class="mb-0">DIA</h4>
+                        </div>
+                        <span class="badge quantum-badge">📈</span>
+                    </div>
+                    <div class="mb-2">
+                        <div class="h3 mb-1 price-display">$342.67</div>
+                        <div class="fw-bold text-success">+$0.89 (+0.26%)</div>
+                    </div>
+                    <div class="row text-muted small">
+                        <div class="col-6">
+                            <div>High: $343.12</div>
+                            <div>Low: $340.23</div>
+                        </div>
+                        <div class="col-6">
+                            <div>Vol: 12.3M</div>
+                            <div>Cap: $1.5T</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card quantum-card micro-interaction">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h6 class="text-muted mb-1">Volatility Index</h6>
+                            <h4 class="mb-0">VIX</h4>
+                        </div>
+                        <span class="badge quantum-badge">📉</span>
+                    </div>
+                    <div class="mb-2">
+                        <div class="h3 mb-1 price-display">$18.45</div>
+                        <div class="fw-bold text-success">-$0.67 (-3.51%)</div>
+                    </div>
+                    <div class="row text-muted small">
+                        <div class="col-6">
+                            <div>High: $19.23</div>
+                            <div>Low: $17.89</div>
+                        </div>
+                        <div class="col-6">
+                            <div>Vol: 8.8M</div>
+                            <div>Fear: Low</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Portfolio Overview -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card quantum-card quantum-particles">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">💼 Portfolio Performance</h5>
+                        <span class="badge bg-info">Real-time</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="portfolio-metric">
+                                <div class="metric-label">Total Value</div>
+                                <div class="metric-value">{{ format_currency(portfolio.total_value) }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="portfolio-metric">
+                                <div class="metric-label">Daily Change</div>
+                                <div class="metric-value {% if portfolio.daily_change >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ format_percentage(portfolio.daily_change) }}
+                                    {% if portfolio.daily_change >= 0 %}
+                                    <i class="bi bi-arrow-up"></i>
+                                    {% else %}
+                                    <i class="bi bi-arrow-down"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="portfolio-metric">
+                                <div class="metric-label">Total Return</div>
+                                <div class="metric-value {% if portfolio.total_gain_percent >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ format_currency(portfolio.total_gain) }}
+                                    <small class="d-block">{{ format_percentage(portfolio.total_gain_percent) }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="/portfolio" class="btn btn-primary w-100">
+                            View Full Portfolio Analysis
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card quantum-card">
+                <div class="card-header">
+                    <h5 class="mb-0">📊 Top Movers</h5>
+                </div>
+                <div class="card-body">
+                    <div class="top-movers-list">
+                        <div class="top-mover-item d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <div class="fw-bold">NVDA</div>
+                                <div class="text-muted small">$789.23</div>
+                            </div>
+                            <div class="text-end text-success">
+                                <div class="fw-bold">+6.14%</div>
+                                <div class="small">+$45.67</div>
+                            </div>
+                        </div>
+                        <div class="top-mover-item d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <div class="fw-bold">TSLA</div>
+                                <div class="text-muted small">$245.67</div>
+                            </div>
+                            <div class="text-end text-danger">
+                                <div class="fw-bold">-4.78%</div>
+                                <div class="small">-$12.34</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="/stocks" class="btn btn-outline-primary w-100">
+                            View All Stocks
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col">
+            <div class="card quantum-card">
+                <div class="card-header">
+                    <h5 class="mb-0">🎯 Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="/watchlist" class="btn btn-outline-primary w-100 quantum-action-btn">
+                                👁️ Watchlist
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="/backtest" class="btn btn-outline-success w-100 quantum-action-btn">
+                                🔄 Backtest
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="/analytics" class="btn btn-outline-info w-100 quantum-action-btn">
+                                📈 Analytics
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="/alerts" class="btn btn-outline-warning w-100 quantum-action-btn">
+                                🔔 Alerts
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
                     <button class="btn-chart-toggle active" data-chart="line">Line</button>
                     <button class="btn-chart-toggle" data-chart="bar">Bar</button>
                 </div>
