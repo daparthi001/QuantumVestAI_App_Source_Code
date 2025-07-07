@@ -130,11 +130,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <motion.div
           className="quantum-sidebar d-none d-lg-block"
           variants={sidebarVariants}
+          initial={{ x: -280, opacity: 0 }}
           animate={sidebarCollapsed ? 'collapsed' : 'expanded'}
           transition={{ duration: 0.3, ease: "easeInOut" }}
-          initial={{ x: -280, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
         >
           <div className="p-3">
             {/* Sidebar Toggle */}

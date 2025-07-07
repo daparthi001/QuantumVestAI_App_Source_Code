@@ -4,7 +4,7 @@
  * Author: daparthi001
  */
 import { Subject, interval, merge } from 'rxjs';
-import { map, switchMap, catchError } from 'rxjs/operators';
+import { switchMap, catchError } from 'rxjs/operators';
 import { PerformanceMonitor } from './PerformanceMonitor';
 import { hasMemorySupport } from '../../types/global';
 

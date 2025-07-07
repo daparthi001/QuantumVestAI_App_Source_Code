@@ -7,10 +7,10 @@ import React, { useEffect, useState } from 'react';
 import {
     Card,
     CardContent,
-    Grid,
     Typography,
     Tab,
-    Tabs
+    Tabs,
+    Box
 } from '@mui/material';
 import {
     LineChart,
@@ -55,6 +55,10 @@ interface AnalyticsData {
     orderTypeDistribution: OrderDistribution[];
     dailyVolume: DailyVolume[];
     symbolBreakdown: SymbolBreakdown[];
+}
+
+interface PerformanceMetricsProps {
+    orders: Order[];
 }
 
 export const OrderAnalytics: React.FC<OrderAnalyticsProps> = ({ orders }) => {
@@ -119,48 +123,46 @@ export const OrderAnalytics: React.FC<OrderAnalyticsProps> = ({ orders }) => {
             </Tabs>
 
             {activeTab === 0 && (
-                <Grid container spacing={2}>
-                    <Grid item xs={12} md={4}>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                    <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
                         <MetricCard
                             title="Total Orders"
                             value={analytics.totalOrders}
                         />
-                    </Grid>
-                    <Grid item xs={12} md={4}>
+                    </Box>
+                    <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
                         <MetricCard
                             title="Fill Rate"
                             value={formatPercentage(analytics.fillRate)}
                         />
-                    </Grid>
-                    <Grid item xs={12} md={4}>
+                    </Box>
+                    <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
                         <MetricCard
                             title="Avg. Execution Time"
                             value={`${analytics.averageExecutionTime.toFixed(2)}s`}
                         />
-                    </Grid>
-                    <Grid item xs={12}>
+                    </Box>
+                    <Box sx={{ width: '100%' }}>
                         <VolumeChart data={analytics.dailyVolume} />
-                    </Grid>
-                </Grid>
+                    </Box>
+                </Box>
             )}
 
             {activeTab === 1 && (
-                <Grid container spacing={2}>
-                    <Grid item xs={12}>
-                        <PerformanceMetrics orders={orders} />
-                    </Grid>
-                </Grid>
+                <Box>
+                    <PerformanceMetrics orders={orders} />
+                </Box>
             )}
 
             {activeTab === 2 && (
-                <Grid container spacing={2}>
-                    <Grid item xs={12} md={6}>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                    <Box sx={{ flex: '1 1 400px', minWidth: '400px' }}>
                         <OrderTypeDistribution data={analytics.orderTypeDistribution} />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
+                    </Box>
+                    <Box sx={{ flex: '1 1 400px', minWidth: '400px' }}>
                         <SymbolBreakdown data={analytics.symbolBreakdown} />
-                    </Grid>
-                </Grid>
+                    </Box>
+                </Box>
             )}
         </div>
     );
@@ -241,3 +243,52 @@ const SymbolBreakdown: React.FC<{ data: any[] }> = ({ data }) => (
         </BarChart>
     </ResponsiveContainer>
 );
+
+const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ orders }) => {
+    const performanceData = React.useMemo(() => {
+        const executedOrders = orders.filter(order => order.status === 'FILLED');
+        const totalLatency = executedOrders.reduce((sum, order) => {
+            if (order.executionTime) {
+                const execTime = new Date(order.executionTime).getTime();
+                const createTime = new Date(order.createdAt).getTime();
+                return sum + (execTime - createTime);
+            }
+            return sum;
+        }, 0);
+
+        return {
+            averageLatency: executedOrders.length > 0 ? totalLatency / executedOrders.length : 0,
+            executionRate: orders.length > 0 ? (executedOrders.length / orders.length) * 100 : 0,
+            totalExecuted: executedOrders.length,
+            totalOrders: orders.length
+        };
+    }, [orders]);
+
+    return (
+        <Card>
+            <CardContent>
+                <Typography variant="h6" gutterBottom>
+                    Performance Metrics
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    <Box sx={{ flex: '1 1 250px' }}>
+                        <Typography variant="body2" color="textSecondary">
+                            Average Latency
+                        </Typography>
+                        <Typography variant="h5">
+                            {performanceData.averageLatency.toFixed(2)}ms
+                        </Typography>
+                    </Box>
+                    <Box sx={{ flex: '1 1 250px' }}>
+                        <Typography variant="body2" color="textSecondary">
+                            Execution Rate
+                        </Typography>
+                        <Typography variant="h5">
+                            {performanceData.executionRate.toFixed(1)}%
+                        </Typography>
+                    </Box>
+                </Box>
+            </CardContent>
+        </Card>
+    );
+};

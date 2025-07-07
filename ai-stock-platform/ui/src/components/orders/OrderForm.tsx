@@ -13,7 +13,7 @@ import {
     FormControl,
     InputLabel
 } from '@mui/material';
-import { Order, OrderType, TimeInForce } from '../../types/order';
+import { Order, OrderType, OrderSide, TimeInForce } from '../../types/order';
 
 interface OrderFormProps {
     onSubmit: (data: Partial<Order>) => Promise<void>;
@@ -27,7 +27,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     const { register, handleSubmit, reset, watch, formState: { errors } } = useForm({
         defaultValues: initialData || {
             symbol: '',
-            side: 'BUY',
+            side: OrderSide.BUY,
             quantity: 0,
             orderType: OrderType.MARKET,
             timeInForce: TimeInForce.DAY,
