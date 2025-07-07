@@ -14,7 +14,7 @@ import {
     FormHelperText
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
-import { Order, OrderType, TimeInForce } from '../../types/order';
+import { Order } from '../../types/order';
 
 interface AccessibleOrderFormProps {
     onSubmit: (data: Partial<Order>) => Promise<void>;
@@ -25,7 +25,7 @@ export const AccessibleOrderForm: React.FC<AccessibleOrderFormProps> = ({
     onSubmit,
     initialData
 }) => {
-    const { register, handleSubmit, watch, formState: { errors } } = useForm({
+    const { register, handleSubmit, formState: { errors } } = useForm({
         defaultValues: initialData || {}
     });
     const firstInput = useRef<HTMLInputElement>(null);
@@ -35,8 +35,6 @@ export const AccessibleOrderForm: React.FC<AccessibleOrderFormProps> = ({
             firstInput.current.focus();
         }
     }, []);
-
-    const orderType = watch('orderType');
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && e.shiftKey) {

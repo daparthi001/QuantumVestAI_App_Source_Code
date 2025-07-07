@@ -3,7 +3,6 @@
  * Created: 2025-05-19 04:12:20
  * Author: daparthi001
  */
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import FundamentalAnalysis from '../../components/analysis/FundamentalAnalysis';

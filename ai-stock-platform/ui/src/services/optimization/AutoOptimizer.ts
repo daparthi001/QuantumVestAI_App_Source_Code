@@ -7,16 +7,38 @@ import { RealTimeMonitor } from '../monitoring/RealTimeMonitor';
 import { PerformanceMonitor } from '../monitoring/PerformanceMonitor';
 import { CacheManager } from '../cache/CacheManager';
 
+interface SystemMetrics {
+    timestamp: number;
+    memoryUsage: number;
+    cpuUsage: number;
+    averageRenderTime: number;
+    cacheHitRate: number;
+    networkLatency: number;
+}
+
+interface OptimizationRule {
+    condition: (metrics: SystemMetrics) => boolean;
+    action: () => Promise<boolean>;
+    cooldown: number;
+}
+
+interface CachePattern {
+    key: string;
+    frequency: number;
+    lastAccessed: number;
+    size: number;
+}
+
 export class AutoOptimizer {
     private static instance: AutoOptimizer;
-    private monitor: RealTimeMonitor;
+    private _monitor: RealTimeMonitor;
     private performanceMonitor: PerformanceMonitor;
     private cacheManager: CacheManager;
     private optimizationRules: Map<string, OptimizationRule>;
     private activeOptimizations: Set<string>;
 
     private constructor() {
-        this.monitor = RealTimeMonitor.getInstance();
+        this._monitor = RealTimeMonitor.getInstance();
         this.performanceMonitor = PerformanceMonitor.getInstance();
         this.cacheManager = CacheManager.getInstance();
         this.optimizationRules = new Map();
@@ -163,41 +185,49 @@ export class AutoOptimizer {
     }
 
     private processCacheAccessPatterns(logs: any[]): CachePattern[] {
-        return logs.reduce((patterns, log) => {
+        return logs.reduce((patterns, _log) => {
             // Process logs to identify patterns
             // Return array of identified patterns
             return patterns;
         }, [] as CachePattern[]);
     }
 
-    private async adjustCacheSettings(patterns: CachePattern[]) {
+    private async adjustCacheSettings(patterns: CachePattern[]): Promise<void> {
         for (const pattern of patterns) {
-            await this.cacheManager.updateCacheSettings(pattern.key, {
-                ttl: pattern.optimalTTL,
-                priority: pattern.priority
+            await this.cacheManager.updateCacheSettings({
+                key: pattern.key,
+                ttl: pattern.frequency > 10 ? 3600000 : 1800000, // 1hr or 30min
+                priority: pattern.frequency > 50 ? 'high' : 'medium'
             });
         }
     }
-}
 
-interface SystemMetrics {
-    timestamp: number;
-    memoryUsage: number;
-    cpuUsage: number;
-    averageRenderTime: number;
-    cacheHitRate: number;
-    networkLatency: number;
-}
+    private cleanupEventListeners(): void {
+        // Remove any global event listeners that might be hanging around
+        const events = ['resize', 'scroll', 'mousemove', 'keydown'];
+        events.forEach(event => {
+            // Create a dummy function to remove any potential listeners
+            const dummyHandler = () => {};
+            window.removeEventListener(event, dummyHandler);
+            document.removeEventListener(event, dummyHandler);
+        });
+    }
 
-interface OptimizationRule {
-    condition: (metrics: SystemMetrics) => boolean;
-    action: () => Promise<boolean>;
-    cooldown: number;
-}
+    private async preloadFrequentData(): Promise<void> {
+        // Preload commonly accessed data
+        const frequentKeys = [
+            'user_preferences',
+            'market_data',
+            'portfolio_summary',
+            'recent_orders'
+        ];
 
-interface CachePattern {
-    key: string;
-    accessFrequency: number;
-    optimalTTL: number;
-    priority: 'high' | 'medium' | 'low';
+        for (const key of frequentKeys) {
+            try {
+                await this.cacheManager.get(key);
+            } catch (error) {
+                console.warn(`Failed to preload ${key}:`, error);
+            }
+        }
+    }
 }

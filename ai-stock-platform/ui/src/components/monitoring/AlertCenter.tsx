@@ -6,10 +6,6 @@
 import React, { useState, useEffect } from 'react';
 import {
     Drawer,
-    List,
-    ListItem,
-    ListItemIcon,
-    ListItemText,
     Badge,
     IconButton,
     Typography,
@@ -17,6 +13,7 @@ import {
     Divider,
     Box,
     Alert,
+    AlertTitle,
     Collapse
 } from '@mui/material';
 import {
@@ -51,7 +48,11 @@ export const AlertCenter: React.FC = () => {
             }
         });
 
-        return () => unsubscribe();
+        return () => {
+            if (typeof unsubscribe === 'function') {
+                unsubscribe();
+            }
+        };
     }, []);
 
     const handleNewAlerts = (newAlerts: any[]) => {
@@ -79,11 +80,10 @@ export const AlertCenter: React.FC = () => {
         setUnreadCount(prev => Math.max(0, prev - 1));
     };
 
-    const handleClearAll = () => {
+    const _handleClearAll = () => {
         setAlerts([]);
         setUnreadCount(0);
     };
-
     return (
         <>
             <IconButton

@@ -13,7 +13,7 @@ const PortfolioManagement: React.FC = () => {
     const [positions, setPositions] = useState<Position[]>([]);
     const [summary, setSummary] = useState<PortfolioSummary | null>(null);
     const [showTransactionModal, setShowTransactionModal] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [_loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [newTransaction, setNewTransaction] = useState<Partial<Transaction>>({
         type: 'BUY',

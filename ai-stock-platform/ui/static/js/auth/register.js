@@ -61,54 +61,34 @@ document.addEventListener('DOMContentLoaded', () => {
             function displayError(message) {
                 if (!errorContainer) return;
                 
-                // Clear previous errors
-                errorContainer.innerHTML = '';
-                
-                // Handle object error messages
-                if (typeof message === 'object') {
-                    // FIX: Handle object error messages properly
-                    if (Array.isArray(message)) {
-                        // Array of error messages
-                        const errorList = message.map(err => {
-                            if (typeof err === 'string') return err;
-                            if (typeof err === 'object') {
-                                return err.msg || err.message || JSON.stringify(err);
-                            }
-                            return String(err);
-                        }).join('<br>');
-                        
-                        errorContainer.innerHTML = errorList;
-                    } else {
-                        // Single object error
-                        const errorMessages = [];
-                        
-                        // Extract messages from object
-                        for (const key in message) {
-                            if (message.hasOwnProperty(key)) {
-                                const value = message[key];
-                                if (typeof value === 'string') {
-                                    errorMessages.push(`${key}: ${value}`);
-                                } else {
-                                    errorMessages.push(`${key}: ${JSON.stringify(value)}`);
-                                }
-                            }
-                        }
-                        
-                        if (errorMessages.length > 0) {
-                            errorContainer.innerHTML = errorMessages.join('<br>');
-                        } else {
-                            errorContainer.innerText = 'Registration failed with validation errors';
-                        }
-                    }
-                } else {
-                    // String error message
-                    errorContainer.innerText = message;
+                // Use the global error handler if available
+                if (window.UIErrorHandler) {
+                    window.UIErrorHandler.showError(message, { 
+                        position: 'inline', 
+                        container: errorContainer,
+                        replace: true
+                    });
+                    return;
                 }
                 
-                // Show the error container
+                // Fallback: Simple error display
+                errorContainer.innerHTML = '';
                 errorContainer.style.display = 'block';
                 
-                // Scroll to error container
+                // Handle different message types
+                let errorText = '';
+                if (typeof message === 'string') {
+                    errorText = message;
+                } else if (Array.isArray(message)) {
+                    errorText = message.join('<br>');
+                } else if (typeof message === 'object' && message !== null) {
+                    // Extract common error properties
+                    errorText = message.detail || message.msg || message.message || 'Registration failed';
+                } else {
+                    errorText = 'Registration failed';
+                }
+                
+                errorContainer.innerHTML = errorText;
                 errorContainer.scrollIntoView({ behavior: 'smooth' });
             }
         });

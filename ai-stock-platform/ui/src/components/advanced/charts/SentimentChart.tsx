@@ -109,7 +109,7 @@ const SentimentChart: React.FC<SentimentChartProps> = ({ symbol, data }) => {
             min: -1,
             max: 1,
             grid: {
-              borderDash: [2, 2]
+              display: true
             },
             title: {
               display: true,

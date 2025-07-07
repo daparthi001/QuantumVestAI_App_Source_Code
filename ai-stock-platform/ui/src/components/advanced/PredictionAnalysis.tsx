@@ -40,7 +40,7 @@ const PredictionAnalysis: React.FC = () => {
     const fetchStocks = async () => {
       try {
         const stocks = await stockService.getAvailableSymbols();
-        setStockOptions(stocks);
+        setStockOptions(stocks.map(symbol => ({ symbol, name: symbol })));
       } catch (error) {
         console.error('Error fetching stocks:', error);
       }
@@ -286,7 +286,7 @@ const PredictionAnalysis: React.FC = () => {
                   <div className="chart-container">
                     <PredictionChart 
                       symbol={symbol}
-                      prediction={prediction}
+                      prediction={[prediction]}
                     />
                   </div>
                   

@@ -4,18 +4,19 @@
  * Author: daparthi001
  */
 import { Subject, interval, merge } from 'rxjs';
-import { map, switchMap, catchError } from 'rxjs/operators';
+import { switchMap, catchError } from 'rxjs/operators';
 import { PerformanceMonitor } from './PerformanceMonitor';
+import { hasMemorySupport } from '../../types/global';
 
 export class RealTimeMonitor {
     private static instance: RealTimeMonitor;
     private metrics$ = new Subject<any>();
     private alerts$ = new Subject<any>();
-    private performanceMonitor: PerformanceMonitor;
+    private _performanceMonitor: PerformanceMonitor;
     private subscribers: Set<(data: any) => void> = new Set();
 
     private constructor() {
-        this.performanceMonitor = PerformanceMonitor.getInstance();
+        this._performanceMonitor = PerformanceMonitor.getInstance();
         this.initializeMonitoring();
     }
 
@@ -113,7 +114,7 @@ export class RealTimeMonitor {
     }
 
     private async getMemoryUsage(): Promise<number> {
-        if (performance.memory) {
+        if (hasMemorySupport(performance)) {
             return (performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit) * 100;
         }
         return 0;
@@ -133,5 +134,16 @@ export class RealTimeMonitor {
     private async getRenderTimes() {
         const entries = performance.getEntriesByType('measure');
         return entries.filter(entry => entry.name.startsWith('render_'));
+    }
+
+    // Add missing trackMetric method
+    trackMetric(name: string, value: number): void {
+        const metricData = {
+            name,
+            value,
+            timestamp: Date.now(),
+            type: 'metric'
+        };
+        this.metrics$.next(metricData);
     }
 }

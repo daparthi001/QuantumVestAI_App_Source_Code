@@ -87,10 +87,9 @@ const TwitterTrendingStocks: React.FC = () => {
             <React.Fragment key={stock.ticker}>
               {index > 0 && <Divider variant="inset" component="li" />}
               <ListItem 
-                button 
                 component={Link} 
                 to={`/stocks/${stock.ticker}`}
-                alignItems="center"
+                sx={{ alignItems: 'center', cursor: 'pointer' }}
               >
                 <Avatar sx={{ bgcolor: grey[200], width: 36, height: 36, mr: 2 }}>${stock.ticker}</Avatar>
                 <ListItemText 

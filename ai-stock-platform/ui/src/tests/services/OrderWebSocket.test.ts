@@ -5,7 +5,6 @@
  */
 import { OrderWebSocket } from '../../services/OrderWebSocket';
 import { store } from '../../store';
-import { updateOrderStatus } from '../../store/slices/orderSlice';
 import { OrderStatus } from '../../types/order';
 
 describe('OrderWebSocket', () => {

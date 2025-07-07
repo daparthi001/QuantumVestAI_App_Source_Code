@@ -5,7 +5,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import {
-    Grid,
+    Box,
     Paper,
     Typography,
     Select,
@@ -66,8 +66,8 @@ export const AnalyticsDashboard: React.FC = () => {
 
     return (
         <div className="analytics-dashboard">
-            <Grid container spacing={3}>
-                <Grid item xs={12}>
+            <Box sx={{ flexGrow: 1 }}>
+                <Box sx={{ mb: 3 }}>
                     <Paper className="analytics-header">
                         <Typography variant="h5">Order Analytics</Typography>
                         <FormControl>
@@ -82,11 +82,12 @@ export const AnalyticsDashboard: React.FC = () => {
                             </Select>
                         </FormControl>
                     </Paper>
-                </Grid>
+                </Box>
 
-                <Grid item xs={12} md={6}>
-                    <Paper className="analytics-card">
-                        <Typography variant="h6">Order Volume</Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                    <Box sx={{ flex: '1 1 300px', minWidth: 300 }}>
+                        <Paper className="analytics-card">
+                            <Typography variant="h6">Order Volume</Typography>
                         <ResponsiveContainer width="100%" height={300}>
                             <LineChart data={metricsData.orderVolume}>
                                 <XAxis dataKey="time" />
@@ -101,11 +102,11 @@ export const AnalyticsDashboard: React.FC = () => {
                             </LineChart>
                         </ResponsiveContainer>
                     </Paper>
-                </Grid>
+                    </Box>
 
-                <Grid item xs={12} md={6}>
-                    <Paper className="analytics-card">
-                        <Typography variant="h6">Execution Rates</Typography>
+                    <Box sx={{ flex: '1 1 300px', minWidth: 300 }}>
+                        <Paper className="analytics-card">
+                            <Typography variant="h6">Execution Rates</Typography>
                         <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={metricsData.executionRates}>
                                 <XAxis dataKey="type" />
@@ -116,11 +117,11 @@ export const AnalyticsDashboard: React.FC = () => {
                             </BarChart>
                         </ResponsiveContainer>
                     </Paper>
-                </Grid>
+                    </Box>
 
-                <Grid item xs={12} md={6}>
-                    <Paper className="analytics-card">
-                        <Typography variant="h6">Order Types Distribution</Typography>
+                    <Box sx={{ flex: '1 1 300px', minWidth: 300 }}>
+                        <Paper className="analytics-card">
+                            <Typography variant="h6">Order Types Distribution</Typography>
                         <ResponsiveContainer width="100%" height={300}>
                             <PieChart>
                                 <Pie
@@ -134,11 +135,11 @@ export const AnalyticsDashboard: React.FC = () => {
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
-                </Grid>
+                    </Box>
 
-                <Grid item xs={12} md={6}>
-                    <Paper className="analytics-card performance-metrics">
-                        <Typography variant="h6">Performance Metrics</Typography>
+                    <Box sx={{ flex: '1 1 300px', minWidth: 300 }}>
+                        <Paper className="analytics-card performance-metrics">
+                            <Typography variant="h6">Performance Metrics</Typography>
                         <div className="metrics-grid">
                             <MetricCard
                                 title="Average Execution Time"
@@ -158,8 +159,9 @@ export const AnalyticsDashboard: React.FC = () => {
                             />
                         </div>
                     </Paper>
-                </Grid>
-            </Grid>
+                    </Box>
+                </Box>
+            </Box>
         </div>
     );
 };

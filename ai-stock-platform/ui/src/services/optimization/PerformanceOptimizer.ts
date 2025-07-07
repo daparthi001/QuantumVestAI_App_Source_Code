@@ -3,16 +3,19 @@
  * Created: 2025-05-19 05:05:29
  * Author: daparthi001
  */
+import React from 'react';
 import { debounce, throttle } from 'lodash';
+import LZString from 'lz-string';
 import { RealTimeMonitor } from '../monitoring/RealTimeMonitor';
+import { hasMemorySupport } from '../../types/global';
 
 export class PerformanceOptimizer {
     private static instance: PerformanceOptimizer;
-    private monitor: RealTimeMonitor;
+    private _monitor: RealTimeMonitor;
     private optimizations: Map<string, boolean> = new Map();
 
     private constructor() {
-        this.monitor = RealTimeMonitor.getInstance();
+        this._monitor = RealTimeMonitor.getInstance();
         this.initializeOptimizations();
     }
 
@@ -38,9 +41,12 @@ export class PerformanceOptimizer {
             clearUnusedData: () => {
                 // Clear unnecessary data from memory
                 window.localStorage.removeItem('temp_cache');
-                if (window.performance && window.performance.memory) {
-                    // Force garbage collection if possible
-                    window.performance.memory.usedJSHeapSize = 0;
+                if (hasMemorySupport(window.performance)) {
+                    // Note: Cannot actually modify usedJSHeapSize - this is read-only
+                    // Instead, trigger garbage collection if possible
+                    if (window.gc) {
+                        window.gc();
+                    }
                 }
             },
 
@@ -51,7 +57,11 @@ export class PerformanceOptimizer {
                 if (totalSize > maxSize) {
                     // Remove oldest entries until under maxSize
                     const entries = Object.entries(currentCache);
-                    entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+                    entries.sort((a, b) => {
+                        const aData = a[1] as any;
+                        const bData = b[1] as any;
+                        return (aData.timestamp || 0) - (bData.timestamp || 0);
+                    });
                     
                     while (entries.length && totalSize > maxSize) {
                         entries.shift();
@@ -98,15 +108,16 @@ export class PerformanceOptimizer {
                 );
             },
 
-            memoizeComponent: <T extends Function>(
+            memoizeComponent: <T extends React.ComponentType<any>>(
                 component: T,
-                dependencies: any[]
-            ): T => {
-                return React.memo(component, (prev, next) => {
+                dependencies: string[]
+            ): React.MemoExoticComponent<T> => {
+                return React.memo(component, (prev: any, next: any) => {
+
                     return dependencies.every(
                         dep => prev[dep] === next[dep]
                     );
-                }) as unknown as T;
+                });
             }
         };
     }

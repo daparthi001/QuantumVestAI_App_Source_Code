@@ -9,6 +9,11 @@ import {
     Typography,
     Tabs,
     Tab,
+    Table,
+    TableHead,
+    TableRow,
+    TableCell,
+    TableBody,
     Box,
     CircularProgress,
     Alert
@@ -57,7 +62,7 @@ export const DetailedMetrics: React.FC<{
             setError(null);
             try {
                 const monitor = PerformanceMonitor.getInstance();
-                const data = await monitor.getMetricDetails(metricName, interval);
+                const data = await monitor.getMetricDetails(metricName);
                 setTimeseriesData(data.timeseries);
                 setBreakdown(data.breakdown);
                 trackInteraction('fetch_metric_details');
@@ -178,4 +183,21 @@ const MetricBreakdownTable: React.FC<{ data: MetricBreakdown[] }> = ({ data }) =
             ))}
         </TableBody>
     </Table>
+);
+
+const MetricAnalysis: React.FC<{
+    metricName: string;
+    timeseriesData: MetricDetail[];
+    breakdown: MetricBreakdown[];
+}> = ({ metricName, timeseriesData, breakdown }) => (
+    <Box>
+        <Typography variant="h6" gutterBottom>
+            Analysis for {metricName}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+            This metric shows performance characteristics over time.
+            Based on {timeseriesData.length} data points across {breakdown.length} categories.
+        </Typography>
+        {/* Add more detailed analysis here */}
+    </Box>
 );

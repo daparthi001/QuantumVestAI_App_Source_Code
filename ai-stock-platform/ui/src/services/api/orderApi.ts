@@ -50,3 +50,5 @@ export const orderApi = {
         return response.data;
     }
 };
+
+export default orderApi;

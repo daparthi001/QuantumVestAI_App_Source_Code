@@ -9,6 +9,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Safely export middleware components
+try:
+    from .error_handlers import setup_error_handlers
+    from .auth import AuthMiddleware
+    from .metrics import MetricsMiddleware
+    logger.info("Successfully imported middleware components")
+except Exception as e:
     logger.error(f"Error importing middleware components: {e}")
     
     # Define fallback middleware classes and functions

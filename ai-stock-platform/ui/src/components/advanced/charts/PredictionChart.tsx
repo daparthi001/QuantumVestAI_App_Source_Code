@@ -9,7 +9,7 @@ import { PredictionResult } from '../../../services/ml-service';
 
 interface PredictionChartProps {
   symbol: string;
-  prediction: PredictionResult;
+  prediction: PredictionResult[];
 }
 
 const PredictionChart: React.FC<PredictionChartProps> = ({ symbol, prediction }) => {
@@ -28,15 +28,15 @@ const PredictionChart: React.FC<PredictionChartProps> = ({ symbol, prediction })
     if (!ctx) return;
     
     // Format dates for display
-    const dates = prediction.predictions.map(p => {
+    const dates = prediction.map(p => {
       const date = new Date(p.date);
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     });
     
     // Extract price data
-    const predictedPrices = prediction.predictions.map(p => p.predicted_price);
-    const upperBounds = prediction.predictions.map(p => p.upper_bound);
-    const lowerBounds = prediction.predictions.map(p => p.lower_bound);
+    const predictedPrices = prediction.map(p => p.predicted_price);
+    const upperBounds = prediction.map(p => p.upper_bound || 0);
+    const lowerBounds = prediction.map(p => p.lower_bound || 0);
     
     // Add historical data point for better visualization
     // This would typically come from real data
@@ -133,7 +133,7 @@ const PredictionChart: React.FC<PredictionChartProps> = ({ symbol, prediction })
           },
           y: {
             grid: {
-              borderDash: [2, 2]
+              display: true
             },
             title: {
               display: true,

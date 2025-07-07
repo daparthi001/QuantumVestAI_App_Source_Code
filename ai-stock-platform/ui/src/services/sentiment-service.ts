@@ -25,6 +25,11 @@ export interface SentimentData {
     url?: string;
     engagement: number;
   }>;
+  daily_sentiment: Array<{
+    date: string;
+    sentiment_score: number;
+    volume: number;
+  }>;
 }
 
 export interface TrendingStock {

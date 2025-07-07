@@ -51,7 +51,7 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({
         try {
             setLoading(true);
             setError(null);
-            const response = await stockService.getSentimentAnalysis(symbol, timeframe);
+            const response = await stockService.getSentimentAnalysis(symbol);
             setSentimentData(response.data);
         } catch (err) {
             setError('Failed to load sentiment data');

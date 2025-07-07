@@ -28,7 +28,7 @@ interface TechnicalAnalysisProps {
     onIndicatorClick?: (indicator: string) => void;
 }
 
-const TechnicalAnalysis: React.FC<TechnicalAnalysisProps> = ({ symbol, onIndicatorClick }) => {
+const TechnicalAnalysis: React.FC<TechnicalAnalysisProps> = ({ symbol }) => {
     const [data, setData] = useState<TechnicalIndicator[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);

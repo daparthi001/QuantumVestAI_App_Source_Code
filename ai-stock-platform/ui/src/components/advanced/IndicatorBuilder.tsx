@@ -3,7 +3,7 @@
  * Created: 2025-06-19 03:09:13
  * Author: daparthi001
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { stockService } from '../../services/api';
 import { useError } from '../../contexts/ErrorContext';
 

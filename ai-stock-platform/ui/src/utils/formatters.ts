@@ -1,4 +1,5 @@
 /**
+
  * Utility functions for formatting financial data
  */
 
@@ -66,3 +67,4 @@ export const formatPercentage = (value: number): string => {
 export const formatVolume = (volume: number): string => {
   return formatLargeNumber(volume);
 };
+

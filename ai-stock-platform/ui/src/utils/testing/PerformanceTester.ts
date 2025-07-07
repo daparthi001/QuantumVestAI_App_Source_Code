@@ -3,12 +3,30 @@
  * Created: 2025-05-19 05:06:36
  * Author: daparthi001
  */
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import { PerformanceMonitor } from '../../services/monitoring/PerformanceMonitor';
+
+
+// Extend Performance interface to include memory property
+interface PerformanceWithMemory extends Performance {
+    memory?: {
+        usedJSHeapSize: number;
+        totalJSHeapSize: number;
+        jsHeapSizeLimit: number;
+    };
+}
+
+// Type guard to check if performance.memory is available
+function hasMemorySupport(perf: Performance): perf is PerformanceWithMemory {
+    return 'memory' in perf;
+}
+
 
 export class PerformanceTester {
     private static instance: PerformanceTester;
     private monitor: PerformanceMonitor;
-    private testResults: Map<string, TestResult[]> = new Map();
+    private testResults: Map<string, PerformanceTestResult[]> = new Map();
 
     private constructor() {
         this.monitor = PerformanceMonitor.getInstance();
@@ -25,7 +43,7 @@ export class PerformanceTester {
         component: React.ComponentType,
         props: any,
         iterations: number = 100
-    ): Promise<TestResult> {
+    ): Promise<PerformanceTestResult> {
         const results: number[] = [];
 
         for (let i = 0; i < iterations; i++) {
@@ -44,7 +62,7 @@ export class PerformanceTester {
         operation: () => Promise<void>,
         name: string,
         iterations: number = 100
-    ): Promise<TestResult> {
+    ): Promise<PerformanceTestResult> {
         const results: number[] = [];
 
         for (let i = 0; i < iterations; i++) {
@@ -62,7 +80,9 @@ export class PerformanceTester {
     async measureMemoryUsage(
         operation: () => Promise<void>
     ): Promise<MemoryTestResult> {
-        if (!performance.memory) {
+
+        if (!hasMemorySupport(performance) || !performance.memory) {
+
             throw new Error('Memory measurements not supported in this environment');
         }
 
@@ -95,20 +115,26 @@ export class PerformanceTester {
         props: any
     ): Promise<void> {
         const div = document.createElement('div');
+        document.body.appendChild(div);
+        
         try {
-            await new Promise(resolve => {
-                ReactDOM.render(
-                    React.createElement(component, props),
-                    div,
-                    resolve
-                );
+            await new Promise<void>((resolve) => {
+                const element = React.createElement(component, props);
+                ReactDOM.render(element, div, () => {
+                    resolve();
+                });
             });
+        } catch (error) {
+            // Handle rendering errors
+            console.error('Error rendering component:', error);
+            throw error;
         } finally {
             ReactDOM.unmountComponentAtNode(div);
+            document.body.removeChild(div);
         }
     }
 
-    private calculateStats(results: number[]): TestResult {
+    private calculateStats(results: number[]): PerformanceTestResult {
         const sorted = [...results].sort((a, b) => a - b);
         return {
             min: sorted[0],
@@ -126,7 +152,7 @@ export class PerformanceTester {
         return Math.sqrt(squareDiffs.reduce((a, b) => a + b) / values.length);
     }
 
-    private calculateTrend(results: TestResult[]): 'improving' | 'stable' | 'degrading' {
+    private calculateTrend(results: PerformanceTestResult[]): 'improving' | 'stable' | 'degrading' {
         if (results.length < 2) return 'stable';
         
         const recentMean = results[results.length - 1].mean;
@@ -138,7 +164,7 @@ export class PerformanceTester {
         return 'stable';
     }
 
-    private generateRecommendations(results: TestResult[]): string[] {
+    private generateRecommendations(results: PerformanceTestResult[]): string[] {
         const recommendations: string[] = [];
         const latestResult = results[results.length - 1];
 
@@ -154,9 +180,26 @@ export class PerformanceTester {
 
         return recommendations;
     }
+
+    private storeTestResult(testName: string, result: PerformanceTestResult): void {
+        if (!this.testResults.has(testName)) {
+            this.testResults.set(testName, []);
+        }
+        const results = this.testResults.get(testName)!;
+        results.push(result);
+        
+        // Keep only the last 50 results to prevent memory issues
+        if (results.length > 50) {
+            results.shift();
+        }
+
+        // Use the monitor to track performance metrics
+        this.monitor.trackRenderTime(testName, result.mean);
+
+    }
 }
 
-interface TestResult {
+interface PerformanceTestResult {
     min: number;
     max: number;
     mean: number;
@@ -174,7 +217,7 @@ interface MemoryTestResult {
 interface TestReport {
     testName: string;
     timestamp: string;
-    results: TestResult[];
+    results: PerformanceTestResult[];
     trend: 'improving' | 'stable' | 'degrading';
     recommendations: string[];
 }

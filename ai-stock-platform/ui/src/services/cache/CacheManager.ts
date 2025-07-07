@@ -11,12 +11,15 @@ export class CacheManager {
     private memoryCache: LRUCache<string, any>;
     private indexedDB: IDBDatabase | null = null;
     private monitor: RealTimeMonitor;
+    private cacheHits: number = 0;
+    private cacheMisses: number = 0;
 
     private constructor() {
         this.memoryCache = new LRUCache({
             max: 500, // Maximum number of items
             maxSize: 5000, // Maximum cache size in bytes
-            sizeCalculation: (value, key) => {
+            sizeCalculation: (value, _key) => {
+
                 return new Blob([JSON.stringify(value)]).size;
             },
             ttl: 1000 * 60 * 60, // 1 hour default TTL
@@ -80,11 +83,8 @@ export class CacheManager {
         }
 
         // Monitor cache usage
-        this.monitor.trackMetric('cache_set', {
-            key,
-            size: new Blob([JSON.stringify(value)]).size,
-            persistent: options.persistent
-        });
+        this.monitor.trackMetric('cache_set', new Blob([JSON.stringify(value)]).size);
+
     }
 
     async get(key: string): Promise<any | null> {
@@ -93,8 +93,10 @@ export class CacheManager {
         if (memoryItem) {
             if (this.isExpired(memoryItem)) {
                 this.memoryCache.delete(key);
+                this.cacheMisses++;
                 return null;
             }
+            this.cacheHits++;
             return memoryItem.value;
         }
 
@@ -110,8 +112,10 @@ export class CacheManager {
                     if (item && !this.isExpired(item)) {
                         // Cache in memory for future access
                         this.memoryCache.set(key, item);
+                        this.cacheHits++;
                         resolve(item.value);
                     } else {
+                        this.cacheMisses++;
                         resolve(null);
                     }
                 };
@@ -119,6 +123,7 @@ export class CacheManager {
             });
         }
 
+        this.cacheMisses++;
         return null;
     }
 
@@ -151,10 +156,81 @@ export class CacheManager {
         itemCount: number;
         hitRate: number;
     }> {
+        // Calculate hit rate manually
+        const totalRequests = this.cacheHits + this.cacheMisses;
+        const hitRate = totalRequests > 0 ? this.cacheHits / totalRequests : 0;
+
         return {
             memorySize: this.memoryCache.calculatedSize || 0,
             itemCount: this.memoryCache.size,
-            hitRate: this.memoryCache.fetchStats?.hitRate || 0
+            hitRate: hitRate
+
         };
+    }
+
+    // Add missing methods for AutoOptimizer
+    async pruneExpired(): Promise<void> {
+        const keysToDelete: string[] = [];
+        
+        // Check memory cache
+        for (const [key, item] of this.memoryCache.entries()) {
+            if (this.isExpired(item)) {
+                keysToDelete.push(key);
+            }
+        }
+        
+        // Remove expired items
+        for (const key of keysToDelete) {
+            this.memoryCache.delete(key);
+        }
+        
+        // Also clean up IndexedDB if available
+        if (this.indexedDB) {
+            const transaction = this.indexedDB.transaction(['cache'], 'readwrite');
+            const store = transaction.objectStore('cache');
+            const request = store.openCursor();
+            
+            request.onsuccess = (event) => {
+                const cursor = (event.target as IDBRequest).result;
+                if (cursor) {
+                    if (this.isExpired(cursor.value)) {
+                        cursor.delete();
+                    }
+                    cursor.continue();
+                }
+            };
+        }
+    }
+
+    cleanupEventListeners(): void {
+        // Clean up any event listeners
+        if (this.indexedDB) {
+            this.indexedDB.close();
+        }
+    }
+
+    preloadFrequentData(keys: string[]): Promise<void[]> {
+        return Promise.all(keys.map(key => this.get(key)));
+    }
+
+    getComponentStats(componentName: string): Promise<any> {
+        return this.get(`component_stats_${componentName}`);
+    }
+
+    async getAccessLogs(): Promise<any[]> {
+        // Return cached access logs if available
+        const logs = await this.get('access_logs');
+        return logs || [];
+    }
+
+    async updateCacheSettings(settings: any): Promise<void> {
+        await this.set('cache_settings', settings, { persistent: true });
+    }
+
+    private calculateHitRate(): number {
+        // Simple hit rate calculation based on cache size vs theoretical max access
+        const maxSize = this.memoryCache.max || 1000;
+        const currentSize = this.memoryCache.size;
+        return Math.min((currentSize / maxSize) * 100, 100);
     }
 }

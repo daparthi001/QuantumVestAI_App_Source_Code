@@ -30,14 +30,14 @@ interface OrderListProps {
     orders: Order[];
     onSelect: (order: Order) => void;
     onCancel: (orderId: string) => void;
-    onModify: (orderId: string, modifications: Partial<Order>) => void;
 }
 
 export const OrderList: React.FC<OrderListProps> = ({
     orders,
     onSelect,
     onCancel,
-    onModify
+    onModify: _onModify
+
 }) => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -102,7 +102,7 @@ export const OrderList: React.FC<OrderListProps> = ({
                                     </TableCell>
                                     <TableCell>{order.quantity}</TableCell>
                                     <TableCell>
-                                        {formatCurrency(order.price)}
+                                        {order.price ? formatCurrency(order.price) : 'Market'}
                                     </TableCell>
                                     <TableCell>
                                         <Chip
@@ -114,7 +114,7 @@ export const OrderList: React.FC<OrderListProps> = ({
                                     <TableCell>
                                         <IconButton
                                             onClick={(e) => handleMenuOpen(e, order)}
-                                            disabled={!order.canModify}
+                                            disabled={!canModifyOrder(order)}
                                         >
                                             <MoreVertIcon />
                                         </IconButton>
@@ -166,3 +166,8 @@ export const OrderList: React.FC<OrderListProps> = ({
         </Paper>
     );
 };
+
+// Helper function to determine if an order can be modified
+function canModifyOrder(order: Order): boolean {
+    return order.status === OrderStatus.PENDING || order.status === OrderStatus.ACCEPTED;
+}

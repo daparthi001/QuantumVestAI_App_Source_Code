@@ -3,9 +3,19 @@
  * Updated: 2025-06-19 18:06:43
  * Author: daparthi001
  */
-import axios, { AxiosInstance, AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import { API_BASE_URL } from '../config/constants';
 import authService from './auth.service';
+
+// Extend AxiosInstance to include custom methods
+interface ExtendedAxiosInstance extends AxiosInstance {
+  getResponseTime: () => {
+
+    average: number;
+    max: number;
+    min: number;
+  };
+}
 
 // API request queue for handling 401 token refresh
 let isRefreshing = false;
@@ -24,17 +34,18 @@ const processQueue = (error: any, token: string | null = null) => {
 };
 
 // Create a custom API client with advanced features
-const apiClient: AxiosInstance = axios.create({
+const apiClient = axios.create({
+
   baseURL: API_BASE_URL,
   timeout: 30000, // 30 seconds timeout
   headers: {
     'Content-Type': 'application/json',
   },
-});
+}) as ExtendedAxiosInstance;
 
 // Request interceptor with advanced features
 apiClient.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config: InternalAxiosRequestConfig) => {
     // Get token and add it to the request
     const token = authService.getToken();
     if (token && config.headers) {
@@ -75,7 +86,7 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     
     if (error.response) {
       // Handle 401 Unauthorized errors with token refresh
@@ -221,3 +232,9 @@ function getMinResponseTime() {
 }
 
 export default apiClient;
+export { apiClient as api }; // Export as named export for compatibility
+
+// Export additional services
+export { default as stockService } from './stock.service';
+export { default as portfolioService } from './portfolio.service';
+export { orderApi } from './api/orderApi';
