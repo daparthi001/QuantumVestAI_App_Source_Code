@@ -1,7 +1,6 @@
 import re
 from typing import Union, Tuple, Optional, Any, Dict
 from datetime import datetime, date
-import yfinance as yf
 
 def validate_ticker_symbol(ticker: str) -> Tuple[bool, Optional[str]]:
     """
@@ -24,10 +23,9 @@ def validate_ticker_symbol(ticker: str) -> Tuple[bool, Optional[str]]:
     if not re.match(pattern, ticker):
         return False, "Invalid ticker format"
         
-    # Check if ticker exists (optional, may hit rate limits)
-        # If yfinance lookup fails, assume ticker is valid
-        # This prevents API rate limiting issues from blocking valid tickers
-        return True, None
+    # Basic validation passes, assume ticker is valid
+    # In production, you could add API validation here
+    return True, None
 
 def validate_email(email: str) -> Tuple[bool, Optional[str]]:
     """
@@ -102,6 +100,9 @@ def validate_numeric_range(value: Union[int, float, str],
         
     # Convert to numeric if string
     if isinstance(value, str):
+        try:
+            value = float(value)
+        except ValueError:
             return False, "Value must be a number"
     
     # Check min value if specified
@@ -135,18 +136,27 @@ def validate_date_range(date_value: Union[str, datetime, date],
     
     # Convert string inputs to datetime objects
     if isinstance(date_value, str):
+        try:
+            date_value = datetime.strptime(date_value, date_format).date()
+        except ValueError:
             return False, f"Invalid date format. Expected {date_format}"
     elif isinstance(date_value, datetime):
         date_value = date_value.date()
     
     # Convert min_date if it's a string
     if isinstance(min_date, str):
+        try:
+            min_date = datetime.strptime(min_date, date_format).date()
+        except ValueError:
             return False, f"Invalid minimum date format. Expected {date_format}"
     elif isinstance(min_date, datetime):
         min_date = min_date.date()
     
     # Convert max_date if it's a string
     if isinstance(max_date, str):
+        try:
+            max_date = datetime.strptime(max_date, date_format).date()
+        except ValueError:
             return False, f"Invalid maximum date format. Expected {date_format}"
     elif isinstance(max_date, datetime):
         max_date = max_date.date()

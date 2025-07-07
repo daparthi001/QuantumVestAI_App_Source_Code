@@ -1,8 +1,7 @@
 """
 Main application file for QuantumVestAI UI (Enhanced)
-Updated: 2025-06-20 19:31:29
-Enhanced: 2025-01-09 (AI Assistant)
-Author: daparthi001
+Updated: 2025-07-07 21:51:56
+Author: hemanth9398
 """
 import os
 import json
@@ -16,7 +15,6 @@ from datetime import datetime, timedelta
 import logging
 from pathlib import Path
 from logging.config import dictConfig
-from utils import format_large_number
 import sys
 
 # CRITICAL FIX: Define BASE_DIR before using it
@@ -66,7 +64,7 @@ logger = logging.getLogger("quantumvestai_ui")
 app = FastAPI(
     title="QuantumVestAI UI",
     description="Enhanced Web UI for QuantumVestAI Platform with improved error handling and user experience",
-    version="1.1.0"
+    version="1.2.0"
 )
 
 # CORS origins configuration
@@ -96,125 +94,62 @@ API_V1_URL = f"{API_URL}/api/v1"
 
 # Enhanced template filters and utilities
 try:
-    from controllers import auth_controller
-    from utils.template_filters import register_filters
-
-    register_filters(app)
-    logger.info("Template filters registered successfully")
+    from utils import format_large_number
+    logger.info("Imported format_large_number successfully")
 except Exception as e:
-    logger.error(f"Error importing controllers or registering filters: {str(e)}")
-    
-    # Create enhanced fallback functions
-    def get_asset_url(path, version=None):
-        if not version:
-            version = os.environ.get('APP_VERSION', 'v1.5.2')
-# Import controllers - moved after app creation
+    logger.error(f"Error importing format_large_number: {str(e)}")
+    # Create fallback function
+    def format_large_number(value):
+        """Fallback format_large_number function"""
+        if value is None:
+            return "—"
+        try:
+            num_value = float(value)
+            if abs(num_value) >= 1e9:
+                return f"{num_value / 1e9:.1f}B"
+            elif abs(num_value) >= 1e6:
+                return f"{num_value / 1e6:.1f}M"
+            elif abs(num_value) >= 1e3:
+                return f"{num_value / 1e3:.1f}K"
+            else:
+                return str(num_value)
+        except (ValueError, TypeError):
+            return str(value)
+
 # Create fallback functions for critical template filters
 def get_asset_url(path, version=None):
     if not version:
         version = os.environ.get('APP_VERSION', 'v1.5.2')
         timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
         return f"/static/{path}?v={version}&t={timestamp}"
-    
-    def format_currency(amount):
-        """Format currency with proper formatting"""
-        if isinstance(amount, (int, float)):
-            return f"${amount:,.2f}"
-        return str(amount)
-    
-    def format_percentage(value):
-        """Format percentage with proper sign"""
-        if isinstance(value, (int, float)):
-            sign = "+" if value > 0 else ""
-            return f"{sign}{value:.2f}%"
-        return str(value)
-    
-    # Add enhanced filters to Jinja environment
-    templates.env.filters['get_asset_url'] = get_asset_url
-    templates.env.filters["format_large_number"] = format_large_number
-    templates.env.filters["format_currency"] = format_currency
-    templates.env.filters["format_percentage"] = format_percentage
-    
-    # Add globals for template context
-    templates.env.globals["now"] = datetime.utcnow
-    templates.env.globals["API_URL"] = API_URL
-    
-    logger.info("Enhanced fallback template filters added")
+    return f"/static/{path}?v={version}"
 
+def format_currency(amount):
+    """Format currency with proper formatting"""
+    if isinstance(amount, (int, float)):
+        return f"${amount:,.2f}"
+    return str(amount)
+
+def format_percentage(value):
+    """Format percentage with proper sign"""
+    if isinstance(value, (int, float)):
+        sign = "+" if value > 0 else ""
+        return f"{sign}{value:.2f}%"
+    return str(value)
+
+# Add enhanced filters to Jinja environment
+templates.env.filters['get_asset_url'] = get_asset_url
+templates.env.filters["format_large_number"] = format_large_number
+templates.env.filters["format_currency"] = format_currency
+templates.env.filters["format_percentage"] = format_percentage
+
+# Add globals for template context
+templates.env.globals["now"] = datetime.utcnow
+templates.env.globals["API_URL"] = API_URL
+
+logger.info("Enhanced template filters added")
 
 # Enhanced request middleware with performance monitoring
-    logger.info("Added fallback for get_asset_url filter")
-    logger.info("Added fallback for format_large_number filter")
-
-
-# Import proxy router - with error handling
-# try:
-#     from routes import api_proxy
-# except ImportError as e:
-#     logger.error(f"Could not import api_proxy: {str(e)}")
-#     # Create dummy router as fallback
-#     from fastapi import APIRouter
-#     api_proxy = APIRouter()
-#     app.include_router(api_proxy)
-
-# Import controllers with error handling
-controllers = {}
-
-try:
-    from controllers import auth_controller
-    controllers['auth'] = auth_controller
-except ImportError as e:
-    logger.error(f"Could not import auth_controller: {str(e)}")
-
-try:
-    from controllers import dashboard_controller
-    controllers['dashboard'] = dashboard_controller
-except ImportError as e:
-    logger.error(f"Could not import dashboard_controller: {str(e)}")
-
-try:
-    from controllers import market_controller
-    controllers['market'] = market_controller
-except ImportError as e:
-    logger.error(f"Could not import market_controller: {str(e)}")
-
-try:
-    from controllers import stock_controller
-    controllers['stock'] = stock_controller
-except ImportError as e:
-    logger.error(f"Could not import stock_controller: {str(e)}")
-
-try:
-    from controllers import watchlist_controller
-    controllers['watchlist'] = watchlist_controller
-except ImportError as e:
-    logger.error(f"Could not import watchlist_controller: {str(e)}")
-
-try:
-    from controllers import profile_controller
-    controllers['profile'] = profile_controller
-except ImportError as e:
-    logger.error(f"Could not import profile_controller: {str(e)}")
-
-try:
-    from controllers import forecast_controller
-    controllers['forecast'] = forecast_controller
-except ImportError as e:
-    logger.error(f"Could not import forecast_controller: {str(e)}")
-
-try:
-    from controllers import news_controller
-    controllers['news'] = news_controller
-except ImportError as e:
-    logger.error(f"Could not import news_controller: {str(e)}")
-
-try:
-    from controllers import feature_controller
-    controllers['feature'] = feature_controller
-except ImportError as e:
-    logger.error(f"Could not import feature_controller: {str(e)}")
-
-# Debug middleware to log all requests
 @app.middleware("http")
 async def enhanced_request_middleware(request: Request, call_next):
     start_time = datetime.now()
@@ -245,28 +180,6 @@ async def enhanced_request_middleware(request: Request, call_next):
         logger.error(f"[{request_id}] {method} {path} failed - Duration: {duration:.3f}s - Error: {str(e)}")
         raise
 
-@app.post("/emergency-login")
-async def direct_emergency_login(request: Request):
-    """Emergency login endpoint for when normal login fails"""
-    try:
-        # If not JSON, try to parse it as form data
-        form = await request.form()
-        data = dict(form)
-        username = data.get("username", "")
-        password = data.get("password", "")
-        
-        logger.info(f"Emergency login for: {username}")
-        
-        # Create emergency token
-        expires = datetime.utcnow() + timedelta(hours=24)
-        token = f"emergency_{username}_{expires.timestamp()}"
-        
-        return {"token": token, "user": {"username": username}}
-    except Exception as e:
-        logger.error(f"Emergency login failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Emergency login failed")
-
-
 # Enhanced authentication utilities
 class AuthUtils:
     @staticmethod
@@ -293,7 +206,6 @@ class AuthUtils:
 # Enhanced route handlers with better error handling
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-
     """Enhanced index page with user context"""
     try:
         request_id = getattr(request.state, 'request_id', 'unknown')
@@ -343,7 +255,6 @@ async def index(request: Request):
             status_code=500
         )
 
-
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request, msg: str = None):
     """Enhanced login page"""
@@ -365,216 +276,6 @@ async def login_page(request: Request, msg: str = None):
         )
     except Exception as e:
         logger.error(f"Error rendering login page: {str(e)}")
-
-@app.get("/register", response_class=HTMLResponse)
-async def register_page(request: Request, msg: str = None):
-    """Serve registration page"""
-    try:
-        return app.state.templates.TemplateResponse(
-            "register.html", 
-            {
-                "request": request, 
-                "msg": msg,
-                # Add get_asset_url directly to context if not registered
-                "get_asset_url": app.state.templates.env.filters.get("get_asset_url", 
-                    lambda path, version=None: f"/static/{path}?v={version or os.environ.get('APP_VERSION', 'v1.5.2')}"
-                )
-            }
-        )
-    except Exception as e:
-        logger.error(f"Error rendering register page: {str(e)}")
-        return HTMLResponse(
-            content=f"""
-            <!DOCTYPE html>
-            <html>
-                <head>
-                    <title>Registration - QuantumVestAI</title>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-                </head>
-                <body>
-                    <div class="container mt-5">
-                        <div class="row justify-content-center">
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h2 class="card-title text-center">Registration</h2>
-                                        <div class="alert alert-warning">
-                                            Registration page temporarily unavailable. Please try again later.
-                                        </div>
-                                        <div class="text-center">
-                                            <a href="/" class="btn btn-secondary">Go Home</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </body>
-            </html>
-            """,
-            status_code=500
-        )
-
-@app.post("/login")
-async def enhanced_login_post(
-    request: Request,
-    username: str = Form(...),
-    password: str = Form(...),
-    remember: bool = Form(False),
-):
-    """Enhanced login handler with improved error handling"""
-    request_id = getattr(request.state, 'request_id', 'unknown')
-    logger.info(f"[{request_id}] Login attempt for: {username}")
-    
-
-    try:
-        # Validate input
-        if not username or len(username.strip()) < 3:
-            raise ValueError("Username must be at least 3 characters long")
-        
-        if not password or len(password) < 8:
-            raise ValueError("Password must be at least 8 characters long")
-        
-        # Create login data for API
-        login_data = {
-            "username": username.strip(),
-            "password": password,
-            "remember": remember
-        }
-        
-        # Call API login endpoint with timeout
-        try:
-            response = requests.post(
-                f"{API_V1_URL}/auth/login", 
-                json=login_data,
-                timeout=10,
-                headers={"Content-Type": "application/json"}
-            )
-            
-            if response.status_code == 200:
-                token_data = response.json()
-                logger.info(f"[{request_id}] API login successful for {username}")
-                
-                # Create redirect response
-                redirect_response = RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
-                
-                # Set secure cookie
-                max_age = 30 * 24 * 60 * 60 if remember else None  # 30 days or session
-                redirect_response.set_cookie(
-                    key="access_token",
-                    value=f"Bearer {token_data.get('data', {}).get('access_token', 'mock_token')}",
-                    httponly=True,
-                    max_age=max_age,
-                    samesite="lax",
-                    secure=request.url.scheme == "https"
-                )
-                
-                return redirect_response
-            else:
-                # API login failed, try fallback
-                logger.warning(f"[{request_id}] API login failed with status {response.status_code}")
-                raise requests.RequestException("API login failed")
-                
-        except requests.RequestException as e:
-            logger.warning(f"[{request_id}] API unavailable, using fallback authentication: {str(e)}")
-            
-            # Fallback authentication (demo purposes)
-            if username.lower() in ["demo", "test", "admin"] and password == "password":
-                logger.info(f"[{request_id}] Fallback login successful for {username}")
-                
-                # Create emergency token
-                expires = datetime.utcnow() + timedelta(hours=24)
-                token = f"fallback_{username}_{int(expires.timestamp())}"
-                
-                redirect_response = RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
-                redirect_response.set_cookie(
-                    key="access_token",
-                    value=f"Bearer {token}",
-                    httponly=True,
-                    max_age=86400,  # 1 day
-                    samesite="lax",
-                    secure=request.url.scheme == "https"
-                )
-                
-                return redirect_response
-            else:
-                raise ValueError("Invalid username or password")
-    
-    except ValueError as e:
-        logger.warning(f"[{request_id}] Login validation failed: {str(e)}")
-        return app.state.templates.TemplateResponse(
-            "login.html",
-            {
-                "request": request,
-                "msg": str(e),
-                "msg_type": "danger",
-                "username": username,
-                "api_url": API_URL,
-                "request_id": request_id
-            },
-            status_code=400
-        )
-    
-    except Exception as e:
-        logger.error(f"[{request_id}] Login error: {str(e)}")
-        return app.state.templates.TemplateResponse(
-            "login.html",
-            {
-                "request": request,
-                "msg": "Login failed due to a technical error. Please try again.",
-                "msg_type": "danger",
-                "username": username,
-                "api_url": API_URL,
-                "request_id": request_id
-            },
-            status_code=500
-        )
-
-
-@app.get("/dashboard", response_class=HTMLResponse)
-async def enhanced_dashboard(request: Request):
-    """Enhanced dashboard with authentication check"""
-    try:
-        request_id = getattr(request.state, 'request_id', 'unknown')
-        
-        # Check authentication
-        if not AuthUtils.is_authenticated(request):
-            return RedirectResponse(url="/login?msg=Please log in to access the dashboard", status_code=status.HTTP_302_FOUND)
-        
-        user = AuthUtils.get_user_info(request)
-        
-        return app.state.templates.TemplateResponse(
-            "dashboard/index.html",
-            {
-                "request": request, 
-                "user": user,
-                "api_url": API_URL,
-                "request_id": request_id
-            }
-        )
-    except Exception as e:
-        logger.error(f"Error rendering dashboard: {str(e)}")
-        # Fallback dashboard HTML
-
-@app.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request, msg: str = None):
-    """Serve login page"""
-    try:
-        return app.state.templates.TemplateResponse(
-            "login.html", 
-            {
-                "request": request, 
-                "msg": msg,
-                # Add get_asset_url directly to context if not registered
-                "get_asset_url": app.state.templates.env.filters.get("get_asset_url", 
-                    lambda path, version=None: f"/static/{path}?v={version or os.environ.get('APP_VERSION', 'v1.5.2')}"
-                )
-            }
-        )
-    except Exception as e:
-        logger.error(f"Error rendering login page: {str(e)}")
         return HTMLResponse(
             content=f"""
             <!DOCTYPE html>
@@ -592,11 +293,24 @@ async def login_page(request: Request, msg: str = None):
                             <div class="card">
                                 <div class="card-body">
                                     <h2 class="card-title text-center">Login</h2>
-                                    <div class="alert alert-warning">
-                                        Login page temporarily unavailable. Please try again later.
-                                    </div>
-                                    <div class="text-center">
-                                        <a href="/" class="btn btn-secondary">Go Home</a>
+                                    {f'<div class="alert alert-info">{msg}</div>' if msg else ''}
+                                    <form method="post" action="/login">
+                                        <div class="mb-3">
+                                            <label for="username" class="form-label">Username</label>
+                                            <input type="text" class="form-control" id="username" name="username" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="password" class="form-label">Password</label>
+                                            <input type="password" class="form-control" id="password" name="password" required>
+                                        </div>
+                                        <div class="mb-3 form-check">
+                                            <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                                            <label class="form-check-label" for="remember">Remember me</label>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary w-100">Login</button>
+                                    </form>
+                                    <div class="mt-3 text-center">
+                                        <p class="text-muted">Demo credentials: username: demo, password: password</p>
                                     </div>
                                 </div>
                             </div>
@@ -606,7 +320,168 @@ async def login_page(request: Request, msg: str = None):
             </body>
             </html>
             """,
-            status_code=500
+            status_code=200
+        )
+
+@app.post("/login")
+async def enhanced_login_post(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+    remember: bool = Form(False),
+):
+    """Enhanced login handler with improved error handling"""
+    request_id = getattr(request.state, 'request_id', 'unknown')
+    logger.info(f"[{request_id}] Login attempt for: {username}")
+    
+    try:
+        # Validate input
+        if not username or len(username.strip()) < 3:
+            raise ValueError("Username must be at least 3 characters long")
+        
+        if not password or len(password) < 4:  # Relaxed for demo
+            raise ValueError("Password must be at least 4 characters long")
+        
+        # Demo/fallback authentication (always works for demo)
+        if username.lower() in ["demo", "test", "admin", "user"] and password in ["password", "demo", "test"]:
+            logger.info(f"[{request_id}] Demo login successful for {username}")
+            
+            # Create demo token
+            expires = datetime.utcnow() + timedelta(hours=24)
+            token = f"demo_{username}_{int(expires.timestamp())}"
+            
+            redirect_response = RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
+            redirect_response.set_cookie(
+                key="access_token",
+                value=f"Bearer {token}",
+                httponly=True,
+                max_age=86400 if remember else None,  # 1 day or session
+                samesite="lax",
+                secure=request.url.scheme == "https"
+            )
+            
+            return redirect_response
+        else:
+            raise ValueError("Invalid username or password. Try demo/password")
+    
+    except ValueError as e:
+        logger.warning(f"[{request_id}] Login validation failed: {str(e)}")
+        return RedirectResponse(url=f"/login?msg={str(e)}", status_code=status.HTTP_302_FOUND)
+    
+    except Exception as e:
+        logger.error(f"[{request_id}] Login error: {str(e)}")
+        return RedirectResponse(url="/login?msg=Login failed due to a technical error", status_code=status.HTTP_302_FOUND)
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def enhanced_dashboard(request: Request):
+    """Enhanced dashboard with authentication check"""
+    try:
+        request_id = getattr(request.state, 'request_id', 'unknown')
+        
+        # Check authentication
+        if not AuthUtils.is_authenticated(request):
+            return RedirectResponse(url="/login?msg=Please log in to access the dashboard", status_code=status.HTTP_302_FOUND)
+        
+        user = AuthUtils.get_user_info(request)
+        
+        # Demo data for dashboard
+        demo_data = {
+            "portfolio_value": 150000.50,
+            "daily_change": 2500.75,
+            "daily_change_percent": 1.69,
+            "total_stocks": 12,
+            "watchlist_count": 8,
+            "recent_trades": [
+                {"symbol": "AAPL", "action": "BUY", "shares": 50, "price": 185.50, "time": "10:30 AM"},
+                {"symbol": "MSFT", "action": "SELL", "shares": 25, "price": 365.25, "time": "09:15 AM"},
+                {"symbol": "GOOGL", "action": "BUY", "shares": 10, "price": 2750.00, "time": "Yesterday"}
+            ],
+            "top_stocks": [
+                {"symbol": "AAPL", "price": 185.50, "change": 2.25, "change_percent": 1.23},
+                {"symbol": "MSFT", "price": 365.25, "change": -1.50, "change_percent": -0.41},
+                {"symbol": "GOOGL", "price": 2750.00, "change": 15.75, "change_percent": 0.58}
+            ]
+        }
+        
+        return app.state.templates.TemplateResponse(
+            "dashboard/index.html",
+            {
+                "request": request, 
+                "user": user,
+                "api_url": API_URL,
+                "request_id": request_id,
+                "demo_data": demo_data
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error rendering dashboard: {str(e)}")
+        # Fallback dashboard HTML
+        return HTMLResponse(
+            content=f"""
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <title>Dashboard - QuantumVestAI</title>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                </head>
+                <body>
+                    <div class="container mt-5">
+                        <div class="row">
+                            <div class="col-12">
+                                <h1>QuantumVestAI Dashboard</h1>
+                                <div class="alert alert-success">
+                                    <h4>Welcome to QuantumVestAI!</h4>
+                                    <p>You have successfully logged in. The dashboard is loading...</p>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <h5 class="card-title">Portfolio Value</h5>
+                                                <h3 class="text-success">$150,000.50</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <h5 class="card-title">Daily Change</h5>
+                                                <h3 class="text-success">+$2,500.75</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <h5 class="card-title">Total Stocks</h5>
+                                                <h3>12</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <h5 class="card-title">Watchlist</h5>
+                                                <h3>8</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <a href="/forecast" class="btn btn-primary">Forecasts</a>
+                                    <a href="/market" class="btn btn-secondary">Market Data</a>
+                                    <a href="/watchlist" class="btn btn-info">Watchlist</a>
+                                    <a href="/logout" class="btn btn-outline-danger">Logout</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </body>
+            </html>
+            """,
+            status_code=200
         )
 
 @app.get("/health")
@@ -614,13 +489,11 @@ async def enhanced_health_check():
     """Enhanced health check with API status"""
     api_health = {"status": "unknown"}
     
-
     try:
         response = requests.get(f"{API_V1_URL}/health", timeout=5)
         if response.status_code == 200:
             api_health = response.json()
     except Exception as e:
-
         logger.warning(f"Could not reach API for health check: {str(e)}")
         api_health = {"status": "unreachable", "error": str(e)}
     
@@ -628,12 +501,15 @@ async def enhanced_health_check():
         "ui": {
             "status": "healthy",
             "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
-            "version": "1.1.0",
+            "version": "1.2.0",
+            "author": "hemanth9398",
+            "updated": "2025-07-07 21:51:56",
             "features": {
                 "enhanced_error_handling": "enabled",
                 "loading_states": "enabled",
                 "responsive_design": "enabled",
-                "accessibility": "enabled"
+                "accessibility": "enabled",
+                "demo_mode": "enabled"
             }
         },
         "api": api_health
@@ -641,6 +517,7 @@ async def enhanced_health_check():
 
 # Enhanced logout
 @app.post("/logout")
+@app.get("/logout")
 async def logout(request: Request):
     """Enhanced logout endpoint"""
     request_id = getattr(request.state, 'request_id', 'unknown')
@@ -652,7 +529,6 @@ async def logout(request: Request):
 
 # Enhanced error handlers
 @app.exception_handler(404)
-
 async def enhanced_not_found_handler(request: Request, exc: HTTPException):
     """Enhanced 404 error handler"""
     try:
@@ -709,70 +585,70 @@ async def enhanced_server_error_handler(request: Request, exc: HTTPException):
         )
     except:
         return HTMLResponse(
-            content="""<!DOCTYPE html>
-<html>
-<head>
-    <title>500 Server Error</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-6 text-center">
-                <h1 class="display-1">500</h1>
-                <h2>Server Error</h2>
-                <p>Something went wrong. Please try again later.</p>
-                <a href="/" class="btn btn-primary">Go Home</a>
-            </div>
-        </div>
-    </div>
-</body>
-</html>""",
+            content="""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>500 Server Error</title>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+            </head>
+            <body>
+                <div class="container mt-5">
+                    <div class="row justify-content-center">
+                        <div class="col-md-6 text-center">
+                            <h1 class="display-1">500</h1>
+                            <h2>Server Error</h2>
+                            <p>Something went wrong. Please try again later.</p>
+                            <a href="/" class="btn btn-primary">Go Home</a>
+                        </div>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """,
             status_code=500
         )
 
-# Include controllers AFTER defining direct routes to avoid conflicts
+# Import and include route controllers with error handling
+controllers = {}
+
+# Try to import and include route controllers
+route_modules = [
+    ("auth", "routes.auth"),
+    ("dashboard", "routes.dashboard"),
+    ("forecast", "routes.forecast"),
+    ("market", "routes.market"),
+    ("watchlist", "routes.watchlist"),
+    ("settings", "routes.settings"),
+]
+
+for name, module_path in route_modules:
+    try:
+        module = __import__(module_path, fromlist=["router"])
+        if hasattr(module, 'router'):
+            app.include_router(module.router)
+            controllers[name] = module
+            logger.info(f"Included {name} router from {module_path}")
+    except Exception as e:
+        logger.warning(f"Could not import {name} router from {module_path}: {str(e)}")
+
+# Try to import API proxy
 try:
     from routes import api_proxy
-    app.include_router(api_proxy.router)
-    logger.info("Included API proxy router")
+    if hasattr(api_proxy, 'router'):
+        app.include_router(api_proxy.router)
+        logger.info("Included API proxy router")
 except Exception as e:
-    logger.error(f"Failed to include api_proxy router: {str(e)}")
+    logger.warning(f"Could not import api_proxy router: {str(e)}")
 
-# Only include controllers that were successfully imported
-for name, controller in controllers.items():
-    try:
-        app.include_router(controller.router)
-        logger.info(f"Included {name} router")
-    except Exception as e:
-        logger.error(f"Failed to include {name} router: {str(e)}")
-
-# Include any existing controllers that work
-controllers_imported = []
-try:
-    from controllers import auth_controller
-    if hasattr(auth_controller, 'router'):
-        app.include_router(auth_controller.router)
-        controllers_imported.append("auth_controller")
-except ImportError as e:
-    logger.warning(f"Could not import auth_controller: {str(e)}")
-
-try:
-    from controllers import dashboard_controller
-    if hasattr(dashboard_controller, 'router'):
-        app.include_router(dashboard_controller.router)
-        controllers_imported.append("dashboard_controller")
-except ImportError as e:
-    logger.warning(f"Could not import dashboard_controller: {str(e)}")
-
-if controllers_imported:
-    logger.info(f"Successfully imported controllers: {', '.join(controllers_imported)}")
+logger.info(f"Successfully imported {len(controllers)} route controllers")
 
 if __name__ == "__main__":
     import uvicorn
     logger.info("Starting Enhanced QuantumVestAI UI")
+    logger.info(f"Author: hemanth9398, Updated: 2025-07-07 21:51:56")
     uvicorn.run(
         "main:app", 
         host="0.0.0.0", 
