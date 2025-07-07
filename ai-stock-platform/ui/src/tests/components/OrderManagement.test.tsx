@@ -6,10 +6,9 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import configureStore from 'redux-mock-store';
-import thunk from 'redux-thunk';
 import OrderManagement from '../../components/orders/OrderManagement';
 
-const mockStore = configureStore([thunk]);
+const mockStore = configureStore([]);
 
 describe('OrderManagement Component', () => {
     let store: any;

@@ -4,7 +4,6 @@
  * Author: daparthi001
  */
 import { RealTimeMonitor } from '../monitoring/RealTimeMonitor';
-import { PerformanceMonitor } from '../monitoring/PerformanceMonitor';
 
 export class LoadTester {
     private static instance: LoadTester;

@@ -45,7 +45,7 @@ interface DailyVolume {
 interface SymbolBreakdown {
     symbol: string;
     count: number;
-    volume: number;
+    percentage: number;
 }
 
 interface AnalyticsData {

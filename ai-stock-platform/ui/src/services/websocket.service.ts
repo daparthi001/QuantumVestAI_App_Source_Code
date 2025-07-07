@@ -4,7 +4,6 @@
  * Author: daparthi001
  */
 import io from 'socket.io-client';
-import type { Socket } from 'socket.io-client';
 import { BehaviorSubject } from 'rxjs';
 import authService from './auth.service';
 
@@ -48,7 +47,7 @@ export interface SocketMessage {
 }
 
 class WebSocketService {
-  private socket: Socket | null = null;
+  private socket: ReturnType<typeof io> | null = null;
   private connectionStateSubject = new BehaviorSubject<ConnectionState>(ConnectionState.DISCONNECTED);
   private messagesSubject = new BehaviorSubject<SocketMessage[]>([]);
   private subscribedSymbols = new Set<string>();
