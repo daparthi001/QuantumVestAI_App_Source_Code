@@ -10,8 +10,11 @@ import json
 import hashlib
 
 # Set locale for currency formatting
-    # Fallback for environments where the locale is not available
+try:
     locale.setlocale(locale.LC_ALL, '')
+except locale.Error:
+    # Fallback for environments where the locale is not available
+    pass
 
 def format_currency(value, symbol='$'):
     """Format a number as currency with proper separators and symbol.

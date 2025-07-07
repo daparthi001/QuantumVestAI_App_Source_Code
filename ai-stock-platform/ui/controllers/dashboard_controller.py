@@ -279,6 +279,10 @@ async def dashboard(
         templates_obj = getattr(request.app.state, 'templates', templates)
         
         # Ensure template filters are registered
+        try:
+            from ui.utils import template_filters
+            template_filters.register_filters(request.app)
+        except ImportError:
             logger.warning("Could not import template_filters in dashboard")
         
         return templates_obj.TemplateResponse("dashboard/index.html", context)
@@ -352,6 +356,19 @@ async def dashboard_data(
     Returns:
         Dict[str, Any]: Dashboard data in JSON format
     """
+    try:
+        # Demo mode - return mock data
+        mock_data = {
+            "portfolio_value": 50000.00,
+            "daily_change": 2.5,
+            "daily_change_percent": 0.05,
+            "active_positions": 5,
+            "total_return": 15.3,
+            "period": period,
+            "last_updated": datetime.now().isoformat()
+        }
+        return mock_data
+    except Exception as e:
         logger.exception(f"Dashboard data error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -366,6 +383,24 @@ async def dashboard_insights():
     Returns:
         Dict[str, Any]: AI insights in JSON format
     """
+    try:
+        # Demo mode - return mock insights
+        mock_insights = {
+            "market_sentiment": "positive",
+            "recommended_actions": [
+                "Consider increasing tech allocation",
+                "Monitor dividend yields",
+                "Review portfolio diversification"
+            ],
+            "key_insights": [
+                "Market showing upward trend",
+                "Tech sector outperforming",
+                "Low volatility environment"
+            ],
+            "generated_at": datetime.now().isoformat()
+        }
+        return mock_insights
+    except Exception as e:
         logger.exception(f"Insights error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -385,6 +420,28 @@ async def admin_dashboard(
     Returns:
         HTMLResponse: Rendered admin dashboard template
     """
+    try:
+        # Demo mode - return mock admin dashboard
+        context = {
+            "request": request,
+            "title": "Admin Dashboard - QuantumVestAI",
+            "user_stats": {
+                "total_users": 150,
+                "active_users": 45,
+                "new_registrations": 12
+            },
+            "system_stats": {
+                "uptime": "99.9%",
+                "api_calls": 15420,
+                "avg_response_time": "245ms"
+            }
+        }
+        
+        # Get correct templates object
+        templates_obj = getattr(request.app.state, 'templates', templates)
+        return templates_obj.TemplateResponse("admin/dashboard.html", context)
+        
+    except HTTPException:
         # Re-raise HTTP exceptions (like 403 from validate_admin_access)
         raise
     except Exception as e:

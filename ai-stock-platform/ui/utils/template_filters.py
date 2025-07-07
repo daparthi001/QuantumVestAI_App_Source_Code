@@ -13,14 +13,22 @@ import json
 import hashlib
 
 # Set locale for currency formatting
-    # Fallback for environments where the locale is not available
+try:
     locale.setlocale(locale.LC_ALL, '')
+except locale.Error:
+    # Fallback for environments where the locale is not available
+    pass
 
 def format_currency(value, symbol='$'):
     """Format a number as currency with proper separators and symbol."""
     if value is None:
         return f"{symbol}0.00"
     
+    try:
+        # Convert to float and format
+        float_value = float(value)
+        return f"{symbol}{float_value:,.2f}"
+    except (ValueError, TypeError):
         # Handle case where value cannot be converted to float
         return f"{symbol}0.00"
 
@@ -29,6 +37,11 @@ def format_percentage(value, precision=2):
     if value is None:
         return f"0.{precision * '0'}%"
     
+    try:
+        # Convert to float and format as percentage
+        float_value = float(value) * 100
+        return f"{float_value:.{precision}f}%"
+    except (ValueError, TypeError):
         # Handle case where value cannot be converted to float
         return f"0.{precision * '0'}%"
 
@@ -207,6 +220,19 @@ def error_format(error_data):
 
     html_parts = []
     
+    try:
+        # Process error data and format for display
+        if isinstance(error_data, dict):
+            for key, value in error_data.items():
+                html_parts.append(f"<div class='error-item'><strong>{key}:</strong> {value}</div>")
+        elif isinstance(error_data, list):
+            for item in error_data:
+                html_parts.append(f"<div class='error-item'>{item}</div>")
+        else:
+            html_parts.append(f"<div class='error-item'>{error_data}</div>")
+        
+        return "".join(html_parts)
+    except Exception as e:
         return f"<div>Error processing error message: {str(e)}</div>"
 
 # Dictionary of all filters
@@ -236,5 +262,16 @@ def register_filters(app):
     import logging
     logger = logging.getLogger("quantumvestai_ui.filters")
     
+    try:
+        # Register all template filters with the app
+        if hasattr(app.state, 'templates') and hasattr(app.state.templates, 'env'):
+            for name, func in template_filters.items():
+                app.state.templates.env.filters[name] = func
+            logger.info(f"Successfully registered {len(template_filters)} template filters")
+            return True
+        else:
+            logger.warning("Templates not found in app state")
+            return False
+    except Exception as e:
         logger.error(f"Error registering filters: {str(e)}")
         return False
