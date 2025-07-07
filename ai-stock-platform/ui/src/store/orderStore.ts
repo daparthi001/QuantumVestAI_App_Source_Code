@@ -3,11 +3,12 @@
  * Created: 2025-05-19 05:00:36
  * Author: daparthi001
  */
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { orderApi } from '../services/api/orderApi';
-import { Order, validateOrder } from '../types/order';
+import { Order, OrderStatus, validateOrder } from '../types/order';
 import { toast } from 'react-toastify';
+import { OrderWebSocket } from '../services/OrderWebSocket';
 
 // Create a client
 export const queryClient = new QueryClient({
@@ -35,7 +36,7 @@ export const useOrders = (filters?: any) => {
     return useQuery({
         queryKey: orderKeys.list(JSON.stringify(filters)),
         queryFn: async () => {
-            const orders = await orderApi.getOrders(filters);
+            const orders = await orderApi.getOrders();
             return orders.map(validateOrder);
         },
         onError: (error: Error) => {
@@ -114,9 +115,9 @@ export const useUpdateOrder = () => {
                     context.previousOrder
                 );
             }
-            toast.error(`Failed to update order: ${err.message}`);
+            toast.error(`Failed to update order: ${err instanceof Error ? err.message : 'Unknown error'}`);
         },
-        onSettled: (data, error, { orderId }) => {
+        onSettled: (_data, _error, { orderId }) => {
             // Invalidate related queries
             queryClient.invalidateQueries(orderKeys.detail(orderId));
             queryClient.invalidateQueries(orderKeys.lists());
@@ -140,7 +141,7 @@ export const useCancelOrder = () => {
             );
 
             queryClient.setQueryData<Order>(orderKeys.detail(orderId), (old) => {
-                return old ? { ...old, status: 'CANCELLED' } : old;
+                return old ? { ...old, status: OrderStatus.CANCELLED } : old;
             });
 
             return { previousOrder };
@@ -152,12 +153,12 @@ export const useCancelOrder = () => {
                     context.previousOrder
                 );
             }
-            toast.error(`Failed to cancel order: ${err.message}`);
+            toast.error(`Failed to cancel order: ${err instanceof Error ? err.message : 'Unknown error'}`);
         },
         onSuccess: () => {
             toast.success('Order cancelled successfully');
         },
-        onSettled: (data, error, orderId) => {
+        onSettled: (_data, _error, orderId) => {
             queryClient.invalidateQueries(orderKeys.detail(orderId));
             queryClient.invalidateQueries(orderKeys.lists());
         },
@@ -166,31 +167,12 @@ export const useCancelOrder = () => {
 
 // WebSocket integration
 export const useOrderWebSocket = () => {
-    const queryClient = useQueryClient();
-
-    const handleOrderUpdate = useCallback((update: any) => {
-        const orderId = update.orderId;
-        
-        // Update order details
-        queryClient.setQueryData<Order>(orderKeys.detail(orderId), (old) => {
-            return old ? { ...old, ...update } : old;
-        });
-
-        // Update order list
-        queryClient.setQueryData<Order[]>(orderKeys.lists(), (old = []) => {
-            return old.map((order) =>
-                order.id === orderId ? { ...order, ...update } : order
-            );
-        });
-    }, [queryClient]);
-
     useEffect(() => {
         const ws = new OrderWebSocket();
-        ws.onOrderUpdate = handleOrderUpdate;
         ws.connect();
 
         return () => {
             ws.disconnect();
         };
-    }, [handleOrderUpdate]);
+    }, []);  // Remove handleOrderUpdate dependency since OrderWebSocket uses Redux directly
 };
