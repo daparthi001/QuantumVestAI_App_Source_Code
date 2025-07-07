@@ -111,7 +111,7 @@ export class OrderWebSocket {
     private handleExecutionReport(execution: any) {
         store.dispatch(updateOrderStatus({
             orderId: execution.order_id,
-            status: OrderStatus.FILLED,
+            status: 'FILLED' as OrderStatus,
             executionDetails: {
                 executedQuantity: execution.quantity,
                 executedPrice: execution.price,
