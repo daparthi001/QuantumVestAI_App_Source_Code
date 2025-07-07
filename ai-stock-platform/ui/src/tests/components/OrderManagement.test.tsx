@@ -9,7 +9,7 @@ import configureStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
 import OrderManagement from '../../components/orders/OrderManagement';
 
-const mockStore = configureStore([thunk.default]);
+const mockStore = configureStore([thunk]);
 
 describe('OrderManagement Component', () => {
     let store: any;

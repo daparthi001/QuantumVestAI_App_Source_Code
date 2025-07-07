@@ -5,6 +5,7 @@
  */
 import { api } from './api';
 import { wsService } from './websocket';
+import authService from './auth.service';
 import { Position, Transaction, PortfolioSummary } from '../types/portfolio';
 import { Subject } from 'rxjs';
 
@@ -29,8 +30,11 @@ export const portfolioService = {
     subscribeToUpdates(callback: (update: any) => void) {
         const subject = new Subject();
         
-        wsService.connect();
-        wsService.subscribe('PORTFOLIO_UPDATES');
+        const token = authService.getToken();
+        if (token) {
+            wsService.connect(token);
+            wsService.subscribe('PORTFOLIO_UPDATES');
+        }
         
         wsService.onMessage().subscribe((message) => {
             if (message.type === 'PORTFOLIO_UPDATE') {

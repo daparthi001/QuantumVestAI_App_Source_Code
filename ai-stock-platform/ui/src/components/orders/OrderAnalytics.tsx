@@ -32,9 +32,34 @@ interface OrderAnalyticsProps {
     orders: Order[];
 }
 
+interface OrderDistribution {
+    type: string;
+    count: number;
+}
+
+interface DailyVolume {
+    date: string;
+    volume: number;
+}
+
+interface SymbolBreakdown {
+    symbol: string;
+    count: number;
+    volume: number;
+}
+
+interface AnalyticsData {
+    totalOrders: number;
+    fillRate: number;
+    averageExecutionTime: number;
+    orderTypeDistribution: OrderDistribution[];
+    dailyVolume: DailyVolume[];
+    symbolBreakdown: SymbolBreakdown[];
+}
+
 export const OrderAnalytics: React.FC<OrderAnalyticsProps> = ({ orders }) => {
     const [activeTab, setActiveTab] = useState(0);
-    const [analytics, setAnalytics] = useState({
+    const [analytics, setAnalytics] = useState<AnalyticsData>({
         totalOrders: 0,
         fillRate: 0,
         averageExecutionTime: 0,

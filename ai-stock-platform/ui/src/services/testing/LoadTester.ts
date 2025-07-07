@@ -9,13 +9,11 @@ import { PerformanceMonitor } from '../monitoring/PerformanceMonitor';
 export class LoadTester {
     private static instance: LoadTester;
     private monitor: RealTimeMonitor;
-    private performanceMonitor: PerformanceMonitor;
     private activeTests: Map<string, TestSession>;
     private worker: Worker | null = null;
 
     private constructor() {
         this.monitor = RealTimeMonitor.getInstance();
-        this.performanceMonitor = PerformanceMonitor.getInstance();
         this.activeTests = new Map();
         this.initializeWorker();
     }
@@ -111,7 +109,7 @@ export class LoadTester {
             session.endTime = Date.now();
             
             const results = await this.generateTestResults(session);
-            this.monitor.trackMetric('load_test_complete', results);
+            this.monitor.trackMetric('load_test_complete', results.duration);
         }
     }
 
