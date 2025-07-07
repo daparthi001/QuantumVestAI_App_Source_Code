@@ -33,6 +33,12 @@ export const OrderSchema = z.object({
 
 export type Order = z.infer<typeof OrderSchema>;
 
+// Export individual enum types
+export type OrderStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'PARTIAL_FILLED' | 'FILLED' | 'CANCELLED' | 'EXPIRED';
+export type OrderType = 'MARKET' | 'LIMIT' | 'STOP' | 'STOP_LIMIT';
+export type TimeInForce = 'DAY' | 'GTC' | 'IOC' | 'FOK';
+export type OrderSide = 'BUY' | 'SELL';
+
 export function validateOrder(order: unknown): Order {
     return OrderSchema.parse(order);
 }
