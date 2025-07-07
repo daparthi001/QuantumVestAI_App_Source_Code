@@ -46,6 +46,10 @@ class APIClient:
         
     def _handle_response(self, response: requests.Response) -> Dict[str, Any]:
         """Handle API response and errors"""
+        try:
+            response.raise_for_status()
+            return response.json()
+        except ValueError:
             self.logger.error("Failed to decode JSON from API response")
             if response.content:
                 self.logger.error(f"Response content: {response.content[:500]}...")
@@ -54,8 +58,11 @@ class APIClient:
             error_detail = "Unknown error"
             
             # Try to extract error details from response
+            try:
                 if response.content:
                     error_detail = response.content.decode('utf-8')[:200]
+            except:
+                pass
                     
             self.logger.error(f"API request failed: {e}, Detail: {error_detail}")
             
@@ -68,6 +75,10 @@ class APIClient:
         url = f"{self.base_url}{normalized_endpoint}"
         
         self.logger.debug(f"Making GET request to {url}")
+        try:
+            response = requests.get(url, params=params, timeout=self.timeout)
+            return self._handle_response(response)
+        except Timeout:
             self.logger.error(f"Request to {normalized_endpoint} timed out")
             raise Timeout(f"Request to API timed out: {normalized_endpoint}")
         except ConnectionError:

@@ -56,8 +56,6 @@ def decode_token(token: str) -> Dict[str, Any]:
         JWTError: If token is invalid or expired
     """
     try:
-        logger.error(f"API connection error during token verification: {str(e)}")
-        # Fall back to local verification if API is unavailable
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
         return payload
     except jwt.PyJWTError as e:
