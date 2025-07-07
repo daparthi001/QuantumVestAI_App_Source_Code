@@ -8,7 +8,6 @@ import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import {
     createOrder,
     cancelOrder,
-    modifyOrder,
     fetchOrders
 } from '../../store/actions/orderActions';
 import { 
@@ -57,18 +56,6 @@ const OrderManagement: React.FC = () => {
         }
     };
 
-    const handleModifyOrder = async (
-        orderId: string,
-        modifications: Partial<Order>
-    ) => {
-        try {
-            await dispatch(modifyOrder(orderId, modifications));
-            setSelectedOrder(null);
-        } catch (error) {
-            console.error('Order modification failed:', error);
-        }
-    };
-
     return (
         <div className="order-management">
             <div className="order-management__header">
@@ -88,7 +75,6 @@ const OrderManagement: React.FC = () => {
                         orders={orders}
                         onSelect={setSelectedOrder}
                         onCancel={handleCancelOrder}
-                        onModify={handleModifyOrder}
                     />
                 </div>
                 

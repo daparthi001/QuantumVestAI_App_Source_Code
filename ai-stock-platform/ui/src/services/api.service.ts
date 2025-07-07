@@ -3,7 +3,7 @@
  * Created: 2025-06-19 17:56:46
  * Author: daparthi001
  */
-import axios, { AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import authService from './auth.service';
 
 class ApiService {

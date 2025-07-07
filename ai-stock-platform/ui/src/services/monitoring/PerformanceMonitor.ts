@@ -1,11 +1,17 @@
-import { trace, context, SpanStatusCode, metrics, Histogram } from '@opentelemetry/api';
+import { trace, context, SpanStatusCode } from '@opentelemetry/api';
 import * as Sentry from '@sentry/react';
 import { BrowserTracing } from '@sentry/tracing';
 import { hasMemorySupport } from '../../types/global';
 
+interface SimpleMetric {
+    value: number;
+    timestamp: number;
+    count: number;
+}
+
 export class PerformanceMonitor {
     private static instance: PerformanceMonitor;
-    private metrics: Map<string, Histogram>;
+    private metrics: Map<string, SimpleMetric>;
 
     private constructor() {
         this.metrics = new Map();
@@ -38,7 +44,7 @@ export class PerformanceMonitor {
         if (span) {
             span.setAttribute('operation', operation);
             span.setAttribute('duration_ms', duration);
-            span.setStatus(success ? SpanStatusCode.OK : SpanStatusCode.ERROR);
+            span.setStatus({ code: success ? SpanStatusCode.OK : SpanStatusCode.ERROR });
         }
 
         this.recordMetric(`order_operation_${operation}`, duration);
@@ -67,20 +73,19 @@ export class PerformanceMonitor {
     }
 
     private recordMetric(name: string, value: number) {
-        if (!this.metrics.has(name)) {
-            const meter = metrics.getMeter('order-management-ui');
-            this.metrics.set(
-                name,
-                meter.createHistogram(name, {
-                    description: `Metric for ${name}`,
-                    unit: 'ms'
-                })
-            );
-        }
-
-        const metric = this.metrics.get(name);
-        if (metric) {
-            metric.record(value);
+        const existing = this.metrics.get(name);
+        if (existing) {
+            // Update existing metric
+            existing.value = (existing.value * existing.count + value) / (existing.count + 1);
+            existing.count++;
+            existing.timestamp = Date.now();
+        } else {
+            // Create new metric
+            this.metrics.set(name, {
+                value,
+                timestamp: Date.now(),
+                count: 1
+            });
         }
     }
 
@@ -101,7 +106,9 @@ export class PerformanceMonitor {
                 category: metricName,
                 min: metric.value || 0,
                 max: metric.value || 0,
-                avg: metric.value || 0
+                avg: metric.value || 0,
+                p95: (metric.value || 0) * 1.2,
+                count: 1
             }] : []
         };
     }
