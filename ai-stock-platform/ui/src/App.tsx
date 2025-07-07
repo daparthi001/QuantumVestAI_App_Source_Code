@@ -195,7 +195,10 @@ function App() {
                       <Route path="/admin/*" element={
                         <ProtectedRoute requiredRole="admin">
                           <Layout>
-                            {/* Admin components would go here */}
+                            <div className="admin-dashboard">
+                              <h1>Admin Dashboard</h1>
+                              <p>Admin components would go here</p>
+                            </div>
                           </Layout>
                         </ProtectedRoute>
                       } />

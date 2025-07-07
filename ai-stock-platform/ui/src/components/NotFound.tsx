@@ -18,10 +18,10 @@ const NotFound: React.FC = () => {
             Sorry, the page you are looking for doesn't exist or has been moved.
           </p>
           <div>
-            <Button as={Link} to={ROUTES.DASHBOARD} variant="primary" size="lg" className="me-3">
+            <Button as={Link as any} to={ROUTES.DASHBOARD} variant="primary" size="lg" className="me-3">
               Go to Dashboard
             </Button>
-            <Button as={Link} to={ROUTES.STOCKS} variant="outline-primary" size="lg">
+            <Button as={Link as any} to={ROUTES.STOCKS} variant="outline-primary" size="lg">
               Browse Stocks
             </Button>
           </div>
