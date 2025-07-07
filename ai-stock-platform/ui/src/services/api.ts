@@ -221,6 +221,7 @@ function getMinResponseTime() {
 }
 
 export default apiClient;
+export { apiClient as api }; // Export as named export for compatibility
 
 // Export additional services
 export { default as stockService } from './stock.service';

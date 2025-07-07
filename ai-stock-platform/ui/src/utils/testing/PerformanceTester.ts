@@ -65,13 +65,14 @@ export class PerformanceTester {
     async measureMemoryUsage(
         operation: () => Promise<void>
     ): Promise<MemoryTestResult> {
-        if (!performance.memory) {
+        const perfMemory = (performance as any).memory;
+        if (!perfMemory) {
             throw new Error('Memory measurements not supported in this environment');
         }
 
-        const initialMemory = performance.memory.usedJSHeapSize;
+        const initialMemory = perfMemory.usedJSHeapSize;
         await operation();
-        const finalMemory = performance.memory.usedJSHeapSize;
+        const finalMemory = perfMemory.usedJSHeapSize;
 
         return {
             beforeBytes: initialMemory,
