@@ -4,10 +4,12 @@
  */
 import React from 'react';
 import { Container, Row, Col, Button } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../config/constants';
 
 const NotFound: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <Container>
       <Row className="justify-content-center text-center" style={{ minHeight: '70vh' }}>
@@ -18,10 +20,10 @@ const NotFound: React.FC = () => {
             Sorry, the page you are looking for doesn't exist or has been moved.
           </p>
           <div>
-            <Button as={Link} to={ROUTES.DASHBOARD} variant="primary" size="lg" className="me-3">
+            <Button onClick={() => navigate(ROUTES.DASHBOARD)} variant="primary" size="lg" className="me-3">
               Go to Dashboard
             </Button>
-            <Button as={Link} to={ROUTES.STOCKS} variant="outline-primary" size="lg">
+            <Button onClick={() => navigate(ROUTES.STOCKS)} variant="outline-primary" size="lg">
               Browse Stocks
             </Button>
           </div>
