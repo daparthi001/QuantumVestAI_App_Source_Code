@@ -12,6 +12,7 @@ import logging
 import time
 import os
 from datetime import datetime, timedelta
+from core.http_client import safe_get_json
 API_URL = "http://quantumvestai-dev-api:8000/api/v1"
 # Import dependencies with fallback
 try:
@@ -104,14 +105,11 @@ async def market_overview(
         
         if market_data is None:
             try:
-                # Fetch market data from API
-                async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-                    response = await client.get(
-                        f"{api_url_base}/api/market/overview"
-                # Fetch market data from API using centralized HTTP client
-                from core.http_client import safe_get_json
-                
+                # Get current user for authentication
+                user = await get_optional_current_user(request, response)
                 auth_token = user.get('token') if user else None
+                
+                # Fetch market data from API using centralized HTTP client
                 market_data = await safe_get_json(
                     url=f"{api_url_base}/api/market/overview",
                     auth_token=auth_token
@@ -196,8 +194,6 @@ async def stock_details(
     request: Request,
     response: Response,
     symbol: str = Path(..., description="Stock symbol")
-    symbol: str = Path(..., description="Stock symbol"),
-    
 ):
     """
     Stock details page showing price, charts, news, and fundamentals for a specific stock (demo mode).
@@ -215,14 +211,11 @@ async def stock_details(
         
         if stock_data is None:
             try:
-                # Fetch stock data from API
-                async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-                    response = await client.get(
-                        f"{api_url_base}/api/stocks/{symbol.upper()}"
-                # Fetch stock data from API using centralized HTTP client
-                from core.http_client import safe_get_json
-                
+                # Get current user for authentication
+                user = await get_optional_current_user(request, response)
                 auth_token = user.get('token') if user else None
+                
+                # Fetch stock data from API using centralized HTTP client
                 stock_data = await safe_get_json(
                     url=f"{api_url_base}/api/stocks/{symbol.upper()}",
                     auth_token=auth_token
@@ -233,16 +226,13 @@ async def stock_details(
                     raise HTTPException(
                         status_code=503,
                         detail=f"Error fetching data for {symbol}"
-
                     )
                 
                 # Cache the data
                 set_cached_data(cache_key, stock_data)
             except Exception as e:
                 logger.error(f"Stock data fetch error: {str(e)}")
-
                 logger.error(f"API request error: {str(e)}")
-
                 # Use fallback data
                 stock_data = {
                     "symbol": symbol.upper(),
@@ -260,12 +250,13 @@ async def stock_details(
                     }
                 }
 
+        # Get current user for checking watchlist
+        user = await get_optional_current_user(request, response)
+        
         # Check if user has this stock in watchlist
         is_in_watchlist = False
         if user:
             try:
-                from core.http_client import safe_get_json
-                
                 watchlist_data = await safe_get_json(
                     url=f"{api_url_base}/api/watchlist/check/{symbol.upper()}",
                     auth_token=user.get('token')
@@ -319,8 +310,6 @@ async def stock_details(
 async def search_stocks(
     request: Request,
     query: str = Query(..., description="Search query")
-    query: str = Query(..., description="Search query"),
-    
 ):
     """
     API endpoint to search for stocks by name or symbol (demo mode).
@@ -338,14 +327,11 @@ async def search_stocks(
         
         if search_results is None:
             try:
-                # Fetch search results from API
-                async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-                    response = await client.get(
-                        f"{api_url_base}/api/stocks/search?query={query}"
-                # Fetch search results from API using centralized HTTP client
-                from core.http_client import safe_get_json
-                
+                # Get current user for authentication
+                user = await get_optional_current_user(request)
                 auth_token = user.get('token') if user else None
+                
+                # Fetch search results from API using centralized HTTP client
                 search_results = await safe_get_json(
                     url=f"{api_url_base}/api/stocks/search",
                     params={"query": query},
@@ -357,7 +343,6 @@ async def search_stocks(
                     raise HTTPException(
                         status_code=503,
                         detail="Error searching stocks"
-
                     )
                 
                 # Cache the data
