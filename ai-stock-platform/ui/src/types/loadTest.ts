@@ -47,6 +47,7 @@ export interface TestStep {
   actualResult?: any;
   status?: 'PENDING' | 'RUNNING' | 'PASSED' | 'FAILED';
   duration?: number;
+  assertions?: any[];
 }
 
 export interface TestScenario {

@@ -4,7 +4,7 @@
  * Author: daparthi001
  */
 import React, { useState } from 'react';
-import { Tab, Nav } from 'react-bootstrap';
+import { Nav } from 'react-bootstrap';
 import PredictionAnalysis from './PredictionAnalysis';
 import SentimentAnalysis from './SentimentAnalysis';
 import IndicatorBuilder from './IndicatorBuilder';
@@ -26,6 +26,7 @@ const AdvancedDashboard: React.FC = () => {
   const handleApplyIndicator = (formula: string, name: string) => {
     // This would typically update a global state or context
     // For now, we'll just show a success message
+    console.log(`Applying indicator "${name}" with formula: ${formula}`);
     showErrorMessage(`Custom indicator "${name}" applied successfully`);
   };
   

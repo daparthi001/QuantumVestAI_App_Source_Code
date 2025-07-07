@@ -3,7 +3,7 @@
  * Created: 2025-05-19 05:09:34
  * Author: daparthi001
  */
-import { LoadTestConfig, TestScenario, TestStep } from '../types/loadTest';
+import { LoadTestConfig, TestScenario, TestStep, TestMetrics, TestResult } from '../types/loadTest';
 
 class LoadTestWorker {
     private activeTests: Map<string, boolean> = new Map();
@@ -205,7 +205,8 @@ class VirtualUser {
     }
 
     private async executeAction(step: TestStep): Promise<void> {
-        // Simulate user actions
+        // Simulate user actions based on step type
+        console.log(`Executing action: ${step.name}`);
         await new Promise(resolve => setTimeout(resolve, 100));
     }
 
@@ -231,43 +232,54 @@ class VirtualUser {
 
     private evaluateCondition(data: any, condition: string, value: any): boolean {
         // Implement condition evaluation logic
-        return true;
+        switch (condition) {
+            case 'equals':
+                return data === value;
+            case 'greater':
+                return data > value;
+            case 'less':
+                return data < value;
+            default:
+                return true;
+        }
     }
 }
 
 class MetricCollector {
     private metrics: TestMetrics = {
-        requestCount: 0,
-        successCount: 0,
-        failureCount: 0,
-        totalDuration: 0,
-        minDuration: Infinity,
-        maxDuration: 0,
-        scenarios: new Map()
+        totalRequests: 0,
+        successfulRequests: 0,
+        failedRequests: 0,
+        averageResponseTime: 0,
+        minResponseTime: Infinity,
+        maxResponseTime: 0,
+        requestsPerSecond: 0,
+        errorRate: 0,
+        throughput: 0,
+        concurrency: 0,
+        startTime: Date.now(),
+        endTime: 0
     };
 
     addMetric(result: TestResult) {
-        this.metrics.requestCount++;
-        if (result.success) {
-            this.metrics.successCount++;
+        this.metrics.totalRequests++;
+        if (result.status === 'COMPLETED') {
+            this.metrics.successfulRequests++;
         } else {
-            this.metrics.failureCount++;
+            this.metrics.failedRequests++;
         }
 
-        this.metrics.totalDuration += result.duration;
-        this.metrics.minDuration = Math.min(this.metrics.minDuration, result.duration);
-        this.metrics.maxDuration = Math.max(this.metrics.maxDuration, result.duration);
+        // Update response time metrics if duration is available
+        if (result.duration) {
+            this.metrics.minResponseTime = Math.min(this.metrics.minResponseTime, result.duration);
+            this.metrics.maxResponseTime = Math.max(this.metrics.maxResponseTime, result.duration);
+        }
 
-        // Update scenario metrics
-        const scenarioMetrics = this.metrics.scenarios.get(result.scenarioName) || {
-            count: 0,
-            successCount: 0,
-            totalDuration: 0
-        };
-        scenarioMetrics.count++;
-        if (result.success) scenarioMetrics.successCount++;
-        scenarioMetrics.totalDuration += result.duration;
-        this.metrics.scenarios.set(result.scenarioName, scenarioMetrics);
+        // Calculate averages
+        this.metrics.errorRate = this.metrics.failedRequests / this.metrics.totalRequests;
+        this.metrics.endTime = Date.now();
+        const testDuration = (this.metrics.endTime - this.metrics.startTime) / 1000;
+        this.metrics.requestsPerSecond = this.metrics.totalRequests / testDuration;
     }
 
     getCurrentMetrics(): TestMetrics {
@@ -277,8 +289,8 @@ class MetricCollector {
     getFinalMetrics(): TestMetrics {
         return {
             ...this.metrics,
-            averageDuration: this.metrics.totalDuration / this.metrics.requestCount,
-            successRate: this.metrics.successCount / this.metrics.requestCount
+            averageResponseTime: this.metrics.totalRequests > 0 ? 
+                (this.metrics.endTime - this.metrics.startTime) / this.metrics.totalRequests : 0
         };
     }
 }

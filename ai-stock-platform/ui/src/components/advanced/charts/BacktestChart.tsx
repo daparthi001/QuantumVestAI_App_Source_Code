@@ -110,7 +110,7 @@ const BacktestChart: React.FC<BacktestChartProps> = ({ equityCurve, benchmarkCur
           },
           y: {
             grid: {
-              borderDash: [2, 2]
+              display: true
             },
             title: {
               display: true,
