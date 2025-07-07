@@ -168,3 +168,52 @@ const VolumeChart: React.FC<{ data: any[] }> = ({ data }) => (
         </LineChart>
     </ResponsiveContainer>
 );
+
+// Helper functions
+function calculateAverageExecutionTime(orders: Order[]): number {
+    const executedOrders = orders.filter(order => order.executedPrice && order.executionTime);
+    if (executedOrders.length === 0) return 0;
+    
+    const totalTime = executedOrders.reduce((sum, order) => {
+        const execTime = new Date(order.executionTime!).getTime();
+        const createTime = new Date(order.createdAt).getTime();
+        return sum + (execTime - createTime);
+    }, 0);
+    
+    return totalTime / executedOrders.length;
+}
+
+function calculateSymbolBreakdown(orders: Order[]) {
+    const breakdown: Record<string, number> = {};
+    orders.forEach(order => {
+        breakdown[order.symbol] = (breakdown[order.symbol] || 0) + 1;
+    });
+    
+    return Object.entries(breakdown).map(([symbol, count]) => ({
+        symbol,
+        count,
+        percentage: (count / orders.length) * 100
+    }));
+}
+
+// Component types
+const OrderTypeDistribution: React.FC<{ data: any[] }> = ({ data }) => (
+    <ResponsiveContainer width="100%" height={300}>
+        <PieChart>
+            <Pie dataKey="count" data={data} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" />
+            <Tooltip />
+        </PieChart>
+    </ResponsiveContainer>
+);
+
+const SymbolBreakdown: React.FC<{ data: any[] }> = ({ data }) => (
+    <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={data}>
+            <XAxis dataKey="symbol" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="count" fill="#8884d8" />
+        </BarChart>
+    </ResponsiveContainer>
+);
