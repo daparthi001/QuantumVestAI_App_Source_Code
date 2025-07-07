@@ -22,7 +22,7 @@ import {
 } from '@mui/material';
 import { DateRangePicker } from '@mui/lab';
 import { PerformanceMonitor } from '../../services/monitoring/PerformanceMonitor';
-import { formatDuration, formatPercentage } from '../../utils/formatters';
+import { formatDuration } from '../../utils/formatters';
 
 interface PerformanceData {
     componentMetrics: Array<{
