@@ -4,7 +4,8 @@
  * Author: daparthi001
  */
 import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
+import { useAppDispatch } from '../../hooks/redux';
 import {
     createOrder,
     cancelOrder,
@@ -24,7 +25,7 @@ import {
 import { RootState } from '../../store/types';
 
 const OrderManagement: React.FC = () => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const { orders, loading, error } = useSelector(
         (state: RootState) => state.orders

@@ -120,25 +120,25 @@ export const OrderAnalytics: React.FC<OrderAnalyticsProps> = ({ orders }) => {
 
             {activeTab === 0 && (
                 <Grid container spacing={2}>
-                    <Grid item xs={12} md={4}>
+                    <Grid size={{ xs: 12, md: 4 }}>
                         <MetricCard
                             title="Total Orders"
                             value={analytics.totalOrders}
                         />
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid size={{ xs: 12, md: 4 }}>
                         <MetricCard
                             title="Fill Rate"
                             value={formatPercentage(analytics.fillRate)}
                         />
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid size={{ xs: 12, md: 4 }}>
                         <MetricCard
                             title="Avg. Execution Time"
                             value={`${analytics.averageExecutionTime.toFixed(2)}s`}
                         />
                     </Grid>
-                    <Grid item xs={12}>
+                    <Grid size={{ xs: 12 }}>
                         <VolumeChart data={analytics.dailyVolume} />
                     </Grid>
                 </Grid>
@@ -146,7 +146,7 @@ export const OrderAnalytics: React.FC<OrderAnalyticsProps> = ({ orders }) => {
 
             {activeTab === 1 && (
                 <Grid container spacing={2}>
-                    <Grid item xs={12}>
+                    <Grid size={{ xs: 12 }}>
                         <PerformanceMetrics orders={orders} />
                     </Grid>
                 </Grid>
@@ -154,15 +154,65 @@ export const OrderAnalytics: React.FC<OrderAnalyticsProps> = ({ orders }) => {
 
             {activeTab === 2 && (
                 <Grid container spacing={2}>
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                         <OrderTypeDistribution data={analytics.orderTypeDistribution} />
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                         <SymbolBreakdown data={analytics.symbolBreakdown} />
                     </Grid>
                 </Grid>
             )}
         </div>
+    );
+};
+
+// PerformanceMetrics Component
+interface PerformanceMetricsProps {
+    orders: Order[];
+}
+
+const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ orders }) => {
+    const metrics = React.useMemo(() => {
+        const totalOrders = orders.length;
+        const filledOrders = orders.filter(order => order.status === 'FILLED').length;
+        const avgExecutionTime = orders.reduce((sum, order) => {
+            return sum + (order.executionTime ? new Date(order.executionTime).getTime() - new Date(order.createdAt).getTime() : 0);
+        }, 0) / totalOrders / 1000; // Convert to seconds
+
+        return {
+            totalOrders,
+            fillRate: totalOrders > 0 ? filledOrders / totalOrders : 0,
+            avgExecutionTime: avgExecutionTime || 0,
+            successRate: totalOrders > 0 ? filledOrders / totalOrders : 0
+        };
+    }, [orders]);
+
+    return (
+        <Card>
+            <CardContent>
+                <Typography variant="h6" gutterBottom>
+                    Performance Metrics
+                </Typography>
+                <Grid container spacing={2}>
+                    <Grid size={{ xs: 6, md: 3 }}>
+                        <Typography variant="subtitle2">Total Orders</Typography>
+                        <Typography variant="h4">{metrics.totalOrders}</Typography>
+                    </Grid>
+                    <Grid size={{ xs: 6, md: 3 }}>
+                        <Typography variant="subtitle2">Fill Rate</Typography>
+                        <Typography variant="h4">{(metrics.fillRate * 100).toFixed(1)}%</Typography>
+                    </Grid>
+                    <Grid size={{ xs: 6, md: 3 }}>
+                        <Typography variant="subtitle2">Avg Execution</Typography>
+                        <Typography variant="h4">{metrics.avgExecutionTime.toFixed(2)}s</Typography>
+                    </Grid>
+                    <Grid size={{ xs: 6, md: 3 }}>
+                        <Typography variant="subtitle2">Success Rate</Typography>
+                        <Typography variant="h4">{(metrics.successRate * 100).toFixed(1)}%</Typography>
+                    </Grid>
+                </Grid>
+            </CardContent>
+        </Card>
     );
 };
 

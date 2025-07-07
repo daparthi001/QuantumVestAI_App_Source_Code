@@ -7,6 +7,15 @@ import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResp
 import { API_BASE_URL } from '../config/constants';
 import authService from './auth.service';
 
+// Extend AxiosInstance to include custom methods
+interface ExtendedAxiosInstance extends AxiosInstance {
+  getResponseTime: () => {
+    average: number;
+    max: number;
+    min: number;
+  };
+}
+
 // API request queue for handling 401 token refresh
 let isRefreshing = false;
 let failedQueue: any[] = [];
@@ -24,13 +33,13 @@ const processQueue = (error: any, token: string | null = null) => {
 };
 
 // Create a custom API client with advanced features
-const apiClient: AxiosInstance = axios.create({
+const apiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30000, // 30 seconds timeout
   headers: {
     'Content-Type': 'application/json',
   },
-});
+}) as ExtendedAxiosInstance;
 
 // Request interceptor with advanced features
 apiClient.interceptors.request.use(

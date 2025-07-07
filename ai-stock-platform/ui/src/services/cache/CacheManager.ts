@@ -11,6 +11,8 @@ export class CacheManager {
     private memoryCache: LRUCache<string, any>;
     private indexedDB: IDBDatabase | null = null;
     private monitor: RealTimeMonitor;
+    private cacheHits: number = 0;
+    private cacheMisses: number = 0;
 
     private constructor() {
         this.memoryCache = new LRUCache({
@@ -93,8 +95,10 @@ export class CacheManager {
         if (memoryItem) {
             if (this.isExpired(memoryItem)) {
                 this.memoryCache.delete(key);
+                this.cacheMisses++;
                 return null;
             }
+            this.cacheHits++;
             return memoryItem.value;
         }
 
@@ -110,8 +114,10 @@ export class CacheManager {
                     if (item && !this.isExpired(item)) {
                         // Cache in memory for future access
                         this.memoryCache.set(key, item);
+                        this.cacheHits++;
                         resolve(item.value);
                     } else {
+                        this.cacheMisses++;
                         resolve(null);
                     }
                 };
@@ -119,6 +125,7 @@ export class CacheManager {
             });
         }
 
+        this.cacheMisses++;
         return null;
     }
 
@@ -151,10 +158,14 @@ export class CacheManager {
         itemCount: number;
         hitRate: number;
     }> {
+        // Calculate hit rate manually
+        const totalRequests = this.cacheHits + this.cacheMisses;
+        const hitRate = totalRequests > 0 ? this.cacheHits / totalRequests : 0;
+
         return {
             memorySize: this.memoryCache.calculatedSize || 0,
             itemCount: this.memoryCache.size,
-            hitRate: this.memoryCache.fetchStats?.hitRate || 0
+            hitRate: hitRate
         };
     }
 

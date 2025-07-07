@@ -104,15 +104,15 @@ export class PerformanceOptimizer {
                 );
             },
 
-            memoizeComponent: <T extends Function>(
+            memoizeComponent: <T extends React.ComponentType<any>>(
                 component: T,
-                dependencies: any[]
-            ): T => {
-                return React.memo(component, (prev, next) => {
+                dependencies: string[]
+            ): React.MemoExoticComponent<T> => {
+                return React.memo(component, (prev: any, next: any) => {
                     return dependencies.every(
                         dep => prev[dep] === next[dep]
                     );
-                }) as unknown as T;
+                });
             }
         };
     }
