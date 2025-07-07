@@ -4,8 +4,7 @@
  * Author: daparthi001
  */
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { useAppDispatch } from '../../hooks/redux';
+import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import {
     createOrder,
     cancelOrder,
@@ -18,10 +17,6 @@ import { OrderForm } from './OrderForm';
 import { OrderList } from './OrderList';
 import { OrderAnalytics } from './OrderAnalytics';
 import { OrderWebSocket } from '../../services/OrderWebSocket';
-import { 
-    Order
-} from '../../types/order';
-import { RootState } from '../../store/types';
 
 
 const OrderManagement: React.FC = () => {

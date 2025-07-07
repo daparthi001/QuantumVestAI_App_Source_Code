@@ -4,12 +4,10 @@
  */
 import React from 'react';
 import { Container, Row, Col, Button } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { ROUTES } from '../config/constants';
 
 const NotFound: React.FC = () => {
-  const navigate = useNavigate();
-
   return (
     <Container>
       <Row className="justify-content-center text-center" style={{ minHeight: '70vh' }}>

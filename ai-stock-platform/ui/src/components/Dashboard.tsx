@@ -4,12 +4,10 @@
  */
 import React from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { ROUTES } from '../config/constants';
 
 const Dashboard: React.FC = () => {
-  const navigate = useNavigate();
-
   return (
     <Container fluid>
       <div className="d-flex justify-content-between align-items-center mb-4">

@@ -10,7 +10,7 @@ import {
     Typography,
     Tab,
     Tabs,
-    Box
+    Grid
 } from '@mui/material';
 import {
     LineChart,
@@ -297,51 +297,4 @@ const SymbolBreakdown: React.FC<{ data: any[] }> = ({ data }) => (
     </ResponsiveContainer>
 );
 
-const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ orders }) => {
-    const performanceData = React.useMemo(() => {
-        const executedOrders = orders.filter(order => order.status === 'FILLED');
-        const totalLatency = executedOrders.reduce((sum, order) => {
-            if (order.executionTime) {
-                const execTime = new Date(order.executionTime).getTime();
-                const createTime = new Date(order.createdAt).getTime();
-                return sum + (execTime - createTime);
-            }
-            return sum;
-        }, 0);
-
-        return {
-            averageLatency: executedOrders.length > 0 ? totalLatency / executedOrders.length : 0,
-            executionRate: orders.length > 0 ? (executedOrders.length / orders.length) * 100 : 0,
-            totalExecuted: executedOrders.length,
-            totalOrders: orders.length
-        };
-    }, [orders]);
-
-    return (
-        <Card>
-            <CardContent>
-                <Typography variant="h6" gutterBottom>
-                    Performance Metrics
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                    <Box sx={{ flex: '1 1 250px' }}>
-                        <Typography variant="body2" color="textSecondary">
-                            Average Latency
-                        </Typography>
-                        <Typography variant="h5">
-                            {performanceData.averageLatency.toFixed(2)}ms
-                        </Typography>
-                    </Box>
-                    <Box sx={{ flex: '1 1 250px' }}>
-                        <Typography variant="body2" color="textSecondary">
-                            Execution Rate
-                        </Typography>
-                        <Typography variant="h5">
-                            {performanceData.executionRate.toFixed(1)}%
-                        </Typography>
-                    </Box>
-                </Box>
-            </CardContent>
-        </Card>
-    );
-};
+export default OrderAnalytics;

@@ -86,8 +86,9 @@ export class PerformanceMonitor {
 
     // Add missing methods
     getMetricDetails(metricName: string, interval?: string) {
+        const metric = this.metrics.get(metricName);
+        
         const baseData = {
-
             name: metricName,
             description: `Metric for ${metricName}`,
             unit: 'ms',

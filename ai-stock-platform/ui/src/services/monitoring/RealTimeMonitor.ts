@@ -5,18 +5,18 @@
  */
 import { Subject, interval, merge } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
-import { PerformanceMonitor } from './PerformanceMonitor';
+// import { PerformanceMonitor } from './PerformanceMonitor';
 import { hasMemorySupport } from '../../types/global';
 
 export class RealTimeMonitor {
     private static instance: RealTimeMonitor;
     private metrics$ = new Subject<any>();
     private alerts$ = new Subject<any>();
-    private _performanceMonitor: PerformanceMonitor;
+    // private _performanceMonitor: PerformanceMonitor;
     private subscribers: Set<(data: any) => void> = new Set();
 
     private constructor() {
-        this._performanceMonitor = PerformanceMonitor.getInstance();
+        // this._performanceMonitor = PerformanceMonitor.getInstance();
         this.initializeMonitoring();
     }
 

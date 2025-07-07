@@ -185,19 +185,6 @@ apiClient.getResponseTime = () => {
 // Track response times
 const responseTimes: Record<string, number[]> = {};
 
-function trackResponseTime(endpoint: string, time: number) {
-  if (!responseTimes[endpoint]) {
-    responseTimes[endpoint] = [];
-  }
-  
-  responseTimes[endpoint].push(time);
-  
-  // Keep only last 100 requests
-  if (responseTimes[endpoint].length > 100) {
-    responseTimes[endpoint].shift();
-  }
-}
-
 function calculateAverageResponseTime() {
   const allTimes: number[] = [];
   Object.values(responseTimes).forEach(times => {

@@ -6,16 +6,16 @@
 import React from 'react';
 import { debounce, throttle } from 'lodash';
 import LZString from 'lz-string';
-import { RealTimeMonitor } from '../monitoring/RealTimeMonitor';
+// import { RealTimeMonitor } from '../monitoring/RealTimeMonitor';
 import { hasMemorySupport } from '../../types/global';
 
 export class PerformanceOptimizer {
     private static instance: PerformanceOptimizer;
-    private _monitor: RealTimeMonitor;
+    // private _monitor: RealTimeMonitor;
     private optimizations: Map<string, boolean> = new Map();
 
     private constructor() {
-        this._monitor = RealTimeMonitor.getInstance();
+        // this._monitor = RealTimeMonitor.getInstance();
         this.initializeOptimizations();
     }
 
