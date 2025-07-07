@@ -201,4 +201,3 @@ const MetricAnalysis: React.FC<{
         {/* Add more detailed analysis here */}
     </Box>
 );
-);

@@ -3,7 +3,7 @@
  * Created: 2025-05-19 04:58:03
  * Author: daparthi001
  */
-import { useCallback, useRef, useEffect, useState } from 'react';
+import { useCallback, useRef, useEffect, useState, useMemo } from 'react';
 import { debounce } from 'lodash';
 
 // Custom hook for virtualized lists
@@ -61,18 +61,19 @@ export const useSortedData = <T>(
 export const useDataCache = <T>(key: string, ttl: number = 5000) => {
     const cache = useRef<Map<string, { data: T; timestamp: number }>>(new Map());
 
-    const getData = useCallback((key: string): T | null => {
-        const cached = cache.current.get(key);
+    const getData = useCallback((dataKey?: string): T | null => {
+        const cacheKey = dataKey || key;
+        const cached = cache.current.get(cacheKey);
         if (!cached) return null;
 
         const now = Date.now();
         if (now - cached.timestamp > ttl) {
-            cache.current.delete(key);
+            cache.current.delete(cacheKey);
             return null;
         }
 
         return cached.data;
-    }, [ttl]);
+    }, [key, ttl]);
 
     const setData = useCallback((key: string, data: T) => {
         cache.current.set(key, {
