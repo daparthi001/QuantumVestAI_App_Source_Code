@@ -26,7 +26,7 @@
     <div class="section-header">
         <h2 class="section-title">Market Summary</h2>
         <div class="section-actions">
-            <span class="market-date">{{ now.strftime('%B %d, %Y') }}</span>
+            <span class="market-date">{% if now is defined %}{{ now().strftime('%B %d, %Y') }}{% else %}Market Data{% endif %}</span>
         </div>
     </div>
     <div class="row g-4">

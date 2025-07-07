@@ -79,12 +79,20 @@ app.add_middleware(
 templates = Jinja2Templates(directory=str(BASE_DIR / "ui" / "templates"))
 app.state.templates = templates  # Store templates in app.state
 
-# Mount static files
-app.mount("/static", StaticFiles(directory=str(BASE_DIR / "ui" / "static")), name="static")
-
 # Get API URL from environment or use default for local development
 API_URL = os.environ.get("API_URL", "http://api:8000")
 API_V1_URL = f"{API_URL}/api/v1"
+
+# CRITICAL FIX: Add global template context variables
+templates.env.globals["now"] = datetime.utcnow
+templates.env.globals["API_URL"] = API_URL
+templates.env.globals["current_year"] = datetime.utcnow().year
+templates.env.globals["app_name"] = "QuantumVestAI"
+templates.env.globals["app_version"] = os.environ.get("APP_VERSION", "2.0.0")
+logger.info("✓ Template global variables configured (now, API_URL, current_year)")
+
+# Mount static files
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "ui" / "static")), name="static")
 
 # Import controllers - moved after app creation
 try:
