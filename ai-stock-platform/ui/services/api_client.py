@@ -20,6 +20,11 @@ class APIClient:
         self.timeout = 10  # Default timeout in seconds
         self.logger = logging.getLogger(__name__)
         
+    @property
+    def headers(self) -> Dict[str, str]:
+        """Get request headers, including auth token if available"""
+        return self._get_headers()
+        
     def _get_headers(self) -> Dict[str, str]:
         """Get request headers, including auth token if available"""
         headers = {
@@ -44,6 +49,13 @@ class APIClient:
             
         # If endpoint doesn't start with /, add /api/v1/
         return f"/api/v1/{endpoint}"
+    
+    def build_url(self, endpoint: str) -> str:
+        """Build full URL for an endpoint"""
+        # Ensure endpoint starts with /
+        if not endpoint.startswith("/"):
+            endpoint = f"/{endpoint}"
+        return f"{self.base_url}{endpoint}"
         
     def _handle_response(self, response: requests.Response) -> Dict[str, Any]:
         """Handle API response and errors"""
@@ -77,7 +89,7 @@ class APIClient:
         
         self.logger.debug(f"Making GET request to {url}")
         try:
-            response = requests.get(url, params=params, timeout=self.timeout)
+            response = requests.get(url, params=params, headers=self._get_headers(), timeout=self.timeout)
             return self._handle_response(response)
         except Timeout:
             self.logger.error(f"Request to {normalized_endpoint} timed out")
@@ -96,7 +108,7 @@ class APIClient:
         
         self.logger.debug(f"Making POST request to {url}")
         try:
-            response = requests.post(url, json=data, headers=self._get_headers(), timeout=self.timeout)
+            response = requests.post(url, data=json.dumps(data) if data else None, headers=self._get_headers(), timeout=self.timeout)
             return self._handle_response(response)
         except Timeout:
             self.logger.error(f"Request to {normalized_endpoint} timed out")
@@ -115,7 +127,7 @@ class APIClient:
         
         self.logger.debug(f"Making PUT request to {url}")
         try:
-            response = requests.put(url, json=data, headers=self._get_headers(), timeout=self.timeout)
+            response = requests.put(url, data=json.dumps(data) if data else None, headers=self._get_headers(), timeout=self.timeout)
             return self._handle_response(response)
         except Timeout:
             self.logger.error(f"Request to {normalized_endpoint} timed out")
@@ -134,7 +146,11 @@ class APIClient:
         
         self.logger.debug(f"Making DELETE request to {url}")
         try:
-            response = requests.delete(url, params=params, headers=self._get_headers(), timeout=self.timeout)
+            # Only include params if they are provided
+            kwargs = {'headers': self._get_headers(), 'timeout': self.timeout}
+            if params:
+                kwargs['params'] = params
+            response = requests.delete(url, **kwargs)
             return self._handle_response(response)
         except Timeout:
             self.logger.error(f"Request to {normalized_endpoint} timed out")
@@ -186,3 +202,16 @@ class APIClient:
         except Exception as e:
             self.logger.error(f"Failed to get available features: {str(e)}")
             return {"features": {}}
+    
+    def authenticate(self, username: str, password: str) -> Optional[Dict[str, Any]]:
+        """Authenticate user and return auth data"""
+        try:
+            auth_data = {
+                "username": username,
+                "password": password
+            }
+            response = self.post("/auth/login", data=auth_data)
+            return response
+        except Exception as e:
+            self.logger.error(f"Authentication failed: {str(e)}")
+            return None
