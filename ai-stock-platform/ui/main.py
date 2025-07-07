@@ -159,22 +159,59 @@ def get_asset_url(path, version=None):
 
 # Import controllers with error handling
 controllers = {}
+
+try:
+    from controllers import auth_controller
+    controllers['auth'] = auth_controller
+except ImportError as e:
     logger.error(f"Could not import auth_controller: {str(e)}")
 
+try:
+    from controllers import dashboard_controller
+    controllers['dashboard'] = dashboard_controller
+except ImportError as e:
     logger.error(f"Could not import dashboard_controller: {str(e)}")
 
+try:
+    from controllers import market_controller
+    controllers['market'] = market_controller
+except ImportError as e:
     logger.error(f"Could not import market_controller: {str(e)}")
 
+try:
+    from controllers import stock_controller
+    controllers['stock'] = stock_controller
+except ImportError as e:
     logger.error(f"Could not import stock_controller: {str(e)}")
 
+try:
+    from controllers import watchlist_controller
+    controllers['watchlist'] = watchlist_controller
+except ImportError as e:
     logger.error(f"Could not import watchlist_controller: {str(e)}")
 
+try:
+    from controllers import profile_controller
+    controllers['profile'] = profile_controller
+except ImportError as e:
     logger.error(f"Could not import profile_controller: {str(e)}")
 
+try:
+    from controllers import forecast_controller
+    controllers['forecast'] = forecast_controller
+except ImportError as e:
     logger.error(f"Could not import forecast_controller: {str(e)}")
 
+try:
+    from controllers import news_controller
+    controllers['news'] = news_controller
+except ImportError as e:
     logger.error(f"Could not import news_controller: {str(e)}")
 
+try:
+    from controllers import feature_controller
+    controllers['feature'] = feature_controller
+except ImportError as e:
     logger.error(f"Could not import feature_controller: {str(e)}")
 
 # Debug middleware to log all requests
@@ -195,7 +232,6 @@ async def enhanced_request_middleware(request: Request, call_next):
         
         # Calculate duration
         duration = (datetime.now() - start_time).total_seconds()
-        logger.error(f"Login error: {str(e)}")
         
         # Add performance headers
         response.headers["X-Request-ID"] = request_id
@@ -204,25 +240,31 @@ async def enhanced_request_middleware(request: Request, call_next):
         logger.info(f"[{request_id}] {method} {path} completed - Status: {response.status_code} - Duration: {duration:.3f}s")
         
         return response
+    except Exception as e:
+        duration = (datetime.now() - start_time).total_seconds()
+        logger.error(f"[{request_id}] {method} {path} failed - Duration: {duration:.3f}s - Error: {str(e)}")
+        raise
+
 @app.post("/emergency-login")
 async def direct_emergency_login(request: Request):
     """Emergency login endpoint for when normal login fails"""
-            # If not JSON, try to parse it as form data
-            form = await request.form()
-            data = dict(form)
-            username = data.get("username", "")
-            password = data.get("password", "")
+    try:
+        # If not JSON, try to parse it as form data
+        form = await request.form()
+        data = dict(form)
+        username = data.get("username", "")
+        password = data.get("password", "")
         
         logger.info(f"Emergency login for: {username}")
         
         # Create emergency token
         expires = datetime.utcnow() + timedelta(hours=24)
         token = f"emergency_{username}_{expires.timestamp()}"
-
+        
+        return {"token": token, "user": {"username": username}}
     except Exception as e:
-        duration = (datetime.now() - start_time).total_seconds()
-        logger.error(f"[{request_id}] {method} {path} failed - Error: {str(e)} - Duration: {duration:.3f}s")
-        raise
+        logger.error(f"Emergency login failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Emergency login failed")
 
 # Enhanced authentication utilities
 class AuthUtils:
