@@ -158,7 +158,7 @@ async def dashboard(
         
         if dashboard_data is None:
             # Check if app.state has settings attribute
-            api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://api:8000'))
+            api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://quantumvestai-dev-api:8000/api/v1'))
             
             try:
                 # Get portfolio data from API using centralized HTTP client

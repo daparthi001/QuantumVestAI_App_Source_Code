@@ -95,7 +95,7 @@ async def market_overview(
     """
     try:
         # Get API URL from app state or environment
-        api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://api:8000'))
+        api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://quantumvestai-dev-api:8000/api/v1'))
         
         # Create cache key for demo mode
         cache_key = f"market_overview_demo"
@@ -201,7 +201,7 @@ async def stock_details(
     """
     try:
         # Get API URL from app state or environment
-        api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://api:8000'))
+        api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://quantumvestai-dev-api:8000/api/v1'))
         
         # Create cache key for demo mode
         cache_key = f"stock_details_{symbol.upper()}_demo"
@@ -317,7 +317,7 @@ async def search_stocks(
     """
     try:
         # Get API URL from app state or environment
-        api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://api:8000'))
+        api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://quantumvestai-dev-api:8000/api/v1'))
         
         # Create cache key for demo mode
         cache_key = f"stock_search_{query.lower()}_demo"
