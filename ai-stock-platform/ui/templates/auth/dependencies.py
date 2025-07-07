@@ -8,6 +8,8 @@ from datetime import datetime, timedelta
 import logging
 import os
 
+from fastapi import HTTPException, status
+
 # Setup logging
 logger = logging.getLogger(__name__)
 
@@ -41,9 +43,9 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
     return encoded_jwt
 
-def decode_token(token: str) -> Dict[str, Any]:
+async def decode_token(token: str) -> Dict[str, Any]:
     """
-    Decode a JWT token.
+    Decode a JWT token with API verification fallback.
     
     Args:
         token: JWT token to decode
@@ -52,49 +54,38 @@ def decode_token(token: str) -> Dict[str, Any]:
         Dict containing token payload
         
     Raises:
-        JWTError: If token is invalid or expired
+        HTTPException: If token is invalid or expired
     """
-
     try:
-        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-        return payload
-    except jwt.PyJWTError as e:
-        logger.error(f"JWT decode error: {str(e)}")
-        raise
+        # First try to verify with API server using improved HTTPX client
         from core.http_client import safe_post_json
         
-        # Use the centralized HTTP client with proper error handling
         response_data = await safe_post_json(
             url=f"{API_URL}/api/auth/verify",
             json_data={"token": token},
             auth_token=token
         )
         
-        if response_data is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token or API unavailable"
-            )
-        
-        return response_data
-        
+        if response_data is not None:
+            return response_data
+            
     except Exception as e:
         logger.error(f"API token verification failed: {str(e)}")
-        logger.error(f"API connection error during token verification: {str(e)}")
-        # Fall back to local verification if API is unavailable
-        try:
-            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-            return {
-                "username": payload.get("sub"),
-                "email": payload.get("email"),
-                "full_name": payload.get("name"),
-                "permissions": payload.get("permissions", []),
-                "token": token,
-                "verified_locally": True
-            }
-        except jwt.PyJWTError as jwt_error:
-            logger.error(f"Local token verification failed: {str(jwt_error)}")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token"
-            )
+    
+    # Fall back to local JWT verification if API is unavailable
+    try:
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        return {
+            "username": payload.get("sub"),
+            "email": payload.get("email"),
+            "full_name": payload.get("name"),
+            "permissions": payload.get("permissions", []),
+            "token": token,
+            "verified_locally": True
+        }
+    except jwt.PyJWTError as jwt_error:
+        logger.error(f"Local token verification failed: {str(jwt_error)}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token"
+        )
