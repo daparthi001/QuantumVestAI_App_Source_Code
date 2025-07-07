@@ -245,14 +245,19 @@ async def remove_from_watchlist(
         
         # Find and remove item
         original_length = len(DEMO_WATCHLIST)
-        global DEMO_WATCHLIST
-        DEMO_WATCHLIST = [item for item in DEMO_WATCHLIST if item["symbol"] != ticker]
         
-        if len(DEMO_WATCHLIST) == original_length:
+        # Filter out the item to remove
+        updated_watchlist = [item for item in DEMO_WATCHLIST if item["symbol"] != ticker]
+        
+        if len(updated_watchlist) == original_length:
             return JSONResponse({
                 "status": "error",
                 "message": f"{ticker} not found in watchlist"
             }, status_code=404)
+        
+        # Update the global list
+        DEMO_WATCHLIST.clear()
+        DEMO_WATCHLIST.extend(updated_watchlist)
         
         return JSONResponse({
             "status": "success",

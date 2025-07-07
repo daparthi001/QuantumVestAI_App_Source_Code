@@ -5,9 +5,10 @@ Author: hemanth9398
 """
 from fastapi import APIRouter, Request, Response, HTTPException
 from fastapi.responses import JSONResponse
+import requests
 import logging
 import os
-from datetime import datetime
+import json
 
 # Setup router
 router = APIRouter(prefix="/api/v1", tags=["api"])
@@ -72,60 +73,48 @@ async def enable_advanced_features_proxy(request: Request):
             content={"error": "Failed to enable advanced features", "detail": str(e)},
             status_code=500
         )
+            logger.debug(f"API response body: {response.text[:200]}")
+        
+        if response.status_code == 200:
+            logger.info("Advanced features enabled successfully!")
+            
+            # Update cached feature status
+            # This ensures the UI immediately reflects the change
+                logger.warning(f"Cache invalidation failed: {str(cache_err)}")
+        
+        # Return API response as-is
+            # If response is not JSON, return a generic success response
+            logger.warning(f"Failed to parse JSON response: {str(json_err)}")
+            return JSONResponse(
+                content={"status": "success", "message": "Advanced features activated"},
+                status_code=200
+            )
+    except Exception as e:
+        logger.error(f"Error enabling advanced features: {str(e)}")
+        return JSONResponse(
+            content={"error": "Failed to enable advanced features", "detail": str(e)},
+            status_code=500
+        )
 
 @router.get("/users/features")
 async def get_features_proxy(request: Request):
     """Direct proxy for getting user features"""
-    try:
-        logger.info("Getting user features in demo mode")
-        
-        return JSONResponse({
-            "status": "success",
-            "features": {
-                "basic": True,
-                "advanced_analytics": True,
-                "real_time_data": True,
-                "ai_predictions": True,
-                "portfolio_insights": True,
-                "api_access": True
-            },
-            "plan": "Premium Demo",
-            "timestamp": datetime.utcnow().isoformat()
-        })
-        
-    except Exception as e:
         logger.error(f"Error getting features status: {str(e)}")
         return JSONResponse(
             content={"error": "Failed to get features status", "detail": str(e)},
             status_code=500
         )
 
-@router.get("/health")
-async def api_proxy_health():
-    """Health check for API proxy"""
-    return {
-        "status": "healthy",
-        "service": "api_proxy",
-        "timestamp": datetime.utcnow().isoformat(),
-        "demo_mode": True
-    }
-
 # Generic API proxy for other endpoints
 @router.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
 async def generic_api_proxy(request: Request, path: str):
     """Generic proxy for any API endpoint"""
-    try:
-        # In demo mode, return generic success responses
-        method = request.method
-        logger.info(f"Generic API proxy: {method} /{path} (demo mode)")
-        
-        return JSONResponse({
-            "status": "success",
-            "message": f"Demo response for {method} /{path}",
-            "demo_mode": True,
-            "timestamp": datetime.utcnow().isoformat()
-        })
-        
+            # If not JSON, return text response
+            return Response(
+                content=response.content,
+                status_code=response.status_code,
+                media_type=response.headers.get("Content-Type", "text/plain")
+            )
     except Exception as e:
         logger.error(f"Error in API proxy for /{path}: {str(e)}")
         return JSONResponse(
