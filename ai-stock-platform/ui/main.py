@@ -159,6 +159,7 @@ def get_asset_url(path, version=None):
 
 # Import controllers with error handling
 controllers = {}
+
 try:
     from controllers import auth_controller
     controllers['auth'] = auth_controller
@@ -239,13 +240,11 @@ async def enhanced_request_middleware(request: Request, call_next):
         logger.info(f"[{request_id}] {method} {path} completed - Status: {response.status_code} - Duration: {duration:.3f}s")
         
         return response
-    
     except Exception as e:
         duration = (datetime.now() - start_time).total_seconds()
-        logger.error(f"[{request_id}] Error processing request {method} {path}: {str(e)}")
-        logger.error(f"[{request_id}] Duration before error: {duration:.3f}s")
-        # Re-raise to let error handlers handle it
+        logger.error(f"[{request_id}] {method} {path} failed - Duration: {duration:.3f}s - Error: {str(e)}")
         raise
+
 @app.post("/emergency-login")
 async def direct_emergency_login(request: Request):
     """Emergency login endpoint for when normal login fails"""
@@ -262,19 +261,11 @@ async def direct_emergency_login(request: Request):
         expires = datetime.utcnow() + timedelta(hours=24)
         token = f"emergency_{username}_{expires.timestamp()}"
         
-        # For now, just return a success response
-        return JSONResponse({
-            "success": True,
-            "message": "Emergency login successful",
-            "token": token
-        })
-        
+        return {"token": token, "user": {"username": username}}
     except Exception as e:
-        logger.error(f"Emergency login error: {str(e)}")
-        return JSONResponse({
-            "success": False,
-            "message": "Emergency login failed"
-        }, status_code=500)
+        logger.error(f"Emergency login failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Emergency login failed")
+
 
 # Enhanced authentication utilities
 class AuthUtils:

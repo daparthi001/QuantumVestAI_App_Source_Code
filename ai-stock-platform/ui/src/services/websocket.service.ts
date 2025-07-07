@@ -16,13 +16,16 @@ export enum ConnectionState {
   ERROR = 'error'
 }
 
-// WebSocket event types
+// WebSocket event types for enhanced real-time data
 export enum EventTypes {
   // Market data events
   PRICE_UPDATE = 'price_update',
   MARKET_STATUS = 'market_status',
   PRICE_ALERT = 'price_alert',
   VOLUME_SPIKE = 'volume_spike',
+  MARKET_OVERVIEW = 'market_overview',
+  TOP_MOVERS = 'top_movers',
+  SECTOR_PERFORMANCE = 'sector_performance',
   
   // User-specific events
   WATCHLIST_UPDATE = 'watchlist_update',
@@ -264,6 +267,81 @@ class WebSocketService {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
+  }
+
+  /**
+   * Subscribe to real-time market data
+   */
+  public subscribeToMarketData(): void {
+    if (this.socket) {
+      this.socket.emit('subscribe', { 
+        type: 'market_data',
+        symbols: ['SPY', 'QQQ', 'DIA', 'VIX']
+      });
+    }
+  }
+
+  /**
+   * Subscribe to portfolio updates
+   */
+  public subscribeToPortfolio(): void {
+    if (this.socket) {
+      this.socket.emit('subscribe', { 
+        type: 'portfolio_updates'
+      });
+    }
+  }
+
+  /**
+   * Subscribe to top movers
+   */
+  public subscribeToTopMovers(): void {
+    if (this.socket) {
+      this.socket.emit('subscribe', { 
+        type: 'top_movers'
+      });
+    }
+  }
+
+  /**
+   * Get connection state
+   */
+  public getConnectionState(): ConnectionState {
+    return this.connectionStateSubject.value;
+  }
+
+  /**
+   * Get event stream for specific event type
+   */
+  public getEventStream(eventType: EventTypes) {
+    return this.eventStreams[eventType];
+  }
+
+  /**
+   * Send a message to the server
+   */
+  public sendMessage(type: string, data: any): void {
+    if (this.socket && this.socket.connected) {
+      this.socket.emit('message', { type, data, timestamp: new Date().toISOString() });
+    }
+  }
+
+  /**
+   * Subscribe to an event type
+   */
+  public subscribe(eventType: string, callback: (data: any) => void): void {
+    if (this.eventStreams[eventType as EventTypes]) {
+      this.eventStreams[eventType as EventTypes].subscribe(callback);
+    }
+  }
+
+  /**
+   * Unsubscribe from an event type
+   */
+  public unsubscribe(eventType: string): void {
+    // For RxJS BehaviorSubject, we don't need to explicitly unsubscribe 
+    // unless we're tracking subscriptions, which we're not in this simple implementation
+    console.log(`Unsubscribed from ${eventType}`);
   }
 } // <-- THIS closes the class!
 

@@ -197,7 +197,11 @@ function App() {
                       <Route path="/admin/*" element={
                         <ProtectedRoute requiredRole="admin">
                           <Layout>
-                            <div>Admin Panel - Coming Soon</div>
+                            <div className="admin-dashboard">
+                              <h1>Admin Dashboard</h1>
+                              <p>Admin components would go here</p>
+                            </div>
+
                           </Layout>
                         </ProtectedRoute>
                       } />

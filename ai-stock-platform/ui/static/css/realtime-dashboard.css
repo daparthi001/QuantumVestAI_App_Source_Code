@@ -1,0 +1,363 @@
+/**
+ * Real-time Dashboard Styles
+ * Premium quantum-inspired design for financial data
+ */
+
+/* Dashboard Container */
+.realtime-dashboard {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* Quantum Title */
+.quantum-title {
+  background: linear-gradient(135deg, #00d2ff, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
+}
+
+/* Live Indicator */
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #10b981;
+  font-weight: 600;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Quantum Card */
+.quantum-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(0, 210, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.quantum-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 210, 255, 0.5), transparent);
+}
+
+.quantum-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 
+    0 12px 48px rgba(0, 0, 0, 0.4),
+    0 4px 16px rgba(0, 210, 255, 0.2);
+  border-color: rgba(0, 210, 255, 0.3);
+}
+
+/* Quantum Badge */
+.quantum-badge {
+  background: linear-gradient(135deg, #00d2ff, #8b5cf6);
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 210, 255, 0.3);
+}
+
+/* Portfolio Metrics */
+.portfolio-metric {
+  text-align: center;
+  padding: 1rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.portfolio-metric:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.metric-label {
+  font-size: 0.875rem;
+  color: #b0b0b0;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.metric-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* Top Movers */
+.top-movers-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.top-mover-item {
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.top-mover-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(4px);
+}
+
+/* Quantum Action Buttons */
+.quantum-action-btn {
+  border-radius: 12px;
+  padding: 1rem;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.quantum-action-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.quantum-action-btn:hover::before {
+  left: 100%;
+}
+
+.quantum-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 210, 255, 0.3);
+}
+
+/* Quantum Particles Effect */
+.quantum-particles {
+  position: relative;
+  overflow: hidden;
+}
+
+.quantum-particles::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(0, 210, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 60%, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
+  animation: quantum-float 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes quantum-float {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0.5;
+  }
+  50% { 
+    transform: translateY(-10px) rotate(180deg);
+    opacity: 0.8;
+  }
+}
+
+/* Dashboard Actions */
+.dashboard-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.dashboard-actions .btn {
+  border-radius: 10px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-actions .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 210, 255, 0.3);
+}
+
+/* Market Overview Cards */
+.quantum-card .card-body {
+  padding: 1.5rem;
+}
+
+.quantum-card .card-header {
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px 16px 0 0;
+  padding: 1rem 1.5rem;
+}
+
+/* Price Display */
+.price-display {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: 0.5px;
+}
+
+/* Change Indicators */
+.change-positive {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.change-negative {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* Loading State */
+.loading-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+  height: 20px;
+  margin: 0.5rem 0;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .quantum-title {
+    font-size: 2rem;
+  }
+  
+  .dashboard-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .dashboard-actions .btn {
+    width: 100%;
+  }
+  
+  .quantum-card {
+    margin-bottom: 1rem;
+  }
+  
+  .portfolio-metric {
+    margin-bottom: 1rem;
+  }
+  
+  .metric-value {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .realtime-dashboard {
+    padding: 10px;
+  }
+  
+  .quantum-title {
+    font-size: 1.75rem;
+  }
+  
+  .quantum-card .card-body {
+    padding: 1rem;
+  }
+  
+  .quantum-card .card-header {
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* High contrast support */
+@media (prefers-contrast: high) {
+  .quantum-card {
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .quantum-title {
+    -webkit-text-fill-color: #ffffff;
+    text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .quantum-particles::after,
+  .live-indicator,
+  .quantum-action-btn::before {
+    animation: none;
+  }
+  
+  .quantum-card,
+  .portfolio-metric,
+  .top-mover-item,
+  .quantum-action-btn {
+    transition: none;
+  }
+}
+
+/* Focus states for accessibility */
+.quantum-card:focus-within,
+.quantum-action-btn:focus {
+  outline: 2px solid #00d2ff;
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .realtime-dashboard {
+    background: white;
+    color: black;
+  }
+  
+  .quantum-card {
+    background: white;
+    border: 1px solid #ccc;
+    box-shadow: none;
+  }
+  
+  .quantum-title {
+    color: black;
+    -webkit-text-fill-color: black;
+  }
+}
