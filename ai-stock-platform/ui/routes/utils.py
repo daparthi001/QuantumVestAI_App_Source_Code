@@ -1,100 +1,96 @@
-from fastapi import APIRouter, Request, Query, Depends
+"""
+QuantumVestAI Utility Routes
+Updated: 2025-07-07 21:54:42
+Author: hemanth9398
+"""
+from fastapi import APIRouter, Request, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from typing import Optional, List, Dict, Any
-from ui.services.yahoo_finance import YahooFinanceService
-API_URL = "http://quantumvestai-dev-api:8000/api/v1"
+from typing import Optional
+import logging
+from datetime import datetime
+from pathlib import Path
 
-# Router setup for utility endpoints
-router = APIRouter(prefix="/utils", tags=["utilities"])
+# Setup router
+router = APIRouter(prefix="/utils", tags=["utils"])
+logger = logging.getLogger(__name__)
 
-@router.get("/ticker-info")
-async def get_ticker_info(
-    ticker: str = Query(...),
-    
-):
-    """Get basic information for a stock ticker"""
-        return JSONResponse(
-            content={"error": f"Could not retrieve ticker info: {str(e)}"},
-            status_code=500
-        )
+# Templates setup
+BASE_DIR = Path(__file__).resolve().parent.parent
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
-@router.get("/search-tickers")
-async def search_tickers(
-    query: str = Query(..., min_length=1),
-    limit: int = Query(10, ge=1, le=20),
-    
-):
-    """Search for ticker symbols"""
-        return JSONResponse(
-            content={"error": f"Search failed: {str(e)}"},
-            status_code=500
-        )
+@router.get("/health")
+async def health_check():
+    """Health check endpoint for utility service"""
+    return {
+        "status": "healthy",
+        "service": "utils",
+        "timestamp": datetime.utcnow().isoformat(),
+        "demo_mode": True,
+        "version": "2.0.0",
+        "author": "hemanth9398"
+    }
 
-@router.get("/market-indices")
-async def get_market_indices(
-    indices: Optional[str] = Query(None),  # Comma-separated list of index tickers
-    
-):
-    """Get current market indices data"""
-                results[ticker] = {"error": f"Could not retrieve data for {ticker}"}
-                
-        return JSONResponse(content=results)
+@router.get("/api/version")
+async def get_version_info():
+    """Get version and build information"""
+    try:
+        return JSONResponse({
+            "status": "success",
+            "version": "2.0.0",
+            "author": "hemanth9398",
+            "updated": "2025-07-07 21:54:42",
+            "build": {
+                "environment": "demo",
+                "features": ["auth", "dashboard", "forecast", "market", "watchlist", "predictability", "settings"],
+                "demo_mode": True
+            },
+            "timestamp": datetime.utcnow().isoformat()
+        })
+        
     except Exception as e:
-        return JSONResponse(
-            content={"error": f"Failed to retrieve market indices: {str(e)}"},
-            status_code=500
-        )
+        logger.error(f"Error getting version info: {str(e)}")
+        return JSONResponse({
+            "status": "error",
+            "message": str(e),
+            "timestamp": datetime.utcnow().isoformat()
+        }, status_code=500)
 
-@router.get("/historical-data")
-async def get_historical_data(
-    ticker: str = Query(...),
-    period: str = Query("1y"),
-    interval: str = Query("1d"),
-    
-):
-    """Get historical price data for a ticker"""
-        return JSONResponse(
-            content={"error": f"Could not retrieve historical data: {str(e)}"},
-            status_code=500
-        )
-
-@router.get("/stock-news")
-async def get_stock_news(
-    ticker: str = Query(...),
-    limit: int = Query(10, ge=1, le=50),
-    
-):
-    """Get news for a specific stock"""
-        return JSONResponse(
-            content={"error": f"Could not retrieve news: {str(e)}"},
-            status_code=500
-        )
-
-# Helper functions that can be used across routes
-def format_price(price: float, include_symbol: bool = True) -> str:
-    """Format a price value with currency symbol"""
-    if price is None:
-        return "N/A"
-    return f"${price:,.2f}" if include_symbol else f"{price:,.2f}"
-
-def format_percent(percent: float, include_symbol: bool = True) -> str:
-    """Format a percentage value"""
-    if percent is None:
-        return "N/A"
-    return f"{percent:.2f}%" if include_symbol else f"{percent:.2f}"
-
-def format_volume(volume: float) -> str:
-    """Format a volume value with K, M, B suffixes"""
-    if volume is None:
-        return "N/A"
-    
-    if volume >= 1_000_000_000:
-        return f"{volume / 1_000_000_000:.2f}B"
-    elif volume >= 1_000_000:
-        return f"{volume / 1_000_000:.2f}M"
-    elif volume >= 1_000:
-        return f"{volume / 1_000:.2f}K"
-    else:
-        return f"{volume:.0f}"
-    elif volume:
+@router.get("/api/metrics")
+async def get_system_metrics():
+    """Get system performance metrics"""
+    try:
+        metrics = {
+            "performance": {
+                "cpu_usage": 23.5,
+                "memory_usage": 67.2,
+                "disk_usage": 45.8,
+                "network_io": 125.6
+            },
+            "application": {
+                "active_sessions": 156,
+                "requests_per_minute": 450,
+                "avg_response_time": 145.6,
+                "error_rate": 0.02
+            },
+            "features": {
+                "predictions_generated": 12450,
+                "stocks_tracked": 5000,
+                "alerts_active": 2340,
+                "users_online": 89
+            }
+        }
+        
+        return JSONResponse({
+            "status": "success",
+            "metrics": metrics,
+            "timestamp": datetime.utcnow().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting system metrics: {str(e)}")
+        return JSONResponse({
+            "status": "error",
+            "message": str(e),
+            "timestamp": datetime.utcnow().isoformat()
+        }, status_code=500)
