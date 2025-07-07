@@ -12,7 +12,7 @@ from fastapi.templating import Jinja2Templates
 from pathlib import Path
 
 router = APIRouter()
-templates = Jinja2Templates(directory=str(Path("/app/templates")))
+templates = Jinja2Templates(directory=str(Path(__file__).resolve().parent.parent / "templates"))
 logger = logging.getLogger("quantumvestai.stock_controller")
 
 # Get API URL from environment or use default

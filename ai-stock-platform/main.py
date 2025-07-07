@@ -76,11 +76,11 @@ app.add_middleware(
 )
 
 # Setup templates and store in app.state - UPDATED
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+templates = Jinja2Templates(directory=str(BASE_DIR / "ui" / "templates"))
 app.state.templates = templates  # Store templates in app.state
 
 # Mount static files
-app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "ui" / "static")), name="static")
 
 # Get API URL from environment or use default for local development
 API_URL = os.environ.get("API_URL", "http://api:8000")
