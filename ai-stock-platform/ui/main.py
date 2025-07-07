@@ -218,14 +218,95 @@ async def index(request: Request):
         if user.get("is_authenticated"):
             return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
         
-        return app.state.templates.TemplateResponse(
-            "index.html", 
-            {
-                "request": request,
-                "user": user,
-                "api_url": API_URL,
-                "request_id": request_id
-            }
+        # Use simple landing page for non-authenticated users
+        return HTMLResponse(
+            content="""
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <title>QuantumVestAI - AI-Powered Investment Platform</title>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                    <style>
+                        .hero-section { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 100px 0; }
+                        .feature-card { transition: transform 0.3s; }
+                        .feature-card:hover { transform: translateY(-5px); }
+                    </style>
+                </head>
+                <body>
+                    <!-- Hero Section -->
+                    <div class="hero-section text-center">
+                        <div class="container">
+                            <h1 class="display-4 fw-bold">QuantumVestAI</h1>
+                            <p class="lead">AI-Powered Investment Intelligence Platform</p>
+                            <p class="fs-5">Make smarter investment decisions with advanced AI forecasting</p>
+                            <a href="/login" class="btn btn-light btn-lg mt-3">Get Started</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Features Section -->
+                    <div class="container my-5">
+                        <div class="row text-center">
+                            <div class="col-12">
+                                <h2 class="mb-5">Powerful Features</h2>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-4">
+                                <div class="card feature-card h-100">
+                                    <div class="card-body text-center">
+                                        <div class="display-6 text-primary mb-3">🤖</div>
+                                        <h5 class="card-title">AI Forecasting</h5>
+                                        <p class="card-text">Advanced machine learning algorithms predict stock movements with high accuracy.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-4">
+                                <div class="card feature-card h-100">
+                                    <div class="card-body text-center">
+                                        <div class="display-6 text-success mb-3">📊</div>
+                                        <h5 class="card-title">Real-time Data</h5>
+                                        <p class="card-text">Live market data and analytics to keep you informed of every market movement.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-4">
+                                <div class="card feature-card h-100">
+                                    <div class="card-body text-center">
+                                        <div class="display-6 text-warning mb-3">⚡</div>
+                                        <h5 class="card-title">Smart Alerts</h5>
+                                        <p class="card-text">Get notified instantly when AI detects significant market opportunities.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Demo Section -->
+                    <div class="bg-light py-5">
+                        <div class="container text-center">
+                            <h3>Try the Demo</h3>
+                            <p class="lead">Experience QuantumVestAI with our demo account</p>
+                            <p><strong>Demo Credentials:</strong></p>
+                            <p>Username: <code>demo</code> | Password: <code>password</code></p>
+                            <a href="/login" class="btn btn-primary btn-lg">Login to Demo</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <footer class="bg-dark text-white py-4">
+                        <div class="container text-center">
+                            <p>&copy; 2025 QuantumVestAI. Built by hemanth9398</p>
+                            <p class="small">Updated: 2025-07-07 21:51:56 UTC</p>
+                        </div>
+                    </footer>
+                    
+                    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+                </body>
+            </html>
+            """,
+            status_code=200
         )
     except Exception as e:
         logger.error(f"Error rendering index page: {str(e)}")
@@ -245,7 +326,7 @@ async def index(request: Request):
                             <div class="col-md-6 text-center">
                                 <h1 class="text-danger">Service Unavailable</h1>
                                 <p class="lead">We're experiencing technical difficulties. Please try again later.</p>
-                                <a href="/" class="btn btn-primary">Try Again</a>
+                                <a href="/login" class="btn btn-primary">Try Login</a>
                             </div>
                         </div>
                     </div>
@@ -614,14 +695,26 @@ async def enhanced_server_error_handler(request: Request, exc: HTTPException):
 # Import and include route controllers with error handling
 controllers = {}
 
-# Try to import and include route controllers
+# Try to import basic routes first (fallback)
+try:
+    import sys
+    sys.path.append(str(BASE_DIR / "routes"))
+    from basic_routes import router as basic_router
+    app.include_router(basic_router)
+    controllers["basic"] = True
+    logger.info("Included basic router (forecast, market, watchlist)")
+except Exception as e:
+    logger.warning(f"Could not import basic router: {str(e)}")
+
+# Try to import and include route controllers (skip if broken)
 route_modules = [
     ("auth", "routes.auth"),
-    ("dashboard", "routes.dashboard"),
-    ("forecast", "routes.forecast"),
-    ("market", "routes.market"),
-    ("watchlist", "routes.watchlist"),
-    ("settings", "routes.settings"),
+    # Skip broken ones for now
+    # ("dashboard", "routes.dashboard"),
+    # ("forecast", "routes.forecast"),
+    # ("market", "routes.market"),
+    # ("watchlist", "routes.watchlist"),
+    # ("settings", "routes.settings"),
 ]
 
 for name, module_path in route_modules:
@@ -634,14 +727,14 @@ for name, module_path in route_modules:
     except Exception as e:
         logger.warning(f"Could not import {name} router from {module_path}: {str(e)}")
 
-# Try to import API proxy
-try:
-    from routes import api_proxy
-    if hasattr(api_proxy, 'router'):
-        app.include_router(api_proxy.router)
-        logger.info("Included API proxy router")
-except Exception as e:
-    logger.warning(f"Could not import api_proxy router: {str(e)}")
+# Try to import API proxy (skip if broken)
+# try:
+#     from routes import api_proxy
+#     if hasattr(api_proxy, 'router'):
+#         app.include_router(api_proxy.router)
+#         logger.info("Included API proxy router")
+# except Exception as e:
+#     logger.warning(f"Could not import api_proxy router: {str(e)}")
 
 logger.info(f"Successfully imported {len(controllers)} route controllers")
 
