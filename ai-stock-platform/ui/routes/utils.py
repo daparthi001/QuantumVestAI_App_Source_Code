@@ -1,4 +1,5 @@
 """
+<<<<<<< HEAD
 Utility routes for QuantumVestAI UI
 Updated: 2025-07-07 21:49:53
 Author: hemanth9398
@@ -544,3 +545,100 @@ async def get_financial_calendar(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get financial calendar"
         )
+=======
+QuantumVestAI Utility Routes
+Updated: 2025-07-07 21:54:42
+Author: hemanth9398
+"""
+from fastapi import APIRouter, Request, Query
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
+from typing import Optional
+import logging
+from datetime import datetime
+from pathlib import Path
+
+# Setup router
+router = APIRouter(prefix="/utils", tags=["utils"])
+logger = logging.getLogger(__name__)
+
+# Templates setup
+BASE_DIR = Path(__file__).resolve().parent.parent
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+
+@router.get("/health")
+async def health_check():
+    """Health check endpoint for utility service"""
+    return {
+        "status": "healthy",
+        "service": "utils",
+        "timestamp": datetime.utcnow().isoformat(),
+        "demo_mode": True,
+        "version": "2.0.0",
+        "author": "hemanth9398"
+    }
+
+@router.get("/api/version")
+async def get_version_info():
+    """Get version and build information"""
+    try:
+        return JSONResponse({
+            "status": "success",
+            "version": "2.0.0",
+            "author": "hemanth9398",
+            "updated": "2025-07-07 21:54:42",
+            "build": {
+                "environment": "demo",
+                "features": ["auth", "dashboard", "forecast", "market", "watchlist", "predictability", "settings"],
+                "demo_mode": True
+            },
+            "timestamp": datetime.utcnow().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting version info: {str(e)}")
+        return JSONResponse({
+            "status": "error",
+            "message": str(e),
+            "timestamp": datetime.utcnow().isoformat()
+        }, status_code=500)
+
+@router.get("/api/metrics")
+async def get_system_metrics():
+    """Get system performance metrics"""
+    try:
+        metrics = {
+            "performance": {
+                "cpu_usage": 23.5,
+                "memory_usage": 67.2,
+                "disk_usage": 45.8,
+                "network_io": 125.6
+            },
+            "application": {
+                "active_sessions": 156,
+                "requests_per_minute": 450,
+                "avg_response_time": 145.6,
+                "error_rate": 0.02
+            },
+            "features": {
+                "predictions_generated": 12450,
+                "stocks_tracked": 5000,
+                "alerts_active": 2340,
+                "users_online": 89
+            }
+        }
+        
+        return JSONResponse({
+            "status": "success",
+            "metrics": metrics,
+            "timestamp": datetime.utcnow().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting system metrics: {str(e)}")
+        return JSONResponse({
+            "status": "error",
+            "message": str(e),
+            "timestamp": datetime.utcnow().isoformat()
+        }, status_code=500)
+>>>>>>> af1ea02c566412749467c62f0937995df3769a5c

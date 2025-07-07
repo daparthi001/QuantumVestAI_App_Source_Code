@@ -1,17 +1,27 @@
 """
+<<<<<<< HEAD
 API proxy routes for QuantumVestAI UI
 Updated: 2025-07-07 21:49:53
+=======
+QuantumVestAI API Proxy Routes
+Updated: 2025-07-07 21:54:42
+>>>>>>> af1ea02c566412749467c62f0937995df3769a5c
 Author: hemanth9398
 """
 
 from fastapi import APIRouter, Request, Response, HTTPException, status, Depends
 from fastapi.responses import JSONResponse
+<<<<<<< HEAD
 from pathlib import Path
 import requests
 import logging
 import os
 import json
 from typing import Any, Dict, Optional
+=======
+import logging
+import os
+>>>>>>> af1ea02c566412749467c62f0937995df3769a5c
 from datetime import datetime
 
 # Setup logging
@@ -21,6 +31,7 @@ logger = logging.getLogger(__name__)
 API_URL = os.getenv("API_URL", "http://quantumvestai-dev-api:8000")
 API_V1_URL = f"{API_URL}/api/v1"
 
+<<<<<<< HEAD
 # Create router
 router = APIRouter(prefix="/api", tags=["api_proxy"])
 
@@ -93,6 +104,57 @@ async def proxy_request(
         )
     except HTTPException:
         raise
+=======
+@router.get("/ticker-search")
+async def ticker_search_proxy(request: Request):
+    """Direct proxy for ticker search API endpoint"""
+    try:
+        # Demo ticker search
+        query = request.query_params.get("q", "")
+        demo_results = []
+        
+        if query:
+            demo_tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "NVDA", "META", "NFLX"]
+            demo_results = [
+                {
+                    "symbol": ticker,
+                    "name": f"{ticker} Corporation",
+                    "exchange": "NASDAQ"
+                }
+                for ticker in demo_tickers if query.upper() in ticker
+            ]
+        
+        return JSONResponse({
+            "status": "success",
+            "results": demo_results,
+            "query": query
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in ticker search proxy: {str(e)}")
+        return JSONResponse(
+            content={"error": "Failed to search tickers", "detail": str(e)},
+            status_code=500
+        )
+
+@router.post("/users/features/advanced")
+async def enable_advanced_features_proxy(request: Request):
+    """Direct proxy for enabling advanced features"""
+    try:
+        logger.info("Enabling advanced features in demo mode")
+        
+        return JSONResponse({
+            "status": "success",
+            "message": "Advanced features enabled successfully (demo mode)",
+            "features": {
+                "advanced_analytics": True,
+                "real_time_data": True,
+                "ai_predictions": True,
+                "portfolio_insights": True
+            }
+        })
+        
+>>>>>>> af1ea02c566412749467c62f0937995df3769a5c
     except Exception as e:
         logger.error(f"Unexpected error in API proxy: {str(e)}")
         raise HTTPException(
@@ -100,6 +162,7 @@ async def proxy_request(
             detail="Internal server error"
         )
 
+<<<<<<< HEAD
 @router.get("/health")
 async def api_health_check(request: Request):
     """Check backend API health"""
@@ -112,6 +175,30 @@ async def api_health_check(request: Request):
         })
         
     except HTTPException as e:
+=======
+@router.get("/users/features")
+async def get_features_proxy(request: Request):
+    """Direct proxy for getting user features"""
+    try:
+        logger.info("Getting user features in demo mode")
+        
+        return JSONResponse({
+            "status": "success",
+            "features": {
+                "basic": True,
+                "advanced_analytics": True,
+                "real_time_data": True,
+                "ai_predictions": True,
+                "portfolio_insights": True,
+                "api_access": True
+            },
+            "plan": "Premium Demo",
+            "timestamp": datetime.utcnow().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting features status: {str(e)}")
+>>>>>>> af1ea02c566412749467c62f0937995df3769a5c
         return JSONResponse(
             content={
                 "proxy_status": "healthy",
@@ -124,6 +211,7 @@ async def api_health_check(request: Request):
             status_code=200  # Proxy is healthy even if backend is down
         )
 
+<<<<<<< HEAD
 @router.get("/market/data")
 async def proxy_market_data(request: Request):
     """Proxy market data endpoint"""
@@ -388,6 +476,36 @@ async def generic_proxy(request: Request, path: str):
         
     except HTTPException as e:
         # Return appropriate error response
+=======
+@router.get("/health")
+async def api_proxy_health():
+    """Health check for API proxy"""
+    return {
+        "status": "healthy",
+        "service": "api_proxy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "demo_mode": True
+    }
+
+# Generic API proxy for other endpoints
+@router.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
+async def generic_api_proxy(request: Request, path: str):
+    """Generic proxy for any API endpoint"""
+    try:
+        # In demo mode, return generic success responses
+        method = request.method
+        logger.info(f"Generic API proxy: {method} /{path} (demo mode)")
+        
+        return JSONResponse({
+            "status": "success",
+            "message": f"Demo response for {method} /{path}",
+            "demo_mode": True,
+            "timestamp": datetime.utcnow().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in API proxy for /{path}: {str(e)}")
+>>>>>>> af1ea02c566412749467c62f0937995df3769a5c
         return JSONResponse(
             content={
                 "error": "API proxy error",
