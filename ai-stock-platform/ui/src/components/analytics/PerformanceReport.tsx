@@ -96,7 +96,8 @@ export const PerformanceReport: React.FC = () => {
                 <Typography variant="h6">Performance Report</Typography>
                 <DateRangePicker
                     value={dateRange}
-                    onChange={(newValue: [Date | null, Date | null] | null) => setDateRange(newValue || [null, null])}
+                    onChange={(newValue: [Date | null, Date | null]) => setDateRange(newValue)}
+
                     renderInput={(startProps: any, endProps: any) => (
                         <>
                             <TextField {...startProps} />

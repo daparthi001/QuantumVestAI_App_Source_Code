@@ -35,7 +35,9 @@ interface OrderListProps {
 export const OrderList: React.FC<OrderListProps> = ({
     orders,
     onSelect,
-    onCancel
+    onCancel,
+    onModify: _onModify
+
 }) => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);

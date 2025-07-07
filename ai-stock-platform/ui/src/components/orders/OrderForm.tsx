@@ -13,7 +13,8 @@ import {
     FormControl,
     InputLabel
 } from '@mui/material';
-import { Order, OrderType, OrderSide, TimeInForce } from '../../types/order';
+import { Order, OrderType, TimeInForce, OrderSide } from '../../types/order';
+
 
 interface OrderFormProps {
     onSubmit: (data: Partial<Order>) => Promise<void>;

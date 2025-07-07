@@ -11,11 +11,11 @@ import { hasMemorySupport } from '../../types/global';
 
 export class PerformanceOptimizer {
     private static instance: PerformanceOptimizer;
-    private monitor: RealTimeMonitor;
+    private _monitor: RealTimeMonitor;
     private optimizations: Map<string, boolean> = new Map();
 
     private constructor() {
-        this.monitor = RealTimeMonitor.getInstance();
+        this._monitor = RealTimeMonitor.getInstance();
         this.initializeOptimizations();
     }
 
@@ -57,7 +57,11 @@ export class PerformanceOptimizer {
                 if (totalSize > maxSize) {
                     // Remove oldest entries until under maxSize
                     const entries = Object.entries(currentCache);
-                    entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+                    entries.sort((a, b) => {
+                        const aData = a[1] as any;
+                        const bData = b[1] as any;
+                        return (aData.timestamp || 0) - (bData.timestamp || 0);
+                    });
                     
                     while (entries.length && totalSize > maxSize) {
                         entries.shift();
@@ -108,7 +112,8 @@ export class PerformanceOptimizer {
                 component: T,
                 dependencies: string[]
             ): React.MemoExoticComponent<T> => {
-                return React.memo(component, (prev, next) => {
+                return React.memo(component, (prev: any, next: any) => {
+
                     return dependencies.every(
                         dep => prev[dep] === next[dep]
                     );

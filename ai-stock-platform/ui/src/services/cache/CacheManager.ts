@@ -11,12 +11,15 @@ export class CacheManager {
     private memoryCache: LRUCache<string, any>;
     private indexedDB: IDBDatabase | null = null;
     private monitor: RealTimeMonitor;
+    private cacheHits: number = 0;
+    private cacheMisses: number = 0;
 
     private constructor() {
         this.memoryCache = new LRUCache({
             max: 500, // Maximum number of items
             maxSize: 5000, // Maximum cache size in bytes
-            sizeCalculation: (value) => {
+            sizeCalculation: (value, _key) => {
+
                 return new Blob([JSON.stringify(value)]).size;
             },
             ttl: 1000 * 60 * 60, // 1 hour default TTL
@@ -80,8 +83,8 @@ export class CacheManager {
         }
 
         // Monitor cache usage
-        const size = new Blob([JSON.stringify(value)]).size;
-        this.monitor.trackMetric('cache_set', size);
+        this.monitor.trackMetric('cache_set', new Blob([JSON.stringify(value)]).size);
+
     }
 
     async get(key: string): Promise<any | null> {
@@ -90,8 +93,10 @@ export class CacheManager {
         if (memoryItem) {
             if (this.isExpired(memoryItem)) {
                 this.memoryCache.delete(key);
+                this.cacheMisses++;
                 return null;
             }
+            this.cacheHits++;
             return memoryItem.value;
         }
 
@@ -107,8 +112,10 @@ export class CacheManager {
                     if (item && !this.isExpired(item)) {
                         // Cache in memory for future access
                         this.memoryCache.set(key, item);
+                        this.cacheHits++;
                         resolve(item.value);
                     } else {
+                        this.cacheMisses++;
                         resolve(null);
                     }
                 };
@@ -116,6 +123,7 @@ export class CacheManager {
             });
         }
 
+        this.cacheMisses++;
         return null;
     }
 
@@ -148,10 +156,15 @@ export class CacheManager {
         itemCount: number;
         hitRate: number;
     }> {
+        // Calculate hit rate manually
+        const totalRequests = this.cacheHits + this.cacheMisses;
+        const hitRate = totalRequests > 0 ? this.cacheHits / totalRequests : 0;
+
         return {
             memorySize: this.memoryCache.calculatedSize || 0,
             itemCount: this.memoryCache.size,
-            hitRate: this.calculateHitRate()
+            hitRate: hitRate
+
         };
     }
 

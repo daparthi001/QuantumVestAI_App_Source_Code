@@ -50,7 +50,8 @@ export const OrderSchema = z.object({
     updatedAt: z.string().datetime(),
     executedPrice: z.number().optional(),
     executedQuantity: z.number().optional(),
-    executionTime: z.string().datetime().optional()
+    executionTime: z.string().datetime().optional(),
+    canModify: z.boolean().optional().default(true)
 });
 
 export type Order = z.infer<typeof OrderSchema>;

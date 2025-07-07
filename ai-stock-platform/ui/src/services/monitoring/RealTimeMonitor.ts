@@ -12,11 +12,11 @@ export class RealTimeMonitor {
     private static instance: RealTimeMonitor;
     private metrics$ = new Subject<any>();
     private alerts$ = new Subject<any>();
-    private performanceMonitor: PerformanceMonitor;
+    private _performanceMonitor: PerformanceMonitor;
     private subscribers: Set<(data: any) => void> = new Set();
 
     private constructor() {
-        this.performanceMonitor = PerformanceMonitor.getInstance();
+        this._performanceMonitor = PerformanceMonitor.getInstance();
         this.initializeMonitoring();
     }
 

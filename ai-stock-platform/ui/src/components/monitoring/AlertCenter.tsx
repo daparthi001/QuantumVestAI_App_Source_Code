@@ -80,6 +80,10 @@ export const AlertCenter: React.FC = () => {
         setUnreadCount(prev => Math.max(0, prev - 1));
     };
 
+    const _handleClearAll = () => {
+        setAlerts([]);
+        setUnreadCount(0);
+    };
     return (
         <>
             <IconButton

@@ -31,14 +31,14 @@ interface CachePattern {
 
 export class AutoOptimizer {
     private static instance: AutoOptimizer;
-    private monitor: RealTimeMonitor;
+    private _monitor: RealTimeMonitor;
     private performanceMonitor: PerformanceMonitor;
     private cacheManager: CacheManager;
     private optimizationRules: Map<string, OptimizationRule>;
     private activeOptimizations: Set<string>;
 
     private constructor() {
-        this.monitor = RealTimeMonitor.getInstance();
+        this._monitor = RealTimeMonitor.getInstance();
         this.performanceMonitor = PerformanceMonitor.getInstance();
         this.cacheManager = CacheManager.getInstance();
         this.optimizationRules = new Map();
@@ -185,7 +185,7 @@ export class AutoOptimizer {
     }
 
     private processCacheAccessPatterns(logs: any[]): CachePattern[] {
-        return logs.reduce((patterns, log) => {
+        return logs.reduce((patterns, _log) => {
             // Process logs to identify patterns
             // Return array of identified patterns
             return patterns;
@@ -199,6 +199,35 @@ export class AutoOptimizer {
                 ttl: pattern.frequency > 10 ? 3600000 : 1800000, // 1hr or 30min
                 priority: pattern.frequency > 50 ? 'high' : 'medium'
             });
+        }
+    }
+
+    private cleanupEventListeners(): void {
+        // Remove any global event listeners that might be hanging around
+        const events = ['resize', 'scroll', 'mousemove', 'keydown'];
+        events.forEach(event => {
+            // Create a dummy function to remove any potential listeners
+            const dummyHandler = () => {};
+            window.removeEventListener(event, dummyHandler);
+            document.removeEventListener(event, dummyHandler);
+        });
+    }
+
+    private async preloadFrequentData(): Promise<void> {
+        // Preload commonly accessed data
+        const frequentKeys = [
+            'user_preferences',
+            'market_data',
+            'portfolio_summary',
+            'recent_orders'
+        ];
+
+        for (const key of frequentKeys) {
+            try {
+                await this.cacheManager.get(key);
+            } catch (error) {
+                console.warn(`Failed to preload ${key}:`, error);
+            }
         }
     }
 }

@@ -3,7 +3,7 @@
  * Created: 2025-05-19 05:00:36
  * Author: daparthi001
  */
-import React, { createContext, useContext } from 'react';
+import React, { createContext } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { queryClient } from '../store/orderStore';
