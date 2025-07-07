@@ -82,4 +82,24 @@ export class PerformanceMonitor {
             metric.record(value);
         }
     }
+
+    // Add missing methods
+    getMetricDetails(metricName: string) {
+        return {
+            name: metricName,
+            description: `Metric for ${metricName}`,
+            unit: 'ms',
+            hasData: this.metrics.has(metricName)
+        };
+    }
+
+    generateReport() {
+        return {
+            timestamp: new Date().toISOString(),
+            metrics: Array.from(this.metrics.keys()).map(name => ({
+                name,
+                details: this.getMetricDetails(name)
+            }))
+        };
+    }
 }

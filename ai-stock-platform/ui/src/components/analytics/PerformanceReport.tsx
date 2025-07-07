@@ -17,7 +17,8 @@ import {
     Dialog,
     DialogTitle,
     DialogContent,
-    DialogActions
+    DialogActions,
+    TextField
 } from '@mui/material';
 import { DateRangePicker } from '@mui/lab';
 import { PerformanceMonitor } from '../../services/monitoring/PerformanceMonitor';
@@ -174,3 +175,38 @@ export const PerformanceReport: React.FC = () => {
         </div>
     );
 };
+
+// Helper functions
+function generateCSVReport(data: PerformanceData): string {
+    const headers = ['Component', 'Average Render Time', 'P95 Render Time', 'Memory Usage'];
+    const rows = data.componentMetrics.map(metric => [
+        metric.name,
+        metric.averageRenderTime.toString(),
+        metric.p95RenderTime.toString(),
+        metric.memoryUsage.toString()
+    ]);
+    
+    return [headers, ...rows].map(row => row.join(',')).join('\n');
+}
+
+function downloadCSV(content: string, filename: string) {
+    const blob = new Blob([content], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+// MetricDetails component
+const MetricDetails: React.FC<{ metric: any }> = ({ metric }) => (
+    <div>
+        <p>Name: {metric.name}</p>
+        <p>Average: {metric.averageRenderTime}ms</p>
+        <p>P95: {metric.p95RenderTime}ms</p>
+        <p>Memory: {metric.memoryUsage}MB</p>
+    </div>
+);
+
+export default PerformanceReport;
