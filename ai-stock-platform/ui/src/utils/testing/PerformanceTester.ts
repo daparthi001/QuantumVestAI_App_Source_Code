@@ -3,10 +3,25 @@
  * Created: 2025-05-19 05:06:36
  * Author: daparthi001
  */
-import React from 'react';
-import ReactDOM from 'react-dom';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import { PerformanceMonitor } from '../../services/monitoring/PerformanceMonitor';
-import { TestResult as LoadTestResult } from '../../types/loadTest';
+
+
+// Extend Performance interface to include memory property
+interface PerformanceWithMemory extends Performance {
+    memory?: {
+        usedJSHeapSize: number;
+        totalJSHeapSize: number;
+        jsHeapSizeLimit: number;
+    };
+}
+
+// Type guard to check if performance.memory is available
+function hasMemorySupport(perf: Performance): perf is PerformanceWithMemory {
+    return 'memory' in perf;
+}
+
 
 export class PerformanceTester {
     private static instance: PerformanceTester;
@@ -65,8 +80,9 @@ export class PerformanceTester {
     async measureMemoryUsage(
         operation: () => Promise<void>
     ): Promise<MemoryTestResult> {
-        const perfMemory = (performance as any).memory;
-        if (!perfMemory) {
+
+        if (!hasMemorySupport(performance) || !performance.memory) {
+
             throw new Error('Memory measurements not supported in this environment');
         }
 
@@ -99,16 +115,18 @@ export class PerformanceTester {
         props: any
     ): Promise<void> {
         const div = document.createElement('div');
+        document.body.appendChild(div);
+        
         try {
-            await new Promise<void>(resolve => {
-                ReactDOM.render(
-                    React.createElement(component, props),
-                    div,
-                    () => resolve()
-                );
-            });
+
+            await new Promise<void>((resolve) => {
+                const element = React.createElement(component, props);
+                ReactDOM.render(element, div, () => {
+                    resolve();
+                });
         } finally {
             ReactDOM.unmountComponentAtNode(div);
+            document.body.removeChild(div);
         }
     }
 
@@ -159,11 +177,21 @@ export class PerformanceTester {
         return recommendations;
     }
 
-    private storeResult(name: string, result: PerformanceTestResult) {
-        if (!this.testResults.has(name)) {
-            this.testResults.set(name, []);
+    private storeTestResult(testName: string, result: PerformanceTestResult): void {
+        if (!this.testResults.has(testName)) {
+            this.testResults.set(testName, []);
         }
-        this.testResults.get(name)!.push(result);
+        const results = this.testResults.get(testName)!;
+        results.push(result);
+        
+        // Keep only the last 50 results to prevent memory issues
+        if (results.length > 50) {
+            results.shift();
+        }
+
+        // Use the monitor to track performance metrics
+        this.monitor.trackRenderTime(testName, result.mean);
+
     }
 }
 
