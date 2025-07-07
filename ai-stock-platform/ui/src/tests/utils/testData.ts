@@ -25,7 +25,8 @@ export function generateTestOrders(count: number): Order[] {
             updatedAt: new Date(Date.now() - Math.random() * 86400000).toISOString(),
             executedPrice: Math.random() * 1000 + 10,
             executedQuantity: Math.floor(Math.random() * 1000) + 1,
-            executionTime: new Date(Date.now() - Math.random() * 86400000).toISOString()
+            executionTime: new Date(Date.now() - Math.random() * 86400000).toISOString(),
+            canModify: Math.random() > 0.5
         };
         
         orders.push(order);
@@ -49,5 +50,6 @@ export const mockOrder: Order = {
     price: 150.00,
     status: OrderStatus.PENDING,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    canModify: true
 };

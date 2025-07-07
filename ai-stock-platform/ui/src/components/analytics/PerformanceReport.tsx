@@ -30,6 +30,7 @@ interface PerformanceData {
         averageRenderTime: number;
         p95RenderTime: number;
         rerenders: number;
+        memoryUsage: number;
     }>;
     operationMetrics: Array<{
         name: string;
@@ -92,8 +93,8 @@ export const PerformanceReport: React.FC = () => {
                 <Typography variant="h6">Performance Report</Typography>
                 <DateRangePicker
                     value={dateRange}
-                    onChange={(newValue) => setDateRange(newValue)}
-                    renderInput={(startProps, endProps) => (
+                    onChange={(newValue: [Date | null, Date | null]) => setDateRange(newValue)}
+                    renderInput={(startProps: any, endProps: any) => (
                         <>
                             <TextField {...startProps} />
                             <TextField {...endProps} />

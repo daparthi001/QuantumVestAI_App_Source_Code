@@ -17,10 +17,7 @@ import { OrderList } from './OrderList';
 import { OrderAnalytics } from './OrderAnalytics';
 import { OrderWebSocket } from '../../services/OrderWebSocket';
 import { 
-    Order,
-    OrderType,
-    OrderStatus,
-    TimeInForce
+    Order
 } from '../../types/order';
 import { RootState } from '../../store/types';
 

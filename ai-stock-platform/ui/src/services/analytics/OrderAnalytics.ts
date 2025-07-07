@@ -5,11 +5,11 @@
  */
 import Analytics from 'analytics';
 import googleAnalytics from '@analytics/google-analytics';
-import { Order, OrderType } from '../../types/order';
+import { Order } from '../../types/order';
 
 export class OrderAnalytics {
     private static instance: OrderAnalytics;
-    private analytics: Analytics;
+    private analytics: any;
 
     private constructor() {
         this.analytics = Analytics({

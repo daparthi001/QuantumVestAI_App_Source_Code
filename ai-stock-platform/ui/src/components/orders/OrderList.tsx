@@ -37,7 +37,7 @@ export const OrderList: React.FC<OrderListProps> = ({
     orders,
     onSelect,
     onCancel,
-    onModify
+    onModify: _onModify
 }) => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -102,7 +102,7 @@ export const OrderList: React.FC<OrderListProps> = ({
                                     </TableCell>
                                     <TableCell>{order.quantity}</TableCell>
                                     <TableCell>
-                                        {formatCurrency(order.price)}
+                                        {order.price ? formatCurrency(order.price) : 'Market'}
                                     </TableCell>
                                     <TableCell>
                                         <Chip

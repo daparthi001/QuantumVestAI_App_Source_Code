@@ -1,4 +1,4 @@
-import { trace, context, SpanStatusCode, metrics } from '@opentelemetry/api';
+import { trace, context, SpanStatusCode } from '@opentelemetry/api';
 import * as Sentry from '@sentry/react';
 import { BrowserTracing } from '@sentry/tracing';
 import { hasMemorySupport } from '../../types/global';
@@ -44,7 +44,9 @@ export class PerformanceMonitor {
         if (span) {
             span.setAttribute('operation', operation);
             span.setAttribute('duration_ms', duration);
-            span.setStatus(success ? SpanStatusCode.OK : SpanStatusCode.ERROR);
+            span.setStatus({
+                code: success ? SpanStatusCode.OK : SpanStatusCode.ERROR
+            });
         }
 
         this.recordMetric(`order_operation_${operation}`, duration);
@@ -99,7 +101,7 @@ export class PerformanceMonitor {
         });
     }
 
-    private generateTimeseriesData(metricName: string, interval: string) {
+    private generateTimeseriesData(_metricName: string, interval: string) {
         // Generate mock timeseries data based on interval
         const data = [];
         const now = Date.now();
@@ -110,39 +112,69 @@ export class PerformanceMonitor {
             data.push({
                 timestamp: now - (i * intervalMs / points),
                 value: Math.random() * 100 + 50, // Mock value
-                label: new Date(now - (i * intervalMs / points)).toLocaleTimeString()
+                category: `Category ${(i % 3) + 1}` // Add category field
             });
         }
 
         return data;
     }
 
-    private generateBreakdownData(metricName: string) {
-        // Generate mock breakdown data
+    private generateBreakdownData(_metricName: string) {
+        // Generate mock breakdown data matching MetricBreakdown interface
         return [
-            { category: 'Component A', value: 35, percentage: 35 },
-            { category: 'Component B', value: 25, percentage: 25 },
-            { category: 'Component C', value: 20, percentage: 20 },
-            { category: 'Other', value: 20, percentage: 20 }
+            { category: 'Component A', min: 10, max: 90, avg: 35, p95: 80, count: 100 },
+            { category: 'Component B', min: 5, max: 70, avg: 25, p95: 60, count: 80 },
+            { category: 'Component C', min: 15, max: 85, avg: 20, p95: 75, count: 60 },
+            { category: 'Other', min: 8, max: 60, avg: 20, p95: 55, count: 40 }
         ];
     }
 
-    generateReport(startDate?: Date, endDate?: Date) {
+    generateReport(_startDate?: Date, _endDate?: Date) {
         return Promise.resolve({
-            timestamp: new Date().toISOString(),
-            dateRange: {
-                start: startDate?.toISOString() || new Date(Date.now() - 86400000).toISOString(),
-                end: endDate?.toISOString() || new Date().toISOString()
-            },
-            metrics: Array.from(this.metrics.keys()).map(name => ({
-                name,
-                details: this.getMetricDetails(name)
-            })),
-            summary: {
-                totalMetrics: this.metrics.size,
-                avgPerformance: this.getAverageRenderTime(),
-                memoryUsage: this.getMemoryUsage()
-            }
+            componentMetrics: [
+                {
+                    name: 'OrderList',
+                    averageRenderTime: 12.5,
+                    p95RenderTime: 25.0,
+                    rerenders: 3,
+                    memoryUsage: 2.5
+                },
+                {
+                    name: 'OrderForm',
+                    averageRenderTime: 8.3,
+                    p95RenderTime: 18.0,
+                    rerenders: 2,
+                    memoryUsage: 1.8
+                }
+            ],
+            operationMetrics: [
+                {
+                    name: 'createOrder',
+                    averageTime: 250,
+                    errorRate: 0.02,
+                    count: 150
+                },
+                {
+                    name: 'fetchOrders',
+                    averageTime: 180,
+                    errorRate: 0.01,
+                    count: 500
+                }
+            ],
+            apiMetrics: [
+                {
+                    endpoint: '/api/orders',
+                    averageResponseTime: 200,
+                    errorRate: 0.015,
+                    callCount: 450
+                },
+                {
+                    endpoint: '/api/portfolio',
+                    averageResponseTime: 150,
+                    errorRate: 0.008,
+                    callCount: 200
+                }
+            ]
         });
     }
 

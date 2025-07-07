@@ -18,7 +18,7 @@ export class CacheManager {
         this.memoryCache = new LRUCache({
             max: 500, // Maximum number of items
             maxSize: 5000, // Maximum cache size in bytes
-            sizeCalculation: (value, key) => {
+            sizeCalculation: (value, _key) => {
                 return new Blob([JSON.stringify(value)]).size;
             },
             ttl: 1000 * 60 * 60, // 1 hour default TTL
@@ -82,11 +82,7 @@ export class CacheManager {
         }
 
         // Monitor cache usage
-        this.monitor.trackMetric('cache_set', {
-            key,
-            size: new Blob([JSON.stringify(value)]).size,
-            persistent: options.persistent
-        });
+        this.monitor.trackMetric('cache_set', new Blob([JSON.stringify(value)]).size);
     }
 
     async get(key: string): Promise<any | null> {
