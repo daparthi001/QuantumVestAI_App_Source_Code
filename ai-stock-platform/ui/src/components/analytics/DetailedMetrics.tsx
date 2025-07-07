@@ -62,7 +62,7 @@ export const DetailedMetrics: React.FC<{
             setError(null);
             try {
                 const monitor = PerformanceMonitor.getInstance();
-                const data = await monitor.getMetricDetails(metricName, interval);
+                const data = await monitor.getMetricDetails(metricName);
                 setTimeseriesData(data.timeseries);
                 setBreakdown(data.breakdown);
                 trackInteraction('fetch_metric_details');
