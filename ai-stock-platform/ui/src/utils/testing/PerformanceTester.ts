@@ -7,6 +7,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { PerformanceMonitor } from '../../services/monitoring/PerformanceMonitor';
 
+
 // Extend Performance interface to include memory property
 interface PerformanceWithMemory extends Performance {
     memory?: {
@@ -20,6 +21,7 @@ interface PerformanceWithMemory extends Performance {
 function hasMemorySupport(perf: Performance): perf is PerformanceWithMemory {
     return 'memory' in perf;
 }
+
 
 export class PerformanceTester {
     private static instance: PerformanceTester;
@@ -52,7 +54,7 @@ export class PerformanceTester {
         }
 
         const testResult = this.calculateStats(results);
-        this.storeTestResult('render', testResult);
+        this.storeResult('render', testResult);
         return testResult;
     }
 
@@ -71,20 +73,22 @@ export class PerformanceTester {
         }
 
         const testResult = this.calculateStats(results);
-        this.storeTestResult(name, testResult);
+        this.storeResult(name, testResult);
         return testResult;
     }
 
     async measureMemoryUsage(
         operation: () => Promise<void>
     ): Promise<MemoryTestResult> {
+
         if (!hasMemorySupport(performance) || !performance.memory) {
+
             throw new Error('Memory measurements not supported in this environment');
         }
 
-        const initialMemory = performance.memory.usedJSHeapSize;
+        const initialMemory = perfMemory.usedJSHeapSize;
         await operation();
-        const finalMemory = performance.memory.usedJSHeapSize;
+        const finalMemory = perfMemory.usedJSHeapSize;
 
         return {
             beforeBytes: initialMemory,
@@ -114,12 +118,12 @@ export class PerformanceTester {
         document.body.appendChild(div);
         
         try {
+
             await new Promise<void>((resolve) => {
                 const element = React.createElement(component, props);
                 ReactDOM.render(element, div, () => {
                     resolve();
                 });
-            });
         } finally {
             ReactDOM.unmountComponentAtNode(div);
             document.body.removeChild(div);
@@ -187,6 +191,7 @@ export class PerformanceTester {
 
         // Use the monitor to track performance metrics
         this.monitor.trackRenderTime(testName, result.mean);
+
     }
 }
 

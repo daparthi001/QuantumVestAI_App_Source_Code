@@ -5,25 +5,47 @@
  */
 import { z } from 'zod';
 
+// Export individual enum types
+export enum OrderStatus {
+    PENDING = 'PENDING',
+    ACCEPTED = 'ACCEPTED',
+    REJECTED = 'REJECTED',
+    PARTIAL_FILLED = 'PARTIAL_FILLED',
+    FILLED = 'FILLED',
+    CANCELLED = 'CANCELLED',
+    EXPIRED = 'EXPIRED'
+}
+
+export enum OrderType {
+    MARKET = 'MARKET',
+    LIMIT = 'LIMIT',
+    STOP = 'STOP',
+    STOP_LIMIT = 'STOP_LIMIT'
+}
+
+export enum TimeInForce {
+    DAY = 'DAY',
+    GTC = 'GTC',
+    IOC = 'IOC',
+    FOK = 'FOK'
+}
+
+export enum OrderSide {
+    BUY = 'BUY',
+    SELL = 'SELL'
+}
+
 export const OrderSchema = z.object({
     id: z.string().uuid(),
     userId: z.string(),
     symbol: z.string().min(1),
-    side: z.enum(['BUY', 'SELL']),
+    side: z.nativeEnum(OrderSide),
     quantity: z.number().positive(),
-    orderType: z.enum(['MARKET', 'LIMIT', 'STOP', 'STOP_LIMIT']),
-    timeInForce: z.enum(['DAY', 'GTC', 'IOC', 'FOK']),
+    orderType: z.nativeEnum(OrderType),
+    timeInForce: z.nativeEnum(TimeInForce),
     price: z.number().optional(),
     stopPrice: z.number().optional(),
-    status: z.enum([
-        'PENDING',
-        'ACCEPTED',
-        'REJECTED',
-        'PARTIAL_FILLED',
-        'FILLED',
-        'CANCELLED',
-        'EXPIRED'
-    ]),
+    status: z.nativeEnum(OrderStatus),
     createdAt: z.string().datetime(),
     updatedAt: z.string().datetime(),
     executedPrice: z.number().optional(),
@@ -32,12 +54,6 @@ export const OrderSchema = z.object({
 });
 
 export type Order = z.infer<typeof OrderSchema>;
-
-// Export individual enum types
-export type OrderStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'PARTIAL_FILLED' | 'FILLED' | 'CANCELLED' | 'EXPIRED';
-export type OrderType = 'MARKET' | 'LIMIT' | 'STOP' | 'STOP_LIMIT';
-export type TimeInForce = 'DAY' | 'GTC' | 'IOC' | 'FOK';
-export type OrderSide = 'BUY' | 'SELL';
 
 export function validateOrder(order: unknown): Order {
     return OrderSchema.parse(order);
