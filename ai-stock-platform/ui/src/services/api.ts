@@ -10,6 +10,7 @@ import authService from './auth.service';
 // Extend AxiosInstance to include custom methods
 interface ExtendedAxiosInstance extends AxiosInstance {
   getResponseTime: () => {
+
     average: number;
     max: number;
     min: number;
@@ -34,6 +35,7 @@ const processQueue = (error: any, token: string | null = null) => {
 
 // Create a custom API client with advanced features
 const apiClient = axios.create({
+
   baseURL: API_BASE_URL,
   timeout: 30000, // 30 seconds timeout
   headers: {

@@ -113,6 +113,7 @@ export class PerformanceOptimizer {
                 dependencies: string[]
             ): React.MemoExoticComponent<T> => {
                 return React.memo(component, (prev: any, next: any) => {
+
                     return dependencies.every(
                         dep => prev[dep] === next[dep]
                     );

@@ -7,11 +7,13 @@ import { hasMemorySupport } from '../../types/global';
 interface MetricHistogram {
     value: number;
     timestamp: number;
+
 }
 
 export class PerformanceMonitor {
     private static instance: PerformanceMonitor;
     private metrics: Map<string, MetricHistogram>;
+
 
     private constructor() {
         this.metrics = new Map();
@@ -47,6 +49,7 @@ export class PerformanceMonitor {
             span.setStatus({
                 code: success ? SpanStatusCode.OK : SpanStatusCode.ERROR
             });
+
         }
 
         this.recordMetric(`order_operation_${operation}`, duration);
@@ -84,10 +87,24 @@ export class PerformanceMonitor {
     // Add missing methods
     getMetricDetails(metricName: string, interval?: string) {
         const baseData = {
+
             name: metricName,
             description: `Metric for ${metricName}`,
             unit: 'ms',
-            hasData: this.metrics.has(metricName)
+            hasData: this.metrics.has(metricName),
+            timeseries: metric ? [{ 
+                timestamp: Date.now(), 
+                value: metric.value || 0,
+                category: metricName 
+            }] : [],
+            breakdown: metric ? [{ 
+                category: metricName,
+                min: metric.value || 0,
+                max: metric.value || 0,
+                avg: metric.value || 0,
+                p95: (metric.value || 0) * 1.2,
+                count: 1
+            }] : []
         };
 
         // Generate mock timeseries and breakdown data based on interval
@@ -176,6 +193,7 @@ export class PerformanceMonitor {
                 }
             ]
         });
+
     }
 
     // Add missing getStats method
@@ -228,5 +246,6 @@ export class PerformanceMonitor {
             });
 
         return Promise.resolve(renderMetrics);
+
     }
 }

@@ -9,9 +9,11 @@ import { useAppDispatch } from '../../hooks/redux';
 import {
     createOrder,
     cancelOrder,
-    modifyOrder,
     fetchOrders
 } from '../../store/actions/orderActions';
+import { 
+    Order
+} from '../../types/order';
 import { OrderForm } from './OrderForm';
 import { OrderList } from './OrderList';
 import { OrderAnalytics } from './OrderAnalytics';
@@ -21,11 +23,12 @@ import {
 } from '../../types/order';
 import { RootState } from '../../store/types';
 
+
 const OrderManagement: React.FC = () => {
     const dispatch = useAppDispatch();
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-    const { orders, loading, error } = useSelector(
-        (state: RootState) => state.orders
+    const { orders, loading, error } = useAppSelector(
+        (state) => state.orders
     );
 
     useEffect(() => {
@@ -59,18 +62,6 @@ const OrderManagement: React.FC = () => {
         }
     };
 
-    const handleModifyOrder = async (
-        orderId: string,
-        modifications: Partial<Order>
-    ) => {
-        try {
-            await dispatch(modifyOrder(orderId, modifications));
-            setSelectedOrder(null);
-        } catch (error) {
-            console.error('Order modification failed:', error);
-        }
-    };
-
     return (
         <div className="order-management">
             <div className="order-management__header">
@@ -90,7 +81,6 @@ const OrderManagement: React.FC = () => {
                         orders={orders}
                         onSelect={setSelectedOrder}
                         onCancel={handleCancelOrder}
-                        onModify={handleModifyOrder}
                     />
                 </div>
                 

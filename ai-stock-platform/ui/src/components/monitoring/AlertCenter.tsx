@@ -13,6 +13,7 @@ import {
     Divider,
     Box,
     Alert,
+    AlertTitle,
     Collapse
 } from '@mui/material';
 import {
@@ -47,7 +48,11 @@ export const AlertCenter: React.FC = () => {
             }
         });
 
-        return () => unsubscribe();
+        return () => {
+            if (typeof unsubscribe === 'function') {
+                unsubscribe();
+            }
+        };
     }, []);
 
     const handleNewAlerts = (newAlerts: any[]) => {
@@ -79,7 +84,6 @@ export const AlertCenter: React.FC = () => {
         setAlerts([]);
         setUnreadCount(0);
     };
-
     return (
         <>
             <IconButton

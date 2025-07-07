@@ -7,10 +7,10 @@ import React, { useEffect, useState } from 'react';
 import {
     Card,
     CardContent,
-    Grid,
     Typography,
     Tab,
-    Tabs
+    Tabs,
+    Box
 } from '@mui/material';
 import {
     LineChart,
@@ -55,6 +55,10 @@ interface AnalyticsData {
     orderTypeDistribution: OrderDistribution[];
     dailyVolume: DailyVolume[];
     symbolBreakdown: SymbolBreakdown[];
+}
+
+interface PerformanceMetricsProps {
+    orders: Order[];
 }
 
 export const OrderAnalytics: React.FC<OrderAnalyticsProps> = ({ orders }) => {
@@ -121,6 +125,7 @@ export const OrderAnalytics: React.FC<OrderAnalyticsProps> = ({ orders }) => {
             {activeTab === 0 && (
                 <Grid container spacing={2}>
                     <Grid size={{ xs: 12, md: 4 }}>
+
                         <MetricCard
                             title="Total Orders"
                             value={analytics.totalOrders}
@@ -133,6 +138,7 @@ export const OrderAnalytics: React.FC<OrderAnalyticsProps> = ({ orders }) => {
                         />
                     </Grid>
                     <Grid size={{ xs: 12, md: 4 }}>
+
                         <MetricCard
                             title="Avg. Execution Time"
                             value={`${analytics.averageExecutionTime.toFixed(2)}s`}
@@ -140,8 +146,8 @@ export const OrderAnalytics: React.FC<OrderAnalyticsProps> = ({ orders }) => {
                     </Grid>
                     <Grid size={{ xs: 12 }}>
                         <VolumeChart data={analytics.dailyVolume} />
-                    </Grid>
-                </Grid>
+                    </Box>
+                </Box>
             )}
 
             {activeTab === 1 && (
@@ -159,8 +165,8 @@ export const OrderAnalytics: React.FC<OrderAnalyticsProps> = ({ orders }) => {
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
                         <SymbolBreakdown data={analytics.symbolBreakdown} />
-                    </Grid>
-                </Grid>
+                    </Box>
+                </Box>
             )}
         </div>
     );
@@ -291,3 +297,52 @@ const SymbolBreakdown: React.FC<{ data: any[] }> = ({ data }) => (
         </BarChart>
     </ResponsiveContainer>
 );
+
+const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ orders }) => {
+    const performanceData = React.useMemo(() => {
+        const executedOrders = orders.filter(order => order.status === 'FILLED');
+        const totalLatency = executedOrders.reduce((sum, order) => {
+            if (order.executionTime) {
+                const execTime = new Date(order.executionTime).getTime();
+                const createTime = new Date(order.createdAt).getTime();
+                return sum + (execTime - createTime);
+            }
+            return sum;
+        }, 0);
+
+        return {
+            averageLatency: executedOrders.length > 0 ? totalLatency / executedOrders.length : 0,
+            executionRate: orders.length > 0 ? (executedOrders.length / orders.length) * 100 : 0,
+            totalExecuted: executedOrders.length,
+            totalOrders: orders.length
+        };
+    }, [orders]);
+
+    return (
+        <Card>
+            <CardContent>
+                <Typography variant="h6" gutterBottom>
+                    Performance Metrics
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    <Box sx={{ flex: '1 1 250px' }}>
+                        <Typography variant="body2" color="textSecondary">
+                            Average Latency
+                        </Typography>
+                        <Typography variant="h5">
+                            {performanceData.averageLatency.toFixed(2)}ms
+                        </Typography>
+                    </Box>
+                    <Box sx={{ flex: '1 1 250px' }}>
+                        <Typography variant="body2" color="textSecondary">
+                            Execution Rate
+                        </Typography>
+                        <Typography variant="h5">
+                            {performanceData.executionRate.toFixed(1)}%
+                        </Typography>
+                    </Box>
+                </Box>
+            </CardContent>
+        </Card>
+    );
+};

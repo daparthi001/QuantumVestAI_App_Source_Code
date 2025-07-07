@@ -25,6 +25,8 @@ import { PerformanceMonitor } from '../../services/monitoring/PerformanceMonitor
 import { formatDuration } from '../../utils/formatters';
 
 interface PerformanceData {
+    timestamp: string;
+    dateRange?: { start: string; end: string; } | null;
     componentMetrics: Array<{
         name: string;
         averageRenderTime: number;
@@ -39,11 +41,12 @@ interface PerformanceData {
         count: number;
     }>;
     apiMetrics: Array<{
-        endpoint: string;
-        averageResponseTime: number;
+        name: string;
+        averageTime: number;
         errorRate: number;
-        callCount: number;
+        successRate: number;
     }>;
+    summary: any;
 }
 
 export const PerformanceReport: React.FC = () => {
@@ -94,6 +97,7 @@ export const PerformanceReport: React.FC = () => {
                 <DateRangePicker
                     value={dateRange}
                     onChange={(newValue: [Date | null, Date | null]) => setDateRange(newValue)}
+
                     renderInput={(startProps: any, endProps: any) => (
                         <>
                             <TextField {...startProps} />

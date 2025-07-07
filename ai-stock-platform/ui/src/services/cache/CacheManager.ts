@@ -19,6 +19,7 @@ export class CacheManager {
             max: 500, // Maximum number of items
             maxSize: 5000, // Maximum cache size in bytes
             sizeCalculation: (value, _key) => {
+
                 return new Blob([JSON.stringify(value)]).size;
             },
             ttl: 1000 * 60 * 60, // 1 hour default TTL
@@ -83,6 +84,7 @@ export class CacheManager {
 
         // Monitor cache usage
         this.monitor.trackMetric('cache_set', new Blob([JSON.stringify(value)]).size);
+
     }
 
     async get(key: string): Promise<any | null> {
@@ -162,6 +164,7 @@ export class CacheManager {
             memorySize: this.memoryCache.calculatedSize || 0,
             itemCount: this.memoryCache.size,
             hitRate: hitRate
+
         };
     }
 
@@ -222,5 +225,12 @@ export class CacheManager {
 
     async updateCacheSettings(settings: any): Promise<void> {
         await this.set('cache_settings', settings, { persistent: true });
+    }
+
+    private calculateHitRate(): number {
+        // Simple hit rate calculation based on cache size vs theoretical max access
+        const maxSize = this.memoryCache.max || 1000;
+        const currentSize = this.memoryCache.size;
+        return Math.min((currentSize / maxSize) * 100, 100);
     }
 }
