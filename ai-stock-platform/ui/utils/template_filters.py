@@ -12,6 +12,51 @@ import os
 import json
 import hashlib
 
+# Import additional formatter functions
+try:
+    # Try to import from formatters module with fallback
+    from .formatters import format_large_number, format_change_value
+except ImportError:
+    # Fallback implementations if import fails
+    def format_large_number(value, decimal_places=1):
+        """Fallback implementation for format_large_number"""
+        if value is None:
+            return "—"
+        try:
+            num_value = float(value)
+            if abs(num_value) >= 1e12:
+                return f"{num_value / 1e12:.{decimal_places}f}T"
+            elif abs(num_value) >= 1e9:
+                return f"{num_value / 1e9:.{decimal_places}f}B"
+            elif abs(num_value) >= 1e6:
+                return f"{num_value / 1e6:.{decimal_places}f}M"
+            elif abs(num_value) >= 1e3:
+                return f"{num_value / 1e3:.{decimal_places}f}K"
+            else:
+                return str(num_value)
+        except (ValueError, TypeError):
+            return str(value)
+    
+    def format_change_value(value, include_sign=True, with_color=False, decimal_places=2):
+        """Fallback implementation for format_change_value"""
+        if value is None:
+            return "—"
+        try:
+            num_value = float(value)
+            formatted = f"{num_value:.{decimal_places}f}"
+            if include_sign and num_value > 0:
+                formatted = f"+{formatted}"
+            if with_color:
+                if num_value > 0:
+                    formatted = f"🟢 {formatted}"
+                elif num_value < 0:
+                    formatted = f"🔴 {formatted}"
+                else:
+                    formatted = f"⚪ {formatted}"
+            return formatted
+        except (ValueError, TypeError):
+            return str(value)
+
 # Set locale for currency formatting
 try:
     locale.setlocale(locale.LC_ALL, '')
@@ -250,8 +295,10 @@ template_filters = {
     'json_stringify': json_stringify,
     'file_size_format': file_size_format,
     'gravatar_url': gravatar_url,
-    'stringify': stringify,          # Added stringify filter
-    'error_format': error_format     # Added error_format filter
+    'stringify': stringify,
+    'error_format': error_format,
+    'format_large_number': format_large_number,  # Added missing filter
+    'format_change_value': format_change_value   # Added missing filter
 }
 
 def register_filters(app):
@@ -263,15 +310,138 @@ def register_filters(app):
     logger = logging.getLogger("quantumvestai_ui.filters")
     
     try:
-        # Register all template filters with the app
-        if hasattr(app.state, 'templates') and hasattr(app.state.templates, 'env'):
-            for name, func in template_filters.items():
-                app.state.templates.env.filters[name] = func
-            logger.info(f"Successfully registered {len(template_filters)} template filters")
-            return True
-        else:
-            logger.warning("Templates not found in app state")
+        # Verify app and templates are available
+        if not hasattr(app, 'state'):
+            logger.error("App state not found")
             return False
+            
+        if not hasattr(app.state, 'templates'):
+            logger.error("Templates not found in app state")
+            return False
+            
+        if not hasattr(app.state.templates, 'env'):
+            logger.error("Jinja2 environment not found in templates")
+            return False
+        
+        # Register each filter with error handling
+        successful_filters = 0
+        failed_filters = []
+        
+        for name, func in template_filters.items():
+            try:
+                app.state.templates.env.filters[name] = func
+                successful_filters += 1
+                logger.debug(f"Successfully registered filter: {name}")
+            except Exception as filter_error:
+                failed_filters.append((name, str(filter_error)))
+                logger.error(f"Failed to register filter {name}: {filter_error}")
+        
+        # Log results
+        if failed_filters:
+            logger.warning(f"Successfully registered {successful_filters}/{len(template_filters)} filters. "
+                         f"Failed filters: {[name for name, error in failed_filters]}")
+            for name, error in failed_filters:
+                logger.error(f"Filter {name} error: {error}")
+        else:
+            logger.info(f"Successfully registered all {successful_filters} template filters")
+        
+        # Validate critical filters are available
+        critical_filters = ['format_currency', 'format_percentage', 'format_change_value', 'format_large_number']
+        missing_critical = []
+        
+        for filter_name in critical_filters:
+            if filter_name not in app.state.templates.env.filters:
+                missing_critical.append(filter_name)
+        
+        if missing_critical:
+            logger.error(f"Critical filters missing: {missing_critical}")
+            return False
+        
+        logger.info("All critical template filters are available")
+        return successful_filters > 0
+        
     except Exception as e:
         logger.error(f"Error registering filters: {str(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         return False
+
+
+def validate_template_filters(app):
+    """
+    Validate that all required template filters are properly registered.
+    This should be called during application startup.
+    """
+    import logging
+    logger = logging.getLogger("quantumvestai_ui.filters")
+    
+    try:
+        if not hasattr(app.state, 'templates') or not hasattr(app.state.templates, 'env'):
+            logger.error("Templates environment not available for validation")
+            return False
+        
+        # Define required filters for the application
+        required_filters = [
+            'format_currency',
+            'format_percentage', 
+            'format_change_value',
+            'format_large_number',
+            'format_date',
+            'get_asset_url'
+        ]
+        
+        missing_filters = []
+        working_filters = []
+        
+        for filter_name in required_filters:
+            if filter_name in app.state.templates.env.filters:
+                # Test the filter with sample data
+                try:
+                    filter_func = app.state.templates.env.filters[filter_name]
+                    if filter_name == 'format_currency':
+                        result = filter_func(100.50)
+                    elif filter_name == 'format_percentage':
+                        result = filter_func(15.75)
+                    elif filter_name == 'format_change_value':
+                        result = filter_func(5.25)
+                    elif filter_name == 'format_large_number':
+                        result = filter_func(1500000)
+                    elif filter_name == 'format_date':
+                        from datetime import datetime
+                        result = filter_func(datetime.now())
+                    elif filter_name == 'get_asset_url':
+                        result = filter_func('css/style.css')
+                    
+                    working_filters.append(filter_name)
+                    logger.debug(f"Filter {filter_name} test successful: {result}")
+                    
+                except Exception as test_error:
+                    logger.error(f"Filter {filter_name} failed test: {test_error}")
+                    missing_filters.append(f"{filter_name} (test failed)")
+            else:
+                missing_filters.append(filter_name)
+        
+        if missing_filters:
+            logger.error(f"Missing or broken required filters: {missing_filters}")
+            logger.info(f"Working filters: {working_filters}")
+            return False
+        else:
+            logger.info(f"All {len(required_filters)} required filters are working correctly")
+            return True
+            
+    except Exception as e:
+        logger.error(f"Error validating template filters: {str(e)}")
+        return False
+
+
+def get_template_filter_status():
+    """
+    Get the current status of template filters for debugging.
+    Returns a dictionary with filter information.
+    """
+    return {
+        "total_filters": len(template_filters),
+        "available_filters": list(template_filters.keys()),
+        "critical_filters": ['format_currency', 'format_percentage', 'format_change_value', 'format_large_number'],
+        "status": "ready"
+    }
