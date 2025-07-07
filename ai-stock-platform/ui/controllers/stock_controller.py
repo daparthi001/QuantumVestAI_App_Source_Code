@@ -60,7 +60,6 @@ async def stock_detail(
             # Get stock forecast
             async with session.get(
                 f"{API_V1_URL}/forecast/{ticker}?days={forecast_days}",
-                headers=headers,
                 timeout=5
             ) as response:
                 if response.status == 200:
@@ -68,25 +67,9 @@ async def stock_detail(
                 else:
                     stock_data["forecast"] = {"status": "unavailable"}
             
-            # Get stock sentiment
-            if user.get("role") in ["premium", "admin"]:
-                async with session.get(
-                    f"{API_V1_URL}/sentiment/stock/{ticker}",
-                    headers=headers,
-                    timeout=5
-                ) as response:
-                    if response.status == 200:
-                        stock_data["sentiment"] = await response.json()
-                    else:
-                        stock_data["sentiment"] = {"status": "unavailable"}
-            
-            # Check if stock is in user's watchlist
-            async with session.get(
-                f"{API_V1_URL}/watchlist/{user['username']}/contains?ticker={ticker}",
-                headers=headers,
-                timeout=5
-            ) as response:
-                stock_data["in_watchlist"] = response.status == 200
+            # Demo mode - skip premium features like sentiment and watchlist
+            stock_data["sentiment"] = {"status": "unavailable", "reason": "demo_mode"}
+            stock_data["in_watchlist"] = False
         
         return templates.TemplateResponse(
             "stocks/detail.html",
@@ -98,11 +81,6 @@ async def stock_detail(
             }
         )
     except HTTPException as e:
-
-    forecast_days: int = Query(7, ge=1, le=30),
-    
-):
-    """Display stock detail page"""
         raise e
     except Exception as e:
         logger.error(f"Stock detail error for {ticker}: {str(e)}")
@@ -141,11 +119,6 @@ async def stock_search(
             }
         )
     except Exception as e:
-
-    q: str = Query(None),
-    
-):
-    """Search for stocks"""
         logger.error(f"Stock search error: {str(e)}")
         return templates.TemplateResponse(
             "stocks/search.html",
@@ -168,12 +141,3 @@ async def add_to_watchlist(
     
     # Demo mode - redirect to login with a message
     return RedirectResponse(url="/login?msg=Watchlist+features+require+authentication+(demo+mode)", status_code=302)
-
-    ticker: str,
-    
-):
-    """Add stock to watchlist"""
-        raise e
-    except Exception as e:
-        logger.error(f"Add to watchlist error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
