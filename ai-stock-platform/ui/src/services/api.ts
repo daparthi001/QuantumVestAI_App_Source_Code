@@ -221,3 +221,8 @@ function getMinResponseTime() {
 }
 
 export default apiClient;
+
+// Export additional services
+export { default as stockService } from './stock.service';
+export { default as portfolioService } from './portfolio.service';
+export { orderApi } from './api/orderApi';

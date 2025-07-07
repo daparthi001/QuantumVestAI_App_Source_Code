@@ -286,7 +286,7 @@ const PredictionAnalysis: React.FC = () => {
                   <div className="chart-container">
                     <PredictionChart 
                       symbol={symbol}
-                      prediction={prediction}
+                      prediction={[prediction]}
                     />
                   </div>
                   

@@ -4,6 +4,7 @@
  * Author: daparthi001
  */
 import { debounce, throttle } from 'lodash';
+import LZString from 'lz-string';
 import { RealTimeMonitor } from '../monitoring/RealTimeMonitor';
 
 export class PerformanceOptimizer {
