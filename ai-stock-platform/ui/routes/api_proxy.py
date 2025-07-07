@@ -1,7 +1,7 @@
 """
 QuantumVestAI API Proxy Routes
-Updated: 2025-06-19 02:20:19
-Author: daparthi001
+Updated: 2025-07-07 21:54:42
+Author: hemanth9398
 """
 from fastapi import APIRouter, Request, Response, HTTPException
 from fastapi.responses import JSONResponse
@@ -21,6 +21,29 @@ API_V1_URL = f"{API_URL}/api/v1"
 @router.get("/ticker-search")
 async def ticker_search_proxy(request: Request):
     """Direct proxy for ticker search API endpoint"""
+    try:
+        # Demo ticker search
+        query = request.query_params.get("q", "")
+        demo_results = []
+        
+        if query:
+            demo_tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "NVDA", "META", "NFLX"]
+            demo_results = [
+                {
+                    "symbol": ticker,
+                    "name": f"{ticker} Corporation",
+                    "exchange": "NASDAQ"
+                }
+                for ticker in demo_tickers if query.upper() in ticker
+            ]
+        
+        return JSONResponse({
+            "status": "success",
+            "results": demo_results,
+            "query": query
+        })
+        
+    except Exception as e:
         logger.error(f"Error in ticker search proxy: {str(e)}")
         return JSONResponse(
             content={"error": "Failed to search tickers", "detail": str(e)},
@@ -30,24 +53,26 @@ async def ticker_search_proxy(request: Request):
 @router.post("/users/features/advanced")
 async def enable_advanced_features_proxy(request: Request):
     """Direct proxy for enabling advanced features"""
-            request_body = {}
-            
-        # Set enabled to true if not specified
-        if "enabled" not in request_body:
-            request_body["enabled"] = True
+    try:
+        logger.info("Enabling advanced features in demo mode")
         
-        logger.info(f"Enabling advanced features via API: {api_endpoint}")
-        logger.debug(f"Request body: {json.dumps(request_body)}")
+        return JSONResponse({
+            "status": "success",
+            "message": "Advanced features enabled successfully (demo mode)",
+            "features": {
+                "advanced_analytics": True,
+                "real_time_data": True,
+                "ai_predictions": True,
+                "portfolio_insights": True
+            }
+        })
         
-        response = requests.post(
-            api_endpoint,
-            headers=headers,
-            json=request_body,
-            timeout=10
+    except Exception as e:
+        logger.error(f"Error enabling advanced features: {str(e)}")
+        return JSONResponse(
+            content={"error": "Failed to enable advanced features", "detail": str(e)},
+            status_code=500
         )
-        
-        # Log the entire response for debugging
-        logger.debug(f"API response status: {response.status_code}")
             logger.debug(f"API response body: {response.text[:200]}")
         
         if response.status_code == 200:
