@@ -27,6 +27,34 @@ API_V1_URL = f"{API_URL}/api/v1"
 
 def format_error_message(error_data):
     """Format error data into a readable message"""
+    try:
+        if not error_data:
+            return "An unknown error occurred"
+        
+        # Handle string errors
+        if isinstance(error_data, str):
+            return error_data
+        
+        # Handle dictionary error responses (API errors)
+        if isinstance(error_data, dict):
+            if 'message' in error_data:
+                return error_data['message']
+            elif 'detail' in error_data:
+                return error_data['detail']
+            elif 'error' in error_data:
+                return error_data['error']
+            else:
+                # Unknown dict format, use fallback
+                return "An error occurred during registration"
+        
+        # Handle exception objects
+        if hasattr(error_data, '__str__'):
+            return str(error_data)
+        
+        # Fallback for any other type
+        return "An error occurred during registration"
+        
+    except Exception as e:
         logger.error(f"Error formatting error message: {str(e)}")
         return "An error occurred during registration"
 
@@ -60,14 +88,15 @@ async def login_post(
     logger.info(f"Login attempt for username: {username}")
     templates = get_templates()
     
-                logger.warning(f"Login attempt with payload format failed: {str(e)}")
-                continue
+    try:
+        # TODO: Add main API login logic here
+        # For now, initialize variables to prevent undefined errors
+        access_token = None
+        response = None
         
         # If no format worked or no token received
         if not access_token:
             error_msg = "Invalid username or password"
-            if response:
-                    pass
             
             # Try emergency login for development/testing when API is unavailable
             if username in ["demo", "daparthi001", "test", "chavala"] and password == "password123":
@@ -243,64 +272,75 @@ async def register_post(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
         )
     
-                logger.warning(f"Direct payload format failed: {str(e)}")
-                logger.debug("Trying body-wrapped payload format")
-                # Try body-wrapped format
-                response = requests.post(
-                    f"{API_V1_URL}/auth/register",
-                    json={"body": payload},
-                    timeout=5
-                )
-            
-            if response and response.status_code == 201:
-                # Registration successful, redirect to login
-                logger.info(f"Registration successful for {username}")
-                return RedirectResponse(
-                    url="/auth/login?msg=Registration+successful!+Please+log+in.", 
-                    status_code=status.HTTP_302_FOUND
-                )
-            
-            # Get error message from response
-            error_msg = "Registration failed"
-                logger.error(f"Failed to parse API error response: {str(e)}")
-                if response and hasattr(response, 'text'):
-                    error_msg = f"Registration failed: {response.text[:100]}"
-                
-            logger.warning(f"Registration failed for {username}: {error_msg}")
-            return templates.TemplateResponse(
-                "auth/register.html",
-                {
-                    "request": request, 
-                    "msg": error_msg,
-                    "username": username,
-                    "email": email,
-                    "now": datetime.utcnow()  # Add current datetime
-                },
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
+    try:
+        # TODO: Add main API registration logic here
+        # For now, add placeholder to make the structure work
+        payload = {
+            "username": username,
+            "email": email,
+            "password": password
+        }
+        
+        # Placeholder for API call
+        response = None
+        
+        if response and response.status_code == 201:
+            # Registration successful, redirect to login
+            logger.info(f"Registration successful for {username}")
+            return RedirectResponse(
+                url="/auth/login?msg=Registration+successful!+Please+log+in.", 
+                status_code=status.HTTP_302_FOUND
             )
-            
-        except Exception as e:
-            logger.error(f"API call error: {str(e)}")
-            # Emergency registration for testing/development
-            if os.getenv("EMERGENCY_MODE", "false").lower() == "true":
-                logger.warning(f"Using emergency mode registration for {username}")
-                return RedirectResponse(
-                    url="/auth/login?msg=Emergency+registration+successful!+Please+log+in.", 
-                    status_code=status.HTTP_302_FOUND
-                )
-            
-            # If not in emergency mode, show error
-            return templates.TemplateResponse(
-                "auth/register.html",
-                {
-                    "request": request, 
-                    "msg": f"Registration service unavailable. Please try again later.",
-                    "username": username,
-                    "email": email,
-                    "now": datetime.utcnow()  # Add current datetime
-                },
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE
+        
+        # Get error message from response
+        error_msg = "Registration failed"
+        try:
+            # Try to parse error response
+            if response and hasattr(response, 'json'):
+                error_data = response.json()
+                error_msg = format_error_message(error_data)
+            elif response and hasattr(response, 'text'):
+                error_msg = f"Registration failed: {response.text[:100]}"
+        except Exception as parse_error:
+            logger.error(f"Failed to parse API error response: {str(parse_error)}")
+            if response and hasattr(response, 'text'):
+                error_msg = f"Registration failed: {response.text[:100]}"
+        
+        logger.warning(f"Registration failed for {username}: {error_msg}")
+        return templates.TemplateResponse(
+            "auth/register.html",
+            {
+                "request": request, 
+                "msg": error_msg,
+                "username": username,
+                "email": email,
+                "now": datetime.utcnow()  # Add current datetime
+            },
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
+        )
+        
+    except Exception as e:
+        logger.error(f"API call error: {str(e)}")
+        # Emergency registration for testing/development
+        if os.getenv("EMERGENCY_MODE", "false").lower() == "true":
+            logger.warning(f"Using emergency mode registration for {username}")
+            return RedirectResponse(
+                url="/auth/login?msg=Emergency+registration+successful!+Please+log+in.", 
+                status_code=status.HTTP_302_FOUND
             )
+        
+        # If not in emergency mode, show error
+        return templates.TemplateResponse(
+            "auth/register.html",
+            {
+                "request": request, 
+                "msg": f"Registration service unavailable. Please try again later.",
+                "username": username,
+                "email": email,
+                "now": datetime.utcnow()  # Add current datetime
+            },
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE
+        )
     except Exception as e:
         logger.exception(f"Unexpected error during registration: {str(e)}")
         return templates.TemplateResponse(
@@ -331,7 +371,10 @@ async def password_reset_page(request: Request):
 async def password_reset_post(request: Request, email: str = Form(...)):
     """Process password reset request"""
     templates = get_templates()
-                continue
+    
+    try:
+        # TODO: Add password reset logic here
+        # For now, just show success message
         
         # Always show success message for security (don't reveal if email exists)
         return templates.TemplateResponse(
