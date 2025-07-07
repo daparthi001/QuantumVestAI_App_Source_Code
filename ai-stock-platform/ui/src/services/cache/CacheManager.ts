@@ -157,4 +157,63 @@ export class CacheManager {
             hitRate: this.memoryCache.fetchStats?.hitRate || 0
         };
     }
+
+    // Add missing methods for AutoOptimizer
+    async pruneExpired(): Promise<void> {
+        const keysToDelete: string[] = [];
+        
+        // Check memory cache
+        for (const [key, item] of this.memoryCache.entries()) {
+            if (this.isExpired(item)) {
+                keysToDelete.push(key);
+            }
+        }
+        
+        // Remove expired items
+        for (const key of keysToDelete) {
+            this.memoryCache.delete(key);
+        }
+        
+        // Also clean up IndexedDB if available
+        if (this.indexedDB) {
+            const transaction = this.indexedDB.transaction(['cache'], 'readwrite');
+            const store = transaction.objectStore('cache');
+            const request = store.openCursor();
+            
+            request.onsuccess = (event) => {
+                const cursor = (event.target as IDBRequest).result;
+                if (cursor) {
+                    if (this.isExpired(cursor.value)) {
+                        cursor.delete();
+                    }
+                    cursor.continue();
+                }
+            };
+        }
+    }
+
+    cleanupEventListeners(): void {
+        // Clean up any event listeners
+        if (this.indexedDB) {
+            this.indexedDB.close();
+        }
+    }
+
+    preloadFrequentData(keys: string[]): Promise<void[]> {
+        return Promise.all(keys.map(key => this.get(key)));
+    }
+
+    getComponentStats(componentName: string): Promise<any> {
+        return this.get(`component_stats_${componentName}`);
+    }
+
+    async getAccessLogs(): Promise<any[]> {
+        // Return cached access logs if available
+        const logs = await this.get('access_logs');
+        return logs || [];
+    }
+
+    async updateCacheSettings(settings: any): Promise<void> {
+        await this.set('cache_settings', settings, { persistent: true });
+    }
 }

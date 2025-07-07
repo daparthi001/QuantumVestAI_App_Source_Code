@@ -7,6 +7,28 @@ import { RealTimeMonitor } from '../monitoring/RealTimeMonitor';
 import { PerformanceMonitor } from '../monitoring/PerformanceMonitor';
 import { CacheManager } from '../cache/CacheManager';
 
+interface SystemMetrics {
+    timestamp: number;
+    memoryUsage: number;
+    cpuUsage: number;
+    averageRenderTime: number;
+    cacheHitRate: number;
+    networkLatency: number;
+}
+
+interface OptimizationRule {
+    condition: (metrics: SystemMetrics) => boolean;
+    action: () => Promise<boolean>;
+    cooldown: number;
+}
+
+interface CachePattern {
+    key: string;
+    frequency: number;
+    lastAccessed: number;
+    size: number;
+}
+
 export class AutoOptimizer {
     private static instance: AutoOptimizer;
     private monitor: RealTimeMonitor;
@@ -170,34 +192,13 @@ export class AutoOptimizer {
         }, [] as CachePattern[]);
     }
 
-    private async adjustCacheSettings(patterns: CachePattern[]) {
+    private async adjustCacheSettings(patterns: CachePattern[]): Promise<void> {
         for (const pattern of patterns) {
-            await this.cacheManager.updateCacheSettings(pattern.key, {
-                ttl: pattern.optimalTTL,
-                priority: pattern.priority
+            await this.cacheManager.updateCacheSettings({
+                key: pattern.key,
+                ttl: pattern.frequency > 10 ? 3600000 : 1800000, // 1hr or 30min
+                priority: pattern.frequency > 50 ? 'high' : 'medium'
             });
         }
     }
-}
-
-interface SystemMetrics {
-    timestamp: number;
-    memoryUsage: number;
-    cpuUsage: number;
-    averageRenderTime: number;
-    cacheHitRate: number;
-    networkLatency: number;
-}
-
-interface OptimizationRule {
-    condition: (metrics: SystemMetrics) => boolean;
-    action: () => Promise<boolean>;
-    cooldown: number;
-}
-
-interface CachePattern {
-    key: string;
-    accessFrequency: number;
-    optimalTTL: number;
-    priority: 'high' | 'medium' | 'low';
 }

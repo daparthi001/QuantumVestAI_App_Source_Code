@@ -3,7 +3,8 @@
  * Created: 2025-06-19 18:06:43
  * Author: daparthi001
  */
-import io, { Socket } from 'socket.io-client';
+import io from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 import { BehaviorSubject } from 'rxjs';
 import authService from './auth.service';
 

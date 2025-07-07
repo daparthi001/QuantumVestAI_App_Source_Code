@@ -3,7 +3,7 @@
  * Created: 2025-06-19 03:05:06
  * Author: daparthi001
  */
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;

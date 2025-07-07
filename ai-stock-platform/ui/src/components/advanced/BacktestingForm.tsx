@@ -33,7 +33,7 @@ const BacktestingForm: React.FC<BacktestingFormProps> = ({ onBacktestComplete })
     const fetchSymbols = async () => {
       try {
         const symbols = await stockService.getAvailableSymbols();
-        setAvailableSymbols(symbols);
+        setAvailableSymbols(symbols.map(symbol => ({ symbol, name: symbol })));
       } catch (error) {
         console.error('Error fetching symbols:', error);
       }
