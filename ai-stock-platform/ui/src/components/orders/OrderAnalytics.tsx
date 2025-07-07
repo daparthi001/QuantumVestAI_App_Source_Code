@@ -121,7 +121,6 @@ export const OrderAnalytics: React.FC<OrderAnalyticsProps> = ({ orders }) => {
                 <Tab label="Performance" />
                 <Tab label="Distribution" />
             </Tabs>
-
             {activeTab === 0 && (
                 <Grid container spacing={2}>
                     <Grid size={{ xs: 12, md: 4 }}>
@@ -146,8 +145,8 @@ export const OrderAnalytics: React.FC<OrderAnalyticsProps> = ({ orders }) => {
                     </Grid>
                     <Grid size={{ xs: 12 }}>
                         <VolumeChart data={analytics.dailyVolume} />
-                    </Box>
-                </Box>
+                    </Grid>
+                </Grid>
             )}
 
             {activeTab === 1 && (
@@ -165,8 +164,8 @@ export const OrderAnalytics: React.FC<OrderAnalyticsProps> = ({ orders }) => {
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
                         <SymbolBreakdown data={analytics.symbolBreakdown} />
-                    </Box>
-                </Box>
+                    </Grid>
+                </Grid>
             )}
         </div>
     );
