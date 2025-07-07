@@ -159,22 +159,58 @@ def get_asset_url(path, version=None):
 
 # Import controllers with error handling
 controllers = {}
+try:
+    from controllers import auth_controller
+    controllers['auth'] = auth_controller
+except ImportError as e:
     logger.error(f"Could not import auth_controller: {str(e)}")
 
+try:
+    from controllers import dashboard_controller
+    controllers['dashboard'] = dashboard_controller
+except ImportError as e:
     logger.error(f"Could not import dashboard_controller: {str(e)}")
 
+try:
+    from controllers import market_controller
+    controllers['market'] = market_controller
+except ImportError as e:
     logger.error(f"Could not import market_controller: {str(e)}")
 
+try:
+    from controllers import stock_controller
+    controllers['stock'] = stock_controller
+except ImportError as e:
     logger.error(f"Could not import stock_controller: {str(e)}")
 
+try:
+    from controllers import watchlist_controller
+    controllers['watchlist'] = watchlist_controller
+except ImportError as e:
     logger.error(f"Could not import watchlist_controller: {str(e)}")
 
+try:
+    from controllers import profile_controller
+    controllers['profile'] = profile_controller
+except ImportError as e:
     logger.error(f"Could not import profile_controller: {str(e)}")
 
+try:
+    from controllers import forecast_controller
+    controllers['forecast'] = forecast_controller
+except ImportError as e:
     logger.error(f"Could not import forecast_controller: {str(e)}")
 
+try:
+    from controllers import news_controller
+    controllers['news'] = news_controller
+except ImportError as e:
     logger.error(f"Could not import news_controller: {str(e)}")
 
+try:
+    from controllers import feature_controller
+    controllers['feature'] = feature_controller
+except ImportError as e:
     logger.error(f"Could not import feature_controller: {str(e)}")
 
 # Debug middleware to log all requests
@@ -195,7 +231,6 @@ async def enhanced_request_middleware(request: Request, call_next):
         
         # Calculate duration
         duration = (datetime.now() - start_time).total_seconds()
-        logger.error(f"Login error: {str(e)}")
         
         # Add performance headers
         response.headers["X-Request-ID"] = request_id
@@ -204,25 +239,42 @@ async def enhanced_request_middleware(request: Request, call_next):
         logger.info(f"[{request_id}] {method} {path} completed - Status: {response.status_code} - Duration: {duration:.3f}s")
         
         return response
+    
+    except Exception as e:
+        duration = (datetime.now() - start_time).total_seconds()
+        logger.error(f"[{request_id}] Error processing request {method} {path}: {str(e)}")
+        logger.error(f"[{request_id}] Duration before error: {duration:.3f}s")
+        # Re-raise to let error handlers handle it
+        raise
 @app.post("/emergency-login")
 async def direct_emergency_login(request: Request):
     """Emergency login endpoint for when normal login fails"""
-            # If not JSON, try to parse it as form data
-            form = await request.form()
-            data = dict(form)
-            username = data.get("username", "")
-            password = data.get("password", "")
+    try:
+        # If not JSON, try to parse it as form data
+        form = await request.form()
+        data = dict(form)
+        username = data.get("username", "")
+        password = data.get("password", "")
         
         logger.info(f"Emergency login for: {username}")
         
         # Create emergency token
         expires = datetime.utcnow() + timedelta(hours=24)
         token = f"emergency_{username}_{expires.timestamp()}"
-
+        
+        # For now, just return a success response
+        return JSONResponse({
+            "success": True,
+            "message": "Emergency login successful",
+            "token": token
+        })
+        
     except Exception as e:
-        duration = (datetime.now() - start_time).total_seconds()
-        logger.error(f"[{request_id}] {method} {path} failed - Error: {str(e)} - Duration: {duration:.3f}s")
-        raise
+        logger.error(f"Emergency login error: {str(e)}")
+        return JSONResponse({
+            "success": False,
+            "message": "Emergency login failed"
+        }, status_code=500)
 
 # Enhanced authentication utilities
 class AuthUtils:
@@ -273,9 +325,6 @@ async def index(request: Request):
             }
         )
     except Exception as e:
-
-    """Serve the index page"""
-
         logger.error(f"Error rendering index page: {str(e)}")
         return HTMLResponse(
             content=f"""
@@ -676,12 +725,11 @@ async def not_found_exception_handler(request: Request, exc: HTTPException):
         )
 
 @app.exception_handler(500)
-
 async def enhanced_server_error_handler(request: Request, exc: HTTPException):
     """Enhanced 500 error handler"""
     try:
         return app.state.templates.TemplateResponse(
-            "error.html", 
+            "errors/500.html", 
             {
                 "request": request, 
                 "error": str(exc),
@@ -691,53 +739,45 @@ async def enhanced_server_error_handler(request: Request, exc: HTTPException):
         )
     except:
         return HTMLResponse(
-            content=f"""
-async def server_error_handler(request: Request, exc: HTTPException):
-    """Handle 500 errors"""
-        return HTMLResponse(
-            content=f"<h1>500 Server Error</h1><p>{str(exc)}</p>",
+            content="""<!DOCTYPE html>
+<html>
+<head>
+    <title>500 Server Error</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 text-center">
+                <h1 class="display-1">500</h1>
+                <h2>Server Error</h2>
+                <p>Something went wrong. Please try again later.</p>
+                <a href="/" class="btn btn-primary">Go Home</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>""",
             status_code=500
         )
 
 # Include controllers AFTER defining direct routes to avoid conflicts
+try:
+    from routes import api_proxy
+    app.include_router(api_proxy.router)
+    logger.info("Included API proxy router")
+except Exception as e:
     logger.error(f"Failed to include api_proxy router: {str(e)}")
 
 # Only include controllers that were successfully imported
 for name, controller in controllers.items():
+    try:
+        app.include_router(controller.router)
+        logger.info(f"Included {name} router")
+    except Exception as e:
         logger.error(f"Failed to include {name} router: {str(e)}")
-
-# Add route to serve dashboard placeholder (will be overridden by dashboard_controller if implemented)
-@app.get("/dashboard", response_class=HTMLResponse)
-async def dashboard(request: Request):
-    """Temporary dashboard placeholder until real dashboard is implemented"""
-        logger.error(f"Error rendering dashboard: {str(e)}")
-        # If dashboard/index.html doesn't exist, return a simple HTML response
-        return HTMLResponse(
-            content="""
-            <!DOCTYPE html>
-            <html>
-                <head>
-                    <title>Server Error - QuantumVestAI</title>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-                </head>
-                <body>
-                    <div class="container mt-5">
-                        <div class="row justify-content-center">
-                            <div class="col-md-6 text-center">
-                                <h1 class="display-1">500</h1>
-                                <h2>Server Error</h2>
-                                <p>We're experiencing technical difficulties. Please try again later.</p>
-                                <a href="/" class="btn btn-primary">Go Home</a>
-                            </div>
-                        </div>
-                    </div>
-                </body>
-            </html>
-            """,
-            status_code=500
-        )
 
 # Include any existing controllers that work
 controllers_imported = []
