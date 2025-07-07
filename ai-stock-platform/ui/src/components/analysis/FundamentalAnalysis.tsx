@@ -79,22 +79,22 @@ const FundamentalAnalysis: React.FC<FundamentalAnalysisProps> = ({ symbol }) => 
             <tbody>
                 <tr>
                     <td>P/E Ratio</td>
-                    <td>{formatNumber(metrics?.peRatio)}</td>
+                    <td>{formatNumber(metrics?.peRatio ?? 0)}</td>
                     <td>-</td>
                 </tr>
                 <tr>
                     <td>EPS</td>
-                    <td>{formatCurrency(metrics?.eps)}</td>
+                    <td>{formatCurrency(metrics?.eps ?? 0)}</td>
                     <td>-</td>
                 </tr>
                 <tr>
                     <td>Book Value</td>
-                    <td>{formatCurrency(metrics?.bookValue)}</td>
+                    <td>{formatCurrency(metrics?.bookValue ?? 0)}</td>
                     <td>-</td>
                 </tr>
                 <tr>
                     <td>Dividend Yield</td>
-                    <td>{formatPercentage(metrics?.dividendYield)}</td>
+                    <td>{formatPercentage(metrics?.dividendYield ?? 0)}</td>
                     <td>-</td>
                 </tr>
             </tbody>
@@ -113,22 +113,22 @@ const FundamentalAnalysis: React.FC<FundamentalAnalysisProps> = ({ symbol }) => 
             <tbody>
                 <tr>
                     <td>Revenue</td>
-                    <td>{formatCurrency(metrics?.revenue)}</td>
+                    <td>{formatCurrency(metrics?.revenue ?? 0)}</td>
                     <td>{formatPercentage(0.15)}</td>
                 </tr>
                 <tr>
                     <td>Net Income</td>
-                    <td>{formatCurrency(metrics?.netIncome)}</td>
+                    <td>{formatCurrency(metrics?.netIncome ?? 0)}</td>
                     <td>{formatPercentage(0.08)}</td>
                 </tr>
                 <tr>
                     <td>Operating Margin</td>
-                    <td>{formatPercentage(metrics?.operatingMargin)}</td>
+                    <td>{formatPercentage(metrics?.operatingMargin ?? 0)}</td>
                     <td>{formatPercentage(0.02)}</td>
                 </tr>
                 <tr>
                     <td>Return on Equity</td>
-                    <td>{formatPercentage(metrics?.returnOnEquity)}</td>
+                    <td>{formatPercentage(metrics?.returnOnEquity ?? 0)}</td>
                     <td>{formatPercentage(0.03)}</td>
                 </tr>
             </tbody>
