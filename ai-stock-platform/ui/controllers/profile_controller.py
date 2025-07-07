@@ -73,9 +73,6 @@ async def advanced_features_page(request: Request):
     
     # Demo mode - redirect to login with a message
     return RedirectResponse(url="/login?msg=Advanced+features+require+authentication+(demo+mode)", status_code=302)
-=======
-    """Display user profile page"""
-    return RedirectResponse(url="/login?next=/profile", status_code=302)
 
 @router.get("/profile/settings", response_class=HTMLResponse)
 async def profile_settings(request: Request):

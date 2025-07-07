@@ -50,7 +50,7 @@ async def login_post(request: Request, username: str = Form(...), password: str 
     response_redirect.set_cookie("access_token", f"Bearer {access_token}", httponly=True, max_age=max_age, samesite="strict", secure=request.url.scheme == "https")
     response_redirect.set_cookie("csrf_token", csrf_token, httponly=False, max_age=max_age, samesite="strict", secure=request.url.scheme == "https")
     return response_redirect
-=======
+
 async def login_post(
     request: Request,
     username: str = Form(...),
