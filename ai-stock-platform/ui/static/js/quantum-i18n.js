@@ -664,7 +664,6 @@ const observer = new MutationObserver(mutations => {
 });
 observer.observe(document.documentElement, { childList: true, subtree: true });
 
-
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = QuantumI18n;}
