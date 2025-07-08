@@ -102,22 +102,31 @@ export interface MarketOverview {
 
 // Backtest interfaces
 export interface BacktestResult {
+  id: string;
+  symbol: string;
+  strategy: string;
   strategy_id: string;
   start_date: string;
   end_date: string;
   initial_capital: number;
   final_capital: number;
+  final_value: number;
   total_return: number;
   annualized_return: number;
   sharpe_ratio: number;
   max_drawdown: number;
   trades: number;
+  total_trades: number;
   winning_trades: number;
   losing_trades: number;
   win_rate: number;
+  volatility: number;
+  created_at: string;
 }
 
 export interface BacktestRequest {
+  symbol: string;
+  strategy: string;
   strategy_id: string;
   start_date: string;
   end_date: string;
@@ -156,6 +165,8 @@ export interface Alert {
   type: string;
   condition: string;
   value: number;
+  current_price?: number;
+  status: string;
   triggered: boolean;
   created_at: string;
   triggered_at?: string;
@@ -166,6 +177,7 @@ export interface CreateAlertRequest {
   type: string;
   condition: string;
   value: number;
+  message?: string;
 }
 
 // News interfaces
@@ -173,12 +185,15 @@ export interface NewsItem {
   id: string;
   title: string;
   summary: string;
+  content: string;
   url: string;
   source: string;
+  author: string;
+  category: string;
   published_at: string;
   sentiment: string;
-  relevance: number;
-  symbols: string[];
+  relevance?: number;
+  symbols?: string[];
 }
 
 class ApiService {
