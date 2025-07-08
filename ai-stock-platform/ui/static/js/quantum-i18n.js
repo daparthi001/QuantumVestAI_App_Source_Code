@@ -654,10 +654,20 @@ runTranslations();
 document.addEventListener('DOMContentLoaded', runTranslations);
 
 // Observe DOM mutations to translate dynamically added elements
+let translationTimeout = null;
+const scheduleTranslations = () => {
+    if (translationTimeout) return;
+    translationTimeout = setTimeout(() => {
+        runTranslations();
+        translationTimeout = null;
+    }, 300);
+};
+
 const observer = new MutationObserver(mutations => {
     for (const mutation of mutations) {
         if (mutation.type === 'childList' && mutation.addedNodes.length) {
-            runTranslations();
+            scheduleTranslations();
+
             break;
         }
     }
