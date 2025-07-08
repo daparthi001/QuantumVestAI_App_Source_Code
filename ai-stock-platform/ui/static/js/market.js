@@ -232,7 +232,6 @@ function renderSectorChart(container) {
 
 // Render price chart for a given symbol
 function renderPriceChart(container, symbol) {
-
     fetch(`/api/ai/market-data/${symbol}`)
         .then(response => response.json())
         .then(data => {
