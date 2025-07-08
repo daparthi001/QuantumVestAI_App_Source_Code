@@ -4,6 +4,7 @@
 
 {% block head_extra %}
 <link rel="stylesheet" href="{{ get_asset_url('css/predictability.css') }}">
+
 {% endblock %}
 
 {% block breadcrumb %}
@@ -50,6 +51,7 @@
             <div class="stock-logo">
                 <img src="{{ get_asset_url('img/stock-logos/' ~ ticker.lower() ~ '.png') }}" alt="{{ ticker }}"
                     onerror="this.src='{{ get_asset_url('img/stock-logos/default.png') }}'">
+
             </div>
             <div class="stock-details">
                 <h2 class="stock-name">{{ stock_info.name }}</h2>
@@ -320,7 +322,7 @@
 {% block scripts %}
 <script src="{{ get_asset_url('js/chart.js') }}"></script>
 <script src="{{ get_asset_url('js/predictability.js') }}"></script>
-<script>
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize predictability charts and gauges
     if (typeof initializePredictabilityCharts === 'function') {
