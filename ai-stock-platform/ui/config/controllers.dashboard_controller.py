@@ -24,6 +24,10 @@ router = APIRouter()
 # Set up templates
 templates = Jinja2Templates(directory="templates")
 
+def get_templates(request: Request) -> Jinja2Templates:
+    """Return app-level templates if available."""
+    return getattr(request.app.state, "templates", templates)
+
 # API client timeout (configurable via environment variable)
 TIMEOUT = float(os.getenv("API_TIMEOUT", "10.0"))
 
@@ -182,12 +186,12 @@ async def dashboard(
             endpoint="/dashboard"
         ).observe(duration)
         
-        return templates.TemplateResponse("dashboard/index.html", context)
+        return get_templates(request).TemplateResponse("dashboard/index.html", context)
     
     except httpx.RequestError as e:
 
         logger.error(f"Request error: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "error.html", 
             {
                 "request": request,
@@ -200,7 +204,7 @@ async def dashboard(
         raise e
     except Exception as e:
         logger.exception(f"Unexpected error: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "error.html", 
             {
                 "request": request,

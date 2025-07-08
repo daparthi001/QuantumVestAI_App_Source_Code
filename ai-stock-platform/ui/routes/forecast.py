@@ -20,6 +20,11 @@ logger = logging.getLogger(__name__)
 BASE_DIR = Path(__file__).resolve().parent.parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
+
+def get_templates(request: Request) -> Jinja2Templates:
+    """Return app-level templates if available."""
+    return getattr(request.app.state, "templates", templates)
+
 # Demo forecast data
 DEMO_PREDICTIONS = {
     "AAPL": {
@@ -124,7 +129,7 @@ async def forecast_home(request: Request):
         # Sort by confidence
         top_predictions.sort(key=lambda x: x["confidence"], reverse=True)
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "forecast.html",
             {
                 "request": request,
@@ -138,7 +143,7 @@ async def forecast_home(request: Request):
         
     except Exception as e:
         logger.error(f"Error loading forecast dashboard: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "forecast.html",
             {
                 "request": request,
@@ -202,7 +207,7 @@ async def stock_forecast(
             price = current_price * (0.95 + (i * 0.003) + (0.02 * (i % 7 - 3) / 10))
             historical_data.append({"date": date, "price": round(price, 2)})
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "forecast_detail.html",
             {
                 "request": request,
@@ -218,7 +223,7 @@ async def stock_forecast(
         
     except Exception as e:
         logger.error(f"Error loading stock forecast for {symbol}: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "error.html",
             {
                 "request": request,
@@ -264,7 +269,7 @@ async def model_comparison(request: Request):
             }
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "model_comparison.html",
             {
                 "request": request,
@@ -276,7 +281,7 @@ async def model_comparison(request: Request):
         
     except Exception as e:
         logger.error(f"Error loading model comparison: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "error.html",
             {
                 "request": request,
