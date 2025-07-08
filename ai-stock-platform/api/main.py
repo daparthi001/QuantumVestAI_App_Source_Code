@@ -450,14 +450,14 @@ async def startup_event():
     logger.info(f"Environment: {API_ENV}")
     logger.info(f"Debug mode: {DEBUG}")
     
-    # Initialize services
+    # Initialize services with simplified approach
     try:
-        # Import directly to avoid circular imports
+        # Direct import to avoid circular dependencies
         import sys
         import os
         sys.path.append(os.path.dirname(__file__))
         
-        # Import directly without going through __init__.py
+        # Direct import without going through services/__init__.py
         import importlib.util
         spec = importlib.util.spec_from_file_location(
             "trending_stocks_service", 
@@ -468,10 +468,19 @@ async def startup_event():
         
         trending_stocks_service = trending_module.TrendingStocksService()
         logger.info("Trending stocks service initialized successfully")
+        
+        # Verify service is working
+        if trending_stocks_service is not None:
+            logger.info("Service validation passed - trending_stocks_service is available")
+        else:
+            logger.error("Service validation failed - trending_stocks_service is None")
+            
     except Exception as e:
         logger.error(f"Failed to initialize trending stocks service: {e}")
         import traceback
         logger.error(traceback.format_exc())
+        # Set to None to ensure consistent state
+        trending_stocks_service = None
     
     # Initialize database
     if initialize_database():
