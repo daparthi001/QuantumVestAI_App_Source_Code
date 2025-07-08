@@ -5,6 +5,9 @@ from fastapi.responses import JSONResponse
 import httpx
 import logging
 from datetime import datetime
+from urllib.parse import urlencode
+import time
+
 
 router = APIRouter(prefix="/api/ai", tags=["ai-data"])
 logger = logging.getLogger(__name__)
@@ -12,12 +15,29 @@ logger = logging.getLogger(__name__)
 BASE_CHART_URL = "https://query1.finance.yahoo.com/v8/finance/chart"
 SEARCH_URL = "https://query1.finance.yahoo.com/v1/finance/search"
 
+# Simple in-memory cache to avoid hitting Yahoo Finance too often
+CACHE_TTL = 60  # seconds
+_cache: dict[str, tuple[float, dict]] = {}
+
+def _cache_key(url: str, params: dict | None) -> str:
+    if not params:
+        return url
+    return f"{url}?{urlencode(params, doseq=True)}"
+
 async def fetch_json(url: str, params: dict | None = None):
-    """Helper to fetch JSON data from a remote endpoint."""
-    async with httpx.AsyncClient(timeout=10) as client:
+    """Helper to fetch JSON data from a remote endpoint with caching."""
+    key = _cache_key(url, params)
+    now = time.time()
+    if key in _cache and now - _cache[key][0] < CACHE_TTL:
+        return _cache[key][1]
+
+    async with httpx.AsyncClient(timeout=10, headers={"User-Agent": "QuantumVestAI/1.0"}) as client:
         r = await client.get(url, params=params)
         r.raise_for_status()
-        return r.json()
+        data = r.json()
+        _cache[key] = (now, data)
+        return data
+
 
 @router.get("/market-data/{symbol}")
 async def get_market_data(symbol: str):
@@ -40,6 +60,9 @@ async def get_market_data(symbol: str):
         }
     except httpx.HTTPStatusError as e:
         logger.error(f"HTTP error fetching market data for {symbol}: {e}")
+        if e.response.status_code == 429:
+            raise HTTPException(status_code=429, detail="Upstream rate limited")
+
         raise HTTPException(status_code=502, detail="Upstream error")
     except Exception as e:
         logger.error(f"Error fetching market data for {symbol}: {e}")
@@ -69,6 +92,9 @@ async def get_technical_data(symbol: str):
         }
     except httpx.HTTPStatusError as e:
         logger.error(f"HTTP error fetching technical data for {symbol}: {e}")
+        if e.response.status_code == 429:
+            raise HTTPException(status_code=429, detail="Upstream rate limited")
+
         raise HTTPException(status_code=502, detail="Upstream error")
     except Exception as e:
         logger.error(f"Error fetching technical data for {symbol}: {e}")
@@ -83,6 +109,9 @@ async def get_news(symbol: str):
         return {"symbol": symbol.upper(), "news": news, "timestamp": datetime.utcnow().isoformat()}
     except httpx.HTTPStatusError as e:
         logger.error(f"HTTP error fetching news for {symbol}: {e}")
+        if e.response.status_code == 429:
+            raise HTTPException(status_code=429, detail="Upstream rate limited")
+
         raise HTTPException(status_code=502, detail="Upstream error")
     except Exception as e:
         logger.error(f"Error fetching news for {symbol}: {e}")
@@ -98,6 +127,9 @@ async def get_sentiment(symbol: str):
         return {"symbol": symbol.upper(), "score": score, "timestamp": datetime.utcnow().isoformat()}
     except httpx.HTTPStatusError as e:
         logger.error(f"HTTP error fetching sentiment for {symbol}: {e}")
+        if e.response.status_code == 429:
+            raise HTTPException(status_code=429, detail="Upstream rate limited")
+
         raise HTTPException(status_code=502, detail="Upstream error")
     except Exception as e:
         logger.error(f"Error fetching sentiment for {symbol}: {e}")
