@@ -21,6 +21,11 @@ API_URL = "http://quantumvestai-dev-api:8000/api/v1"
 # Templates setup
 templates = Jinja2Templates(directory="templates")
 
+
+def get_templates(request: Request) -> Jinja2Templates:
+    """Return app-level templates if available."""
+    return getattr(request.app.state, "templates", templates)
+
 # Router setup
 router = APIRouter(prefix="/settings", tags=["settings"])
 
@@ -109,7 +114,7 @@ async def settings_page(request: Request):
             ]
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "settings.html",
             {
                 "request": request,
@@ -125,7 +130,7 @@ async def settings_page(request: Request):
         logger.error(f"Error loading settings page: {str(e)}")
         error_message = str(e)
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "settings.html",
             {
                 "request": request,
@@ -269,7 +274,7 @@ async def update_settings(
             ]
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "settings.html",
             {
                 "request": request,
@@ -324,7 +329,7 @@ async def update_settings(
             "timeframes": [{"value": "1d", "name": "1 Day"}]
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "settings.html",
             {
                 "request": request,

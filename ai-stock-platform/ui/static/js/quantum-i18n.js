@@ -48,6 +48,9 @@ class QuantumI18n {
                 'nav.login': 'Login',
                 'nav.logout': 'Logout',
                 'nav.register': 'Register',
+                'nav.brand': 'QuantumVestAI',
+                'nav.forecast': 'Forecast',
+                'nav.profile': 'Profile',
 
                 // Dashboard
                 'dashboard.title': 'QuantumVestAI Dashboard',
@@ -136,6 +139,9 @@ class QuantumI18n {
                 'nav.login': 'Iniciar Sesión',
                 'nav.logout': 'Cerrar Sesión',
                 'nav.register': 'Registrarse',
+                'nav.brand': 'QuantumVestAI',
+                'nav.forecast': 'Pronóstico',
+                'nav.profile': 'Perfil',
 
                 // Dashboard
                 'dashboard.title': 'Panel de QuantumVestAI',
@@ -186,6 +192,9 @@ class QuantumI18n {
                 'nav.login': 'Connexion',
                 'nav.logout': 'Déconnexion',
                 'nav.register': 'Inscription',
+                'nav.brand': 'QuantumVestAI',
+                'nav.forecast': 'Prévisions',
+                'nav.profile': 'Profil',
 
                 // Dashboard
                 'dashboard.title': 'Tableau de Bord QuantumVestAI',
@@ -210,6 +219,9 @@ class QuantumI18n {
                 'nav.login': 'Anmelden',
                 'nav.logout': 'Abmelden',
                 'nav.register': 'Registrieren',
+                'nav.brand': 'QuantumVestAI',
+                'nav.forecast': 'Prognose',
+                'nav.profile': 'Profil',
 
                 // Dashboard
                 'dashboard.title': 'QuantumVestAI Dashboard',
@@ -234,6 +246,9 @@ class QuantumI18n {
                 'nav.login': '登录',
                 'nav.logout': '退出',
                 'nav.register': '注册',
+                'nav.brand': 'QuantumVestAI',
+                'nav.forecast': '预测',
+                'nav.profile': '个人资料',
 
                 // Dashboard
                 'dashboard.title': 'QuantumVestAI 仪表板',
@@ -481,8 +496,8 @@ class QuantumI18n {
         elements.forEach(element => {
             const key = element.getAttribute('data-i18n');
             const translation = this.translate(key);
-            
-            if (translation) {
+
+            if (translation && translation !== key) {
                 // Handle different content types
                 if (element.tagName === 'INPUT' && element.type === 'submit') {
                     element.value = translation;
@@ -629,7 +644,26 @@ class QuantumI18n {
 // Initialize i18n system
 const quantumI18n = new QuantumI18n();
 
+// Helper to run translation
+const runTranslations = () => quantumI18n.translatePage();
+
+// Always translate once immediately
+runTranslations();
+
+// Reapply translations when DOM is fully loaded in case other scripts modify it
+document.addEventListener('DOMContentLoaded', runTranslations);
+
+// Observe DOM mutations to translate dynamically added elements
+const observer = new MutationObserver(mutations => {
+    for (const mutation of mutations) {
+        if (mutation.type === 'childList' && mutation.addedNodes.length) {
+            runTranslations();
+            break;
+        }
+    }
+});
+observer.observe(document.documentElement, { childList: true, subtree: true });
+
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = QuantumI18n;
-}
+    module.exports = QuantumI18n;}
