@@ -583,6 +583,27 @@ async def enhanced_dashboard(request: Request):
         
         user = AuthUtils.get_user_info(request)
         
+        # Demo portfolio data for dashboard page
+        demo_portfolio = {
+            "total_value": 125750.45,
+            "daily_change": 1234.56,
+            "daily_change_pct": 0.99,
+            "total_gain": 8750.45,
+            "total_gain_percent": 7.48,
+            "status": "available"
+        }
+        
+        # Demo data for dashboard
+        market_summary = {
+            "indices": {
+                "S&P 500": {"value": 4567.89, "change": 23.45, "change_pct": 0.52},
+                "NASDAQ": {"value": 14234.56, "change": -45.67, "change_pct": -0.32},
+                "DOW": {"value": 34567.12, "change": 156.78, "change_pct": 0.46}
+            },
+            "sectors": {},
+            "top_movers": {}
+        }
+        
         return templates.TemplateResponse(
             "dashboard/index.html",
             {
@@ -590,7 +611,13 @@ async def enhanced_dashboard(request: Request):
                 "user": user,
                 "api_url": API_URL,
                 "request_id": request_id,
-                "demo_mode": True
+                "demo_mode": True,
+                "portfolio": demo_portfolio,
+                "market_summary": market_summary,
+                "popular_stocks": [],
+                "news": [],
+                "watchlist": [],
+                "page_title": "Dashboard - QuantumVestAI"
             }
         )
     except Exception as e:
