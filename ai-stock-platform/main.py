@@ -6,6 +6,7 @@ Author: daparthi001
 import os
 import json
 import requests
+import traceback
 from fastapi import FastAPI, HTTPException, Request, Form, status
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -62,6 +63,22 @@ app = FastAPI(
     title="QuantumVestAI UI",
     description="Web UI for QuantumVestAI Platform",
 )
+
+# Add request ID middleware for better error tracking
+import uuid
+from starlette.middleware.base import BaseHTTPMiddleware
+
+class RequestIDMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        request_id = str(uuid.uuid4())[:8]
+        request.state.request_id = request_id
+        
+        # Add request ID to response headers for debugging
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+        return response
+
+app.add_middleware(RequestIDMiddleware)
 
 # CRITICAL FIX: Define origins before using it
 origins = os.environ.get("CORS_ORIGINS", "*").split(",")
@@ -121,6 +138,9 @@ try:
         
 except Exception as e:
     logger.error(f"Error importing controllers or registering filters: {str(e)}")
+    import traceback
+    logger.error(f"Full traceback: {traceback.format_exc()}")
+    logger.warning("🔄 Falling back to built-in template filters to ensure application stability")
     
     # Create fallback functions for critical template filters
     def get_asset_url(path, version=None):
@@ -159,11 +179,34 @@ except Exception as e:
         except (ValueError, TypeError):
             return str(value)
     
+    # Create additional critical fallback filters
+    def format_currency(value, symbol='$'):
+        """Fallback format_currency filter"""
+        if value is None:
+            return f"{symbol}0.00"
+        try:
+            float_value = float(value)
+            return f"{symbol}{float_value:,.2f}"
+        except (ValueError, TypeError):
+            return f"{symbol}0.00"
+    
+    def format_percentage(value, precision=2):
+        """Fallback format_percentage filter"""
+        if value is None:
+            return f"0.{precision * '0'}%"
+        try:
+            float_value = float(value) * 100
+            return f"{float_value:.{precision}f}%"
+        except (ValueError, TypeError):
+            return f"0.{precision * '0'}%"
+    
     # Add fallback filters to Jinja environment
     fallback_filters = {
         'get_asset_url': get_asset_url,
         'format_change_value': format_change_value,
-        'format_large_number': format_large_number
+        'format_large_number': format_large_number,
+        'format_currency': format_currency,
+        'format_percentage': format_percentage
     }
     
     for name, func in fallback_filters.items():
@@ -717,24 +760,64 @@ for name, controller in controllers.items():
 # Add route to serve dashboard placeholder (will be overridden by dashboard_controller if implemented)
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request):
-    """Temporary dashboard placeholder until real dashboard is implemented"""
+    """Enhanced dashboard with comprehensive error handling and template filter support"""
+    request_id = getattr(request.state, 'request_id', 'unknown')
+    logger.info(f"[{request_id}] Dashboard request from {request.client.host if request.client else 'unknown'}")
+    
     try:
-        return app.state.templates.TemplateResponse(
-            "dashboard/index.html",
-            {
-                "request": request, 
-                "username": "User",
-                # Add get_asset_url directly to context if not registered
-                "get_asset_url": app.state.templates.env.filters.get("get_asset_url", 
-                    lambda path, version=None: f"/static/{path}?v={version or os.environ.get('APP_VERSION', 'v1.5.2')}"
-                )
-            }
-        )
+        # Ensure critical template filters are available
+        env = app.state.templates.env
+        if 'format_currency' not in env.filters:
+            def format_currency(value, symbol='$'):
+                if value is None: return f"{symbol}0.00"
+                try: return f"{symbol}{float(value):,.2f}"
+                except: return f"{symbol}0.00"
+            env.filters['format_currency'] = format_currency
+            
+        if 'format_percentage' not in env.filters:
+            def format_percentage(value, precision=2):
+                if value is None: return f"0.{precision * '0'}%"
+                try: return f"{float(value) * 100:.{precision}f}%"
+                except: return f"0.{precision * '0'}%"
+            env.filters['format_percentage'] = format_percentage
+        
+        # Mock portfolio data for dashboard
+        portfolio_data = {
+            "total_value": 125350.75,
+            "daily_change": 0.0234,  # 2.34% 
+            "total_gain": 25350.75,
+            "total_gain_percent": 0.2535  # 25.35%
+        }
+        
+        context = {
+            "request": request, 
+            "username": "Demo User",
+            "portfolio": portfolio_data,
+            "selected_period": "month",
+            "periods": [
+                {"value": "day", "label": "Today"},
+                {"value": "week", "label": "This Week"}, 
+                {"value": "month", "label": "This Month"},
+                {"value": "year", "label": "This Year"}
+            ],
+            "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "is_cached": False,
+            # Add get_asset_url directly to context if not registered
+            "get_asset_url": env.filters.get("get_asset_url", 
+                lambda path, version=None: f"/static/{path}?v={version or os.environ.get('APP_VERSION', 'v1.5.2')}"
+            )
+        }
+        
+        logger.info(f"[{request_id}] Rendering dashboard template with portfolio value: {portfolio_data['total_value']}")
+        return app.state.templates.TemplateResponse("dashboard/index.html", context)
+        
     except Exception as e:
-        logger.error(f"Error rendering dashboard: {str(e)}")
+        logger.error(f"[{request_id}] Error rendering dashboard: {str(e)}")
+        logger.error(f"[{request_id}] Full dashboard error traceback: {traceback.format_exc()}")
+        
         # If dashboard/index.html doesn't exist, return a simple HTML response
         return HTMLResponse(
-            content="""
+            content=f"""
             <!DOCTYPE html>
             <html>
             <head>
@@ -749,7 +832,12 @@ async def dashboard(request: Request):
                         <div class="col-md-12 text-center">
                             <h1>Dashboard</h1>
                             <p class="lead">Welcome to QuantumVestAI Dashboard</p>
-                            <p>Your login was successful! This is a placeholder for the dashboard.</p>
+                            <p>Dashboard is temporarily unavailable. Error ID: {request_id}</p>
+                            <div class="alert alert-info">
+                                <h4>Debug Information:</h4>
+                                <p>Error: {str(e)}</p>
+                                <small>Request ID: {request_id}</small>
+                            </div>
                             <a href="/login" class="btn btn-primary">Back to Login</a>
                         </div>
                     </div>
