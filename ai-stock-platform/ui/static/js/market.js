@@ -169,8 +169,8 @@ function debounce(func, wait) {
 // Render market index chart - placeholder
 function renderIndexChart(container) {
     // Actual chart implementation would go here
-    // Using API proxy endpoint
-    fetch('/api/v1/market/indices')
+    // Fetch demo index data from the new AI API
+    fetch('/api/ai/market-data/SPY')
         .then(response => response.json())
         .then(data => {
             console.log('Index data:', data);
@@ -186,8 +186,8 @@ function renderIndexChart(container) {
 // Render sector performance chart - placeholder
 function renderSectorChart(container) {
     // Actual chart implementation would go here
-    // Using API proxy endpoint
-    fetch('/api/v1/market/sectors')
+    // Fetch demo sector data from the new AI API
+    fetch('/api/ai/market-data/QQQ')
         .then(response => response.json())
         .then(data => {
             console.log('Sector data:', data);
@@ -203,8 +203,8 @@ function renderSectorChart(container) {
 // Render price chart - placeholder
 function renderPriceChart(container, symbol) {
     // Actual chart implementation would go here
-    // Using API proxy endpoint
-    fetch(`/api/v1/market/ticker/${symbol}/price`)
+    // Fetch live price data from the new AI API
+    fetch(`/api/ai/market-data/${symbol}`)
         .then(response => response.json())
         .then(data => {
             console.log('Price data:', data);
@@ -224,8 +224,8 @@ function updateIndicatorChart(symbol, indicatorType) {
     
     indicatorChartContainer.innerHTML = '<div class="loading-spinner"></div>';
     
-    // Using API proxy endpoint
-    fetch(`/api/v1/market/ticker/${symbol}/indicator/${indicatorType}`)
+    // Fetch live technical indicator data from the new AI API
+    fetch(`/api/ai/technical-data/${symbol}`)
         .then(response => response.json())
         .then(data => {
             console.log(`${indicatorType} data:`, data);
@@ -246,8 +246,8 @@ function toggleForecast(show, symbol) {
     if (show) {
         forecastContainer.innerHTML = '<div class="loading-spinner"></div>';
         
-        // Using API proxy endpoint
-        fetch(`/api/v1/forecast/ticker/${symbol}`)
+        // Fetch sentiment data from the new AI API as a placeholder
+        fetch(`/api/ai/sentiment/${symbol}`)
             .then(response => response.json())
             .then(data => {
                 console.log('Forecast data:', data);
@@ -262,5 +262,4 @@ function toggleForecast(show, symbol) {
             });
     } else {
         forecastContainer.classList.add('d-none');
-    }
-}
+    }}

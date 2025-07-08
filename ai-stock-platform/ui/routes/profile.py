@@ -25,6 +25,11 @@ API_V1_URL = f"{API_URL}/api/v1"
 # Templates setup
 templates = Jinja2Templates(directory="templates")
 
+
+def get_templates(request: Request) -> Jinja2Templates:
+    """Return app-level templates if available."""
+    return getattr(request.app.state, "templates", templates)
+
 # Router setup
 router = APIRouter(prefix="/profile", tags=["profile"])
 
@@ -91,7 +96,7 @@ async def profile_page(request: Request):
             }
         ]
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "profile.html",
             {
                 "request": request,
@@ -107,7 +112,7 @@ async def profile_page(request: Request):
         logger.error(f"Error loading profile page: {str(e)}")
         error_message = str(e)
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "profile.html",
             {
                 "request": request,
@@ -203,7 +208,7 @@ async def update_profile(
             }
         ]
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "profile.html",
             {
                 "request": request,
@@ -233,7 +238,7 @@ async def update_profile(
             "profile_image": current_user.get("profile_image", "/static/img/avatars/default.png")
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "profile.html",
             {
                 "request": request,
@@ -273,7 +278,7 @@ async def change_password(
                 "profile_image": current_user.get("profile_image", "/static/img/avatars/default.png")
             }
             
-            return templates.TemplateResponse(
+            return get_templates(request).TemplateResponse(
                 "profile.html",
                 {
                     "request": request,
@@ -323,7 +328,7 @@ async def change_password(
             }
         ]
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "profile.html",
             {
                 "request": request,
@@ -348,7 +353,7 @@ async def change_password(
             "profile_image": current_user.get("profile_image", "/static/img/avatars/default.png")
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "profile.html",
             {
                 "request": request,
@@ -375,7 +380,7 @@ async def change_password(
             "profile_image": current_user.get("profile_image", "/static/img/avatars/default.png")
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "profile.html",
             {
                 "request": request,
