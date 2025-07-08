@@ -59,6 +59,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     };
 
     window.addEventListener('resize', handleResize);
+    // Call once to set initial state
+    handleResize();
+    
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
@@ -285,35 +288,37 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </motion.div>
       </div>
 
-      {/* Quantum Particles Background Effect */}
+      {/* Quantum Particles Background Effect - Optimized */}
       <div className="quantum-particles">
-        {[...Array(20)].map((_, i) => (
+        {[...Array(8)].map((_, i) => (
           <motion.div
             key={i}
             className="quantum-particle"
             initial={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
+              x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1920),
+              y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1080),
               opacity: 0
             }}
             animate={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
-              opacity: [0, 0.5, 0]
+              x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1920),
+              y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1080),
+              opacity: [0, 0.3, 0]
             }}
             transition={{
-              duration: Math.random() * 10 + 10,
+              duration: Math.random() * 15 + 15,
               repeat: Infinity,
-              ease: "linear"
+              ease: "linear",
+              repeatDelay: Math.random() * 5
             }}
             style={{
               position: 'fixed',
-              width: '2px',
-              height: '2px',
-              background: `rgba(74, 144, 226, ${Math.random() * 0.5})`,
+              width: '1px',
+              height: '1px',
+              background: `rgba(74, 144, 226, ${Math.random() * 0.3})`,
               borderRadius: '50%',
               pointerEvents: 'none',
-              zIndex: 1
+              zIndex: 1,
+              willChange: 'transform, opacity'
             }}
           />
         ))}

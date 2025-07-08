@@ -709,25 +709,52 @@ class QuantumSearch {
     }
 
     async performSearch(query) {
-        if (this.searchCache.has(query)) {
-            this.displayResults(this.searchCache.get(query));
+        if (!query || query.trim().length === 0) {
+            this.hideResults();
+            return;
+        }
+
+        const trimmedQuery = query.trim();
+        
+        if (this.searchCache.has(trimmedQuery)) {
+            this.displayResults(this.searchCache.get(trimmedQuery));
             return;
         }
 
         try {
             this.showLoadingState();
 
-            // Simulate API call for demo
-            const results = await this.simulateSearch(query);
+            // Simulate API call for demo with better error handling
+            const results = await this.simulateSearch(trimmedQuery);
             
-            this.searchCache.set(query, results);
-            this.displayResults(results);
-            this.addToHistory(query);
+            if (results && (results.suggestions || results.results)) {
+                this.searchCache.set(trimmedQuery, results);
+                this.displayResults(results);
+                this.addToHistory(trimmedQuery);
+            } else {
+                this.showNoResultsState(trimmedQuery);
+            }
 
         } catch (error) {
             console.error('Search error:', error);
             this.showErrorState();
         }
+    }
+
+    showNoResultsState(query) {
+        const resultsList = document.querySelector('.quantum-search-results-list');
+        if (resultsList) {
+            resultsList.innerHTML = `
+                <div class="quantum-search-no-results">
+                    <div style="padding: 20px; text-align: center; color: rgba(255, 255, 255, 0.6);">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🔍</div>
+                        <div style="font-weight: 500; margin-bottom: 0.25rem;">No results found</div>
+                        <small>No results for "${query}". Try a different search term.</small>
+                    </div>
+                </div>
+            `;
+        }
+        this.showResults();
     }
 
     async simulateSearch(query) {

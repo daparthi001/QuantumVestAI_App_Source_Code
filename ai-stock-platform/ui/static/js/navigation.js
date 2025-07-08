@@ -270,6 +270,16 @@ class NavigationController {
             return;
         }
         
+        // Skip React Router links (they handle navigation themselves)
+        if (link.hasAttribute('data-react-router') || 
+            link.closest('[data-react-router]') ||
+            link.getAttribute('role') === 'button' ||
+            window.location.pathname.includes('/dashboard') ||
+            window.location.pathname.includes('/stocks') ||
+            window.location.pathname.includes('/portfolio')) {
+            return;
+        }
+        
         // Skip if it's the current page
         if (href === window.location.pathname) {
             event.preventDefault();
