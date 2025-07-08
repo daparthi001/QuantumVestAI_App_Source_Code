@@ -157,7 +157,7 @@ async def market_overview(
         templates = get_templates(request)
         
         # Render template
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "market/overview.html",
             {
                 "request": request,
@@ -177,7 +177,7 @@ async def market_overview(
         # Get templates
         templates = get_templates(request)
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "error.html",
             {
                 "request": request,
@@ -273,7 +273,7 @@ async def stock_details(
         templates = get_templates(request)
         
         # Render template
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "market/stock_details.html",
             {
                 "request": request,
@@ -294,7 +294,7 @@ async def stock_details(
         # Get templates
         templates = get_templates(request)
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "error.html",
             {
                 "request": request,
