@@ -909,6 +909,7 @@ routers_to_include = [
     ("routes.api_proxy", "api_proxy"),
     ("routes.utils", "utils"),
     ("controllers.news_controller", "news_controller"),
+    ("controllers.stock_controller", "stock_controller"),
 ]
 
 for module_name, router_name in routers_to_include:

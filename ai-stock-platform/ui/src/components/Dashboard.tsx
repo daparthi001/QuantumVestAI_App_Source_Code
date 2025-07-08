@@ -33,7 +33,6 @@ const Dashboard: React.FC = () => {
   }, []);
 
 
-
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -267,7 +266,75 @@ const Dashboard: React.FC = () => {
             </motion.div>
           </Col>
 
-          {/* Quick Actions */}
+          {/* Stock Flow Preview */}
+          <Col lg={6} className="mb-4">
+            <motion.div variants={itemVariants}>
+              <Card className="quantum-card h-100">
+                <Card.Header className="quantum-card-header">
+                  <h5 className="mb-0 d-flex align-items-center">
+                    <motion.span
+                      className="me-2"
+                      animate={{ 
+                        rotate: [0, 10, -10, 0],
+                        scale: [1, 1.1, 1]
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      🌊
+                    </motion.span>
+                    Stock Flow Preview
+                  </h5>
+                </Card.Header>
+                <Card.Body>
+                  <motion.div
+                    className="text-center p-3"
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    <p className="text-muted mb-3">
+                      Experience real-time stock movements with our interactive flow visualization
+                    </p>
+                    <motion.div 
+                      className="mb-3"
+                      animate={{ 
+                        background: [
+                          'linear-gradient(45deg, #667eea, #764ba2)',
+                          'linear-gradient(45deg, #f093fb, #f5576c)',
+                          'linear-gradient(45deg, #4facfe, #00f2fe)',
+                          'linear-gradient(45deg, #667eea, #764ba2)'
+                        ]
+                      }}
+                      transition={{ duration: 4, repeat: Infinity }}
+                      style={{
+                        height: '80px',
+                        borderRadius: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      📈 Live Data Flows 📊
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button 
+                        as={Link as any} 
+                        to={ROUTES.STOCK_FLOW} 
+                        className="quantum-btn w-100"
+                        variant="primary"
+                      >
+                        <span className="me-2">🚀</span>
+                        Explore Stock Flows
+                      </Button>
+                    </motion.div>
+                  </motion.div>
+                </Card.Body>
+              </Card>
+            </motion.div>
+          </Col>
+        </Row>
+
+        <Row>
           <Col lg={6} className="mb-4">
             <motion.div variants={itemVariants}>
               <Card className="quantum-card h-100">
@@ -286,6 +353,7 @@ const Dashboard: React.FC = () => {
                 <Card.Body>
                   <Row>
                     {[
+                      { route: ROUTES.STOCK_FLOW, icon: '🌊', label: 'Stock Flow', variant: 'outline-primary' },
                       { route: ROUTES.WATCHLIST, icon: '📋', label: 'Manage Watchlist', variant: 'outline-primary' },
                       { route: ROUTES.BACKTEST, icon: '🔄', label: 'Run Backtest', variant: 'outline-success' },
                       { route: ROUTES.ANALYTICS, icon: '📊', label: 'View Analytics', variant: 'outline-info' },
