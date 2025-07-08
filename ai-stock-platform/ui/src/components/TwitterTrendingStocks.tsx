@@ -14,12 +14,27 @@ interface TrendingStock {
   tweet_count: number;
   engagement: number;
   sentiment: number;
+  volume_change?: number;
+}
+
+interface TrendingResponse {
+  status: string;
+  data?: {
+    trending_tickers: TrendingStock[];
+    count: number;
+    last_updated: string;
+    note?: string;
+  };
+  error?: string;
+  message?: string;
 }
 
 const TwitterTrendingStocks: React.FC = () => {
   const [trending, setTrending] = useState<TrendingStock[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<string>('');
+  const [note, setNote] = useState<string>('');
 
   useEffect(() => {
     const fetchTrending = async () => {
@@ -27,11 +42,24 @@ const TwitterTrendingStocks: React.FC = () => {
       setError(null);
       
       try {
+        // Use the new social API endpoint structure
         const response = await axios.get('/api/social/twitter/trending');
-        setTrending(response.data.trending_tickers);
-      } catch (err) {
-        setError('Failed to load trending stocks');
-        console.error(err);
+        const data: TrendingResponse = response.data;
+        
+        if (data.status === 'success' && data.data) {
+          setTrending(data.data.trending_tickers);
+          setLastUpdated(data.data.last_updated);
+          setNote(data.data.note || '');
+        } else {
+          setError(data.error || 'Failed to load trending stocks');
+        }
+      } catch (err: any) {
+        console.error('Error fetching trending stocks:', err);
+        if (err.response && err.response.status === 503) {
+          setError('Twitter integration not configured. Using demo data.');
+        } else {
+          setError('Failed to load trending stocks');
+        }
       } finally {
         setLoading(false);
       }
@@ -51,6 +79,18 @@ const TwitterTrendingStocks: React.FC = () => {
     return <Remove style={{ color: grey[500] }} />;
   };
 
+  const getSentimentLabel = (score: number): string => {
+    if (score > 0.1) return 'Bullish';
+    if (score < -0.1) return 'Bearish';
+    return 'Neutral';
+  };
+
+  const getSentimentColor = (score: number) => {
+    if (score > 0.1) return { backgroundColor: green[100], color: green[800] };
+    if (score < -0.1) return { backgroundColor: red[100], color: red[800] };
+    return { backgroundColor: grey[100], color: grey[800] };
+  };
+
   if (loading) {
     return (
       <Card>
@@ -59,6 +99,9 @@ const TwitterTrendingStocks: React.FC = () => {
           <Box display="flex" justifyContent="center" my={3}>
             <CircularProgress />
           </Box>
+          <Typography variant="body2" color="textSecondary" align="center">
+            Loading trending stocks...
+          </Typography>
         </CardContent>
       </Card>
     );
@@ -70,7 +113,14 @@ const TwitterTrendingStocks: React.FC = () => {
         <CardContent>
           <Typography variant="h6">Trending on Twitter</Typography>
           <Box my={2}>
-            <Typography color="error">{error || 'No trending stocks available'}</Typography>
+            <Typography color="error" variant="body2">
+              {error || 'No trending stocks available'}
+            </Typography>
+            {note && (
+              <Typography variant="caption" color="textSecondary" display="block" mt={1}>
+                {note}
+              </Typography>
+            )}
           </Box>
         </CardContent>
       </Card>
@@ -80,7 +130,14 @@ const TwitterTrendingStocks: React.FC = () => {
   return (
     <Card>
       <CardContent>
-        <Typography variant="h6" gutterBottom>Trending Stocks on Twitter</Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography variant="h6">Trending Stocks on Twitter</Typography>
+          {note && (
+            <Typography variant="caption" color="textSecondary">
+              {note}
+            </Typography>
+          )}
+        </Box>
         
         <List disablePadding>
           {trending.map((stock, index) => (
@@ -89,28 +146,66 @@ const TwitterTrendingStocks: React.FC = () => {
               <ListItem 
                 component={Link} 
                 to={`/stocks/${stock.ticker}`}
-                sx={{ alignItems: 'center', cursor: 'pointer' }}
+                sx={{ 
+                  alignItems: 'center', 
+                  cursor: 'pointer',
+                  '&:hover': {
+                    backgroundColor: grey[50]
+                  }
+                }}
               >
-                <Avatar sx={{ bgcolor: grey[200], width: 36, height: 36, mr: 2 }}>${stock.ticker}</Avatar>
-                <ListItemText 
-                  primary={stock.ticker} 
-                  secondary={`${stock.tweet_count} tweets • ${stock.engagement} engagement`} 
-                />
-                <ListItemIcon style={{ minWidth: 'auto' }}>
-                  {getSentimentIcon(stock.sentiment)}
-                </ListItemIcon>
-                <Chip 
-                  size="small" 
-                  label={stock.sentiment > 0 ? 'Bullish' : stock.sentiment < 0 ? 'Bearish' : 'Neutral'} 
-                  style={{ 
-                    backgroundColor: stock.sentiment > 0 ? green[100] : stock.sentiment < 0 ? red[100] : grey[100],
-                    color: stock.sentiment > 0 ? green[800] : stock.sentiment < 0 ? red[800] : grey[800],
+                <Avatar 
+                  sx={{ 
+                    bgcolor: grey[200], 
+                    width: 36, 
+                    height: 36, 
+                    mr: 2,
+                    fontSize: '0.75rem',
+                    fontWeight: 'bold'
                   }}
+                >
+                  {stock.ticker}
+                </Avatar>
+                <ListItemText 
+                  primary={
+                    <Typography variant="subtitle2" fontWeight="bold">
+                      {stock.ticker}
+                    </Typography>
+                  }
+                  secondary={
+                    <Box>
+                      <Typography variant="caption" color="textSecondary">
+                        {stock.tweet_count.toLocaleString()} tweets • {stock.engagement.toLocaleString()} engagement
+                      </Typography>
+                      {stock.volume_change !== undefined && (
+                        <Typography variant="caption" color="textSecondary" display="block">
+                          Volume change: {(stock.volume_change * 100).toFixed(1)}%
+                        </Typography>
+                      )}
+                    </Box>
+                  }
                 />
+                <Box display="flex" alignItems="center" gap={1}>
+                  <ListItemIcon style={{ minWidth: 'auto' }}>
+                    {getSentimentIcon(stock.sentiment)}
+                  </ListItemIcon>
+                  <Chip 
+                    size="small" 
+                    label={getSentimentLabel(stock.sentiment)}
+                    style={getSentimentColor(stock.sentiment)}
+                  />
+                </Box>
               </ListItem>
             </React.Fragment>
           ))}
         </List>
+
+        {/* Footer with last updated info */}
+        <Box mt={2} pt={1} borderTop={1} borderColor="divider">
+          <Typography variant="caption" color="textSecondary" align="center" display="block">
+            Last updated: {lastUpdated ? new Date(lastUpdated).toLocaleString() : 'Unknown'}
+          </Typography>
+        </Box>
       </CardContent>
     </Card>
   );

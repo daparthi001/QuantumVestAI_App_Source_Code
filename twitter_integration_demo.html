@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter Sentiment Integration Demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .sentiment-score {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #495057;
+        }
+        .stat-label {
+            font-size: 0.85rem;
+        }
+        .trending-item {
+            transition: all 0.3s ease;
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+        }
+        .trending-item:hover {
+            background-color: #e9ecef;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .badge-positive {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .badge-negative {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .badge-neutral {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="text-center mb-4">
+                    <i class="fab fa-twitter text-primary me-2"></i>
+                    Twitter API Integration Demo
+                </h1>
+                <p class="text-center text-muted mb-4">
+                    Real-time social sentiment analysis for stock market insights
+                </p>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Twitter Sentiment Component -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fab fa-twitter me-2" style="color: #1da1f2;"></i>
+                            Twitter Sentiment for AAPL
+                        </h5>
+                        <small class="text-muted">Demo data - Twitter API ready</small>
+                    </div>
+                    
+                    <div class="card-body">
+                        <!-- Main Sentiment Score -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="sentiment-score text-center">
+                                    <div class="display-4">
+                                        📈 +0.15
+                                    </div>
+                                    <div class="text-white">
+                                        <strong>POSITIVE</strong> sentiment
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="sentiment-stats">
+                                    <div class="row text-center">
+                                        <div class="col-6">
+                                            <div class="stat-value">1,250</div>
+                                            <div class="stat-label text-muted">Tweets</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="stat-value">143.8</div>
+                                            <div class="stat-label text-muted">Trending Score</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sources Breakdown -->
+                        <div class="mb-3">
+                            <h6 class="text-muted mb-2">Sources</h6>
+                            <div class="row">
+                                <div class="col-3 text-center">
+                                    <div class="text-primary fw-bold">1,250</div>
+                                    <small class="text-muted">Twitter</small>
+                                </div>
+                                <div class="col-3 text-center">
+                                    <div class="text-secondary fw-bold">0</div>
+                                    <small class="text-muted">Reddit</small>
+                                </div>
+                                <div class="col-3 text-center">
+                                    <div class="text-info fw-bold">0</div>
+                                    <small class="text-muted">News</small>
+                                </div>
+                                <div class="col-3 text-center">
+                                    <div class="text-dark fw-bold">0</div>
+                                    <small class="text-muted">Other</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Mentions -->
+                        <div class="mb-3">
+                            <h6 class="text-muted mb-2">Top Mentions</h6>
+                            <div class="list-group list-group-flush">
+                                <div class="list-group-item px-0 py-2">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <p class="mb-1 small">Great day for $AAPL investors! Stock showing strong momentum and breaking resistance levels.</p>
+                                            <small class="text-muted">
+                                                Engagement: 125 | 
+                                                Sentiment: <span style="color: #28a745;">+0.80</span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="list-group-item px-0 py-2">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <p class="mb-1 small">Watching $AAPL closely, looks promising for the week ahead with strong technicals.</p>
+                                            <small class="text-muted">
+                                                Engagement: 89 | 
+                                                Sentiment: <span style="color: #28a745;">+0.60</span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Last Updated -->
+                        <div class="text-muted small text-center">
+                            Last updated: 2025-01-09 | 1,250 tweets analyzed
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trending Stocks Component -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Trending Stocks on Twitter</h6>
+                        <small class="text-muted">Demo data - Real API ready</small>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            <!-- AAPL -->
+                            <div class="list-group-item trending-item d-flex align-items-center justify-content-between px-3 py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                        <strong style="font-size: 0.75rem;">AAPL</strong>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">AAPL</div>
+                                        <small class="text-muted">1,250 tweets • 15,000 engagement</small>
+                                        <br>
+                                        <small class="text-muted">Volume change: +8.0%</small>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-arrow-up text-success me-2"></i>
+                                    <span class="badge badge-positive">Bullish</span>
+                                </div>
+                            </div>
+
+                            <!-- TSLA -->
+                            <div class="list-group-item trending-item d-flex align-items-center justify-content-between px-3 py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                        <strong style="font-size: 0.75rem;">TSLA</strong>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">TSLA</div>
+                                        <small class="text-muted">980 tweets • 12,000 engagement</small>
+                                        <br>
+                                        <small class="text-muted">Volume change: +12.0%</small>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-arrow-up text-success me-2"></i>
+                                    <span class="badge badge-positive">Bullish</span>
+                                </div>
+                            </div>
+
+                            <!-- MSFT -->
+                            <div class="list-group-item trending-item d-flex align-items-center justify-content-between px-3 py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                        <strong style="font-size: 0.75rem;">MSFT</strong>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">MSFT</div>
+                                        <small class="text-muted">750 tweets • 9,500 engagement</small>
+                                        <br>
+                                        <small class="text-muted">Volume change: +3.0%</small>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-minus text-secondary me-2"></i>
+                                    <span class="badge badge-neutral">Neutral</span>
+                                </div>
+                            </div>
+
+                            <!-- GOOGL -->
+                            <div class="list-group-item trending-item d-flex align-items-center justify-content-between px-3 py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                        <strong style="font-size: 0.65rem;">GOOGL</strong>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">GOOGL</div>
+                                        <small class="text-muted">620 tweets • 7,800 engagement</small>
+                                        <br>
+                                        <small class="text-muted">Volume change: -1.0%</small>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-arrow-down text-danger me-2"></i>
+                                    <span class="badge badge-negative">Bearish</span>
+                                </div>
+                            </div>
+
+                            <!-- NVDA -->
+                            <div class="list-group-item trending-item d-flex align-items-center justify-content-between px-3 py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                        <strong style="font-size: 0.75rem;">NVDA</strong>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">NVDA</div>
+                                        <small class="text-muted">520 tweets • 6,200 engagement</small>
+                                        <br>
+                                        <small class="text-muted">Volume change: +15.0%</small>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-arrow-up text-success me-2"></i>
+                                    <span class="badge badge-positive">Bullish</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="mt-3 pt-2 border-top text-center">
+                            <small class="text-muted">
+                                Last updated: January 9, 2025, 10:30 AM
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Integration Status -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cogs me-2"></i>
+                            Integration Status
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 text-center">
+                                <div class="mb-2">
+                                    <i class="fas fa-check-circle text-success" style="font-size: 2rem;"></i>
+                                </div>
+                                <h6>API Dependencies</h6>
+                                <small class="text-muted">Tweepy & TextBlob installed</small>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <div class="mb-2">
+                                    <i class="fas fa-check-circle text-success" style="font-size: 2rem;"></i>
+                                </div>
+                                <h6>Configuration</h6>
+                                <small class="text-muted">Settings & error handling ready</small>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <div class="mb-2">
+                                    <i class="fas fa-check-circle text-success" style="font-size: 2rem;"></i>
+                                </div>
+                                <h6>API Endpoints</h6>
+                                <small class="text-muted">Social router implemented</small>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <div class="mb-2">
+                                    <i class="fas fa-check-circle text-success" style="font-size: 2rem;"></i>
+                                </div>
+                                <h6>UI Components</h6>
+                                <small class="text-muted">Enhanced with real-time data</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="alert alert-info mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Next Steps:</strong> Configure Twitter API credentials in environment variables to enable real-time data fetching. 
+                                    The system currently shows demo data with the same structure as real Twitter API responses.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

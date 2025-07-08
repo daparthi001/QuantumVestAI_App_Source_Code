@@ -17,7 +17,7 @@ from sqlalchemy import text
 from core.config import settings
 from core.logger import logger
 from db.session import engine, get_db
-from routers import auth, users, stocks, alerts, watchlists, analytics
+from routers import auth, users, stocks, alerts, watchlists, analytics, social
 
 # Create API application
 app = FastAPI(
@@ -43,6 +43,7 @@ app.include_router(alerts.router, prefix="/alerts", tags=["Alerts"])
 app.include_router(watchlists.router, prefix="/watchlists", tags=["Watchlists"])
 app.include_router(analytics.router, prefix="/analytics", tags=["Analytics"])
 app.include_router(analytics.public_router, tags=["Analytics Public"])
+app.include_router(social.router, prefix="/api/v1", tags=["Social Media"])
 
 @app.get("/")
 async def api_root():

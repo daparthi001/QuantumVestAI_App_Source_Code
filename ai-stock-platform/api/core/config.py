@@ -39,6 +39,13 @@ class Settings(BaseSettings):
     
     # Security settings
     SECRET_KEY: Optional[str] = Field(default=None, env='SECRET_KEY')
+    
+    # Twitter API settings
+    TWITTER_BEARER_TOKEN: Optional[str] = Field(default=None, env='TWITTER_BEARER_TOKEN')
+    TWITTER_API_KEY: Optional[str] = Field(default=None, env='TWITTER_API_KEY')
+    TWITTER_API_SECRET: Optional[str] = Field(default=None, env='TWITTER_API_SECRET')
+    TWITTER_ACCESS_TOKEN: Optional[str] = Field(default=None, env='TWITTER_ACCESS_TOKEN')
+    TWITTER_ACCESS_TOKEN_SECRET: Optional[str] = Field(default=None, env='TWITTER_ACCESS_TOKEN_SECRET')
 
     @validator("LOG_LEVEL")
     def validate_log_level(cls, v):
