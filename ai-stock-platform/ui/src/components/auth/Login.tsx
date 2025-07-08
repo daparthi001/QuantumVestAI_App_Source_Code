@@ -1,100 +1,15 @@
 /**
- * Login Component
- * Updated: 2025-06-19 18:00:37
+ * Login Component - Quantum Design System
+ * Enhanced with modern UI/UX and glass morphism effects
+ * Updated: 2025-01-09
  * Author: daparthi001
  */
 import React, { useState, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Container, Card, Form, Button, Alert, Row, Col } from 'react-bootstrap';
+import { motion, AnimatePresence } from 'framer-motion';
 import authService from '../../services/auth.service';
 import { ROUTES } from '../../config/constants';
-
-// Login component styles
-const styles = {
-  container: {
-    maxWidth: '400px',
-    margin: '50px auto',
-    padding: '30px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-    borderRadius: '8px',
-    backgroundColor: '#fff',
-  },
-  header: {
-    textAlign: 'center' as const,
-    marginBottom: '30px',
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '20px',
-  },
-  inputGroup: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '5px',
-  },
-  input: {
-    padding: '12px',
-    borderRadius: '4px',
-    border: '1px solid #ddd',
-    fontSize: '16px',
-  },
-  button: {
-    padding: '14px',
-    backgroundColor: '#1e3a8a',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '16px',
-    fontWeight: 'bold' as const,
-  },
-  registerLink: {
-    textAlign: 'center' as const,
-    marginTop: '20px',
-    fontSize: '14px',
-  },
-  forgotPassword: {
-    textAlign: 'right' as const,
-    marginTop: '5px',
-    fontSize: '14px',
-  },
-  link: {
-    color: '#1e3a8a',
-    textDecoration: 'none',
-  },
-  errorMessage: {
-    color: 'red',
-    marginTop: '10px',
-    textAlign: 'center' as const,
-  },
-  orDivider: {
-    display: 'flex',
-    alignItems: 'center',
-    margin: '20px 0',
-  },
-  line: {
-    flex: '1',
-    height: '1px',
-    backgroundColor: '#ddd',
-  },
-  orText: {
-    padding: '0 10px',
-    color: '#888',
-    fontSize: '14px',
-  },
-  demoAccount: {
-    marginTop: '10px',
-    padding: '14px',
-    backgroundColor: '#4a5568',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '16px',
-    textAlign: 'center' as const,
-    fontWeight: 'bold' as const,
-  },
-};
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -154,76 +69,174 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <h1>QuantumVestAI</h1>
-        <h2>Login</h2>
-      </div>
+    <div className="quantum-bg min-vh-100 d-flex align-items-center justify-content-center">
+      <Container>
+        <Row className="justify-content-center">
+          <Col md={6} lg={4}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card className="quantum-card shadow-lg">
+                <Card.Body className="p-5">
+                  {/* Header */}
+                  <div className="text-center mb-4">
+                    <motion.div
+                      initial={{ scale: 0.8 }}
+                      animate={{ scale: 1 }}
+                      transition={{ duration: 0.5, delay: 0.2 }}
+                    >
+                      <h1 className="quantum-text-gradient mb-2">
+                        <motion.span
+                          className="me-2"
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                        >
+                          ⚛️
+                        </motion.span>
+                        QuantumVestAI
+                      </h1>
+                      <h2 className="text-muted">Welcome Back</h2>
+                    </motion.div>
+                  </div>
 
-      <form onSubmit={handleSubmit} style={styles.form}>
-        <div style={styles.inputGroup}>
-          <label htmlFor="username">Username</label>
-          <input
-            id="username"
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="Enter your username"
-            style={styles.input}
-            disabled={loading}
-            autoComplete="username"
-          />
-        </div>
+                  {/* Login Form */}
+                  <Form onSubmit={handleSubmit}>
+                    <AnimatePresence>
+                      {error && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <Alert variant="danger" className="mb-3">
+                            {error}
+                          </Alert>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
-        <div style={styles.inputGroup}>
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password"
-            style={styles.input}
-            disabled={loading}
-            autoComplete="current-password"
-          />
-          <div style={styles.forgotPassword}>
-            <Link to={ROUTES.FORGOT_PASSWORD} style={styles.link}>
-              Forgot password?
-            </Link>
-          </div>
-        </div>
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: 0.3 }}
+                    >
+                      <Form.Group className="mb-3">
+                        <Form.Label>Username</Form.Label>
+                        <Form.Control
+                          type="text"
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          placeholder="Enter your username"
+                          disabled={loading}
+                          autoComplete="username"
+                          className="quantum-input"
+                        />
+                      </Form.Group>
+                    </motion.div>
 
-        {error && <div style={styles.errorMessage}>{error}</div>}
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: 0.4 }}
+                    >
+                      <Form.Group className="mb-3">
+                        <Form.Label>Password</Form.Label>
+                        <Form.Control
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="Enter your password"
+                          disabled={loading}
+                          autoComplete="current-password"
+                          className="quantum-input"
+                        />
+                        <div className="text-end mt-2">
+                          <Link 
+                            to={ROUTES.FORGOT_PASSWORD} 
+                            className="text-decoration-none quantum-link"
+                          >
+                            Forgot password?
+                          </Link>
+                        </div>
+                      </Form.Group>
+                    </motion.div>
 
-        <button 
-          type="submit" 
-          style={styles.button}
-          disabled={loading}
-        >
-          {loading ? 'Logging in...' : 'Login'}
-        </button>
-        
-        <div style={styles.orDivider}>
-          <div style={styles.line}></div>
-          <div style={styles.orText}>or</div>
-          <div style={styles.line}></div>
-        </div>
-        
-        <div 
-          style={styles.demoAccount}
-          onClick={handleDemoLogin}
-        >
-          Continue with Demo Account
-        </div>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.5 }}
+                    >
+                      <Button
+                        type="submit"
+                        className="quantum-btn w-100 mb-3"
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Logging in...
+                          </>
+                        ) : (
+                          'Login'
+                        )}
+                      </Button>
+                    </motion.div>
 
-        <div style={styles.registerLink}>
-          Don't have an account?{' '}
-          <Link to={ROUTES.REGISTER} style={styles.link}>
-            Sign up
-          </Link>
-        </div>
-      </form>
+                    {/* Divider */}
+                    <div className="d-flex align-items-center my-4">
+                      <div className="flex-grow-1 border-top"></div>
+                      <span className="mx-3 text-muted">or</span>
+                      <div className="flex-grow-1 border-top"></div>
+                    </div>
+
+                    {/* Demo Account Button */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.6 }}
+                    >
+                      <Button
+                        variant="outline-primary"
+                        className="quantum-btn-outline w-100 mb-3"
+                        onClick={handleDemoLogin}
+                        disabled={loading}
+                      >
+                        <motion.span
+                          className="me-2"
+                          animate={{ scale: [1, 1.2, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >
+                          🚀
+                        </motion.span>
+                        Continue with Demo Account
+                      </Button>
+                    </motion.div>
+
+                    {/* Register Link */}
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.7 }}
+                      className="text-center"
+                    >
+                      <span className="text-muted">Don't have an account? </span>
+                      <Link 
+                        to={ROUTES.REGISTER} 
+                        className="text-decoration-none quantum-link"
+                      >
+                        Sign up
+                      </Link>
+                    </motion.div>
+                  </Form>
+                </Card.Body>
+              </Card>
+            </motion.div>
+          </Col>
+        </Row>
+      </Container>
     </div>
   );
 };
