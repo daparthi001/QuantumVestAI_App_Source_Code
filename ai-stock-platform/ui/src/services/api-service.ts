@@ -127,9 +127,10 @@ export interface BacktestRequest {
 
 // Portfolio interfaces
 export interface Position {
+  id: number;
   symbol: string;
   name: string;
-  quantity: number;
+  shares: number; // Changed from quantity to shares
   purchase_price: number;
   current_price: number;
   change_percent: number;
@@ -218,37 +219,6 @@ class ApiService {
     return response.data.data;
   }
 
-  // Watchlist methods
-  async getWatchlists(): Promise<Watchlist[]> {
-    const response = await apiClient.get<StandardResponse<Watchlist[]>>(
-      API_ENDPOINTS.WATCHLISTS.LIST
-    );
-    return response.data.data;
-  }
-
-  async createWatchlist(name: string): Promise<Watchlist> {
-    const response = await apiClient.post<StandardResponse<Watchlist>>(
-      API_ENDPOINTS.WATCHLISTS.CREATE,
-      { name }
-    );
-    return response.data.data;
-  }
-
-  async addToWatchlist(watchlistId: number, symbol: string): Promise<Watchlist> {
-    const response = await apiClient.post<StandardResponse<Watchlist>>(
-      API_ENDPOINTS.WATCHLISTS.ADD(watchlistId),
-      { symbol }
-    );
-    return response.data.data;
-  }
-
-  async removeFromWatchlist(watchlistId: number, symbol: string): Promise<Watchlist> {
-    const response = await apiClient.delete<StandardResponse<Watchlist>>(
-      API_ENDPOINTS.WATCHLISTS.REMOVE(watchlistId, symbol)
-    );
-    return response.data.data;
-  }
-
   // Sentiment methods
   async getStockSentiment(symbol: string): Promise<StockSentiment> {
     const response = await apiClient.get<StandardResponse<StockSentiment>>(
@@ -310,6 +280,14 @@ class ApiService {
     return response.data.data;
   }
 
+  async createPortfolio(portfolioData: { name: string; description?: string }): Promise<Portfolio> {
+    const response = await apiClient.post<StandardResponse<Portfolio>>(
+      API_ENDPOINTS.PORTFOLIO.CREATE,
+      portfolioData
+    );
+    return response.data.data;
+  }
+
   async getPortfolioById(id: number): Promise<Portfolio> {
     const response = await apiClient.get<StandardResponse<Portfolio>>(
       API_ENDPOINTS.PORTFOLIO.GET(id)
@@ -317,12 +295,18 @@ class ApiService {
     return response.data.data;
   }
 
-  async addPosition(portfolioId: number, symbol: string, quantity: number, purchasePrice: number): Promise<Position> {
+  async addPosition(portfolioId: number, positionData: { symbol: string; shares: number; purchase_price: number }): Promise<Position> {
     const response = await apiClient.post<StandardResponse<Position>>(
       API_ENDPOINTS.PORTFOLIO.ADD_POSITION(portfolioId),
-      { symbol, quantity, purchase_price: purchasePrice }
+      positionData
     );
     return response.data.data;
+  }
+
+  async removePosition(portfolioId: number, positionId: number): Promise<void> {
+    await apiClient.delete(
+      API_ENDPOINTS.PORTFOLIO.DELETE_POSITION(portfolioId, positionId)
+    );
   }
 
   async updatePosition(portfolioId: number, positionId: number, quantity: number): Promise<Position> {
@@ -331,6 +315,39 @@ class ApiService {
       { quantity }
     );
     return response.data.data;
+  }
+
+  // Watchlist methods
+  async getWatchlists(): Promise<Watchlist[]> {
+    const response = await apiClient.get<StandardResponse<Watchlist[]>>(
+      API_ENDPOINTS.WATCHLISTS.LIST
+    );
+    return response.data.data;
+  }
+
+  async createWatchlist(watchlistData: { name: string }): Promise<Watchlist> {
+    const response = await apiClient.post<StandardResponse<Watchlist>>(
+      API_ENDPOINTS.WATCHLISTS.CREATE,
+      watchlistData
+    );
+    return response.data.data;
+  }
+
+  async deleteWatchlist(id: number): Promise<void> {
+    await apiClient.delete(API_ENDPOINTS.WATCHLISTS.DELETE(id));
+  }
+
+  async addToWatchlist(watchlistId: number, symbol: string): Promise<void> {
+    await apiClient.post(
+      API_ENDPOINTS.WATCHLISTS.ADD(watchlistId),
+      { symbol }
+    );
+  }
+
+  async removeFromWatchlist(watchlistId: number, symbol: string): Promise<void> {
+    await apiClient.delete(
+      API_ENDPOINTS.WATCHLISTS.REMOVE(watchlistId, symbol)
+    );
   }
 
   // Alert methods
