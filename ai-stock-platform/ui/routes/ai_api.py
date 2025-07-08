@@ -38,7 +38,6 @@ async def fetch_json(url: str, params: dict | None = None):
         _cache[key] = (now, data)
         return data
 
-
 @router.get("/market-data/{symbol}")
 async def get_market_data(symbol: str):
     """Return intraday price data for a symbol."""

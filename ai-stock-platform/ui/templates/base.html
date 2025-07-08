@@ -39,7 +39,8 @@
     <link rel="stylesheet" href="{{ get_asset_url('css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ get_asset_url('css/quantum-enhancements.css') }}">
     <link rel="stylesheet" href="{{ get_asset_url('css/quantum-dashboard.css') }}">
-    <link rel="stylesheet" href="{{ get_asset_url('css/quantum-mobile-enhanced.css') }}">
+      <link rel="stylesheet" href="{{ get_asset_url('css/quantum-mobile-enhanced.css') }}">
+      <link rel="stylesheet" href="{{ get_asset_url('css/quantum-glow.css') }}">
     
     <!-- Progressive CSS Loading -->
     <link rel="preload" href="{{ get_asset_url('css/styles.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -92,7 +93,7 @@
     
     {% block head_extra %}{% endblock %}
 </head>
-<body class="{% if dark_mode %}dark-mode{% endif %} quantum-app" data-theme="{% if dark_mode %}dark{% else %}light{% endif %}">
+<body class="{% if dark_mode %}dark-mode{% endif %} quantum-app glow-theme" data-theme="{% if dark_mode %}dark{% else %}light{% endif %}">
     <!-- PWA Installation Banner -->
     <div id="pwa-install-banner" class="pwa-banner" style="display: none;">
         <div class="pwa-banner-content">
