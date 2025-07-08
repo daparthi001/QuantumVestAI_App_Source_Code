@@ -3,7 +3,8 @@
 {% block title %}Market Overview | QuantumVestAI{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/market.css') }}">
+<link rel="stylesheet" href="{{ get_asset_url('css/market.css') }}">
+
 {% endblock %}
 
 {% block content %}

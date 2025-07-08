@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advanced Features - QuantumVestAI</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', path='css/features.css') }}">
+    <link rel="stylesheet" href="{{ get_asset_url('') }}">
+    <link rel="stylesheet" href="{{ get_asset_url('') }}">
+
 </head>
 <body class="app-layout">
     {% include 'components/header.html' %}
@@ -45,7 +46,8 @@
     
     {% include 'components/footer.html' %}
     
-    <script src="{{ url_for('static', path='js/main.js') }}"></script>
-    <script src="{{ url_for('static', path='js/features.js') }}"></script>
+    <script src="{{ get_asset_url('') }}"></script>
+    <script src="{{ get_asset_url('') }}"></script>
+
 </body>
 </html>

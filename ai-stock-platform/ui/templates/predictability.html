@@ -3,7 +3,8 @@
 {% block title %}QuantumVestAI - Stock Predictability Analysis{% endblock %}
 
 {% block head_extra %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/predictability.css') }}">
+<link rel="stylesheet" href="{{ get_asset_url('css/predictability.css') }}">
+
 {% endblock %}
 
 {% block breadcrumb %}
@@ -48,8 +49,9 @@
     <div class="card-body">
         <div class="stock-info">
             <div class="stock-logo">
-                <img src="{{ url_for('static', path='img/stock-logos/' + ticker.lower() + '.png') }}" alt="{{ ticker }}" 
-                    onerror="this.src='{{ url_for('static', path='img/stock-logos/default.png') }}'">
+                <img src="{{ get_asset_url('img/stock-logos/' ~ ticker.lower() ~ '.png') }}" alt="{{ ticker }}"
+                    onerror="this.src='{{ get_asset_url('img/stock-logos/default.png') }}'">
+
             </div>
             <div class="stock-details">
                 <h2 class="stock-name">{{ stock_info.name }}</h2>
@@ -318,8 +320,9 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', path='js/chart.js') }}"></script>
-<script src="{{ url_for('static', path='js/predictability.js') }}"></script>
+<script src="{{ get_asset_url('js/chart.js') }}"></script>
+<script src="{{ get_asset_url('js/predictability.js') }}"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize predictability charts and gauges

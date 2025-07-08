@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QuantumVestAI - Login</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}">
-    <link rel="shortcut icon" href="{{ url_for('static', path='img/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ get_asset_url('') }}">
+    <link rel="shortcut icon" href="{{ get_asset_url('') }}" type="image/x-icon">
+
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -138,7 +139,8 @@
 <body>
     <div class="login-container">
         <div class="logo">
-            <img src="{{ url_for('static', path='img/logo.png') }}" alt="QuantumVestAI Logo" onerror="this.src='{{ url_for('static', path='img/logo-placeholder.png') }}'">
+            <img src="{{ get_asset_url('') }}" alt="QuantumVestAI Logo" onerror="this.src='{{ get_asset_url('') }}'">
+
         </div>
         <div class="login-header">
             <h1>Login to QuantumVestAI</h1>
