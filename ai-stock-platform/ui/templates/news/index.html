@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}{{ data.category.title() }} News - QuantumVestAI{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">{{ data.category.title() }} News</h1>
+            <p class="text-muted mb-0">Latest financial news and market updates</p>
+        </div>
+        <div class="d-flex gap-2">
+            <!-- Category Filter -->
+            <div class="dropdown">
+                <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    Category: {{ data.category.title() }}
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="/news?category=market">Market</a></li>
+                    <li><a class="dropdown-item" href="/news?category=stocks">Stocks</a></li>
+                    <li><a class="dropdown-item" href="/news?category=crypto">Crypto</a></li>
+                    <li><a class="dropdown-item" href="/news?category=economy">Economy</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- News Articles -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    {% if data.articles %}
+                        {% for article in data.articles %}
+                        <div class="border-bottom pb-3 mb-3">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h5 class="card-title">
+                                        <a href="/news/article/{{ article.id }}" class="text-decoration-none">
+                                            {{ article.title }}
+                                        </a>
+                                    </h5>
+                                    <p class="card-text text-muted">{{ article.summary }}</p>
+                                    <div class="d-flex align-items-center gap-3 text-muted small">
+                                        <span><i class="bi bi-newspaper"></i> {{ article.source }}</span>
+                                        <span><i class="bi bi-clock"></i> {{ article.published_at[:10] }}</span>
+                                        <span class="badge bg-{{ 'success' if article.sentiment == 'positive' else 'warning' if article.sentiment == 'neutral' else 'danger' }}">
+                                            {{ article.sentiment.title() }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 d-none d-md-block">
+                                    <div class="bg-light rounded p-3 text-center">
+                                        <i class="bi bi-newspaper text-muted" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-newspaper text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="mt-3">No news articles available</h5>
+                            <p class="text-muted">Check back later for the latest updates.</p>
+                        </div>
+                    {% endif %}
+
+                    <!-- Pagination -->
+                    {% if data.total_pages > 1 %}
+                    <nav aria-label="News pagination" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if data.page > 1 %}
+                            <li class="page-item">
+                                <a class="page-link" href="/news?category={{ data.category }}&page={{ data.page - 1 }}">Previous</a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for page_num in range(1, data.total_pages + 1) %}
+                            <li class="page-item {{ 'active' if page_num == data.page else '' }}">
+                                <a class="page-link" href="/news?category={{ data.category }}&page={{ page_num }}">{{ page_num }}</a>
+                            </li>
+                            {% endfor %}
+                            
+                            {% if data.page < data.total_pages %}
+                            <li class="page-item">
+                                <a class="page-link" href="/news?category={{ data.category }}&page={{ data.page + 1 }}">Next</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Trending Topics -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="card-title mb-0">Trending Topics</h6>
+                </div>
+                <div class="card-body">
+                    {% if data.trending %}
+                        {% for topic in data.trending %}
+                        <span class="badge bg-primary me-2 mb-2">{{ topic }}</span>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Market Summary -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="card-title mb-0">Market Summary</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>S&P 500</span>
+                        <span class="text-success">+1.2%</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>NASDAQ</span>
+                        <span class="text-danger">-0.3%</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>DOW</span>
+                        <span class="text-success">+0.8%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh news every 5 minutes
+    setInterval(function() {
+        location.reload();
+    }, 5 * 60 * 1000);
+});
+</script>
+{% endblock %}
