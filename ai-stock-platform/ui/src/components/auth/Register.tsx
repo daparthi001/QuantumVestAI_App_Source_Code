@@ -1,10 +1,13 @@
 /**
- * Register Component
- * Created: 2025-06-19 18:00:37
+ * Register Component - Quantum Design System
+ * Enhanced with modern UI/UX and glass morphism effects
+ * Updated: 2025-01-09
  * Author: daparthi001
  */
 import React, { useState, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Container, Card, Form, Button, Alert, Row, Col } from 'react-bootstrap';
+import { motion, AnimatePresence } from 'framer-motion';
 import authService from '../../services/auth.service';
 import { ROUTES } from '../../config/constants';
 
@@ -15,81 +18,6 @@ interface FormErrors {
   password?: string;
   confirmPassword?: string;
 }
-
-// Register component styles
-const styles = {
-  container: {
-    maxWidth: '500px',
-    margin: '40px auto',
-    padding: '30px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-    borderRadius: '8px',
-    backgroundColor: '#fff',
-  },
-  header: {
-    textAlign: 'center' as const,
-    marginBottom: '30px',
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '20px',
-  },
-  inputGroup: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '5px',
-  },
-  input: {
-    padding: '12px',
-    borderRadius: '4px',
-    border: '1px solid #ddd',
-    fontSize: '16px',
-  },
-  button: {
-    padding: '14px',
-    backgroundColor: '#1e3a8a',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '16px',
-    fontWeight: 'bold' as const,
-    marginTop: '10px',
-  },
-  errorText: {
-    color: 'red',
-    fontSize: '14px',
-    marginTop: '5px',
-  },
-  successMessage: {
-    padding: '15px',
-    backgroundColor: '#d4edda',
-    color: '#155724',
-    borderRadius: '4px',
-    marginBottom: '20px',
-    textAlign: 'center' as const,
-  },
-  loginLink: {
-    textAlign: 'center' as const,
-    marginTop: '20px',
-    fontSize: '14px',
-  },
-  link: {
-    color: '#1e3a8a',
-    textDecoration: 'none',
-  },
-  passwordRequirements: {
-    fontSize: '12px',
-    color: '#666',
-    marginTop: '5px',
-  },
-  formError: {
-    color: 'red',
-    marginTop: '10px',
-    textAlign: 'center' as const,
-  },
-};
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -203,108 +131,253 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <h1>QuantumVestAI</h1>
-        <h2>Create Account</h2>
-      </div>
+    <div className="quantum-bg min-vh-100 d-flex align-items-center justify-content-center">
+      <Container>
+        <Row className="justify-content-center">
+          <Col md={8} lg={6}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card className="quantum-card shadow-lg">
+                <Card.Body className="p-5">
+                  {/* Header */}
+                  <div className="text-center mb-4">
+                    <motion.div
+                      initial={{ scale: 0.8 }}
+                      animate={{ scale: 1 }}
+                      transition={{ duration: 0.5, delay: 0.2 }}
+                    >
+                      <h1 className="quantum-text-gradient mb-2">
+                        <motion.span
+                          className="me-2"
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                        >
+                          ⚛️
+                        </motion.span>
+                        QuantumVestAI
+                      </h1>
+                      <h2 className="text-muted">Join the Future</h2>
+                    </motion.div>
+                  </div>
 
-      {success && (
-        <div style={styles.successMessage}>
-          Registration successful! Redirecting to login page...
-        </div>
-      )}
+                  {/* Success Message */}
+                  <AnimatePresence>
+                    {success && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <Alert variant="success" className="mb-3">
+                          <motion.span
+                            className="me-2"
+                            animate={{ scale: [1, 1.2, 1] }}
+                            transition={{ duration: 1, repeat: Infinity }}
+                          >
+                            🎉
+                          </motion.span>
+                          Registration successful! Redirecting to login page...
+                        </Alert>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
-      <form onSubmit={handleSubmit} style={styles.form}>
-        <div style={styles.inputGroup}>
-          <label htmlFor="username">Username *</label>
-          <input
-            id="username"
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="Enter a username"
-            style={styles.input}
-            disabled={loading || success}
-          />
-          {errors.username && <div style={styles.errorText}>{errors.username}</div>}
-        </div>
+                  {/* Registration Form */}
+                  <Form onSubmit={handleSubmit}>
+                    <AnimatePresence>
+                      {formError && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <Alert variant="danger" className="mb-3">
+                            {formError}
+                          </Alert>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
-        <div style={styles.inputGroup}>
-          <label htmlFor="email">Email *</label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
-            style={styles.input}
-            disabled={loading || success}
-          />
-          {errors.email && <div style={styles.errorText}>{errors.email}</div>}
-        </div>
+                    {/* Form Fields */}
+                    <Row>
+                      <Col md={6}>
+                        <motion.div
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.5, delay: 0.3 }}
+                        >
+                          <Form.Group className="mb-3">
+                            <Form.Label>Username <span className="text-danger">*</span></Form.Label>
+                            <Form.Control
+                              type="text"
+                              value={username}
+                              onChange={(e) => setUsername(e.target.value)}
+                              placeholder="Enter a username"
+                              disabled={loading || success}
+                              className="quantum-input"
+                              isInvalid={!!errors.username}
+                            />
+                            <Form.Control.Feedback type="invalid">
+                              {errors.username}
+                            </Form.Control.Feedback>
+                          </Form.Group>
+                        </motion.div>
+                      </Col>
 
-        <div style={styles.inputGroup}>
-          <label htmlFor="fullName">Full Name (Optional)</label>
-          <input
-            id="fullName"
-            type="text"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            placeholder="Enter your full name"
-            style={styles.input}
-            disabled={loading || success}
-          />
-        </div>
+                      <Col md={6}>
+                        <motion.div
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.5, delay: 0.4 }}
+                        >
+                          <Form.Group className="mb-3">
+                            <Form.Label>Email <span className="text-danger">*</span></Form.Label>
+                            <Form.Control
+                              type="email"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              placeholder="Enter your email"
+                              disabled={loading || success}
+                              className="quantum-input"
+                              isInvalid={!!errors.email}
+                            />
+                            <Form.Control.Feedback type="invalid">
+                              {errors.email}
+                            </Form.Control.Feedback>
+                          </Form.Group>
+                        </motion.div>
+                      </Col>
+                    </Row>
 
-        <div style={styles.inputGroup}>
-          <label htmlFor="password">Password *</label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Create a password"
-            style={styles.input}
-            disabled={loading || success}
-          />
-          {errors.password && <div style={styles.errorText}>{errors.password}</div>}
-          <div style={styles.passwordRequirements}>
-            Password must be at least 8 characters long
-          </div>
-        </div>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.5 }}
+                    >
+                      <Form.Group className="mb-3">
+                        <Form.Label>Full Name (Optional)</Form.Label>
+                        <Form.Control
+                          type="text"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          placeholder="Enter your full name"
+                          disabled={loading || success}
+                          className="quantum-input"
+                        />
+                      </Form.Group>
+                    </motion.div>
 
-        <div style={styles.inputGroup}>
-          <label htmlFor="confirmPassword">Confirm Password *</label>
-          <input
-            id="confirmPassword"
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Confirm your password"
-            style={styles.input}
-            disabled={loading || success}
-          />
-          {errors.confirmPassword && <div style={styles.errorText}>{errors.confirmPassword}</div>}
-        </div>
+                    <Row>
+                      <Col md={6}>
+                        <motion.div
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.5, delay: 0.6 }}
+                        >
+                          <Form.Group className="mb-3">
+                            <Form.Label>Password <span className="text-danger">*</span></Form.Label>
+                            <Form.Control
+                              type="password"
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
+                              placeholder="Create a password"
+                              disabled={loading || success}
+                              className="quantum-input"
+                              isInvalid={!!errors.password}
+                            />
+                            <Form.Control.Feedback type="invalid">
+                              {errors.password}
+                            </Form.Control.Feedback>
+                            <Form.Text className="text-muted">
+                              Password must be at least 8 characters long
+                            </Form.Text>
+                          </Form.Group>
+                        </motion.div>
+                      </Col>
 
-        {formError && <div style={styles.formError}>{formError}</div>}
+                      <Col md={6}>
+                        <motion.div
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.5, delay: 0.7 }}
+                        >
+                          <Form.Group className="mb-3">
+                            <Form.Label>Confirm Password <span className="text-danger">*</span></Form.Label>
+                            <Form.Control
+                              type="password"
+                              value={confirmPassword}
+                              onChange={(e) => setConfirmPassword(e.target.value)}
+                              placeholder="Confirm your password"
+                              disabled={loading || success}
+                              className="quantum-input"
+                              isInvalid={!!errors.confirmPassword}
+                            />
+                            <Form.Control.Feedback type="invalid">
+                              {errors.confirmPassword}
+                            </Form.Control.Feedback>
+                          </Form.Group>
+                        </motion.div>
+                      </Col>
+                    </Row>
 
-        <button
-          type="submit"
-          style={styles.button}
-          disabled={loading || success}
-        >
-          {loading ? 'Creating Account...' : 'Create Account'}
-        </button>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.8 }}
+                    >
+                      <Button
+                        type="submit"
+                        className="quantum-btn w-100 mb-3"
+                        disabled={loading || success}
+                        size="lg"
+                      >
+                        {loading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Creating Account...
+                          </>
+                        ) : (
+                          <>
+                            <motion.span
+                              className="me-2"
+                              animate={{ scale: [1, 1.1, 1] }}
+                              transition={{ duration: 1.5, repeat: Infinity }}
+                            >
+                              🚀
+                            </motion.span>
+                            Create Account
+                          </>
+                        )}
+                      </Button>
+                    </motion.div>
 
-        <div style={styles.loginLink}>
-          Already have an account?{' '}
-          <Link to={ROUTES.LOGIN} style={styles.link}>
-            Log in
-          </Link>
-        </div>
-      </form>
+                    {/* Login Link */}
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.9 }}
+                      className="text-center"
+                    >
+                      <span className="text-muted">Already have an account? </span>
+                      <Link 
+                        to={ROUTES.LOGIN} 
+                        className="text-decoration-none quantum-link"
+                      >
+                        Log in
+                      </Link>
+                    </motion.div>
+                  </Form>
+                </Card.Body>
+              </Card>
+            </motion.div>
+          </Col>
+        </Row>
+      </Container>
     </div>
   );
 };
