@@ -54,7 +54,7 @@ async def profile_page(request: Request):
             "full_name": user.get("full_name", "Hemanth Kumar"),
             "bio": user.get("bio", "Software Developer and AI Enthusiast passionate about quantitative finance and machine learning."),
             "location": user.get("location", "Hyderabad, India"),
-            "profile_image": user.get("profile_image", "/static/images/default-avatar.png"),
+            "profile_image": user.get("profile_image", "/static/img/avatars/default.png"),
             "join_date": user.get("join_date", "2025-01-15"),
             "last_login": user.get("last_login", "2025-07-07T21:35:00Z"),
             "subscription_type": user.get("subscription_type", "Premium"),
@@ -184,7 +184,7 @@ async def update_profile(
             "full_name": current_user.get("full_name", ""),
             "bio": current_user.get("bio", ""),
             "location": current_user.get("location", ""),
-            "profile_image": current_user.get("profile_image", "/static/images/default-avatar.png"),
+            "profile_image": current_user.get("profile_image", "/static/img/avatars/default.png"),
             "join_date": current_user.get("join_date", "2025-01-15"),
             "last_login": current_user.get("last_login", "2025-07-07T21:35:00Z"),
             "subscription_type": current_user.get("subscription_type", "Premium"),
@@ -230,7 +230,7 @@ async def update_profile(
             "full_name": current_user.get("full_name", ""),
             "bio": current_user.get("bio", ""),
             "location": current_user.get("location", ""),
-            "profile_image": current_user.get("profile_image", "/static/images/default-avatar.png")
+            "profile_image": current_user.get("profile_image", "/static/img/avatars/default.png")
         }
         
         return templates.TemplateResponse(
@@ -270,7 +270,7 @@ async def change_password(
                 "full_name": current_user.get("full_name", ""),
                 "bio": current_user.get("bio", ""),
                 "location": current_user.get("location", ""),
-                "profile_image": current_user.get("profile_image", "/static/images/default-avatar.png")
+                "profile_image": current_user.get("profile_image", "/static/img/avatars/default.png")
             }
             
             return templates.TemplateResponse(
@@ -304,7 +304,7 @@ async def change_password(
             "full_name": current_user.get("full_name", ""),
             "bio": current_user.get("bio", ""),
             "location": current_user.get("location", ""),
-            "profile_image": current_user.get("profile_image", "/static/images/default-avatar.png"),
+            "profile_image": current_user.get("profile_image", "/static/img/avatars/default.png"),
             "join_date": current_user.get("join_date", "2025-01-15"),
             "last_login": current_user.get("last_login", "2025-07-07T21:35:00Z"),
             "subscription_type": current_user.get("subscription_type", "Premium"),
@@ -345,7 +345,7 @@ async def change_password(
             "full_name": current_user.get("full_name", ""),
             "bio": current_user.get("bio", ""),
             "location": current_user.get("location", ""),
-            "profile_image": current_user.get("profile_image", "/static/images/default-avatar.png")
+            "profile_image": current_user.get("profile_image", "/static/img/avatars/default.png")
         }
         
         return templates.TemplateResponse(
@@ -372,7 +372,7 @@ async def change_password(
             "full_name": current_user.get("full_name", ""),
             "bio": current_user.get("bio", ""),
             "location": current_user.get("location", ""),
-            "profile_image": current_user.get("profile_image", "/static/images/default-avatar.png")
+            "profile_image": current_user.get("profile_image", "/static/img/avatars/default.png")
         }
         
         return templates.TemplateResponse(

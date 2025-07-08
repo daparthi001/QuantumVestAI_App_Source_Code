@@ -1248,7 +1248,7 @@ class QuantumCommunity {
     }
 
     getUserAvatar() {
-        return localStorage.getItem('quantum-user-avatar') || '/static/img/default-avatar.png';
+        return localStorage.getItem('quantum-user-avatar') || '/static/img/avatars/default.png';
     }
 
     getUsername() {

@@ -199,6 +199,16 @@ except Exception as e:
             return f"{float_value:.{precision}f}%"
         except (ValueError, TypeError):
             return f"0.{precision * '0'}%"
+
+    def format_number(value, decimal_places=0):
+        """Simple thousands separator formatting"""
+        try:
+            num_value = float(value)
+            if decimal_places == 0:
+                return f"{int(num_value):,}"
+            return f"{num_value:,.{decimal_places}f}"
+        except (ValueError, TypeError):
+            return "0"
     
     # Add fallback filters to Jinja environment
     fallback_filters = {
@@ -206,7 +216,8 @@ except Exception as e:
         'format_change_value': format_change_value,
         'format_large_number': format_large_number,
         'format_currency': format_currency,
-        'format_percentage': format_percentage
+        'format_percentage': format_percentage,
+        'format_number': format_number,
     }
     
     for name, func in fallback_filters.items():
