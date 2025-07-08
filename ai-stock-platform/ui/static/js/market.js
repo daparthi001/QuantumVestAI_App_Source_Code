@@ -198,7 +198,6 @@ function renderLineChart(container, labels, dataset, label) {
 
 // Render market index chart
 function renderIndexChart(container) {
-
     fetch('/api/ai/market-data/SPY')
         .then(response => response.json())
         .then(data => {
@@ -216,7 +215,6 @@ function renderIndexChart(container) {
 
 // Render sector performance chart
 function renderSectorChart(container) {
-
     fetch('/api/ai/market-data/QQQ')
         .then(response => response.json())
         .then(data => {
@@ -257,7 +255,6 @@ function updateIndicatorChart(symbol, indicatorType) {
     
     indicatorChartContainer.innerHTML = '<div class="loading-spinner"></div>';
     
-
     fetch(`/api/ai/technical-data/${symbol}`)
         .then(response => response.json())
         .then(data => {
