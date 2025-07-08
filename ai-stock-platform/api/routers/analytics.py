@@ -3,10 +3,11 @@ Analytics Router
 Created: 2025-05-20 05:03:42
 Author: daparthi001
 """
-from fastapi import APIRouter, Depends, Query, Path, status
+from fastapi import APIRouter, Depends, Query, Path, status, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
 from datetime import datetime
+from pydantic import BaseModel
 
 from core.security import get_current_user
 from core.exceptions import ResourceNotFoundError, PermissionDeniedError
@@ -24,10 +25,24 @@ from schemas.analytics import (
     CustomAnalyticsResponse
 )
 
+# Pageview tracking model
+class PageviewRequest(BaseModel):
+    page: str
+    title: str
+    timestamp: str
+    userAgent: str
+    language: str
+
 router = APIRouter(
     prefix="/analytics",
     tags=["analytics"],
     dependencies=[Depends(get_current_user)]
+)
+
+# Public router for analytics endpoints that don't require authentication
+public_router = APIRouter(
+    prefix="/analytics",
+    tags=["analytics"]
 )
 
 @router.get(
@@ -222,11 +237,11 @@ async def get_sentiment_analytics(
     description="Run custom analytics query"
 )
 async def run_custom_analytics(
+    request: Request,
     query_type: str = Query(
         ...,
         regex="^(correlation|regression|clustering|factor)$"
     ),
-    parameters: Dict[str, Any],
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> CustomAnalyticsResponse:
@@ -236,9 +251,33 @@ async def run_custom_analytics(
             "Custom analytics requires premium subscription"
         )
     
+    # Extract parameters from request body
+    parameters = await request.json()
+    
     service = AnalyticsService(db)
     return await service.run_custom_analytics(
         query_type=query_type,
         parameters=parameters,
         user_id=current_user.id
     )
+
+@public_router.post(
+    "/pageview",
+    summary="Track page view",
+    description="Track page view analytics"
+)
+async def track_pageview(
+    request: Request,
+    pageview_data: PageviewRequest
+):
+    """Track page view for analytics (demo mode)."""
+    # In a real implementation, this would save to database
+    # For now, just return success response
+    return {
+        "status": "success",
+        "message": "Page view tracked successfully",
+        "data": {
+            "page": pageview_data.page,
+            "timestamp": pageview_data.timestamp
+        }
+    }

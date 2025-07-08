@@ -91,6 +91,19 @@ app.state.templates = templates
 # Mount static files
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
+# Service worker needs to be accessible at root level
+@app.get("/sw.js")
+async def service_worker():
+    """Serve service worker from root path"""
+    from fastapi.responses import FileResponse
+    import os
+    
+    sw_path = os.path.join(BASE_DIR, "static", "sw.js")
+    if os.path.exists(sw_path):
+        return FileResponse(sw_path, media_type="application/javascript")
+    else:
+        raise HTTPException(status_code=404, detail="Service worker not found")
+
 # API configuration
 API_URL = os.environ.get("API_URL", "http://localhost:8000")
 API_V1_URL = f"{API_URL}/api/v1"
@@ -762,6 +775,39 @@ def create_fallback_login_html(msg=None):
     </body>
     </html>
     """
+
+# Analytics endpoint for pageview tracking
+from pydantic import BaseModel
+class PageviewRequest(BaseModel):
+    page: str
+    title: str
+    timestamp: str
+    userAgent: str
+    language: str
+
+@app.post("/analytics/pageview")
+async def track_pageview(request: Request, pageview_data: PageviewRequest):
+    """Track page view for analytics (demo mode)."""
+    try:
+        # In a real implementation, this would save to database
+        # For now, just log the pageview and return success
+        logger.info(f"Page view tracked: {pageview_data.page} at {pageview_data.timestamp}")
+        
+        return {
+            "status": "success",
+            "message": "Page view tracked successfully",
+            "data": {
+                "page": pageview_data.page,
+                "timestamp": pageview_data.timestamp
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error tracking pageview: {str(e)}")
+        return {
+            "status": "error",
+            "message": str(e),
+            "timestamp": datetime.utcnow().isoformat()
+        }
 
 # Enhanced error handlers
 @app.exception_handler(404)
