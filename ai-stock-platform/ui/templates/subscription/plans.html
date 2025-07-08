@@ -1,0 +1,476 @@
+{% extends "base.html" %}
+
+{% block title %}Subscription Plans | QuantumVestAI{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', path='/css/quantum-mobile-enhanced.css') }}">
+<script src="{{ url_for('static', path='/js/quantum-pwa.js') }}" defer></script>
+<style>
+    .pricing-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 4rem 0;
+        margin-bottom: 3rem;
+    }
+    
+    .pricing-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .pricing-header h1 {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+    
+    .pricing-header p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .pricing-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+    
+    .pricing-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        color: #333;
+        position: relative;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .pricing-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 48px rgba(0,0,0,0.15);
+    }
+    
+    .pricing-card.popular {
+        border: 3px solid #ffd700;
+        transform: scale(1.05);
+    }
+    
+    .pricing-card.popular::before {
+        content: "Most Popular";
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #ffd700;
+        color: #333;
+        padding: 0.5rem 1.5rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .plan-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .plan-price {
+        font-size: 3rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+    
+    .plan-price .currency {
+        font-size: 1.5rem;
+        vertical-align: top;
+    }
+    
+    .plan-price .period {
+        font-size: 1rem;
+        color: #666;
+        font-weight: 400;
+    }
+    
+    .plan-description {
+        color: #666;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+    
+    .plan-features {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 2rem;
+    }
+    
+    .plan-features li {
+        padding: 0.75rem 0;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .plan-features li:last-child {
+        border-bottom: none;
+    }
+    
+    .plan-features li .icon {
+        margin-right: 0.75rem;
+        font-size: 1.2rem;
+    }
+    
+    .plan-features li.included .icon {
+        color: #28a745;
+    }
+    
+    .plan-features li.not-included {
+        opacity: 0.5;
+    }
+    
+    .plan-features li.not-included .icon {
+        color: #dc3545;
+    }
+    
+    .plan-cta {
+        width: 100%;
+        padding: 1rem 2rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .plan-cta:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .plan-cta.current {
+        background: #28a745;
+    }
+    
+    .billing-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 3rem;
+    }
+    
+    .billing-toggle label {
+        font-weight: 600;
+        opacity: 0.8;
+    }
+    
+    .billing-toggle .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+    }
+    
+    .billing-toggle .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .billing-toggle .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255,255,255,0.3);
+        transition: .4s;
+        border-radius: 34px;
+    }
+    
+    .billing-toggle .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    
+    .billing-toggle input:checked + .slider {
+        background-color: #ffd700;
+    }
+    
+    .billing-toggle input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+    
+    .savings-badge {
+        background: #ffd700;
+        color: #333;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .pricing-header h1 {
+            font-size: 2rem;
+        }
+        
+        .pricing-cards {
+            grid-template-columns: 1fr;
+        }
+        
+        .pricing-card.popular {
+            transform: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pricing-section">
+    <div class="container">
+        <div class="pricing-header">
+            <h1>Choose Your Plan</h1>
+            <p>Unlock the full potential of AI-powered investing with our comprehensive plans designed for every investor.</p>
+            
+            <div class="billing-toggle">
+                <label>Monthly</label>
+                <label class="switch">
+                    <input type="checkbox" id="billing-toggle" onchange="toggleBilling()">
+                    <span class="slider"></span>
+                </label>
+                <label>Yearly <span class="savings-badge">Save 20%</span></label>
+            </div>
+        </div>
+        
+        <div class="pricing-cards">
+            <!-- Free Plan -->
+            <div class="pricing-card">
+                <div class="plan-name">Free</div>
+                <div class="plan-price">
+                    <span class="currency">$</span>0
+                    <span class="period">/month</span>
+                </div>
+                <div class="plan-description">
+                    Perfect for getting started with AI-powered investing
+                </div>
+                <ul class="plan-features">
+                    <li class="included">
+                        <span class="icon">✓</span>
+                        5 AI predictions per day
+                    </li>
+                    <li class="included">
+                        <span class="icon">✓</span>
+                        Basic portfolio tracking
+                    </li>
+                    <li class="included">
+                        <span class="icon">✓</span>
+                        3 price alerts
+                    </li>
+                    <li class="included">
+                        <span class="icon">✓</span>
+                        Community access
+                    </li>
+                    <li class="not-included">
+                        <span class="icon">✗</span>
+                        Advanced analytics
+                    </li>
+                    <li class="not-included">
+                        <span class="icon">✗</span>
+                        Real-time alerts
+                    </li>
+                </ul>
+                <button class="plan-cta" onclick="selectPlan('free')">
+                    Get Started
+                </button>
+            </div>
+            
+            <!-- Basic Plan -->
+            <div class="pricing-card">
+                <div class="plan-name">Basic</div>
+                <div class="plan-price">
+                    <span class="currency">$</span><span class="price-amount" data-monthly="19.99" data-yearly="199.99">19.99</span>
+                    <span class="period">/month</span>
+                </div>
+                <div class="plan-description">
+                    Enhanced features for serious individual investors
+                </div>
+                <ul class="plan-features">
+                    <li class="included">
+                        <span class="icon">✓</span>
+                        25 AI predictions per day
+                    </li>
+                    <li class="included">
+                        <span class="icon">✓</span>
+                        Advanced analytics dashboard
+                    </li>
+                    <li class="included">
+                        <span class="icon">✓</span>
+                        10 price alerts
+                    </li>
+                    <li class="included">
+                        <span class="icon">✓</span>
+                        Sentiment analysis
+                    </li>
+                    <li class="included">
+                        <span class="icon">✓</span>
+                        API access (1,000 calls/day)
+                    </li>
+                    <li class="not-included">
+                        <span class="icon">✗</span>
+                        Portfolio optimization
+                    </li>
+                </ul>
+                <button class="plan-cta" onclick="selectPlan('basic')">
+                    Upgrade to Basic
+                </button>
+            </div>
+            
+            <!-- Premium Plan -->
+            <div class="pricing-card popular">
+                <div class="plan-name">Premium</div>
+                <div class="plan-price">
+                    <span class="currency">$</span><span class="price-amount" data-monthly="49.99" data-yearly="499.99">49.99</span>
+                    <span class="period">/month</span>
+                </div>
+                <div class="plan-description">
+                    Professional-grade tools for advanced investors and advisors
+                </div>
+                <ul class="plan-features">
+                    <li class="included">
+                        <span class="icon">✓</span>
+                        100 AI predictions per day
+                    </li>
+                    <li class="included">
+                        <span class="icon">✓</span>
+                        Real-time alerts (all channels)
+                    </li>
+                    <li class="included">
+                        <span class="icon">✓</span>
+                        50 price alerts
+                    </li>
+                    <li class="included">
+                        <span class="icon">✓</span>
+                        Portfolio optimization
+                    </li>
+                    <li class="included">
+                        <span class="icon">✓</span>
+                        Risk analysis & reports
+                    </li>
+                    <li class="included">
+                        <span class="icon">✓</span>
+                        Premium educational content
+                    </li>
+                </ul>
+                <button class="plan-cta" onclick="selectPlan('premium')">
+                    Upgrade to Premium
+                </button>
+            </div>
+            
+            <!-- Enterprise Plan -->
+            <div class="pricing-card">
+                <div class="plan-name">Enterprise</div>
+                <div class="plan-price">
+                    <span class="currency">$</span><span class="price-amount" data-monthly="199.99" data-yearly="1999.99">199.99</span>
+                    <span class="period">/month</span>
+                </div>
+                <div class="plan-description">
+                    Unlimited access for institutions and professional traders
+                </div>
+                <ul class="plan-features">
+                    <li class="included">
+                        <span class="icon">✓</span>
+                        Unlimited AI predictions
+                    </li>
+                    <li class="included">
+                        <span class="icon">✓</span>
+                        Custom AI models
+                    </li>
+                    <li class="included">
+                        <span class="icon">✓</span>
+                        Unlimited alerts
+                    </li>
+                    <li class="included">
+                        <span class="icon">✓</span>
+                        High-volume API access
+                    </li>
+                    <li class="included">
+                        <span class="icon">✓</span>
+                        24/7 priority support
+                    </li>
+                    <li class="included">
+                        <span class="icon">✓</span>
+                        Dedicated account manager
+                    </li>
+                </ul>
+                <button class="plan-cta" onclick="selectPlan('enterprise')">
+                    Contact Sales
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="text-center mt-5 mb-5">
+        <h3>Ready to Get Started?</h3>
+        <p class="lead">Join thousands of investors using AI to make smarter investment decisions.</p>
+        <a href="/register" class="btn btn-primary btn-lg me-3">Start Free Trial</a>
+        <a href="/contact" class="btn btn-outline-primary btn-lg">Contact Sales</a>
+    </div>
+</div>
+
+<script>
+let isYearly = false;
+
+function toggleBilling() {
+    isYearly = document.getElementById('billing-toggle').checked;
+    
+    document.querySelectorAll('.price-amount').forEach(element => {
+        const monthly = parseFloat(element.dataset.monthly);
+        const yearly = parseFloat(element.dataset.yearly);
+        
+        if (isYearly) {
+            const monthlyEquivalent = yearly / 12;
+            element.textContent = monthlyEquivalent.toFixed(2);
+        } else {
+            element.textContent = monthly.toFixed(2);
+        }
+    });
+    
+    // Update period text
+    document.querySelectorAll('.period').forEach(element => {
+        element.textContent = isYearly ? '/month (billed yearly)' : '/month';
+    });
+}
+
+function selectPlan(planId) {
+    if (planId === 'enterprise') {
+        window.location.href = '/contact?plan=enterprise';
+        return;
+    }
+    
+    // Simulate plan selection
+    alert(`Selected ${planId} plan! Redirecting to registration...`);
+    window.location.href = `/register?plan=${planId}&billing=${isYearly ? 'yearly' : 'monthly'}`;
+}
+</script>
+{% endblock %}
