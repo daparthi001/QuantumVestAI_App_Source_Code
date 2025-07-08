@@ -9,6 +9,7 @@
 
 {% block head_extra %}
 <link rel="stylesheet" href="{{ get_asset_url('css/watchlist.css') }}">
+
 {% endblock %}
 
 {% block content %}
@@ -129,6 +130,7 @@
                             <a href="/forecast?ticker={{ alert.ticker }}" class="d-flex align-items-center">
                                 <div class="symbol-logo me-2">
                                     <img src="https://logo.clearbit.com/{{ alert.ticker.lower() }}.com" alt="{{ alert.ticker }}" onerror="this.src='{{ get_asset_url('img/stock-placeholder.png') }}'">
+
                                 </div>
                                 <span class="font-weight-bold">{{ alert.ticker }}</span>
                             </a>
@@ -168,6 +170,7 @@
                 <div class="stock-card-title">
                     <div class="stock-logo">
                         <img src="https://logo.clearbit.com/{{ item.ticker.lower() }}.com" alt="{{ item.ticker }}" onerror="this.src='{{ get_asset_url('img/stock-placeholder.png') }}'">
+
                     </div>
                     <div class="stock-name">
                         <h4>{{ item.ticker }}</h4>
@@ -287,6 +290,7 @@
                             <div class="stock-cell">
                                 <div class="stock-logo">
                                     <img src="https://logo.clearbit.com/{{ item.ticker.lower() }}.com" alt="{{ item.ticker }}" onerror="this.src='{{ get_asset_url('img/stock-placeholder.png') }}'">
+
                                 </div>
                                 <div>
                                     <div class="stock-symbol">{{ item.ticker }}</div>
@@ -523,6 +527,7 @@
 {% block scripts %}
 <script src="{{ get_asset_url('vendors/chart.js/chart.min.js') }}"></script>
 <script src="{{ get_asset_url('js/watchlist.js') }}"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Mini charts for grid view - implementation would go here

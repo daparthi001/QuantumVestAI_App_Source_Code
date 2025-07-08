@@ -172,6 +172,7 @@
                                 <div class="stock-symbol">
                                     <div class="symbol-logo me-2">
                                         <img src="https://logo.clearbit.com/{{ stock.symbol.lower() }}.com" alt="{{ stock.name }}" onerror="this.src='{{ get_asset_url('') }}'">
+
                                     </div>
                                     <div>
                                         <div class="symbol">{{ stock.symbol }}</div>
@@ -331,6 +332,7 @@
 
 {% block scripts %}
 <script src="{{ get_asset_url('') }}"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Hero Chart

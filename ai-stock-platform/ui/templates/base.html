@@ -17,6 +17,7 @@
     <meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}">
     <meta property="og:description" content="{% block og_description %}{{ self.description() }}{% endblock %}">
     <meta property="og:image" content="{{ get_asset_url('img/og-image.jpg') }}">
+
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
@@ -24,6 +25,7 @@
     <meta property="twitter:title" content="{% block twitter_title %}{{ self.title() }}{% endblock %}">
     <meta property="twitter:description" content="{% block twitter_description %}{{ self.description() }}{% endblock %}">
     <meta property="twitter:image" content="{{ get_asset_url('img/twitter-card.jpg') }}">
+
     
     <!-- Preconnect to external resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,6 +53,7 @@
         <link rel="stylesheet" href="{{ get_asset_url('css/dark-mode.css') }}">
         <link rel="stylesheet" href="{{ get_asset_url('css/realtime-dashboard.css') }}">
         <link rel="stylesheet" href="{{ get_asset_url('css/responsive.css') }}">
+
     </noscript>
     
     <!-- Bootstrap Icons -->
@@ -64,6 +67,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="{{ get_asset_url('img/favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ get_asset_url('img/favicon-16x16.png') }}">
     <link rel="apple-touch-icon" href="{{ get_asset_url('img/apple-touch-icon.png') }}">
+
     
     <!-- Theme Color -->
     <meta name="theme-color" content="#4facfe">
@@ -188,6 +192,7 @@
                 <a href="/" class="sidebar-logo quantum-nav-brand">
                     <img src="{{ get_asset_url('img/logo.svg') }}" alt="QuantumVestAI Logo" class="logo-default">
                     <img src="{{ get_asset_url('img/logo-collapsed.svg') }}" alt="QV" class="logo-collapsed">
+
                 </a>
                 <button class="sidebar-toggle quantum-btn" id="sidebarToggle" aria-label="Toggle sidebar">
                     <i class="bi bi-chevron-left"></i>
@@ -272,6 +277,7 @@
                     <div class="user-info">
                         <div class="user-avatar">
                             <img src="{{ get_asset_url('img/avatars/default.png') }}" alt="User">
+
                         </div>
                         <div class="user-details">
                             <span class="user-name">{{ user.username }}</span>
@@ -428,6 +434,7 @@
     <script src="{{ get_asset_url('js/navigation.js') }}" defer></script>
     <script src="{{ get_asset_url('js/app.js') }}" defer></script>
     <script src="{{ get_asset_url('js/auth.js') }}" defer></script>
+
     
     <!-- Progressive Web App Support -->
     <script>
