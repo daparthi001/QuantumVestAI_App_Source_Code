@@ -45,6 +45,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       color: '#43e97b'
     },
     { 
+      path: ROUTES.STOCK_FLOW, 
+      label: 'Stock Flow', 
+      icon: '🌊', 
+      modernIcon: 'bi-diagram-3',
+      description: 'Flow Visualization',
+      color: '#06b6d4'
+    },
+    { 
       path: ROUTES.WATCHLIST, 
       label: 'Watchlist', 
       icon: '👁️', 

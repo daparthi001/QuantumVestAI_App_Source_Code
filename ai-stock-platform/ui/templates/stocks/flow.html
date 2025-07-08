@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block title %}Stock Flow Visualization | QuantumVestAI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/stock-flow.css">
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-3">
+                <div class="me-3">
+                    <i class="fas fa-water fa-2x text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="quantum-title mb-1">Stock Flow Analytics</h1>
+                    <p class="text-muted mb-0">Real-time visualization of stock price movements, trends, and market flows</p>
+                </div>
+            </div>
+            
+            <!-- Quick Info Alert -->
+            <div class="alert alert-info d-flex align-items-center" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                <div>
+                    <strong>Interactive Features:</strong> Toggle between flow charts, scatter plots, and sector heatmaps. 
+                    Use play/pause for real-time updates, and click fullscreen for immersive analysis.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls Panel -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card quantum-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">🎛️ Visualization Controls</h5>
+                </div>
+                <div class="card-body flow-control-panel">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex gap-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
+                                    <label class="form-check-label" for="autoRefresh">
+                                        Real-time Updates
+                                    </label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="showPredictions" checked>
+                                    <label class="form-check-label" for="showPredictions">
+                                        AI Predictions
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2 align-items-center">
+                                <span class="text-muted">Quick Add:</span>
+                                <button class="btn btn-outline-primary btn-sm" onclick="selectStockGroup('tech')">Big Tech</button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="selectStockGroup('ev')">EV Stocks</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Selection -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card quantum-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">📊 Select Stocks to Visualize (<span id="selected-count">6</span>/8)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="stock-chip-container" id="stock-chips">
+                        <!-- Stock chips will be populated by JavaScript -->
+                    </div>
+                    
+                    <div id="no-stocks-warning" class="alert alert-warning d-none">
+                        Please select at least one stock to visualize.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Visualization -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card quantum-card stock-flow-visualization">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title flow-visualization-header mb-0">📈 Stock Flow Visualization</h5>
+                    
+                    <div class="d-flex align-items-center gap-2">
+                        <!-- Visualization type selector -->
+                        <div class="btn-group visualization-toggle" role="group">
+                            <input type="radio" class="btn-check" name="vizType" id="flowChart" checked>
+                            <label class="btn btn-outline-primary" for="flowChart" title="Flow Chart">
+                                <i class="fas fa-chart-line"></i>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="vizType" id="scatterPlot">
+                            <label class="btn btn-outline-primary" for="scatterPlot" title="Price vs Volume">
+                                <i class="fas fa-braille"></i>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="vizType" id="heatmap">
+                            <label class="btn btn-outline-primary" for="heatmap" title="Sector Performance">
+                                <i class="fas fa-th"></i>
+                            </label>
+                        </div>
+
+                        <!-- Timeframe selector -->
+                        <select class="form-select form-select-sm" id="timeframe" style="width: 80px;">
+                            <option value="1m">1m</option>
+                            <option value="5m" selected>5m</option>
+                            <option value="15m">15m</option>
+                            <option value="1h">1h</option>
+                            <option value="1d">1d</option>
+                        </select>
+
+                        <!-- Control buttons -->
+                        <button class="btn btn-sm btn-outline-primary" id="playPause" title="Play/Pause">
+                            <i class="fas fa-pause"></i>
+                        </button>
+                        
+                        <button class="btn btn-sm btn-outline-secondary" id="refresh" title="Refresh">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        
+                        <button class="btn btn-sm btn-outline-secondary" id="fullscreen" title="Fullscreen">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Stock status chips -->
+                    <div class="mb-3">
+                        <div class="d-flex flex-wrap gap-2" id="status-chips">
+                            <!-- Status chips will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Chart container -->
+                    <div class="chart-container" style="height: 500px; position: relative;">
+                        <canvas id="stockFlowChart"></canvas>
+                        <div id="loadingIndicator" class="flow-loading">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data summary -->
+                    <div class="flow-stats-container mt-3">
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <small class="text-muted">Total Stocks: <span id="total-stocks">0</span></small>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">Gainers: <span id="gainers-count">0</span></small>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">Last Update: <span id="last-update">Never</span></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Explanations -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card quantum-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">📚 Understanding Stock Flow Visualizations</h5>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="explanationAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#flowChart-explanation">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    Flow Chart View
+                                </button>
+                            </h2>
+                            <div id="flowChart-explanation" class="accordion-collapse collapse show" data-bs-parent="#explanationAccordion">
+                                <div class="accordion-body">
+                                    Shows real-time price movements as flowing streams. Each line represents a stock's price 
+                                    trajectory over time, with smooth animations highlighting trends and volatility. 
+                                    The flowing nature helps identify momentum patterns and correlation between stocks.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#scatter-explanation">
+                                    <i class="fas fa-braille me-2"></i>
+                                    Price vs Volume Scatter
+                                </button>
+                            </h2>
+                            <div id="scatter-explanation" class="accordion-collapse collapse" data-bs-parent="#explanationAccordion">
+                                <div class="accordion-body">
+                                    Displays the relationship between stock price and trading volume. Green dots indicate 
+                                    stocks with positive performance, while red dots show declining stocks. The position 
+                                    reveals whether high-volume trading correlates with price movements.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#heatmap-explanation">
+                                    <i class="fas fa-chart-bar me-2"></i>
+                                    Sector Performance Heatmap
+                                </button>
+                            </h2>
+                            <div id="heatmap-explanation" class="accordion-collapse collapse" data-bs-parent="#explanationAccordion">
+                                <div class="accordion-body">
+                                    Aggregates performance by sector, showing which industries are leading or lagging. 
+                                    This view helps identify sector rotation patterns and broad market trends that 
+                                    affect related stocks within the same industry.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Links -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-center gap-3">
+                <a href="/dashboard" class="btn btn-outline-primary">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Return to Dashboard
+                </a>
+                <a href="/stocks" class="btn btn-primary">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Explore Individual Stocks
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Live indicator for real-time updates -->
+<div class="position-fixed bottom-0 end-0 p-3">
+    <div class="live-indicator" id="live-status" style="display: none;">
+        LIVE
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/stock-flow-visualization.js"></script>
+<script>
+    // Initialize the stock flow visualization
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof StockFlowManager !== 'undefined') {
+            window.stockFlowManager = new StockFlowManager();
+            window.stockFlowManager.init();
+        }
+    });
+</script>
+{% endblock %}
