@@ -32,19 +32,19 @@ const Dashboard: React.FC = () => {
     fetchDashboardData();
   }, []);
 
-  const formatChange = (change: number) => {
-    const isPositive = change >= 0;
-    return (
-      <motion.span
-        className={isPositive ? 'text-success' : 'text-danger'}
-        initial={{ scale: 1 }}
-        animate={{ scale: [1, 1.1, 1] }}
-        transition={{ duration: 2, repeat: Infinity }}
-      >
-        {isPositive ? '↗ +' : '↘ '}{change.toFixed(2)}%
-      </motion.span>
-    );
-  };
+  // const formatChange = (change: number) => {
+  //   const isPositive = change >= 0;
+  //   return (
+  //     <motion.span
+  //       className={isPositive ? 'text-success' : 'text-danger'}
+  //       initial={{ scale: 1 }}
+  //       animate={{ scale: [1, 1.1, 1] }}
+  //       transition={{ duration: 2, repeat: Infinity }}
+  //     >
+  //       {isPositive ? '↗ +' : '↘ '}{change.toFixed(2)}%
+  //     </motion.span>
+  //   );
+  // };
 
   // Animation variants
   const containerVariants = {

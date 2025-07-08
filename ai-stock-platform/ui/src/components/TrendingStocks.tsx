@@ -2,11 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card, CardContent, Typography, CircularProgress,
   Box, List, ListItem, ListItemText, ListItemIcon,
-  Divider, Chip, Avatar, IconButton, Grid, Paper
+  Divider, Chip, Avatar, IconButton
 } from '@mui/material';
 import { 
-  ArrowUpward, ArrowDownward, TrendingUp, TrendingDown, 
-  Refresh, Update, Timeline 
+  ArrowUpward, ArrowDownward, TrendingUp, 
+  Refresh 
 } from '@mui/icons-material';
 import { green, red, grey, blue } from '@mui/material/colors';
 import axios from 'axios';
