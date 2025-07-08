@@ -8,6 +8,7 @@ import { Card, Row, Col, Table, Nav, Spinner, Alert } from 'react-bootstrap';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { stockService } from '../../services/api';
 import { formatNumber, formatCurrency, formatPercentage } from '../../utils/formatters';
+import BuffettAnalysis from './BuffettAnalysis';
 
 interface FundamentalMetrics {
     peRatio: number;
@@ -190,6 +191,14 @@ const FundamentalAnalysis: React.FC<FundamentalAnalysisProps> = ({ symbol }) => 
                                     Historical
                                 </Nav.Link>
                             </Nav.Item>
+                            <Nav.Item>
+                                <Nav.Link
+                                    active={activeTab === 'buffett'}
+                                    onClick={() => setActiveTab('buffett')}
+                                >
+                                    Buffett Analysis
+                                </Nav.Link>
+                            </Nav.Item>
                         </Nav>
 
                         <Row>
@@ -197,6 +206,7 @@ const FundamentalAnalysis: React.FC<FundamentalAnalysisProps> = ({ symbol }) => 
                                 {activeTab === 'overview' && renderValuationMetrics()}
                                 {activeTab === 'financials' && renderFinancialMetrics()}
                                 {activeTab === 'historical' && renderHistoricalChart()}
+                                {activeTab === 'buffett' && <BuffettAnalysis symbol={symbol} />}
                             </Col>
                         </Row>
                     </>
