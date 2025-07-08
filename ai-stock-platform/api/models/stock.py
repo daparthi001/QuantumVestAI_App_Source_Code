@@ -8,7 +8,7 @@ from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from db.base_class import Base
-from db.models.mixins import TimestampMixin
+from db.base import TimestampMixin
 
 class Stock(Base, TimestampMixin):
     """Stock market data model"""

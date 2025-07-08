@@ -64,6 +64,16 @@ class NotFoundError(APIException):
         )
 
 
+class ResourceNotFoundError(APIException):
+    """Resource not found error (alias for NotFoundError)."""
+    def __init__(self, detail: str = "Resource not found"):
+        super().__init__(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=detail,
+            error_code="NOT_FOUND"
+        )
+
+
 class RateLimitError(APIException):
     """Rate limit exceeded error."""
     def __init__(self, detail: str = "Rate limit exceeded"):
