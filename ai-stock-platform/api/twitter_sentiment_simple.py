@@ -1,20 +1,15 @@
 """
-Twitter Sentiment Analysis for Stocks
-Created: 2025-06-19 03:09:13
-Author: daparthi001
-Enhanced: 2025-01-09 (AI Assistant)
+Simplified Twitter Sentiment Analysis for Stocks
+This version works without complex configuration dependencies
 """
 import logging
-import pandas as pd
 import tweepy
 from textblob import TextBlob
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 import re
 import asyncio
-from core.config.settings import settings
-from core.exceptions import ExternalAPIError, RateLimitError, ConfigurationError
-from models.sentiment import SentimentRecord
+from twitter_config import twitter_config
 
 logger = logging.getLogger("api.social")
 
@@ -25,22 +20,16 @@ class TwitterSentimentAnalyzer:
         """Initialize Twitter sentiment analyzer with proper error handling"""
         try:
             # Check if credentials are available
-            if not any([
-                settings.TWITTER_BEARER_TOKEN,
-                settings.TWITTER_API_KEY,
-                settings.TWITTER_API_SECRET,
-                settings.TWITTER_ACCESS_TOKEN,
-                settings.TWITTER_ACCESS_TOKEN_SECRET
-            ]):
-                raise ConfigurationError("Twitter API credentials not configured")
+            if not twitter_config.has_credentials():
+                raise ValueError("Twitter API credentials not configured")
             
             # Twitter API credentials
             self.client = tweepy.Client(
-                bearer_token=settings.TWITTER_BEARER_TOKEN,
-                consumer_key=settings.TWITTER_API_KEY,
-                consumer_secret=settings.TWITTER_API_SECRET,
-                access_token=settings.TWITTER_ACCESS_TOKEN,
-                access_token_secret=settings.TWITTER_ACCESS_TOKEN_SECRET,
+                bearer_token=twitter_config.TWITTER_BEARER_TOKEN,
+                consumer_key=twitter_config.TWITTER_API_KEY,
+                consumer_secret=twitter_config.TWITTER_API_SECRET,
+                access_token=twitter_config.TWITTER_ACCESS_TOKEN,
+                access_token_secret=twitter_config.TWITTER_ACCESS_TOKEN_SECRET,
                 wait_on_rate_limit=True  # Automatically wait when rate limited
             )
             
@@ -51,8 +40,8 @@ class TwitterSentimentAnalyzer:
             
         except Exception as e:
             logger.error(f"Failed to initialize Twitter client: {e}")
-            raise ConfigurationError(f"Twitter API initialization failed: {str(e)}")
-        
+            raise ValueError(f"Twitter API initialization failed: {str(e)}")
+    
     async def analyze_sentiment(
         self, 
         symbol: str,
@@ -181,9 +170,6 @@ class TwitterSentimentAnalyzer:
                     "data": result
                 }
                 
-                # Store in database asynchronously
-                asyncio.create_task(self._store_sentiment_record(symbol, result))
-                
                 return result
             else:
                 return {
@@ -203,12 +189,9 @@ class TwitterSentimentAnalyzer:
                     "daily_sentiment": []
                 }
                 
-        except (RateLimitError, ConfigurationError, ExternalAPIError):
-            # Re-raise our custom exceptions
-            raise
         except Exception as e:
             logger.error(f"Error analyzing Twitter sentiment for {symbol}: {str(e)}")
-            raise ExternalAPIError(f"Sentiment analysis failed: {str(e)}")
+            raise ValueError(f"Sentiment analysis failed: {str(e)}")
     
     def _fetch_tweets(
         self, 
@@ -258,32 +241,29 @@ class TwitterSentimentAnalyzer:
                         
                 except tweepy.TooManyRequests:
                     logger.warning("Twitter API rate limit exceeded")
-                    raise RateLimitError("Twitter API rate limit exceeded")
+                    raise ValueError("Twitter API rate limit exceeded")
                 except tweepy.Unauthorized:
                     logger.error("Twitter API unauthorized - check credentials")
-                    raise ConfigurationError("Twitter API credentials are invalid")
+                    raise ValueError("Twitter API credentials are invalid")
                 except tweepy.Forbidden:
                     logger.error("Twitter API forbidden - check permissions")
-                    raise ConfigurationError("Twitter API access forbidden")
+                    raise ValueError("Twitter API access forbidden")
                 except tweepy.NotFound:
                     logger.warning(f"No tweets found for query: {query}")
                     break
                 except tweepy.TwitterServerError as e:
                     logger.error(f"Twitter API server error: {e}")
-                    raise ExternalAPIError(f"Twitter API server error: {str(e)}")
+                    raise ValueError(f"Twitter API server error: {str(e)}")
                 except Exception as e:
                     logger.error(f"Unexpected error in Twitter API call: {e}")
-                    raise ExternalAPIError(f"Twitter API error: {str(e)}")
+                    raise ValueError(f"Twitter API error: {str(e)}")
             
             logger.info(f"Successfully fetched {len(tweets)} tweets for query: {query}")
             return tweets
             
-        except (RateLimitError, ConfigurationError, ExternalAPIError):
-            # Re-raise our custom exceptions
-            raise
         except Exception as e:
             logger.error(f"Error fetching tweets: {e}")
-            raise ExternalAPIError(f"Failed to fetch tweets: {str(e)}")
+            raise ValueError(f"Failed to fetch tweets: {str(e)}")
     
     def _clean_tweet(self, text: str) -> str:
         """Clean tweet text for sentiment analysis"""
@@ -338,22 +318,3 @@ class TwitterSentimentAnalyzer:
         daily_sentiment.sort(key=lambda x: x["date"])
         
         return daily_sentiment
-    
-    async def _store_sentiment_record(self, symbol: str, sentiment_data: Dict[str, Any]) -> None:
-        """Store sentiment record in database"""
-        try:
-            # Create sentiment record
-            record = SentimentRecord(
-                symbol=symbol,
-                date=datetime.now(),
-                sentiment_score=sentiment_data["sentiment_score"],
-                sentiment_label=sentiment_data["sentiment_label"],
-                volume=sentiment_data["volume"],
-                trending_score=sentiment_data["trending_score"],
-                data=sentiment_data
-            )
-            
-            # Save to database
-            await record.save()
-        except Exception as e:
-            logger.error(f"Error storing sentiment record: {str(e)}")
