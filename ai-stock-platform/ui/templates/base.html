@@ -36,6 +36,7 @@
     <!-- Critical CSS -->
     <link rel="stylesheet" href="{{ url_for('static', path='/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', path='/css/quantum-enhancements.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/quantum-mobile-enhanced.css') }}">
     
     <!-- Progressive CSS Loading -->
     <link rel="preload" href="{{ url_for('static', path='/css/styles.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -416,6 +417,8 @@
     <script src="{{ url_for('static', path='/js/quantum-charts.js') }}" defer></script>
     <script src="{{ url_for('static', path='/js/quantum-ai.js') }}" defer></script>
     <script src="{{ url_for('static', path='/js/quantum-content.js') }}" defer></script>
+    <script src="{{ url_for('static', path='/js/quantum-enhanced-charts.js') }}" defer></script>
+    <script src="{{ url_for('static', path='/js/quantum-pwa.js') }}" defer></script>
     
     <!-- Legacy UI Scripts -->
     <script src="{{ url_for('static', path='/js/enhanced-ui.js') }}" defer></script>

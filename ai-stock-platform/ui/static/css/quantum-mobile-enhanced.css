@@ -1,0 +1,397 @@
+/* 
+Enhanced Mobile-Responsive Styles for QuantumVestAI
+Created: 2025-01-09
+Author: AI Assistant for QuantumVestAI
+*/
+
+/* Enhanced Mobile Responsiveness */
+@media (max-width: 768px) {
+    /* Navigation improvements */
+    .navbar {
+        padding: 0.5rem 1rem;
+    }
+    
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+    
+    .navbar-nav .nav-link {
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+    }
+    
+    /* Dashboard enhancements */
+    .dashboard-container {
+        padding: 1rem;
+    }
+    
+    .dashboard-header h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .dashboard-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .period-selector {
+        margin-bottom: 1rem;
+    }
+    
+    /* Card improvements */
+    .quantum-card {
+        margin-bottom: 1rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .quantum-card .card-body {
+        padding: 1rem;
+    }
+    
+    /* Enhanced touch targets */
+    .btn {
+        min-height: 44px;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn:hover, .btn:focus {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    /* Form improvements */
+    .form-control {
+        min-height: 44px;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        border: 2px solid #e9ecef;
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+    }
+    
+    /* Chart container improvements */
+    .chart-container {
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+        border-radius: 12px;
+        background: white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .chart-container canvas {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    /* Table responsiveness */
+    .table-responsive {
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .table {
+        font-size: 0.875rem;
+    }
+    
+    .table th {
+        padding: 0.75rem 0.5rem;
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    .table td {
+        padding: 0.75rem 0.5rem;
+        vertical-align: middle;
+    }
+    
+    /* Modal improvements */
+    .modal-dialog {
+        margin: 1rem;
+        max-width: calc(100vw - 2rem);
+    }
+    
+    .modal-content {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    
+    .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+    }
+    
+    .modal-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid #e9ecef;
+    }
+}
+
+/* Enhanced Progressive Web App Features */
+@media (max-width: 480px) {
+    /* Ultra-mobile optimizations */
+    .container-fluid {
+        padding: 0.5rem;
+    }
+    
+    .row {
+        margin: 0 -0.5rem;
+    }
+    
+    .col-12, .col-md-6, .col-md-4, .col-md-3 {
+        padding: 0 0.5rem;
+    }
+    
+    /* Compact card layouts */
+    .card {
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+    }
+    
+    .card-body {
+        padding: 0.75rem;
+    }
+    
+    /* Smaller typography */
+    h1 { font-size: 1.25rem; }
+    h2 { font-size: 1.1rem; }
+    h3 { font-size: 1rem; }
+    h4 { font-size: 0.95rem; }
+    h5 { font-size: 0.9rem; }
+    h6 { font-size: 0.85rem; }
+    
+    /* Compact buttons */
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    /* Swipe gestures support */
+    .swipe-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+    }
+    
+    .swipe-container::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+/* Enhanced Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --quantum-bg: #1a1a1a;
+        --quantum-surface: #2d2d2d;
+        --quantum-text: #ffffff;
+        --quantum-text-secondary: #b0b0b0;
+        --quantum-border: #404040;
+        --quantum-primary: #64b5f6;
+        --quantum-success: #81c784;
+        --quantum-warning: #ffb74d;
+        --quantum-danger: #e57373;
+    }
+    
+    body {
+        background-color: var(--quantum-bg);
+        color: var(--quantum-text);
+    }
+    
+    .card {
+        background-color: var(--quantum-surface);
+        border-color: var(--quantum-border);
+        color: var(--quantum-text);
+    }
+    
+    .navbar {
+        background-color: var(--quantum-surface) !important;
+        border-bottom: 1px solid var(--quantum-border);
+    }
+    
+    .navbar-brand,
+    .navbar-nav .nav-link {
+        color: var(--quantum-text) !important;
+    }
+    
+    .form-control {
+        background-color: var(--quantum-surface);
+        border-color: var(--quantum-border);
+        color: var(--quantum-text);
+    }
+    
+    .form-control:focus {
+        background-color: var(--quantum-surface);
+        border-color: var(--quantum-primary);
+        color: var(--quantum-text);
+    }
+    
+    .table {
+        color: var(--quantum-text);
+    }
+    
+    .table th {
+        border-color: var(--quantum-border);
+    }
+    
+    .table td {
+        border-color: var(--quantum-border);
+    }
+    
+    .modal-content {
+        background-color: var(--quantum-surface);
+        color: var(--quantum-text);
+    }
+    
+    .modal-header {
+        border-color: var(--quantum-border);
+    }
+    
+    .modal-footer {
+        border-color: var(--quantum-border);
+    }
+}
+
+/* Enhanced Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    :root {
+        --quantum-primary: #0066cc;
+        --quantum-success: #008000;
+        --quantum-warning: #ff8800;
+        --quantum-danger: #cc0000;
+    }
+    
+    .btn {
+        border-width: 2px;
+    }
+    
+    .form-control {
+        border-width: 2px;
+    }
+    
+    .card {
+        border-width: 2px;
+    }
+}
+
+/* Enhanced Touch Interactions */
+.touch-friendly {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Enhanced Button Interactions */
+.quantum-btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.quantum-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.6s;
+}
+
+.quantum-btn:hover::before {
+    transform: translateX(100%);
+}
+
+.quantum-btn:active {
+    transform: scale(0.98);
+}
+
+/* Enhanced Card Hover Effects */
+.quantum-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.quantum-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.quantum-card:hover .card-body {
+    transform: scale(1.02);
+}
+
+/* Enhanced Loading States */
+.loading-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Enhanced Focus States */
+.quantum-focus:focus {
+    outline: 3px solid var(--quantum-primary);
+    outline-offset: 2px;
+}
+
+/* Enhanced Print Styles */
+@media print {
+    .navbar,
+    .btn,
+    .modal,
+    .tooltip,
+    .dropdown-menu {
+        display: none !important;
+    }
+    
+    body {
+        background: white !important;
+        color: black !important;
+    }
+    
+    .card {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+    }
+    
+    .table {
+        border-collapse: collapse !important;
+    }
+    
+    .table th,
+    .table td {
+        border: 1px solid #000 !important;
+    }
+}

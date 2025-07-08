@@ -1333,21 +1333,531 @@ class QuantumCommunity {
     }
 
     loadMoreTopics() {
-        // Simulate loading more topics
+        // Enhanced topic loading with actual content
         this.showNotification('Loading more topics...');
+        
+        const forumContainer = document.querySelector('.forum-topics');
+        if (!forumContainer) return;
+        
+        // Simulate API call to load more topics
         setTimeout(() => {
-            this.showNotification('No more topics to load');
+            const newTopics = this.generateAdditionalTopics();
+            newTopics.forEach(topic => {
+                const topicElement = this.createTopicElement(topic);
+                forumContainer.appendChild(topicElement);
+            });
+            this.showNotification(`Loaded ${newTopics.length} new topics`);
         }, 1000);
     }
 
+    generateAdditionalTopics() {
+        const additionalTopics = [
+            {
+                id: 'topic-extra-1',
+                title: 'AI vs Traditional Analysis: Performance Comparison',
+                category: 'AI Insights',
+                author: 'QuantumTrader',
+                replies: 23,
+                views: 189,
+                lastActivity: '2 hours ago',
+                isHot: true
+            },
+            {
+                id: 'topic-extra-2',
+                title: 'Risk Management in Volatile Markets',
+                category: 'Strategies',
+                author: 'RiskManager',
+                replies: 15,
+                views: 156,
+                lastActivity: '4 hours ago',
+                isHot: false
+            },
+            {
+                id: 'topic-extra-3',
+                title: 'Sentiment Analysis Success Stories',
+                category: 'Market Talk',
+                author: 'SentimentGuru',
+                replies: 31,
+                views: 245,
+                lastActivity: '1 hour ago',
+                isHot: true
+            }
+        ];
+        return additionalTopics;
+    }
+
+    createTopicElement(topic) {
+        const topicEl = document.createElement('div');
+        topicEl.className = `forum-topic ${topic.isHot ? 'hot-topic' : ''}`;
+        topicEl.innerHTML = `
+            <div class="topic-content">
+                <div class="topic-header">
+                    <h4 class="topic-title">${topic.title}</h4>
+                    <span class="topic-category">${topic.category}</span>
+                    ${topic.isHot ? '<span class="hot-badge">🔥 Hot</span>' : ''}
+                </div>
+                <div class="topic-meta">
+                    <span class="topic-author">by ${topic.author}</span>
+                    <span class="topic-stats">${topic.replies} replies • ${topic.views} views</span>
+                    <span class="topic-time">${topic.lastActivity}</span>
+                </div>
+            </div>
+            <div class="topic-actions">
+                <button class="btn btn-sm btn-outline-primary" onclick="communityManager.viewTopic('${topic.id}')">
+                    View Discussion
+                </button>
+            </div>
+        `;
+        return topicEl;
+    }
+
     openNewTopicModal() {
-        // Create and open new topic modal
-        this.showNotification('New topic feature coming soon!');
+        // Enhanced new topic modal with form
+        const modal = document.createElement('div');
+        modal.className = 'quantum-modal';
+        modal.innerHTML = `
+            <div class="modal-backdrop" onclick="this.parentElement.remove()"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Create New Discussion Topic</h3>
+                    <button class="modal-close" onclick="this.closest('.quantum-modal').remove()">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="new-topic-form">
+                        <div class="form-group">
+                            <label for="topic-title">Topic Title</label>
+                            <input type="text" id="topic-title" class="form-control" 
+                                   placeholder="Enter a descriptive title..." required>
+                        </div>
+                        <div class="form-group">
+                            <label for="topic-category">Category</label>
+                            <select id="topic-category" class="form-control" required>
+                                <option value="">Select a category</option>
+                                <option value="market">Market Talk</option>
+                                <option value="strategies">Investment Strategies</option>
+                                <option value="ai">AI Insights</option>
+                                <option value="education">Education</option>
+                                <option value="general">General Discussion</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="topic-content">Content</label>
+                            <textarea id="topic-content" class="form-control" rows="6" 
+                                      placeholder="Share your thoughts, questions, or insights..." required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="topic-notify"> 
+                                Notify me of replies
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="this.closest('.quantum-modal').remove()">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="communityManager.submitNewTopic()">
+                        Create Topic
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        document.getElementById('topic-title').focus();
+    }
+
+    submitNewTopic() {
+        const form = document.getElementById('new-topic-form');
+        const formData = new FormData(form);
+        
+        const title = document.getElementById('topic-title').value;
+        const category = document.getElementById('topic-category').value;
+        const content = document.getElementById('topic-content').value;
+        const notify = document.getElementById('topic-notify').checked;
+        
+        if (!title || !category || !content) {
+            this.showNotification('Please fill in all required fields', 'error');
+            return;
+        }
+        
+        // Simulate API call
+        this.showNotification('Creating topic...', 'info');
+        
+        setTimeout(() => {
+            const newTopic = {
+                id: 'topic-' + Date.now(),
+                title: title,
+                category: category,
+                author: 'You',
+                replies: 0,
+                views: 1,
+                lastActivity: 'Just now',
+                isHot: false
+            };
+            
+            // Add to topic list
+            const forumContainer = document.querySelector('.forum-topics');
+            if (forumContainer) {
+                const topicElement = this.createTopicElement(newTopic);
+                forumContainer.insertBefore(topicElement, forumContainer.firstChild);
+            }
+            
+            // Update user points
+            this.userPoints += 10;
+            this.updatePointsDisplay();
+            
+            // Close modal
+            document.querySelector('.quantum-modal').remove();
+            
+            this.showNotification('Topic created successfully! +10 points', 'success');
+        }, 1500);
+    }
+
+    viewTopic(topicId) {
+        // Enhanced topic viewing with detailed discussion
+        const topic = this.getTopicDetails(topicId);
+        
+        const modal = document.createElement('div');
+        modal.className = 'quantum-modal topic-modal';
+        modal.innerHTML = `
+            <div class="modal-backdrop" onclick="this.parentElement.remove()"></div>
+            <div class="modal-content large">
+                <div class="modal-header">
+                    <div class="topic-header-info">
+                        <h3>${topic.title}</h3>
+                        <div class="topic-meta">
+                            <span class="category-badge">${topic.category}</span>
+                            <span class="author">by ${topic.author}</span>
+                            <span class="stats">${topic.replies} replies • ${topic.views} views</span>
+                        </div>
+                    </div>
+                    <button class="modal-close" onclick="this.closest('.quantum-modal').remove()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="topic-content">
+                        <div class="original-post">
+                            <div class="post-author">
+                                <img src="/static/images/avatars/default.png" alt="${topic.author}" class="avatar">
+                                <div class="author-info">
+                                    <strong>${topic.author}</strong>
+                                    <span class="post-time">${topic.lastActivity}</span>
+                                </div>
+                            </div>
+                            <div class="post-content">
+                                ${topic.content}
+                            </div>
+                            <div class="post-actions">
+                                <button class="btn btn-sm btn-outline-primary" onclick="communityManager.likeTopic('${topicId}')">
+                                    👍 Like (${topic.likes || 0})
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="communityManager.shareTopic('${topicId}')">
+                                    📤 Share
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="replies-section">
+                            <h4>Replies (${topic.replies})</h4>
+                            <div class="replies-list">
+                                ${this.generateRepliesHTML(topic.replies)}
+                            </div>
+                        </div>
+                        
+                        <div class="reply-form">
+                            <h5>Add Your Reply</h5>
+                            <textarea id="reply-content" class="form-control" rows="4" 
+                                      placeholder="Share your thoughts..."></textarea>
+                            <div class="reply-actions">
+                                <button class="btn btn-primary" onclick="communityManager.submitReply('${topicId}')">
+                                    Post Reply
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+
+    getTopicDetails(topicId) {
+        // Simulated topic details - in real app, this would come from API
+        const topics = {
+            'topic-1': {
+                title: 'Tesla Stock Analysis Discussion',
+                category: 'Market Talk',
+                author: 'ElonFan2024',
+                content: 'What are your thoughts on Tesla\'s recent performance? The AI predictions show strong bullish sentiment.',
+                replies: 12,
+                views: 89,
+                likes: 5,
+                lastActivity: '2 hours ago'
+            },
+            'topic-2': {
+                title: 'Best AI Trading Strategies for 2024',
+                category: 'Strategies',
+                author: 'AITrader',
+                content: 'Looking to share and discuss the most effective AI trading strategies. What has worked for you?',
+                replies: 8,
+                views: 67,
+                likes: 3,
+                lastActivity: '4 hours ago'
+            }
+        };
+        
+        return topics[topicId] || {
+            title: 'Discussion Topic',
+            category: 'General',
+            author: 'Unknown',
+            content: 'Topic content not available.',
+            replies: 0,
+            views: 0,
+            likes: 0,
+            lastActivity: 'Unknown'
+        };
+    }
+
+    generateRepliesHTML(replyCount) {
+        if (replyCount === 0) {
+            return '<p class="no-replies">No replies yet. Be the first to join the discussion!</p>';
+        }
+        
+        let repliesHTML = '';
+        for (let i = 0; i < Math.min(replyCount, 3); i++) {
+            repliesHTML += `
+                <div class="reply">
+                    <div class="reply-author">
+                        <img src="/static/images/avatars/user${i + 1}.png" alt="User" class="avatar-sm">
+                        <div class="author-info">
+                            <strong>Investor${i + 1}</strong>
+                            <span class="reply-time">${Math.floor(Math.random() * 24)} hours ago</span>
+                        </div>
+                    </div>
+                    <div class="reply-content">
+                        ${this.generateSampleReply(i)}
+                    </div>
+                    <div class="reply-actions">
+                        <button class="btn btn-sm btn-link">👍 ${Math.floor(Math.random() * 10)}</button>
+                        <button class="btn btn-sm btn-link">Reply</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        if (replyCount > 3) {
+            repliesHTML += `
+                <div class="load-more-replies">
+                    <button class="btn btn-outline-primary btn-sm" onclick="communityManager.loadMoreReplies()">
+                        Load ${replyCount - 3} more replies
+                    </button>
+                </div>
+            `;
+        }
+        
+        return repliesHTML;
+    }
+
+    generateSampleReply(index) {
+        const replies = [
+            "Great analysis! I've been following this stock too and the AI predictions have been quite accurate.",
+            "Thanks for sharing. I'm curious about the risk factors you've considered in this strategy.",
+            "Interesting perspective. Have you backtested this approach over different market conditions?"
+        ];
+        return replies[index] || "Thanks for the discussion!";
+    }
+
+    submitReply(topicId) {
+        const replyContent = document.getElementById('reply-content').value;
+        if (!replyContent.trim()) {
+            this.showNotification('Please enter a reply', 'error');
+            return;
+        }
+        
+        // Simulate API call
+        this.showNotification('Posting reply...', 'info');
+        
+        setTimeout(() => {
+            // Add reply to the list
+            const repliesList = document.querySelector('.replies-list');
+            if (repliesList) {
+                const newReply = document.createElement('div');
+                newReply.className = 'reply';
+                newReply.innerHTML = `
+                    <div class="reply-author">
+                        <img src="/static/images/avatars/default.png" alt="You" class="avatar-sm">
+                        <div class="author-info">
+                            <strong>You</strong>
+                            <span class="reply-time">Just now</span>
+                        </div>
+                    </div>
+                    <div class="reply-content">
+                        ${replyContent}
+                    </div>
+                    <div class="reply-actions">
+                        <button class="btn btn-sm btn-link">👍 0</button>
+                        <button class="btn btn-sm btn-link">Edit</button>
+                    </div>
+                `;
+                repliesList.appendChild(newReply);
+            }
+            
+            // Clear form
+            document.getElementById('reply-content').value = '';
+            
+            // Update user points
+            this.userPoints += 5;
+            this.updatePointsDisplay();
+            
+            this.showNotification('Reply posted successfully! +5 points', 'success');
+        }, 1000);
+    }
+
+    likeTopic(topicId) {
+        // Enhanced like functionality
+        this.showNotification('Topic liked! +2 points', 'success');
+        this.userPoints += 2;
+        this.updatePointsDisplay();
+        
+        // Update like count in UI
+        const likeButton = document.querySelector(`button[onclick*="${topicId}"]`);
+        if (likeButton) {
+            const currentLikes = parseInt(likeButton.textContent.match(/\d+/)[0]) || 0;
+            likeButton.innerHTML = `👍 Like (${currentLikes + 1})`;
+            likeButton.disabled = true;
+            likeButton.classList.add('liked');
+        }
+    }
+
+    shareTopic(topicId) {
+        // Enhanced sharing functionality
+        const topic = this.getTopicDetails(topicId);
+        const shareText = `Check out this discussion on QuantumVestAI: "${topic.title}"`;
+        const shareUrl = `${window.location.origin}/community/topic/${topicId}`;
+        
+        if (navigator.share) {
+            navigator.share({
+                title: topic.title,
+                text: shareText,
+                url: shareUrl
+            });
+        } else {
+            // Fallback to clipboard
+            navigator.clipboard.writeText(`${shareText} ${shareUrl}`).then(() => {
+                this.showNotification('Link copied to clipboard!', 'success');
+            });
+        }
+    }
+
+    updatePointsDisplay() {
+        const pointsBadge = document.querySelector('.points-badge');
+        if (pointsBadge) {
+            pointsBadge.textContent = this.formatNumber(this.userPoints);
+            pointsBadge.classList.add('points-updated');
+            setTimeout(() => {
+                pointsBadge.classList.remove('points-updated');
+            }, 1000);
+        }
     }
 
     showAchievementDetails(achievementId) {
-        // Show achievement details modal
-        this.showNotification(`Achievement details for ${achievementId} coming soon!`);
+        // Enhanced achievement details modal
+        const achievement = this.getAchievementDetails(achievementId);
+        
+        const modal = document.createElement('div');
+        modal.className = 'quantum-modal achievement-modal';
+        modal.innerHTML = `
+            <div class="modal-backdrop" onclick="this.parentElement.remove()"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Achievement Details</h3>
+                    <button class="modal-close" onclick="this.closest('.quantum-modal').remove()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="achievement-details">
+                        <div class="achievement-icon large">
+                            ${achievement.icon}
+                        </div>
+                        <h4>${achievement.name}</h4>
+                        <p class="achievement-description">${achievement.description}</p>
+                        <div class="achievement-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${achievement.progress}%"></div>
+                            </div>
+                            <span class="progress-text">${achievement.progress}% complete</span>
+                        </div>
+                        <div class="achievement-rewards">
+                            <h5>Rewards</h5>
+                            <ul>
+                                <li>+${achievement.points} points</li>
+                                <li>${achievement.badge} badge</li>
+                                ${achievement.unlock ? `<li>Unlocks: ${achievement.unlock}</li>` : ''}
+                            </ul>
+                        </div>
+                        ${achievement.tips ? `
+                            <div class="achievement-tips">
+                                <h5>Tips to Complete</h5>
+                                <ul>
+                                    ${achievement.tips.map(tip => `<li>${tip}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="this.closest('.quantum-modal').remove()">
+                        Got it!
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+
+    getAchievementDetails(achievementId) {
+        const achievements = {
+            'first-prediction': {
+                name: 'First Prediction',
+                icon: '🔮',
+                description: 'Make your first AI-powered stock prediction',
+                progress: 100,
+                points: 50,
+                badge: 'Predictor',
+                tips: ['Visit the AI Predictions page', 'Select a stock to analyze', 'Review the prediction results']
+            },
+            'community-contributor': {
+                name: 'Community Contributor',
+                icon: '🤝',
+                description: 'Actively participate in community discussions',
+                progress: 60,
+                points: 100,
+                badge: 'Contributor',
+                unlock: 'Premium discussion features',
+                tips: ['Create new discussion topics', 'Reply to other members\' posts', 'Share helpful insights']
+            },
+            'portfolio-optimizer': {
+                name: 'Portfolio Optimizer',
+                icon: '⚖️',
+                description: 'Use AI portfolio optimization 10 times',
+                progress: 30,
+                points: 200,
+                badge: 'Optimizer',
+                unlock: 'Advanced optimization features',
+                tips: ['Use the portfolio optimization tool', 'Try different risk levels', 'Compare optimization results']
+            }
+        };
+        
+        return achievements[achievementId] || {
+            name: 'Unknown Achievement',
+            icon: '🏆',
+            description: 'Achievement details not available',
+            progress: 0,
+            points: 0,
+            badge: 'Unknown'
+        };
     }
 
     showNotification(message) {
