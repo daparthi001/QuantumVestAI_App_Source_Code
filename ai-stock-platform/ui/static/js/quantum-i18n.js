@@ -644,12 +644,26 @@ class QuantumI18n {
 // Initialize i18n system
 const quantumI18n = new QuantumI18n();
 
-// Ensure translation runs after the DOM is fully loaded
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => quantumI18n.translatePage());
-} else {
-    quantumI18n.translatePage();
-}
+// Helper to run translation
+const runTranslations = () => quantumI18n.translatePage();
+
+// Always translate once immediately
+runTranslations();
+
+// Reapply translations when DOM is fully loaded in case other scripts modify it
+document.addEventListener('DOMContentLoaded', runTranslations);
+
+// Observe DOM mutations to translate dynamically added elements
+const observer = new MutationObserver(mutations => {
+    for (const mutation of mutations) {
+        if (mutation.type === 'childList' && mutation.addedNodes.length) {
+            runTranslations();
+            break;
+        }
+    }
+});
+observer.observe(document.documentElement, { childList: true, subtree: true });
+
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
