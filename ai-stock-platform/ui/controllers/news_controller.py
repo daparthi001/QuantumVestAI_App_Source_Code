@@ -15,6 +15,11 @@ from datetime import datetime
 router = APIRouter()
 BASE_DIR = Path(__file__).resolve().parent.parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+
+
+def get_templates(request: Request) -> Jinja2Templates:
+    """Return app-level templates if available."""
+    return getattr(request.app.state, "templates", templates)
 logger = logging.getLogger("quantumvestai.news_controller")
 
 # Get API URL from environment or use default
@@ -95,7 +100,7 @@ async def news_page(
             "trending": ["AI", "Federal Reserve", "EV Market", "Cryptocurrency"]
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "news/index.html",
             {
                 "request": request, 
@@ -107,7 +112,7 @@ async def news_page(
         )
     except Exception as e:
         logger.error(f"News page error: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "error.html",
             {
                 "request": request, 
@@ -148,7 +153,7 @@ async def news_article(
             "sentiment": {"status": "available", "score": 0.7, "label": "positive"}
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "news/article.html",
             {
                 "request": request, 
@@ -162,7 +167,7 @@ async def news_article(
         raise e
     except Exception as e:
         logger.error(f"News article error for {article_id}: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "error.html",
             {
                 "request": request, 
@@ -171,5 +176,4 @@ async def news_article(
                 "demo_mode": True,
                 "page_title": "Article Error"
             },
-            status_code=500
-        )
+            status_code=500        )

@@ -19,6 +19,11 @@ logger = logging.getLogger(__name__)
 BASE_DIR = Path(__file__).resolve().parent.parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
+
+def get_templates(request: Request) -> Jinja2Templates:
+    """Return app-level templates if available."""
+    return getattr(request.app.state, "templates", templates)
+
 # Demo predictability data
 DEMO_PREDICTABILITY_SCORES = {
     "AAPL": {
@@ -270,7 +275,7 @@ async def predictability_page(
             reverse=True
         )[:10]
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "predictability.html",
             {
                 "request": request,
@@ -288,7 +293,7 @@ async def predictability_page(
         
     except Exception as e:
         logger.error(f"Error loading predictability analysis: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "predictability.html",
             {
                 "request": request,
@@ -330,7 +335,7 @@ async def predictability_ranking_page(
         for i, stock in enumerate(ranked_stocks):
             stock["rank"] = i + 1
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "predictability_ranking.html",
             {
                 "request": request,
@@ -346,7 +351,7 @@ async def predictability_ranking_page(
         
     except Exception as e:
         logger.error(f"Error loading predictability ranking: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "error.html",
             {
                 "request": request,
@@ -392,7 +397,7 @@ async def predictability_comparison_page(
         for i, stock in enumerate(comparison_data):
             stock["comparison_rank"] = i + 1
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "predictability_comparison.html",
             {
                 "request": request,
@@ -406,7 +411,7 @@ async def predictability_comparison_page(
         
     except Exception as e:
         logger.error(f"Error loading predictability comparison: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "predictability_comparison.html",
             {
                 "request": request,
