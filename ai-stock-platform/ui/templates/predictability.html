@@ -275,4 +275,57 @@
                             <div class="sentiment-type">
                                 <div class="sentiment-label">Neutral</div>
                                 <div class="progress">
-                                    <div class="progress-bar bg-warning"
+                                    <div class="progress-bar bg-warning" role="progressbar" style="width: {{ sentiment_distribution.neutral }}%;" 
+                                        aria-valuenow="{{ sentiment_distribution.neutral }}" aria-valuemin="0" aria-valuemax="100">{{ sentiment_distribution.neutral }}%</div>
+                                </div>
+                            </div>
+                            <div class="sentiment-type">
+                                <div class="sentiment-label">Negative</div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: {{ sentiment_distribution.negative }}%;" 
+                                        aria-valuenow="{{ sentiment_distribution.negative }}" aria-valuemin="0" aria-valuemax="100">{{ sentiment_distribution.negative }}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Risk Factors -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Risk Assessment</h3>
+            </div>
+            <div class="card-body">
+                <div class="risk-summary">
+                    <h5>Investment Risk Level: <span class="risk-level {% if risk_level == 'Low' %}low{% elif risk_level == 'Medium' %}medium{% else %}high{% endif %}">{{ risk_level }}</span></h5>
+                    <div class="risk-factors">
+                        {% for factor in risk_factors %}
+                        <div class="risk-factor">
+                            <span class="risk-factor-name">{{ factor.name }}</span>
+                            <span class="risk-factor-level {{ factor.level.lower() }}">{{ factor.level }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', path='/js/chart.js') }}"></script>
+<script src="{{ url_for('static', path='/js/predictability.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize predictability charts and gauges
+    if (typeof initializePredictabilityCharts === 'function') {
+        initializePredictabilityCharts('{{ ticker }}', {{ predictability_score }});
+    }
+});
+</script>
+{% endblock %}
