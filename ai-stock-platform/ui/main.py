@@ -917,6 +917,7 @@ routers_to_include = [
     ("routes.watchlist", "watchlist"),
     ("routes.predictability", "predictability"),
     ("routes.settings", "settings"),
+    ("routes.ai_api", "ai_api"),
     ("routes.api_proxy", "api_proxy"),
     ("routes.utils", "utils"),
     ("controllers.news_controller", "news_controller"),
