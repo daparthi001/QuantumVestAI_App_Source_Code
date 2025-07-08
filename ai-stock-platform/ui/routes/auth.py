@@ -157,8 +157,6 @@ async def login_post(
             )
 
         return response
-
-    except ValueError as e:
         
     except ValueError as e:
         logger.warning(f"Login validation failed: {str(e)}")

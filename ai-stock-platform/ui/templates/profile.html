@@ -9,6 +9,7 @@
 
 {% block head_extra %}
 <link rel="stylesheet" href="{{ get_asset_url('css/profile.css') }}">
+
 {% endblock %}
 
 {% block content %}
@@ -807,6 +808,7 @@
                     <p>Scan this QR code with your authentication app (Google Authenticator, Authy, etc.)</p>
                     <div class="qr-code-container text-center mb-4">
                         <img src="{{ get_asset_url('img/sample-qr.png') }}" alt="QR Code" class="mb-2">
+
                         <div class="text-muted">
                             Can't scan? Use this code: <code>ABCD-EFGH-IJKL-MNOP</code>
                         </div>
@@ -834,6 +836,7 @@
 
 {% block scripts %}
 <script src="{{ get_asset_url('js/profile.js') }}"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Toggle password visibility

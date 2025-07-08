@@ -10,6 +10,7 @@
 
 {% block head_extra %}
 <link rel="stylesheet" href="{{ get_asset_url('css/stockanalysis.css') }}">
+
 {% endblock %}
 
 {% block content %}
@@ -26,6 +27,7 @@
         <div class="stock-info">
             <div class="stock-logo">
                 <img src="https://logo.clearbit.com/{{ ticker.lower() }}.com" alt="{{ stock_info.name }}" onerror="this.src='{{ get_asset_url('img/stock-placeholder.png') }}'">
+
             </div>
             <div class="stock-details">
                 <h2 class="stock-name">{{ stock_info.name }}</h2>
@@ -646,6 +648,7 @@
 {% block scripts %}
 <script src="{{ get_asset_url('js/chart.js') }}"></script>
 <script src="{{ get_asset_url('js/forecast.js') }}"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize forecast charts and interactivity
