@@ -158,3 +158,12 @@ ModuleNotFoundError: No module named 'db.models.mixins'
 2025-07-08 01:57:56 - quantumvestai_api - INFO - Database initialized successfully
 2025-07-08 01:57:56 - quantumvestai_api - INFO - Registered 18 API endpoints
 2025-07-08 01:57:56 - quantumvestai_api - INFO - Enhanced QuantumVestAI API startup complete
+2025-07-08 02:01:51 - quantumvestai_api - INFO - [e756a0d5-62a5-40b0-b0e2-9a90f3213fd4] Request: GET /api/v1/stocks/trending
+2025-07-08 02:01:51 - quantumvestai_api - INFO - Trending stocks endpoint accessed
+2025-07-08 02:01:51 - quantumvestai_api - INFO - [e756a0d5-62a5-40b0-b0e2-9a90f3213fd4] Response: GET /api/v1/stocks/trending - Status: 200 - Duration: 0.001s
+2025-07-08 02:01:58 - quantumvestai_api - INFO - [c6e9e3f6-08cb-4eec-a79e-fdb27e58bee2] Request: GET /api/v1/stocks/trending/cache/status
+2025-07-08 02:01:58 - quantumvestai_api - INFO - Cache status endpoint accessed
+2025-07-08 02:01:58 - quantumvestai_api - INFO - [c6e9e3f6-08cb-4eec-a79e-fdb27e58bee2] Response: GET /api/v1/stocks/trending/cache/status - Status: 200 - Duration: 0.001s
+2025-07-08 02:02:10 - quantumvestai_api - INFO - [2ed723d5-cb4b-48f5-bf5e-f51b290da5f6] Request: GET /api/v1/stocks/trending
+2025-07-08 02:02:10 - quantumvestai_api - INFO - Trending stocks endpoint accessed
+2025-07-08 02:02:10 - quantumvestai_api - INFO - [2ed723d5-cb4b-48f5-bf5e-f51b290da5f6] Response: GET /api/v1/stocks/trending - Status: 200 - Duration: 0.001s
