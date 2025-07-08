@@ -187,8 +187,50 @@ def number_format(value, decimal_places=0):
     """Format a number with thousands separators."""
     if value is None:
         return "0"
-    
+    try:
+        num_value = float(value)
+        if decimal_places == 0:
+            return f"{int(num_value):,}"
+        else:
+            return f"{num_value:,.{decimal_places}f}"
+    except (ValueError, TypeError):
         return "0"
+
+def format_number(value, decimal_places=0):
+    """Format a number with thousands separators - alias for number_format."""
+    return number_format(value, decimal_places)
+
+def format_market_cap(value):
+    """Format market cap values in human readable format (B, T, etc.)."""
+    if value is None:
+        return "—"
+    try:
+        num_value = float(value)
+        if abs(num_value) >= 1e12:
+            return f"${num_value / 1e12:.1f}T"
+        elif abs(num_value) >= 1e9:
+            return f"${num_value / 1e9:.1f}B"
+        elif abs(num_value) >= 1e6:
+            return f"${num_value / 1e6:.1f}M"
+        else:
+            return f"${num_value:,.0f}"
+    except (ValueError, TypeError):
+        return str(value)
+
+def format_sentiment(value):
+    """Format sentiment score as text with color indication."""
+    if value is None:
+        return "—"
+    try:
+        score = float(value)
+        if score > 0.5:
+            return f"+{score:.1f}"
+        elif score < -0.5:
+            return f"{score:.1f}"
+        else:
+            return f"{score:.1f}"
+    except (ValueError, TypeError):
+        return str(value)
 
 def get_asset_url(path, version=None):
     """Generate URL for static assets with cache busting."""
@@ -297,6 +339,9 @@ template_filters = {
     'strip_html': strip_html,
     'markdown_to_html': markdown_to_html,
     'number_format': number_format,
+    'format_number': format_number,  # Added missing filter
+    'format_market_cap': format_market_cap,  # Added missing filter
+    'format_sentiment': format_sentiment,  # Added missing filter
     'get_asset_url': get_asset_url,
     'json_stringify': json_stringify,
     'file_size_format': file_size_format,
