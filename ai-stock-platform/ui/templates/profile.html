@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block head_extra %}
-<link rel="stylesheet" href="{{ url_for('static', path='/css/profile.css') }}">
+<link rel="stylesheet" href="{{ get_asset_url('css/profile.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -776,7 +776,7 @@
             <div class="modal-body">
                 <div class="avatar-upload-container">
                     <div class="avatar-preview">
-                        <img src="{{ user.avatar_url or url_for('static', path='/img/avatars/default.png') }}" alt="Preview" id="avatarPreview">
+                        <img src="{{ user.avatar_url or get_asset_url('img/avatars/default.png') }}" alt="Preview" id="avatarPreview">
                     </div>
                     <div class="avatar-upload">
                         <label for="avatarFile" class="form-label">Select Image</label>
@@ -806,7 +806,7 @@
                     <h5>Step 1: Scan QR Code</h5>
                     <p>Scan this QR code with your authentication app (Google Authenticator, Authy, etc.)</p>
                     <div class="qr-code-container text-center mb-4">
-                        <img src="{{ url_for('static', path='/img/sample-qr.png') }}" alt="QR Code" class="mb-2">
+                        <img src="{{ get_asset_url('img/sample-qr.png') }}" alt="QR Code" class="mb-2">
                         <div class="text-muted">
                             Can't scan? Use this code: <code>ABCD-EFGH-IJKL-MNOP</code>
                         </div>
@@ -833,7 +833,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', path='/js/profile.js') }}"></script>
+<script src="{{ get_asset_url('js/profile.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Toggle password visibility

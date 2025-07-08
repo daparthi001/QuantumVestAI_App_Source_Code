@@ -143,7 +143,7 @@ def _add_fallback_filters(templates):
         """Generate versioned asset URLs"""
         if not version:
             version = os.environ.get('APP_VERSION', 'v2.0.0')
-            timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+        timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
         return f"/static/{path}?v={version}&t={timestamp}"
 
     def format_currency(amount):
@@ -172,13 +172,23 @@ def _add_fallback_filters(templates):
             return f"{value / 1e3:.1f}K"
         else:
             return f"{value:.2f}"
-    
+
     def format_change_value(value):
         """Format change value with sign"""
         if isinstance(value, (int, float)):
             sign = "+" if value > 0 else ""
             return f"{sign}{value:.2f}"
         return str(value)
+
+    def format_number(value, decimal_places=0):
+        """Simple thousands separator formatting"""
+        try:
+            num_value = float(value)
+            if decimal_places == 0:
+                return f"{int(num_value):,}"
+            return f"{num_value:,.{decimal_places}f}"
+        except (ValueError, TypeError):
+            return "0"
 
     def humanize_date(value):
         """Convert datetime to human readable relative time"""
@@ -226,6 +236,7 @@ def _add_fallback_filters(templates):
     templates.env.filters["format_percentage"] = format_percentage
     templates.env.filters["format_change_value"] = format_change_value
     templates.env.filters["humanize_date"] = humanize_date
+    templates.env.filters["format_number"] = format_number
     
     logger.info("✓ Fallback template filters registered")
 

@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block head_extra %}
-<link rel="stylesheet" href="{{ url_for('static', path='/css/stockanalysis.css') }}">
+<link rel="stylesheet" href="{{ get_asset_url('css/stockanalysis.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -25,7 +25,7 @@
     <div class="card-body">
         <div class="stock-info">
             <div class="stock-logo">
-                <img src="https://logo.clearbit.com/{{ ticker.lower() }}.com" alt="{{ stock_info.name }}" onerror="this.src='{{ url_for('static', path='/img/stock-placeholder.png') }}'">
+                <img src="https://logo.clearbit.com/{{ ticker.lower() }}.com" alt="{{ stock_info.name }}" onerror="this.src='{{ get_asset_url('img/stock-placeholder.png') }}'">
             </div>
             <div class="stock-details">
                 <h2 class="stock-name">{{ stock_info.name }}</h2>
@@ -563,7 +563,7 @@
                         {% for article in news %}
                         <div class="card news-card">
                             <div class="news-image-wrapper">
-                                <img src="{{ article.thumbnail }}" class="news-image" alt="{{ article.title }}" onerror="this.src='{{ url_for('static', path='/img/news-placeholder.jpg') }}'">
+                                <img src="{{ article.thumbnail }}" class="news-image" alt="{{ article.title }}" onerror="this.src='{{ get_asset_url('img/news-placeholder.jpg') }}'">
                             </div>
                             <div class="news-content">
                                 <div class="news-meta">
@@ -644,8 +644,8 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', path='/js/chart.js') }}"></script>
-<script src="{{ url_for('static', path='/js/forecast.js') }}"></script>
+<script src="{{ get_asset_url('js/chart.js') }}"></script>
+<script src="{{ get_asset_url('js/forecast.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize forecast charts and interactivity
