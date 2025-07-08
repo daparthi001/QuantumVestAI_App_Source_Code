@@ -8,7 +8,6 @@ from datetime import datetime
 from urllib.parse import urlencode
 import time
 
-
 router = APIRouter(prefix="/api/ai", tags=["ai-data"])
 logger = logging.getLogger(__name__)
 

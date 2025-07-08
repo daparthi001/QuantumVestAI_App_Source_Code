@@ -644,7 +644,13 @@ class QuantumI18n {
 // Initialize i18n system
 const quantumI18n = new QuantumI18n();
 
+// Ensure translation runs after the DOM is fully loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => quantumI18n.translatePage());
+} else {
+    quantumI18n.translatePage();
+}
+
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = QuantumI18n;
-}
+    module.exports = QuantumI18n;}
