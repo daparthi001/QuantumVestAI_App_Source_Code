@@ -2,8 +2,9 @@
 Stocks Router
 Created: 2025-05-20 04:43:53
 Author: daparthi001
+Updated: 2025-01-09 (AI Assistant) - Added Warren Buffett analysis endpoint
 """
-from fastapi import APIRouter, Depends, Query, Path
+from fastapi import APIRouter, Depends, Query, Path, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
@@ -16,7 +17,8 @@ from schemas.stock import (
     StockResponse,
     StockDetailResponse,
     StockPriceResponse,
-    StockSearchResponse
+    StockSearchResponse,
+    BuffettAnalysisResponse
 )
 
 router = APIRouter(
@@ -84,3 +86,32 @@ async def get_stock_price(
         raise ResourceNotFoundError(f"Price data not found for {ticker}")
     
     return price_data
+
+@router.get(
+    "/{ticker}/buffett-analysis",
+    response_model=BuffettAnalysisResponse,
+    summary="Get Warren Buffett analysis",
+    description="Get value investing analysis based on Warren Buffett's methods"
+)
+async def get_buffett_analysis(
+    ticker: str = Path(..., min_length=1, max_length=10, description="Stock ticker symbol"),
+    db: Session = Depends(get_db)
+) -> BuffettAnalysisResponse:
+    """Get Warren Buffett analysis for a stock."""
+    stock_service = StockService(db)
+    analysis = await stock_service.get_buffett_analysis(ticker)
+    
+    if not analysis:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Unable to perform Buffett analysis for {ticker}. Stock data may not be available."
+        )
+    
+    return BuffettAnalysisResponse(
+        intrinsic_value=analysis["intrinsic_value"],
+        margin_of_safety=analysis["margin_of_safety"],
+        quality_score=analysis["quality_score"],
+        investment_recommendation=analysis["investment_recommendation"],
+        reasoning=analysis["reasoning"],
+        quality_metrics=analysis["quality_metrics"]
+    )

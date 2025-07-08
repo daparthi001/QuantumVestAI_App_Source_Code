@@ -651,10 +651,20 @@ async def enhanced_dashboard(request: Request):
         )
 
 @app.post("/logout")
-async def logout(request: Request):
-    """Enhanced logout endpoint"""
+async def logout_post(request: Request):
+    """Enhanced logout endpoint (POST)"""
     request_id = getattr(request.state, 'request_id', 'unknown')
-    logger.info(f"[{request_id}] User logout")
+    logger.info(f"[{request_id}] User logout via POST")
+    
+    response = RedirectResponse(url="/login?msg=Successfully logged out", status_code=status.HTTP_302_FOUND)
+    response.delete_cookie("access_token")
+    return response
+
+@app.get("/logout")
+async def logout_get(request: Request):
+    """Enhanced logout endpoint (GET) - for backwards compatibility"""
+    request_id = getattr(request.state, 'request_id', 'unknown')
+    logger.info(f"[{request_id}] User logout via GET")
     
     response = RedirectResponse(url="/login?msg=Successfully logged out", status_code=status.HTTP_302_FOUND)
     response.delete_cookie("access_token")
@@ -899,6 +909,7 @@ routers_to_include = [
     ("routes.api_proxy", "api_proxy"),
     ("routes.utils", "utils"),
     ("controllers.news_controller", "news_controller"),
+    ("controllers.stock_controller", "stock_controller"),
 ]
 
 for module_name, router_name in routers_to_include:

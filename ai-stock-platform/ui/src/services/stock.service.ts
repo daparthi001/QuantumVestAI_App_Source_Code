@@ -79,8 +79,17 @@ class StockService {
     return response.data;
   }
 
-  async searchStocks(query: string): Promise<StockData[]> {
-    const response = await apiClient.get(`/api/v1/stocks/search?q=${query}`);
+  async searchStocks(query: string, options: { 
+    sector?: string, 
+    limit?: number 
+  } = {}): Promise<StockData[]> {
+    const params = new URLSearchParams({
+      query: query,
+      ...(options.limit && { limit: options.limit.toString() }),
+      ...(options.sector && { sector: options.sector })
+    });
+    
+    const response = await apiClient.get(`/api/v1/stocks/search?${params.toString()}`);
     return response.data;
   }
 
@@ -114,6 +123,11 @@ class StockService {
 
   async getHistoricalFundamentals(symbol: string, period: string = '1y'): Promise<any> {
     const response = await apiClient.get(`/api/v1/stocks/${symbol}/fundamentals/history?period=${period}`);
+    return response.data;
+  }
+
+  async getBuffettAnalysis(symbol: string): Promise<any> {
+    const response = await apiClient.get(`/api/v1/stocks/${symbol}/buffett-analysis`);
     return response.data;
   }
 }

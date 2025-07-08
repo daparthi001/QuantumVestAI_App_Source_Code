@@ -43,7 +43,7 @@ export const formatNumber = (value: number, decimals: number = 0): string => {
  */
 export const formatChange = (change: number, changePercent?: number): string => {
   if (typeof change !== "number" || isNaN(change)) {
-    return "0.00 (0.00%)";
+    return "0.00";
   }
   
   const sign = change >= 0 ? "+" : "";

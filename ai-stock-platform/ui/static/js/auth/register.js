@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             try {
                 // Submit the form using fetch
-                const response = await fetch('/auth/register', {
+                const response = await fetch('/register', {
                     method: 'POST',
                     body: formData
                 });
