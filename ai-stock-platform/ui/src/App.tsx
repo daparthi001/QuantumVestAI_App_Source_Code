@@ -49,6 +49,7 @@ const Trading = React.lazy(() => import('./components/Trading'));
 const News = React.lazy(() => import('./components/News'));
 const Alerts = React.lazy(() => import('./components/Alerts'));
 const Reports = React.lazy(() => import('./components/Reports'));
+const StockFlowPage = React.lazy(() => import('./components/StockFlowPage'));
 const NotFound = React.lazy(() => import('./components/NotFound'));
 
 // Loading component
@@ -101,6 +102,14 @@ function App() {
                         <ProtectedRoute>
                           <Layout>
                             <StockDetails />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
+                      
+                      <Route path={ROUTES.STOCK_FLOW} element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <StockFlowPage />
                           </Layout>
                         </ProtectedRoute>
                       } />

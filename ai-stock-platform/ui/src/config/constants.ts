@@ -146,6 +146,7 @@ export const ROUTES = {
   RESET_PASSWORD: '/reset-password',
   DASHBOARD: '/dashboard',
   STOCKS: '/stocks',
+  STOCK_FLOW: '/stocks/flow',
   WATCHLIST: '/watchlist',
   ANALYTICS: '/analytics',
   SETTINGS: '/settings',
