@@ -167,12 +167,52 @@ def _add_fallback_filters(templates):
             return f"{sign}{value:.2f}"
         return str(value)
 
+    def humanize_date(value):
+        """Convert datetime to human readable relative time"""
+        if not value:
+            return ""
+        try:
+            if isinstance(value, str):
+                # Try to parse ISO format
+                value = datetime.fromisoformat(value.replace('Z', '+00:00'))
+            elif not isinstance(value, datetime):
+                return str(value)
+            
+            now = datetime.utcnow()
+            if value.tzinfo is not None:
+                # Convert to UTC for comparison
+                value = value.replace(tzinfo=None)
+            
+            diff = now - value
+            seconds = diff.total_seconds()
+            
+            if seconds < 60:
+                return "just now"
+            elif seconds < 3600:
+                minutes = int(seconds // 60)
+                return f"{minutes} minute{'s' if minutes != 1 else ''} ago"
+            elif seconds < 86400:
+                hours = int(seconds // 3600)
+                return f"{hours} hour{'s' if hours != 1 else ''} ago"
+            elif seconds < 2592000:
+                days = int(seconds // 86400)
+                return f"{days} day{'s' if days != 1 else ''} ago"
+            elif seconds < 31536000:
+                months = int(seconds // 2592000)
+                return f"{months} month{'s' if months != 1 else ''} ago"
+            else:
+                years = int(seconds // 31536000)
+                return f"{years} year{'s' if years != 1 else ''} ago"
+        except Exception:
+            return str(value)
+
     # Register fallback filters
     templates.env.filters['get_asset_url'] = get_asset_url
     templates.env.filters["format_large_number"] = format_large_number
     templates.env.filters["format_currency"] = format_currency
     templates.env.filters["format_percentage"] = format_percentage
     templates.env.filters["format_change_value"] = format_change_value
+    templates.env.filters["humanize_date"] = humanize_date
     
     logger.info("✓ Fallback template filters registered")
 
@@ -253,6 +293,49 @@ async def index(request: Request):
         if user.get("is_authenticated"):
             return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
         
+        # Demo portfolio data for index page
+        demo_portfolio = {
+            "total_value": 125750.45,
+            "daily_change": 1234.56,
+            "daily_change_pct": 0.99,
+            "total_gain": 8750.45,
+            "total_gain_percent": 7.48,
+            "status": "available"
+        }
+        
+        # Demo market data and news for index page
+        demo_market = {
+            "status": "open",
+            "indices": {
+                "sp500": {"value": 4592.83, "change": 0.47}
+            }
+        }
+        
+        # Demo news with proper dates for humanize_date filter
+        demo_news = [
+            {
+                "title": "Tech Stocks Rally as AI Optimism Grows",
+                "summary": "Major technology companies see significant gains as artificial intelligence adoption accelerates.",
+                "source": "MarketWatch",
+                "published": datetime.utcnow() - timedelta(hours=2),
+                "url": "#"
+            },
+            {
+                "title": "Federal Reserve Maintains Interest Rates",
+                "summary": "The Fed keeps rates steady as inflation shows signs of cooling.",
+                "source": "Reuters", 
+                "published": datetime.utcnow() - timedelta(hours=6),
+                "url": "#"
+            },
+            {
+                "title": "EV Market Shows Strong Q2 Performance", 
+                "summary": "Electric vehicle sales surge 45% year-over-year.",
+                "source": "Bloomberg",
+                "published": datetime.utcnow() - timedelta(days=1),
+                "url": "#"
+            }
+        ]
+        
         return templates.TemplateResponse(
             "index.html", 
             {
@@ -260,7 +343,15 @@ async def index(request: Request):
                 "user": user,
                 "api_url": API_URL,
                 "request_id": request_id,
-                "demo_mode": True
+                "demo_mode": True,
+                "portfolio": demo_portfolio,
+                "data": {
+                    "user": user,
+                    "portfolio": demo_portfolio,
+                    "market": demo_market,
+                    "news": demo_news,
+                    "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+                }
             }
         )
     except Exception as e:
@@ -492,6 +583,27 @@ async def enhanced_dashboard(request: Request):
         
         user = AuthUtils.get_user_info(request)
         
+        # Demo portfolio data for dashboard page
+        demo_portfolio = {
+            "total_value": 125750.45,
+            "daily_change": 1234.56,
+            "daily_change_pct": 0.99,
+            "total_gain": 8750.45,
+            "total_gain_percent": 7.48,
+            "status": "available"
+        }
+        
+        # Demo data for dashboard
+        market_summary = {
+            "indices": {
+                "S&P 500": {"value": 4567.89, "change": 23.45, "change_pct": 0.52},
+                "NASDAQ": {"value": 14234.56, "change": -45.67, "change_pct": -0.32},
+                "DOW": {"value": 34567.12, "change": 156.78, "change_pct": 0.46}
+            },
+            "sectors": {},
+            "top_movers": {}
+        }
+        
         return templates.TemplateResponse(
             "dashboard/index.html",
             {
@@ -499,7 +611,13 @@ async def enhanced_dashboard(request: Request):
                 "user": user,
                 "api_url": API_URL,
                 "request_id": request_id,
-                "demo_mode": True
+                "demo_mode": True,
+                "portfolio": demo_portfolio,
+                "market_summary": market_summary,
+                "popular_stocks": [],
+                "news": [],
+                "watchlist": [],
+                "page_title": "Dashboard - QuantumVestAI"
             }
         )
     except Exception as e:

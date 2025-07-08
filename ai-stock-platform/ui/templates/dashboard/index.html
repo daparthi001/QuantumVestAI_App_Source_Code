@@ -177,18 +177,22 @@
                         <div class="col-md-4">
                             <div class="portfolio-metric">
                                 <div class="metric-label">Total Value</div>
-                                <div class="metric-value">{{ format_currency(portfolio.total_value) }}</div>
+                                <div class="metric-value">{{ format_currency(portfolio.total_value) if portfolio and portfolio.total_value else '$0.00' }}</div>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="portfolio-metric">
                                 <div class="metric-label">Daily Change</div>
-                                <div class="metric-value {% if portfolio.daily_change >= 0 %}text-success{% else %}text-danger{% endif %}">
-                                    {{ format_percentage(portfolio.daily_change) }}
-                                    {% if portfolio.daily_change >= 0 %}
-                                    <i class="bi bi-arrow-up"></i>
+                                <div class="metric-value {% if portfolio and portfolio.daily_change and portfolio.daily_change >= 0 %}text-success{% elif portfolio and portfolio.daily_change %}text-danger{% endif %}">
+                                    {% if portfolio and portfolio.daily_change %}
+                                        {{ format_percentage(portfolio.daily_change) }}
+                                        {% if portfolio.daily_change >= 0 %}
+                                        <i class="bi bi-arrow-up"></i>
+                                        {% else %}
+                                        <i class="bi bi-arrow-down"></i>
+                                        {% endif %}
                                     {% else %}
-                                    <i class="bi bi-arrow-down"></i>
+                                        +0.00%
                                     {% endif %}
                                 </div>
                             </div>
@@ -196,9 +200,14 @@
                         <div class="col-md-4">
                             <div class="portfolio-metric">
                                 <div class="metric-label">Total Return</div>
-                                <div class="metric-value {% if portfolio.total_gain_percent >= 0 %}text-success{% else %}text-danger{% endif %}">
-                                    {{ format_currency(portfolio.total_gain) }}
-                                    <small class="d-block">{{ format_percentage(portfolio.total_gain_percent) }}</small>
+                                <div class="metric-value {% if portfolio and portfolio.total_gain_percent and portfolio.total_gain_percent >= 0 %}text-success{% elif portfolio and portfolio.total_gain_percent %}text-danger{% endif %}">
+                                    {% if portfolio and portfolio.total_gain %}
+                                        {{ format_currency(portfolio.total_gain) }}
+                                        <small class="d-block">{{ format_percentage(portfolio.total_gain_percent) if portfolio.total_gain_percent else '+0.00%' }}</small>
+                                    {% else %}
+                                        $0.00
+                                        <small class="d-block">+0.00%</small>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
