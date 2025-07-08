@@ -5,12 +5,36 @@ Author: daparthi001
 Updated: 2025-01-09 (AI Assistant)
 """
 
-from services.stock_service import StockService
-from services.analytics_service import AnalyticsService
-from services.trending_stocks_service import TrendingStocksService
+# Import services with fallback handling for missing dependencies
+try:
+    from services.stock_service import StockService
+    STOCK_SERVICE_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: StockService not available - {e}")
+    StockService = None
+    STOCK_SERVICE_AVAILABLE = False
 
-__all__ = [
-    'StockService',
-    'AnalyticsService',
-    'TrendingStocksService'
-]
+try:
+    from services.analytics_service import AnalyticsService
+    ANALYTICS_SERVICE_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: AnalyticsService not available - {e}")
+    AnalyticsService = None
+    ANALYTICS_SERVICE_AVAILABLE = False
+
+try:
+    from services.trending_stocks_service import TrendingStocksService
+    TRENDING_STOCKS_SERVICE_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: TrendingStocksService not available - {e}")
+    TrendingStocksService = None
+    TRENDING_STOCKS_SERVICE_AVAILABLE = False
+
+# Only include available services in __all__
+__all__ = []
+if STOCK_SERVICE_AVAILABLE:
+    __all__.append('StockService')
+if ANALYTICS_SERVICE_AVAILABLE:
+    __all__.append('AnalyticsService')
+if TRENDING_STOCKS_SERVICE_AVAILABLE:
+    __all__.append('TrendingStocksService')

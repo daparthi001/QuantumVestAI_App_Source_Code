@@ -452,21 +452,9 @@ async def startup_event():
     
     # Initialize services with simplified approach
     try:
-        # Direct import to avoid circular dependencies
-        import sys
-        import os
-        sys.path.append(os.path.dirname(__file__))
-        
-        # Direct import without going through services/__init__.py
-        import importlib.util
-        spec = importlib.util.spec_from_file_location(
-            "trending_stocks_service", 
-            os.path.join(os.path.dirname(__file__), "services", "trending_stocks_service.py")
-        )
-        trending_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(trending_module)
-        
-        trending_stocks_service = trending_module.TrendingStocksService()
+        # Direct import approach - much simpler and clearer
+        from services.trending_stocks_service import TrendingStocksService
+        trending_stocks_service = TrendingStocksService()
         logger.info("Trending stocks service initialized successfully")
         
         # Verify service is working
