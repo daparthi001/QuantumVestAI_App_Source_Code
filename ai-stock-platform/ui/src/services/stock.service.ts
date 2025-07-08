@@ -125,6 +125,11 @@ class StockService {
     const response = await apiClient.get(`/api/v1/stocks/${symbol}/fundamentals/history?period=${period}`);
     return response.data;
   }
+
+  async getBuffettAnalysis(symbol: string): Promise<any> {
+    const response = await apiClient.get(`/api/v1/stocks/${symbol}/buffett-analysis`);
+    return response.data;
+  }
 }
 
 const stockService = new StockService();

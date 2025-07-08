@@ -2,6 +2,7 @@
  * Fundamental Analysis Tests
  * Created: 2025-05-19 04:12:20
  * Author: daparthi001
+ * Updated: 2025-01-09 (AI Assistant) - Added Buffett analysis tab tests
  */
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -11,9 +12,17 @@ import { stockService } from '../../services/api';
 jest.mock('../../services/api', () => ({
     stockService: {
         getFundamentalMetrics: jest.fn(),
-        getHistoricalFundamentals: jest.fn()
+        getHistoricalFundamentals: jest.fn(),
+        getStockQuote: jest.fn()
     }
 }));
+
+// Mock the BuffettAnalysis component
+jest.mock('../../components/analysis/BuffettAnalysis', () => {
+    return function MockBuffettAnalysis({ symbol }: { symbol: string }) {
+        return <div data-testid="buffett-analysis">Buffett Analysis for {symbol}</div>;
+    };
+});
 
 const mockMetrics = {
     peRatio: 25.4,
@@ -51,6 +60,12 @@ describe('FundamentalAnalysis Component', () => {
         jest.clearAllMocks();
         (stockService.getFundamentalMetrics as jest.Mock).mockResolvedValue({ data: mockMetrics });
         (stockService.getHistoricalFundamentals as jest.Mock).mockResolvedValue({ data: mockHistoricalData });
+        (stockService.getStockQuote as jest.Mock).mockResolvedValue({ 
+            symbol: 'AAPL', 
+            price: 150.00, 
+            change: 2.50, 
+            changePercent: 1.67 
+        });
     });
 
     it('renders loading state initially', () => {
@@ -99,6 +114,39 @@ describe('FundamentalAnalysis Component', () => {
         await waitFor(() => {
             expect(screen.getByText('1.50%')).toBeInTheDocument(); // Dividend Yield
             expect(screen.getByText('$3.75')).toBeInTheDocument(); // EPS
+        });
+    });
+
+    it('displays Buffett Analysis tab', async () => {
+        render(<FundamentalAnalysis symbol="AAPL" />);
+
+        await waitFor(() => {
+            expect(screen.getByText('Buffett Analysis')).toBeInTheDocument();
+        });
+    });
+
+    it('switches to Buffett Analysis tab when clicked', async () => {
+        render(<FundamentalAnalysis symbol="AAPL" />);
+
+        await waitFor(() => {
+            const buffettTab = screen.getByText('Buffett Analysis');
+            fireEvent.click(buffettTab);
+        });
+
+        await waitFor(() => {
+            expect(screen.getByTestId('buffett-analysis')).toBeInTheDocument();
+            expect(screen.getByText('Buffett Analysis for AAPL')).toBeInTheDocument();
+        });
+    });
+
+    it('displays all four navigation tabs', async () => {
+        render(<FundamentalAnalysis symbol="AAPL" />);
+
+        await waitFor(() => {
+            expect(screen.getByText('Overview')).toBeInTheDocument();
+            expect(screen.getByText('Financials')).toBeInTheDocument();
+            expect(screen.getByText('Historical')).toBeInTheDocument();
+            expect(screen.getByText('Buffett Analysis')).toBeInTheDocument();
         });
     });
 });
