@@ -300,15 +300,23 @@ async def index(request: Request):
             "daily_change_pct": 0.99,
             "total_gain": 8750.45,
             "total_gain_percent": 7.48,
-            "status": "available"
+            "status": "available",
+            "holdings": [
+                {"symbol": "AAPL", "shares": 50, "price": 198.45, "value": 9922.50, "change": 2.34},
+                {"symbol": "MSFT", "shares": 25, "price": 425.63, "value": 10640.75, "change": 1.87},
+                {"symbol": "GOOGL", "shares": 15, "price": 2847.92, "value": 42718.80, "change": -0.56},
+                {"symbol": "TSLA", "shares": 30, "price": 264.78, "value": 7943.40, "change": 3.21}
+            ]
         }
         
         # Demo market data and news for index page
         demo_market = {
             "status": "open",
-            "indices": {
-                "sp500": {"value": 4592.83, "change": 0.47}
-            }
+            "indices": [
+                {"name": "S&P 500", "value": 4592.83, "change": 0.47},
+                {"name": "Dow Jones", "value": 35421.12, "change": -0.23},
+                {"name": "NASDAQ", "value": 14893.75, "change": 0.85}
+            ]
         }
         
         # Demo news with proper dates for humanize_date filter
@@ -840,7 +848,7 @@ if __name__ == "__main__":
     logger.info("Author: hemanth9398")
     logger.info("Updated: 2025-07-07 21:54:42")
     uvicorn.run(
-        "main_fixed:app", 
+        "main:app", 
         host="0.0.0.0", 
         port=int(os.environ.get("PORT", 3000)), 
         reload=os.environ.get("DEBUG", "false").lower() == "true",
