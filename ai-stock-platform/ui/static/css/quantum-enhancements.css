@@ -197,7 +197,7 @@ body {
 .quantum-grid-3 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
 .quantum-grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
 
-/* Enhanced Card Components */
+/* Enhanced Card Components - Fixed Alignment */
 .quantum-card {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
@@ -207,6 +207,10 @@ body {
   transition: var(--transition-quantum);
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  box-sizing: border-box;
 }
 
 .quantum-card::before {
@@ -219,6 +223,7 @@ body {
   background: var(--quantum-primary);
   transform: scaleX(0);
   transition: var(--transition-smooth);
+  z-index: 1;
 }
 
 .quantum-card:hover::before {
@@ -231,7 +236,7 @@ body {
   background: rgba(255, 255, 255, 0.12);
 }
 
-/* Enhanced Button System */
+/* Enhanced Button System - Better Alignment */
 .quantum-btn {
   position: relative;
   display: inline-flex;
@@ -250,6 +255,11 @@ body {
   font-size: var(--font-size-base);
   min-height: 48px;
   min-width: 120px;
+  line-height: 1.4;
+  vertical-align: middle;
+  box-sizing: border-box;
+  white-space: nowrap;
+  user-select: none;
 }
 
 .quantum-btn::before {
@@ -261,6 +271,7 @@ body {
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
   transition: var(--transition-smooth);
+  z-index: 1;
 }
 
 .quantum-btn:hover::before {
@@ -277,6 +288,8 @@ body {
   transform: translateY(-3px);
   box-shadow: var(--quantum-shadow-medium);
   filter: brightness(1.1);
+  color: #ffffff;
+  text-decoration: none;
 }
 
 .quantum-btn-secondary {
@@ -289,6 +302,51 @@ body {
 .quantum-btn-secondary:hover {
   background: rgba(255, 255, 255, 0.15);
   transform: translateY(-3px);
+  color: #ffffff;
+  text-decoration: none;
+}
+
+/* Enhanced Alignment Utilities */
+.quantum-flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quantum-flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.quantum-flex-start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.quantum-flex-end {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.quantum-flex-column {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.quantum-text-center {
+  text-align: center;
+}
+
+.quantum-text-left {
+  text-align: left;
+}
+
+.quantum-text-right {
+  text-align: right;
 }
 
 /* Quantum Animations */
