@@ -627,3 +627,31 @@
                                 <div class="progress-bar bg-primary" style="width: {{ stock.predictability }}%"></div>
                             </div>
                             <small>{{ stock.predictability }}%</small>
+                        </td>
+                        <td>
+                            <a href="/forecast/{{ stock.symbol }}" class="btn btn-sm btn-outline-primary">Forecast</a>
+                            <a href="/predictability/{{ stock.symbol }}" class="btn btn-sm btn-outline-secondary">Predictability</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', path='/js/chart.js') }}"></script>
+<script src="{{ url_for('static', path='/js/forecast.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize forecast charts and interactivity
+    if (typeof initializeForecastCharts === 'function') {
+        initializeForecastCharts('{{ ticker }}', '{{ model }}');
+    }
+});
+</script>
+{% endblock %}

@@ -149,6 +149,11 @@ def relative_time(value):
         years = int(seconds // 31536000)
         return f"{years} year{'s' if years != 1 else ''} ago"
 
+def humanize_date(value):
+    """Convert a datetime or ISO date string to a human-readable relative time string.
+    This is an alias for relative_time to support legacy template usage."""
+    return relative_time(value)
+
 def strip_html(text):
     """Remove HTML tags from text."""
     if not text:
@@ -288,6 +293,7 @@ template_filters = {
     'format_date': format_date,
     'format_datetime': format_datetime,
     'relative_time': relative_time,
+    'humanize_date': humanize_date,
     'strip_html': strip_html,
     'markdown_to_html': markdown_to_html,
     'number_format': number_format,
@@ -346,7 +352,7 @@ def register_filters(app):
             logger.info(f"Successfully registered all {successful_filters} template filters")
         
         # Validate critical filters are available
-        critical_filters = ['format_currency', 'format_percentage', 'format_change_value', 'format_large_number']
+        critical_filters = ['format_currency', 'format_percentage', 'format_change_value', 'format_large_number', 'humanize_date']
         missing_critical = []
         
         for filter_name in critical_filters:
@@ -387,6 +393,7 @@ def validate_template_filters(app):
             'format_change_value',
             'format_large_number',
             'format_date',
+            'humanize_date',
             'get_asset_url'
         ]
         
@@ -409,6 +416,9 @@ def validate_template_filters(app):
                     elif filter_name == 'format_date':
                         from datetime import datetime
                         result = filter_func(datetime.now())
+                    elif filter_name == 'humanize_date':
+                        from datetime import datetime, timedelta
+                        result = filter_func(datetime.now() - timedelta(hours=1))
                     elif filter_name == 'get_asset_url':
                         result = filter_func('css/style.css')
                     
@@ -442,6 +452,6 @@ def get_template_filter_status():
     return {
         "total_filters": len(template_filters),
         "available_filters": list(template_filters.keys()),
-        "critical_filters": ['format_currency', 'format_percentage', 'format_change_value', 'format_large_number'],
+        "critical_filters": ['format_currency', 'format_percentage', 'format_change_value', 'format_large_number', 'humanize_date'],
         "status": "ready"
     }
