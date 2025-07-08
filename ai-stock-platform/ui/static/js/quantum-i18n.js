@@ -667,7 +667,6 @@ const observer = new MutationObserver(mutations => {
     for (const mutation of mutations) {
         if (mutation.type === 'childList' && mutation.addedNodes.length) {
             scheduleTranslations();
-
             break;
         }
     }
