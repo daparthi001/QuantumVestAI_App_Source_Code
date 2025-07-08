@@ -19,6 +19,11 @@ logger = logging.getLogger(__name__)
 BASE_DIR = Path(__file__).resolve().parent.parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
+
+def get_templates(request: Request) -> Jinja2Templates:
+    """Return app-level templates if available."""
+    return getattr(request.app.state, "templates", templates)
+
 # Demo data for market summary
 DEMO_MARKET_DATA = {
     "indices": {
@@ -165,7 +170,7 @@ async def dashboard_page(request: Request):
             "cash_available": 15250.00
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "dashboard/index.html",
             {
                 "request": request,
@@ -182,7 +187,7 @@ async def dashboard_page(request: Request):
         
     except Exception as e:
         logger.error(f"Error loading dashboard: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "dashboard/index.html",
             {
                 "request": request,
@@ -241,7 +246,7 @@ async def portfolio_page(request: Request):
             ]
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "dashboard/portfolio.html",
             {
                 "request": request,
@@ -253,7 +258,7 @@ async def portfolio_page(request: Request):
         
     except Exception as e:
         logger.error(f"Error loading portfolio page: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "error.html",
             {
                 "request": request,
@@ -291,7 +296,7 @@ async def analytics_page(request: Request):
             }
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "dashboard/analytics.html",
             {
                 "request": request,
@@ -303,7 +308,7 @@ async def analytics_page(request: Request):
         
     except Exception as e:
         logger.error(f"Error loading analytics page: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "error.html",
             {
                 "request": request,

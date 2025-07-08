@@ -166,16 +166,46 @@ function debounce(func, wait) {
     };
 }
 
-// Render market index chart - placeholder
+// Helper to render a simple line chart using Chart.js
+function renderLineChart(container, labels, dataset, label) {
+    const canvas = document.createElement('canvas');
+    container.innerHTML = '';
+    container.appendChild(canvas);
+
+    new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: label,
+                data: dataset,
+                borderColor: '#4facfe',
+                backgroundColor: 'rgba(79, 172, 254, 0.2)',
+                tension: 0.1,
+                pointRadius: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { display: false },
+                y: { display: true }
+            }
+        }
+    });
+}
+
+// Render market index chart
 function renderIndexChart(container) {
-    // Actual chart implementation would go here
-    // Using API proxy endpoint
-    fetch('/api/v1/market/indices')
+    fetch('/api/ai/market-data/SPY')
         .then(response => response.json())
         .then(data => {
-            console.log('Index data:', data);
-            // Chart rendering code would go here
-            container.innerHTML = '<div class="chart-placeholder p-3">Market Index Chart</div>';
+            if (!data.timestamps || !data.prices) {
+                throw new Error('Invalid data');
+            }
+            const labels = data.timestamps.map(ts => new Date(ts * 1000));
+            renderLineChart(container, labels, data.prices, 'SPY');
         })
         .catch(error => {
             console.error('Error fetching index data:', error);
@@ -183,16 +213,16 @@ function renderIndexChart(container) {
         });
 }
 
-// Render sector performance chart - placeholder
+// Render sector performance chart
 function renderSectorChart(container) {
-    // Actual chart implementation would go here
-    // Using API proxy endpoint
-    fetch('/api/v1/market/sectors')
+    fetch('/api/ai/market-data/QQQ')
         .then(response => response.json())
         .then(data => {
-            console.log('Sector data:', data);
-            // Chart rendering code would go here
-            container.innerHTML = '<div class="chart-placeholder p-3">Sector Performance Chart</div>';
+            if (!data.timestamps || !data.prices) {
+                throw new Error('Invalid data');
+            }
+            const labels = data.timestamps.map(ts => new Date(ts * 1000));
+            renderLineChart(container, labels, data.prices, 'QQQ');
         })
         .catch(error => {
             console.error('Error fetching sector data:', error);
@@ -200,16 +230,16 @@ function renderSectorChart(container) {
         });
 }
 
-// Render price chart - placeholder
+// Render price chart for a given symbol
 function renderPriceChart(container, symbol) {
-    // Actual chart implementation would go here
-    // Using API proxy endpoint
-    fetch(`/api/v1/market/ticker/${symbol}/price`)
+    fetch(`/api/ai/market-data/${symbol}`)
         .then(response => response.json())
         .then(data => {
-            console.log('Price data:', data);
-            // Chart rendering code would go here
-            container.innerHTML = `<div class="chart-placeholder p-3">Price Chart for ${symbol}</div>`;
+            if (!data.timestamps || !data.prices) {
+                throw new Error('Invalid data');
+            }
+            const labels = data.timestamps.map(ts => new Date(ts * 1000));
+            renderLineChart(container, labels, data.prices, symbol);
         })
         .catch(error => {
             console.error(`Error fetching price data for ${symbol}:`, error);
@@ -224,13 +254,14 @@ function updateIndicatorChart(symbol, indicatorType) {
     
     indicatorChartContainer.innerHTML = '<div class="loading-spinner"></div>';
     
-    // Using API proxy endpoint
-    fetch(`/api/v1/market/ticker/${symbol}/indicator/${indicatorType}`)
+    fetch(`/api/ai/technical-data/${symbol}`)
         .then(response => response.json())
         .then(data => {
-            console.log(`${indicatorType} data:`, data);
-            // Chart rendering code would go here
-            indicatorChartContainer.innerHTML = `<div class="chart-placeholder p-3">${indicatorType.toUpperCase()} Chart for ${symbol}</div>`;
+            indicatorChartContainer.innerHTML = `
+                <div class="d-flex flex-column align-items-center p-3">
+                    <div><strong>SMA:</strong> ${data.sma?.toFixed(2) ?? 'N/A'}</div>
+                    <div><strong>EMA:</strong> ${data.ema?.toFixed(2) ?? 'N/A'}</div>
+                </div>`;
         })
         .catch(error => {
             console.error(`Error fetching ${indicatorType} data for ${symbol}:`, error);
@@ -246,8 +277,8 @@ function toggleForecast(show, symbol) {
     if (show) {
         forecastContainer.innerHTML = '<div class="loading-spinner"></div>';
         
-        // Using API proxy endpoint
-        fetch(`/api/v1/forecast/ticker/${symbol}`)
+        // Fetch sentiment data from the new AI API as a placeholder
+        fetch(`/api/ai/sentiment/${symbol}`)
             .then(response => response.json())
             .then(data => {
                 console.log('Forecast data:', data);
@@ -262,5 +293,4 @@ function toggleForecast(show, symbol) {
             });
     } else {
         forecastContainer.classList.add('d-none');
-    }
-}
+    }}

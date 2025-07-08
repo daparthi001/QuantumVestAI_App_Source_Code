@@ -19,6 +19,11 @@ logger = logging.getLogger(__name__)
 BASE_DIR = Path(__file__).resolve().parent.parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
+
+def get_templates(request: Request) -> Jinja2Templates:
+    """Return app-level templates if available."""
+    return getattr(request.app.state, "templates", templates)
+
 # Demo settings data (in-memory for demo)
 DEMO_USER_SETTINGS = {
     "general": {
@@ -74,7 +79,7 @@ async def settings_page(request: Request):
         
         logger.info("Loading settings page in demo mode")
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "settings.html",
             {
                 "request": request,
@@ -86,7 +91,7 @@ async def settings_page(request: Request):
         
     except Exception as e:
         logger.error(f"Error loading settings: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "error.html",
             {
                 "request": request,
