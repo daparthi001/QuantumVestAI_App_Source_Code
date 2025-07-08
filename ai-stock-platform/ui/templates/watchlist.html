@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block head_extra %}
-<link rel="stylesheet" href="{{ url_for('static', path='/css/watchlist.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='css/watchlist.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -128,7 +128,7 @@
                         <td>
                             <a href="/forecast?ticker={{ alert.ticker }}" class="d-flex align-items-center">
                                 <div class="symbol-logo me-2">
-                                    <img src="https://logo.clearbit.com/{{ alert.ticker.lower() }}.com" alt="{{ alert.ticker }}" onerror="this.src='{{ url_for('static', path='/img/stock-placeholder.png') }}'">
+                                    <img src="https://logo.clearbit.com/{{ alert.ticker.lower() }}.com" alt="{{ alert.ticker }}" onerror="this.src='{{ url_for('static', path='img/stock-placeholder.png') }}'">
                                 </div>
                                 <span class="font-weight-bold">{{ alert.ticker }}</span>
                             </a>
@@ -167,7 +167,7 @@
             <div class="stock-card-header">
                 <div class="stock-card-title">
                     <div class="stock-logo">
-                        <img src="https://logo.clearbit.com/{{ item.ticker.lower() }}.com" alt="{{ item.ticker }}" onerror="this.src='{{ url_for('static', path='/img/stock-placeholder.png') }}'">
+                        <img src="https://logo.clearbit.com/{{ item.ticker.lower() }}.com" alt="{{ item.ticker }}" onerror="this.src='{{ url_for('static', path='img/stock-placeholder.png') }}'">
                     </div>
                     <div class="stock-name">
                         <h4>{{ item.ticker }}</h4>
@@ -286,7 +286,7 @@
                         <td>
                             <div class="stock-cell">
                                 <div class="stock-logo">
-                                    <img src="https://logo.clearbit.com/{{ item.ticker.lower() }}.com" alt="{{ item.ticker }}" onerror="this.src='{{ url_for('static', path='/img/stock-placeholder.png') }}'">
+                                    <img src="https://logo.clearbit.com/{{ item.ticker.lower() }}.com" alt="{{ item.ticker }}" onerror="this.src='{{ url_for('static', path='img/stock-placeholder.png') }}'">
                                 </div>
                                 <div>
                                     <div class="stock-symbol">{{ item.ticker }}</div>
@@ -521,8 +521,8 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', path='/vendors/chart.js/chart.min.js') }}"></script>
-<script src="{{ url_for('static', path='/js/watchlist.js') }}"></script>
+<script src="{{ url_for('static', path='vendors/chart.js/chart.min.js') }}"></script>
+<script src="{{ url_for('static', path='js/watchlist.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Mini charts for grid view - implementation would go here
