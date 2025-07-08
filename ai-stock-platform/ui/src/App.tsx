@@ -50,6 +50,7 @@ const News = React.lazy(() => import('./components/News'));
 const Alerts = React.lazy(() => import('./components/Alerts'));
 const Reports = React.lazy(() => import('./components/Reports'));
 const NotFound = React.lazy(() => import('./components/NotFound'));
+const TrendingStocksTest = React.lazy(() => import('./components/TrendingStocksTest'));
 
 // Loading component
 const LoadingFallback = () => (
@@ -85,6 +86,15 @@ function App() {
                         <ProtectedRoute>
                           <Layout>
                             <Dashboard />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
+                      
+                      {/* Test route for TrendingStocks component */}
+                      <Route path="/test/trending-stocks" element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <TrendingStocksTest />
                           </Layout>
                         </ProtectedRoute>
                       } />

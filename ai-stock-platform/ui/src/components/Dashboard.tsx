@@ -9,6 +9,7 @@ import { Container, Row, Col, Card, Button, Spinner, Alert, Badge } from 'react-
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ROUTES } from '../config/constants';
+import TrendingStocks from './TrendingStocks';
 
 const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
@@ -264,54 +265,17 @@ const Dashboard: React.FC = () => {
         </Row>
 
         <Row>
-          {/* Top Stocks */}
+          {/* Trending Stocks */}
           <Col lg={6} className="mb-4">
             <motion.div variants={itemVariants}>
-              <Card className="quantum-card h-100">
-                <Card.Header className="quantum-card-header">
-                  <h5 className="mb-0 d-flex align-items-center">
-                    <motion.span
-                      className="me-2"
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      🚀
-                    </motion.span>
-                    Top Performers
-                  </h5>
-                </Card.Header>
-                <Card.Body>
-                  <div className="list-group list-group-flush">
-                    {[
-                      { symbol: 'AAPL', name: 'Apple Inc.', price: 189.84, change_percent: 1.25 },
-                      { symbol: 'MSFT', name: 'Microsoft', price: 378.85, change_percent: 1.52 },
-                      { symbol: 'GOOGL', name: 'Alphabet', price: 2832.14, change_percent: -0.44 },
-                      { symbol: 'TSLA', name: 'Tesla', price: 248.50, change_percent: 3.72 },
-                      { symbol: 'NVDA', name: 'NVIDIA', price: 875.12, change_percent: 2.18 }
-                    ].map((stock, index) => (
-                      <motion.div
-                        key={stock.symbol}
-                        className="list-group-item quantum-stat-card mb-2"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        whileHover={{ scale: 1.02, x: 5 }}
-                      >
-                        <div className="d-flex justify-content-between align-items-center">
-                          <div>
-                            <div className="fw-bold">{stock.symbol}</div>
-                            <small className="text-muted">{stock.name}</small>
-                          </div>
-                          <div className="text-end">
-                            <div className="fw-semibold">${stock.price}</div>
-                            {formatChange(stock.change_percent)}
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </Card.Body>
-              </Card>
+              <div className="h-100">
+                <TrendingStocks 
+                  limit={5} 
+                  refreshInterval={60000} 
+                  showHeader={false}
+                  compact={true}
+                />
+              </div>
             </motion.div>
           </Col>
 
