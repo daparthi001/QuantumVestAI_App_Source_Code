@@ -17,6 +17,11 @@ logger = logging.getLogger(__name__)
 BASE_DIR = Path(__file__).resolve().parent.parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
+
+def get_templates(request: Request) -> Jinja2Templates:
+    """Return app-level templates if available."""
+    return getattr(request.app.state, "templates", templates)
+
 # Demo market data
 DEMO_MARKET_DATA = {
     "indices": {
@@ -171,7 +176,7 @@ async def market_overview(request: Request):
             }
         ]
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "market/overview.html",
             {
                 "request": request,
@@ -184,7 +189,7 @@ async def market_overview(request: Request):
         
     except Exception as e:
         logger.error(f"Error loading market overview: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "market/overview.html",
             {
                 "request": request,
@@ -253,7 +258,7 @@ async def ticker_details(
             "ma_50": stock_data["price"] * 0.96
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "market/ticker_detail.html",
             {
                 "request": request,
@@ -269,7 +274,7 @@ async def ticker_details(
         
     except Exception as e:
         logger.error(f"Error loading ticker details for {ticker}: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "error.html",
             {
                 "request": request,
@@ -357,7 +362,7 @@ async def market_sentiment(
             "vix": 18.5
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "market/sentiment.html",
             {
                 "request": request,
@@ -370,7 +375,7 @@ async def market_sentiment(
         
     except Exception as e:
         logger.error(f"Error loading market sentiment: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "error.html",
             {
                 "request": request,
