@@ -11,8 +11,16 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
-import aiohttp
 import os
+import random
+
+# Try to import aiohttp, fallback to None if not available
+try:
+    import aiohttp
+    AIOHTTP_AVAILABLE = True
+except ImportError:
+    aiohttp = None
+    AIOHTTP_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +34,13 @@ class TrendingStocksService:
         self.enable_real_data = os.getenv("ENABLE_REAL_DATA", "false").lower() == "true"
         self._cache: Dict[str, Any] = {}
         self._cache_timestamp: Optional[datetime] = None
+        
+        # Log dependency status
+        if AIOHTTP_AVAILABLE:
+            logger.info("aiohttp available - real API calls enabled")
+        else:
+            logger.warning("aiohttp not available - falling back to mock data only")
+            self.enable_real_data = False  # Force disable real data if aiohttp is not available
         
         # Default trending symbols to fetch
         self.trending_symbols = [
@@ -66,8 +81,11 @@ class TrendingStocksService:
     
     async def _fetch_trending_stocks(self) -> List[Dict[str, Any]]:
         """Fetch trending stocks data from external API."""
-        if not self.enable_real_data or self.api_key == "demo":
-            logger.info("Using mock data (real data disabled or demo API key)")
+        if not self.enable_real_data or self.api_key == "demo" or not AIOHTTP_AVAILABLE:
+            if not AIOHTTP_AVAILABLE:
+                logger.info("Using mock data (aiohttp not available)")
+            else:
+                logger.info("Using mock data (real data disabled or demo API key)")
             return self._generate_mock_data_with_timestamps()
         
         stocks_data = []
@@ -94,8 +112,13 @@ class TrendingStocksService:
         
         return stocks_data
     
-    async def _fetch_stock_quote(self, session: aiohttp.ClientSession, symbol: str) -> Optional[Dict[str, Any]]:
+    async def _fetch_stock_quote(self, session, symbol: str) -> Optional[Dict[str, Any]]:
         """Fetch a single stock quote from Alpha Vantage."""
+        if not AIOHTTP_AVAILABLE:
+            # This should not be called if aiohttp is not available, but provide a safeguard
+            logger.warning(f"Cannot fetch stock quote for {symbol} - aiohttp not available")
+            return None
+            
         params = {
             "function": "GLOBAL_QUOTE",
             "symbol": symbol,
