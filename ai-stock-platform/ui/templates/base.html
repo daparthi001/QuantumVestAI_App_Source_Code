@@ -207,7 +207,7 @@
                             </a>
                         </li>
                         <li class="nav-item {% if '/forecast' in request.url.path %}active{% endif %}">
-                            <a href="/ticker-search" class="nav-link">
+                            <a href="/ticker-search" class="nav-link" data-i18n="nav.forecast">
                                 <i class="bi bi-graph-up"></i>
                                 <span class="nav-text">Forecast</span>
                             </a>
@@ -227,13 +227,13 @@
                         </li>
                         {% endif %}
                         <li class="nav-item {% if '/market' in request.url.path %}active{% endif %}">
-                            <a href="/market" class="nav-link">
+                            <a href="/market" class="nav-link" data-i18n="nav.market">
                                 <i class="bi bi-currency-exchange"></i>
                                 <span class="nav-text">Market</span>
                             </a>
                         </li>
                         <li class="nav-item {% if '/news' in request.url.path %}active{% endif %}">
-                            <a href="/news" class="nav-link">
+                            <a href="/news" class="nav-link" data-i18n="nav.news">
                                 <i class="bi bi-newspaper"></i>
                                 <span class="nav-text">News</span>
                             </a>
@@ -287,17 +287,17 @@
                                 <i class="bi bi-three-dots-vertical"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="/profile">Profile</a></li>
-                                <li><a class="dropdown-item" href="/settings">Settings</a></li>
+                                <li><a class="dropdown-item" href="/profile" data-i18n="nav.profile">Profile</a></li>
+                                <li><a class="dropdown-item" href="/settings" data-i18n="nav.settings">Settings</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                                <li><a class="dropdown-item" href="/logout" data-i18n="nav.logout">Logout</a></li>
                             </ul>
                         </div>
                     </div>
                     {% else %}
                     <div class="auth-buttons">
-                        <a href="/login" class="btn btn-outline-primary btn-sm">Login</a>
-                        <a href="/register" class="btn btn-primary btn-sm">Register</a>
+                        <a href="/login" class="btn btn-outline-primary btn-sm" data-i18n="nav.login">Login</a>
+                        <a href="/register" class="btn btn-primary btn-sm" data-i18n="nav.register">Register</a>
                     </div>
                     {% endif %}
                 </div>
