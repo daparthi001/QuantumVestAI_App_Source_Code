@@ -79,8 +79,17 @@ class StockService {
     return response.data;
   }
 
-  async searchStocks(query: string): Promise<StockData[]> {
-    const response = await apiClient.get(`/api/v1/stocks/search?q=${query}`);
+  async searchStocks(query: string, options: { 
+    sector?: string, 
+    limit?: number 
+  } = {}): Promise<StockData[]> {
+    const params = new URLSearchParams({
+      query: query,
+      ...(options.limit && { limit: options.limit.toString() }),
+      ...(options.sector && { sector: options.sector })
+    });
+    
+    const response = await apiClient.get(`/api/v1/stocks/search?${params.toString()}`);
     return response.data;
   }
 
