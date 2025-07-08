@@ -18,8 +18,13 @@ const localStorageMock = {
   setItem: vi.fn(),
   removeItem: vi.fn(),
   clear: vi.fn(),
+  length: 0,
+  key: vi.fn(),
 }
-global.localStorage = localStorageMock
+Object.defineProperty(global, 'localStorage', {
+  value: localStorageMock,
+  writable: true
+})
 
 // runs a cleanup after each test case (e.g. clearing jsdom)
 afterEach(() => {
