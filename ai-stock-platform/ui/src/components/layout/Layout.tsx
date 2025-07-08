@@ -28,16 +28,86 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   const navigationItems = [
-    { path: ROUTES.DASHBOARD, label: 'Dashboard', icon: '🎯', description: 'Overview & Analytics' },
-    { path: ROUTES.STOCKS, label: 'Stocks', icon: '📈', description: 'Market Analysis' },
-    { path: ROUTES.WATCHLIST, label: 'Watchlist', icon: '👁️', description: 'Track Favorites' },
-    { path: ROUTES.PORTFOLIO, label: 'Portfolio', icon: '💼', description: 'Your Investments' },
-    { path: ROUTES.ANALYTICS, label: 'Analytics', icon: '📊', description: 'Deep Insights' },
-    { path: ROUTES.BACKTEST, label: 'Backtest', icon: '🔄', description: 'Strategy Testing' },
-    { path: ROUTES.NEWS, label: 'News', icon: '📰', description: 'Market News' },
-    { path: ROUTES.ALERTS, label: 'Alerts', icon: '🔔', description: 'Notifications' },
-    { path: ROUTES.AI_ASSISTANT, label: 'AI Assistant', icon: '🤖', description: 'Quantum AI' },
-    { path: ROUTES.TRADING, label: 'Trading', icon: '⚡', description: 'Live Trading' },
+    { 
+      path: ROUTES.DASHBOARD, 
+      label: 'Dashboard', 
+      icon: '📊', 
+      modernIcon: 'bi-speedometer2',
+      description: 'Overview & Analytics',
+      color: '#4facfe'
+    },
+    { 
+      path: ROUTES.STOCKS, 
+      label: 'Stocks', 
+      icon: '📈', 
+      modernIcon: 'bi-graph-up-arrow',
+      description: 'Market Analysis',
+      color: '#43e97b'
+    },
+    { 
+      path: ROUTES.WATCHLIST, 
+      label: 'Watchlist', 
+      icon: '👁️', 
+      modernIcon: 'bi-eye',
+      description: 'Track Favorites',
+      color: '#f093fb'
+    },
+    { 
+      path: ROUTES.PORTFOLIO, 
+      label: 'Portfolio', 
+      icon: '💼', 
+      modernIcon: 'bi-briefcase',
+      description: 'Your Investments',
+      color: '#667eea'
+    },
+    { 
+      path: ROUTES.ANALYTICS, 
+      label: 'Analytics', 
+      icon: '📊', 
+      modernIcon: 'bi-bar-chart',
+      description: 'Deep Insights',
+      color: '#00d4ff'
+    },
+    { 
+      path: ROUTES.BACKTEST, 
+      label: 'Backtest', 
+      icon: '🔄', 
+      modernIcon: 'bi-arrow-repeat',
+      description: 'Strategy Testing',
+      color: '#8b5cf6'
+    },
+    { 
+      path: ROUTES.NEWS, 
+      label: 'News', 
+      icon: '📰', 
+      modernIcon: 'bi-newspaper',
+      description: 'Market News',
+      color: '#fa709a'
+    },
+    { 
+      path: ROUTES.ALERTS, 
+      label: 'Alerts', 
+      icon: '🔔', 
+      modernIcon: 'bi-bell',
+      description: 'Notifications',
+      color: '#fee140'
+    },
+    { 
+      path: ROUTES.AI_ASSISTANT, 
+      label: 'AI Assistant', 
+      icon: '🤖', 
+      modernIcon: 'bi-robot',
+      description: 'Quantum AI',
+      color: '#06ffa5'
+    },
+    { 
+      path: ROUTES.TRADING, 
+      label: 'Trading', 
+      icon: '⚡', 
+      modernIcon: 'bi-lightning',
+      description: 'Live Trading',
+      color: '#ffd700'
+    },
   ];
 
   const sidebarVariants = {
@@ -174,8 +244,25 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         className={`quantum-sidebar-item ${
                           location.pathname === item.path ? 'active' : ''
                         }`}
+                        style={{
+                          '--item-color': item.color
+                        } as React.CSSProperties}
                       >
-                        <span className="quantum-sidebar-icon">{item.icon}</span>
+                        <motion.div 
+                          className="quantum-sidebar-icon"
+                          whileHover={{ rotate: 360, scale: 1.2 }}
+                          transition={{ duration: 0.5 }}
+                        >
+                          <i className={`bi ${item.modernIcon}`} style={{ color: item.color }}></i>
+                          {sidebarCollapsed && (
+                            <motion.div
+                              className="quantum-tooltip quantum-tooltip-right"
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              whileHover={{ opacity: 1, scale: 1 }}
+                              data-tooltip={item.label}
+                            />
+                          )}
+                        </motion.div>
                         <AnimatePresence>
                           {!sidebarCollapsed && (
                             <motion.div
@@ -249,8 +336,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                       location.pathname === item.path ? 'active' : ''
                     }`}
                     onClick={() => setShowSidebar(false)}
+                    style={{
+                      '--item-color': item.color
+                    } as React.CSSProperties}
                   >
-                    <span className="me-3">{item.icon}</span>
+                    <motion.div 
+                      className="me-3 quantum-mobile-icon"
+                      whileHover={{ scale: 1.2, rotate: 360 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <i className={`bi ${item.modernIcon}`} style={{ color: item.color, fontSize: '1.2rem' }}></i>
+                    </motion.div>
                     <div>
                       <div className="fw-semibold">{item.label}</div>
                       <small className="text-muted">{item.description}</small>
