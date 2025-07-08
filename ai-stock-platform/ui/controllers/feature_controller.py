@@ -17,9 +17,11 @@ router = APIRouter(prefix="/features", tags=["features"])
 logger = logging.getLogger("quantumvestai.feature_controller")
 
 # Get templates from app state
-def get_templates():
-    from main import app
-    return app.state.templates
+templates = Jinja2Templates(directory=str(Path("templates")))
+
+def get_templates(request: Request) -> Jinja2Templates:
+    """Return app-level templates if available."""
+    return getattr(request.app.state, "templates", templates)
 
 # Get API URL from environment or use default
 API_URL = os.environ.get("API_URL", "http://quantumvestai-dev-api:8000/api/v1")
@@ -54,7 +56,7 @@ async def debug_features(request: Request):
     return RedirectResponse(url="/login?msg=Debug+features+require+authentication+(demo+mode)", status_code=302)
 =======
     """Advanced features page"""
-    templates = get_templates()
+    templates = get_templates(request)
     if not user:
         logger.warning("Unauthenticated user tried to access advanced features page")
         return RedirectResponse(url="/login?next=/features/advanced", status_code=302)
@@ -82,10 +84,10 @@ async def debug_features(request: Request):
     if activated:
         feature_status["advanced"] = True
     
-    return templates.TemplateResponse(
+    return get_templates(request).TemplateResponse(
         "features/advanced.html",
         {
-            "request": request, 
+            "request": request,
             "user": None,
             "features": feature_status,
             "activated": activated
@@ -95,7 +97,7 @@ async def debug_features(request: Request):
 @router.post("/activate")
 async def activate_features(request: Request):
     """Activate advanced features directly"""
-    templates = get_templates()
+    templates = get_templates(request)
     if not user:
         logger.warning("Unauthenticated user tried to activate features")
         return JSONResponse(
@@ -116,7 +118,7 @@ async def activate_features(request: Request):
                 error_message = f"API error: {response.status_code}"
                 
             logger.error(f"API error activating features: {error_message}")
-            return templates.TemplateResponse(
+            return get_templates(request).TemplateResponse(
                 "features/advanced.html",
                 {
                     "request": request,
@@ -128,7 +130,7 @@ async def activate_features(request: Request):
             )
     except Exception as e:
         logger.error(f"Error activating features: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "features/advanced.html",
             {
                 "request": request,
