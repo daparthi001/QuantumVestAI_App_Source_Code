@@ -7,7 +7,7 @@ Author: daparthi001
 from sqlalchemy import Column, Integer, String, Boolean, Float
 from sqlalchemy.orm import relationship
 from db.base_class import Base
-from db.models.mixins import TimestampMixin
+from db.base import TimestampMixin
 from core.security import get_password_hash
 
 class User(Base, TimestampMixin):

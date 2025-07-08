@@ -8,7 +8,7 @@ from datetime import datetime
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from db.base_class import Base
-from db.models.mixins import TimestampMixin
+from db.base import TimestampMixin
 import enum
 
 class TransactionType(str, enum.Enum):
