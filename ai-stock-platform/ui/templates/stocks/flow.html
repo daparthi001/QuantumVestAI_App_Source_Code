@@ -3,7 +3,7 @@
 {% block title %}Stock Flow Visualization | QuantumVestAI{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ get_asset_url('') }}">
+<link rel="stylesheet" href="{{ get_asset_url('css/stock-flow.css') }}">
 
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -268,7 +268,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ get_asset_url('') }}"></script>
+<script src="{{ get_asset_url('js/stock-flow-visualization.js') }}"></script>
 
 <script>
     // Initialize the stock flow visualization
@@ -278,5 +278,4 @@
             window.stockFlowManager.init();
         }
     });
-</script>
-{% endblock %}
+</script>{% endblock %}

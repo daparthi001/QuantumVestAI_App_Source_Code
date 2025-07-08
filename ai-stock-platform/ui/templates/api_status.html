@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block head_extra %}
-<link rel="stylesheet" href="{{ get_asset_url('') }}">
+<link rel="stylesheet" href="{{ get_asset_url('css/admin.css') }}">
 
 {% endblock %}
 
@@ -239,8 +239,8 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ get_asset_url('') }}"></script>
-<script>
+<script src="{{ get_asset_url('vendors/chart.js/chart.min.js') }}"></script>
+
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize API Performance Chart
         const ctx = document.getElementById('apiPerformanceChart').getContext('2d');
