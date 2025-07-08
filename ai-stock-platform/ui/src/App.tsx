@@ -6,6 +6,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './styles/global.css';
+import './styles/quantum-components.css';
 import { ROUTES } from './config/constants';
 import { AuthProvider } from './contexts/AuthContext';
 import { FeatureProvider } from './providers/FeatureProvider';
