@@ -1,0 +1,284 @@
+/* Dashboard Enhancements - Modern UI Elements */
+
+/* Chart placeholder styling */
+.quantum-chart {
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.quantum-chart:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.chart-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 8px;
+    border: 2px dashed #dee2e6;
+}
+
+/* Chart controls */
+.chart-controls .btn {
+    margin-left: 5px;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+}
+
+.chart-controls .btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+    color: white;
+}
+
+.chart-controls .btn:hover {
+    transform: translateY(-1px);
+}
+
+/* AI Insights Cards */
+.ai-insight-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.ai-insight-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.insight-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.insight-header i {
+    font-size: 1.5rem;
+    margin-right: 10px;
+}
+
+.insight-title {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1.1rem;
+}
+
+.insight-text {
+    color: #6c757d;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+.insight-confidence {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.confidence-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.confidence-bar {
+    flex: 1;
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.confidence-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+.confidence-value {
+    font-weight: 600;
+    color: #28a745;
+    font-size: 0.875rem;
+}
+
+/* Performance Metrics */
+.metric-row {
+    padding: 8px 0;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.metric-row:last-child {
+    border-bottom: none;
+}
+
+.metric-label {
+    font-weight: 500;
+    color: #6c757d;
+}
+
+.metric-value {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+/* Enhanced Action Buttons */
+.quantum-action-btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.quantum-action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.quantum-action-btn:hover::before {
+    left: 100%;
+}
+
+.quantum-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Card Enhancements */
+.quantum-card {
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.quantum-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.quantum-card .card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-bottom: 1px solid #e9ecef;
+    padding: 15px 20px;
+}
+
+.quantum-card .card-body {
+    padding: 20px;
+}
+
+/* Market Overview Card Enhancements */
+.micro-interaction {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.micro-interaction:hover {
+    transform: translateY(-5px) scale(1.02);
+}
+
+.price-display {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.quantum-badge {
+    font-size: 1.2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .chart-controls {
+        margin-top: 10px;
+    }
+    
+    .chart-controls .btn {
+        margin: 2px;
+        font-size: 0.8rem;
+        padding: 3px 8px;
+    }
+    
+    .ai-insight-card {
+        margin-bottom: 20px;
+    }
+    
+    .quantum-card {
+        margin-bottom: 20px;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .ai-insight-card {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        border-color: #495057;
+    }
+    
+    .insight-title {
+        color: #f8f9fa;
+    }
+    
+    .insight-text {
+        color: #ced4da;
+    }
+    
+    .chart-placeholder {
+        background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
+        border-color: #6c757d;
+    }
+}
+
+/* Loading animations */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.loading-pulse {
+    animation: pulse 1.5s infinite;
+}
+
+/* Gradient overlays */
+.gradient-overlay {
+    position: relative;
+    overflow: hidden;
+}
+
+.gradient-overlay::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    pointer-events: none;
+}
