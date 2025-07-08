@@ -127,11 +127,11 @@ spec:
         
         resources:
           requests:
-            cpu: "2"
-            memory: "2Gi"
+            cpu: "1"
+            memory: "1Gi"
           limits:
-            cpu: "4"
-            memory: "4Gi"
+            cpu: "2"
+            memory: "3Gi"
             
         # Volume mounts - simplified to only include logs volume
         volumeMounts:
