@@ -1,12 +1,15 @@
 /**
- * Enhanced Navigation Component
+ * Enhanced Navigation Component with Modern Features
  * Created: 2025-01-09
+ * Updated: 2025-01-09
  * Author: AI Assistant
  */
 
 class NavigationController {
     constructor() {
         this.currentPage = window.location.pathname;
+        this.searchTimeout = null;
+        this.dropdownTimeouts = new Map();
         this.init();
     }
     
@@ -16,6 +19,11 @@ class NavigationController {
         this.setupBreadcrumbs();
         this.setupUserMenu();
         this.setupThemeToggle();
+        this.setupSearchFunctionality();
+        this.setupDropdownMenus();
+        this.setupTooltips();
+        this.setupScrollEffects();
+        this.setupKeyboardNavigation();
     }
     
     setupMobileNavigation() {
@@ -339,4 +347,215 @@ document.addEventListener('keydown', function(e) {
         e.preventDefault();
         window.history.forward();
     }
+    
+    // Escape key to close modals, dropdowns, etc.
+    if (e.key === 'Escape') {
+        // Close any open dropdowns
+        document.querySelectorAll('.quantum-dropdown.active').forEach(dropdown => {
+            dropdown.classList.remove('active');
+        });
+        
+        // Close any open modals
+        document.querySelectorAll('.quantum-modal-overlay.active').forEach(modal => {
+            modal.classList.remove('active');
+        });
+        
+        // Close mobile menu
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar && sidebar.classList.contains('show')) {
+            sidebar.classList.remove('show');
+            document.body.classList.remove('sidebar-open');
+        }
+    }
+});
+
+// Add enhanced navigation methods to NavigationController
+NavigationController.prototype.setupSearchFunctionality = function() {
+    const searchInput = document.querySelector('.quantum-search-input');
+    const searchResults = document.querySelector('.quantum-search-results');
+    
+    if (!searchInput) return;
+    
+    // Create search results container if it doesn't exist
+    if (!searchResults) {
+        const resultsContainer = document.createElement('div');
+        resultsContainer.className = 'quantum-search-results';
+        resultsContainer.style.cssText = `
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--glass-dark);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--quantum-shadow-strong);
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        `;
+        searchInput.parentElement.appendChild(resultsContainer);
+    }
+    
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim();
+        
+        if (this.searchTimeout) {
+            clearTimeout(this.searchTimeout);
+        }
+        
+        this.searchTimeout = setTimeout(() => {
+            this.performSearch(query);
+        }, 300);
+    });
+    
+    // Close search results when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !searchResults?.contains(e.target)) {
+            searchResults?.style.setProperty('display', 'none');
+        }
+    });
+};
+
+NavigationController.prototype.performSearch = function(query) {
+    const searchResults = document.querySelector('.quantum-search-results');
+    
+    if (!query || query.length < 2) {
+        searchResults?.style.setProperty('display', 'none');
+        return;
+    }
+    
+    // Mock search results - replace with actual API call
+    const mockResults = [
+        { title: 'Dashboard', url: '/dashboard', type: 'page' },
+        { title: 'Portfolio Analysis', url: '/portfolio', type: 'page' },
+        { title: 'Market Data', url: '/market', type: 'page' },
+        { title: 'Stock Predictions', url: '/forecast', type: 'page' },
+        { title: 'Settings', url: '/settings', type: 'page' }
+    ].filter(item => item.title.toLowerCase().includes(query.toLowerCase()));
+    
+    this.displaySearchResults(mockResults);
+};
+
+NavigationController.prototype.displaySearchResults = function(results) {
+    const searchResults = document.querySelector('.quantum-search-results');
+    if (!searchResults) return;
+    
+    if (results.length === 0) {
+        searchResults.innerHTML = '<div class="p-3 text-center text-muted">No results found</div>';
+    } else {
+        searchResults.innerHTML = results.map(result => `
+            <a href="${result.url}" class="quantum-search-result-item">
+                <div class="quantum-search-result-title">${result.title}</div>
+                <div class="quantum-search-result-type">${result.type}</div>
+            </a>
+        `).join('');
+    }
+    
+    searchResults.style.display = 'block';
+};
+
+NavigationController.prototype.setupDropdownMenus = function() {
+    const dropdowns = document.querySelectorAll('.quantum-dropdown');
+    
+    dropdowns.forEach(dropdown => {
+        const toggle = dropdown.querySelector('.quantum-dropdown-toggle');
+        const menu = dropdown.querySelector('.quantum-dropdown-menu');
+        
+        if (!toggle || !menu) return;
+        
+        toggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Close other dropdowns
+            dropdowns.forEach(otherDropdown => {
+                if (otherDropdown !== dropdown) {
+                    otherDropdown.classList.remove('active');
+                }
+            });
+            
+            // Toggle current dropdown
+            dropdown.classList.toggle('active');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!dropdown.contains(e.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+        
+        // Handle keyboard navigation
+        toggle.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                dropdown.classList.toggle('active');
+            }
+        });
+    });
+};
+
+NavigationController.prototype.setupTooltips = function() {
+    const tooltips = document.querySelectorAll('.quantum-tooltip');
+    
+    tooltips.forEach(tooltip => {
+        tooltip.addEventListener('mouseenter', () => {
+            // Position tooltip
+            const rect = tooltip.getBoundingClientRect();
+            const tooltipText = tooltip.getAttribute('data-tooltip');
+            
+            if (tooltipText) {
+                // Update tooltip text
+                tooltip.setAttribute('data-tooltip', tooltipText);
+            }
+        });
+    });
+};
+
+NavigationController.prototype.setupScrollEffects = function() {
+    const nav = document.querySelector('.quantum-nav');
+    if (!nav) return;
+    
+    let lastScrollY = window.scrollY;
+    
+    window.addEventListener('scroll', () => {
+        const currentScrollY = window.scrollY;
+        
+        // Add scrolled class when scrolling down
+        if (currentScrollY > 50) {
+            nav.classList.add('scrolled');
+        } else {
+            nav.classList.remove('scrolled');
+        }
+        
+        // Hide/show navigation based on scroll direction
+        if (currentScrollY > lastScrollY && currentScrollY > 200) {
+            nav.style.transform = 'translateY(-100%)';
+        } else {
+            nav.style.transform = 'translateY(0)';
+        }
+        
+        lastScrollY = currentScrollY;
+    });
+};
+
+NavigationController.prototype.setupKeyboardNavigation = function() {
+    const navLinks = document.querySelectorAll('.quantum-nav-link');
+    
+    navLinks.forEach((link, index) => {
+        link.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                const nextLink = navLinks[index + 1] || navLinks[0];
+                nextLink.focus();
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                const prevLink = navLinks[index - 1] || navLinks[navLinks.length - 1];
+                prevLink.focus();
+            }
+        });
+    });
+};
 });
