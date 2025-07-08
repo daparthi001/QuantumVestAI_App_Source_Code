@@ -1,0 +1,82 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://quantumvestai.com/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1
+
+# Specific bot instructions
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# Block access to private areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /private/
+Disallow: /temp/
+Disallow: /logs/
+Disallow: /.git/
+Disallow: /node_modules/
+
+# Block access to files
+Disallow: /*.json$
+Disallow: /*.xml$
+Disallow: /*.log$
+Disallow: /*.backup$
+
+# Allow access to important files
+Allow: /manifest.json
+Allow: /sitemap.xml
+Allow: /sw.js
+
+# Social media crawlers
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+# Search engine specific
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 2
+
+# Avoid crawling dynamic URLs with session IDs
+Disallow: /*?sessionid=
+Disallow: /*?sid=
+Disallow: /*?token=
+
+# Avoid crawling search result pages
+Disallow: /search?
+Disallow: /filter?
+Disallow: /sort?
+
+# Priority pages for crawling
+# Homepage, key landing pages, and core features
+Allow: /
+Allow: /about
+Allow: /features
+Allow: /pricing
+Allow: /dashboard
+Allow: /market
+Allow: /portfolio
+Allow: /news
+Allow: /insights
+Allow: /blog
+Allow: /help
+Allow: /contact
+Allow: /terms
+Allow: /privacy

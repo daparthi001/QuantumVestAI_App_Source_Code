@@ -1,40 +1,193 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}QuantumVestAI{% endblock %}</title>
-    <!-- Google Fonts - Poppins & Inter -->
+    <title>{% block title %}QuantumVestAI - Next-Generation Financial AI Platform{% endblock %}</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="{% block description %}QuantumVestAI - Advanced AI-powered financial analytics platform with real-time market data, predictive insights, and quantum-inspired design for global investors.{% endblock %}">
+    <meta name="keywords" content="AI trading, financial analytics, stock prediction, quantum computing, machine learning, investment platform, real-time data">
+    <meta name="author" content="QuantumVestAI">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ self.description() }}{% endblock %}">
+    <meta property="og:image" content="{{ url_for('static', path='/img/og-image.jpg') }}">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ request.url }}">
+    <meta property="twitter:title" content="{% block twitter_title %}{{ self.title() }}{% endblock %}">
+    <meta property="twitter:description" content="{% block twitter_description %}{{ self.description() }}{% endblock %}">
+    <meta property="twitter:image" content="{{ url_for('static', path='/img/twitter-card.jpg') }}">
+    
+    <!-- Preconnect to external resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Bootstrap CSS -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    
+    <!-- Critical Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Critical CSS -->
     <link rel="stylesheet" href="{{ url_for('static', path='/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/quantum-enhancements.css') }}">
+    
+    <!-- Progressive CSS Loading -->
+    <link rel="preload" href="{{ url_for('static', path='/css/styles.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="{{ url_for('static', path='/css/dark-mode.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="{{ url_for('static', path='/css/realtime-dashboard.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="{{ url_for('static', path='/css/responsive.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    
+    <!-- Fallback for preload -->
+    <noscript>
+        <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', path='/css/dark-mode.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', path='/css/realtime-dashboard.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', path='/css/responsive.css') }}">
+    </noscript>
+    
     <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/dark-mode.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/realtime-dashboard.css') }}">
-    <!-- Enhanced Responsive Design -->
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/responsive.css') }}">
-    <!-- Favicon -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{{ url_for('static', path='/manifest.json') }}">
+    
+    <!-- Favicons -->
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='/img/favicon.svg') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', path='/img/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', path='/img/favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', path='/img/apple-touch-icon.png') }}">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#4facfe">
+    <meta name="msapplication-TileColor" content="#4facfe">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "QuantumVestAI",
+        "description": "Advanced AI-powered financial analytics platform",
+        "url": "{{ request.base_url }}",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Web",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        }
+    }
+    </script>
+    
     {% block head_extra %}{% endblock %}
 </head>
-<body class="{% if dark_mode %}dark-mode{% endif %}">
+<body class="{% if dark_mode %}dark-mode{% endif %} quantum-app" data-theme="{% if dark_mode %}dark{% else %}light{% endif %}">
+    <!-- PWA Installation Banner -->
+    <div id="pwa-install-banner" class="pwa-banner" style="display: none;">
+        <div class="pwa-banner-content">
+            <span class="pwa-icon">📱</span>
+            <span class="pwa-text">Install QuantumVestAI for better experience</span>
+            <button class="pwa-install-btn quantum-btn quantum-btn-primary">Install</button>
+            <button class="pwa-close-btn" aria-label="Close">&times;</button>
+        </div>
+    </div>
+
     <!-- Skip navigation link for accessibility -->
-    <a href="#main-content" class="skip-nav">Skip to main content</a>
+    <a href="#main-content" class="skip-nav" data-i18n="accessibility.skip_to_content">Skip to main content</a>
+    
+    <!-- Enhanced Navigation Bar -->
+    <nav class="quantum-nav" role="navigation" aria-label="Primary navigation">
+        <div class="quantum-nav-container">
+            <a href="/" class="quantum-nav-brand" data-i18n="nav.brand">
+                QuantumVestAI
+            </a>
+            
+            <!-- Advanced Search Integration -->
+            <div class="quantum-search"></div>
+            
+            <!-- Navigation Menu -->
+            <ul class="quantum-nav-menu">
+                <li class="quantum-nav-item">
+                    <a href="/" class="quantum-nav-link {% if request.url.path == '/' %}active{% endif %}" data-i18n="nav.dashboard">
+                        Dashboard
+                    </a>
+                </li>
+                <li class="quantum-nav-item">
+                    <a href="/ticker-search" class="quantum-nav-link {% if '/forecast' in request.url.path %}active{% endif %}" data-i18n="nav.forecast">
+                        Forecast
+                    </a>
+                </li>
+                <li class="quantum-nav-item">
+                    <a href="/portfolio" class="quantum-nav-link {% if '/portfolio' in request.url.path %}active{% endif %}" data-i18n="nav.portfolio">
+                        Portfolio
+                    </a>
+                </li>
+                <li class="quantum-nav-item">
+                    <a href="/market" class="quantum-nav-link {% if '/market' in request.url.path %}active{% endif %}" data-i18n="nav.market">
+                        Market
+                    </a>
+                </li>
+                <li class="quantum-nav-item">
+                    <a href="/news" class="quantum-nav-link {% if '/news' in request.url.path %}active{% endif %}" data-i18n="nav.news">
+                        News
+                    </a>
+                </li>
+                {% if user %}
+                <li class="quantum-nav-item">
+                    <a href="/profile" class="quantum-nav-link {% if '/profile' in request.url.path %}active{% endif %}" data-i18n="nav.profile">
+                        Profile
+                    </a>
+                </li>
+                <li class="quantum-nav-item">
+                    <a href="/logout" class="quantum-nav-link" data-i18n="nav.logout">
+                        Logout
+                    </a>
+                </li>
+                {% else %}
+                <li class="quantum-nav-item">
+                    <a href="/login" class="quantum-nav-link {% if '/login' in request.url.path %}active{% endif %}" data-i18n="nav.login">
+                        Login
+                    </a>
+                </li>
+                <li class="quantum-nav-item">
+                    <a href="/register" class="quantum-nav-link {% if '/register' in request.url.path %}active{% endif %}" data-i18n="nav.register">
+                        Register
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+            
+            <!-- Mobile Hamburger Menu -->
+            <div class="quantum-hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Mobile Menu Overlay -->
+    <div class="quantum-mobile-menu">
+        <ul class="quantum-mobile-menu-list">
+            <!-- Mobile menu items will be populated by JavaScript -->
+        </ul>
+    </div>
     
     <div class="app-container">
-        <!-- Sidebar Navigation -->
-        <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
+        <!-- Enhanced Sidebar Navigation -->
+        <aside class="sidebar quantum-glass" id="sidebar" role="navigation" aria-label="Secondary navigation">
             <div class="sidebar-header">
-                <a href="/" class="sidebar-logo">
+                <a href="/" class="sidebar-logo quantum-nav-brand">
                     <img src="{{ url_for('static', path='/img/logo.svg') }}" alt="QuantumVestAI Logo" class="logo-default">
                     <img src="{{ url_for('static', path='/img/logo-collapsed.svg') }}" alt="QV" class="logo-collapsed">
                 </a>
-                <button class="sidebar-toggle" id="sidebarToggle">
+                <button class="sidebar-toggle quantum-btn" id="sidebarToggle" aria-label="Toggle sidebar">
                     <i class="bi bi-chevron-left"></i>
                 </button>
             </div>
@@ -42,7 +195,7 @@
                 <nav class="sidebar-nav">
                     <ul class="nav-list">
                         <li class="nav-item {% if request.url.path == '/' %}active{% endif %}">
-                            <a href="/" class="nav-link">
+                            <a href="/" class="nav-link" data-i18n="nav.dashboard">
                                 <i class="bi bi-house-door"></i>
                                 <span class="nav-text">Dashboard</span>
                             </a>
@@ -254,14 +407,232 @@
     <!-- JavaScript Libraries -->
     <script src="{{ url_for('static', path='/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', path='/vendors/chart.js/chart.min.js') }}"></script>
-    <!-- Enhanced UI Error Handling and Loading States -->
-    <script src="{{ url_for('static', path='/js/enhanced-ui.js') }}"></script>
-    <!-- Enhanced Navigation -->
-    <script src="{{ url_for('static', path='/js/navigation.js') }}"></script>
-    <!-- Core Application JavaScript -->
-    <script src="{{ url_for('static', path='/js/app.js') }}"></script>
-    <!-- Authentication utilities -->
-    <script src="{{ url_for('static', path='/js/auth.js') }}"></script>
+    
+    <!-- Enhanced QuantumVestAI Features -->
+    <script src="{{ url_for('static', path='/js/quantum-enhancements.js') }}" defer></script>
+    <script src="{{ url_for('static', path='/js/quantum-i18n.js') }}" defer></script>
+    <script src="{{ url_for('static', path='/js/quantum-search.js') }}" defer></script>
+    <script src="{{ url_for('static', path='/js/quantum-community.js') }}" defer></script>
+    <script src="{{ url_for('static', path='/js/quantum-charts.js') }}" defer></script>
+    <script src="{{ url_for('static', path='/js/quantum-ai.js') }}" defer></script>
+    <script src="{{ url_for('static', path='/js/quantum-content.js') }}" defer></script>
+    
+    <!-- Legacy UI Scripts -->
+    <script src="{{ url_for('static', path='/js/enhanced-ui.js') }}" defer></script>
+    <script src="{{ url_for('static', path='/js/navigation.js') }}" defer></script>
+    <script src="{{ url_for('static', path='/js/app.js') }}" defer></script>
+    <script src="{{ url_for('static', path='/js/auth.js') }}" defer></script>
+    
+    <!-- Progressive Web App Support -->
+    <script>
+        // PWA Installation
+        let deferredPrompt;
+        const installBanner = document.getElementById('pwa-install-banner');
+        const installBtn = document.querySelector('.pwa-install-btn');
+        const closeBtn = document.querySelector('.pwa-close-btn');
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Show install banner after 3 seconds
+            setTimeout(() => {
+                if (installBanner && !localStorage.getItem('pwa-dismissed')) {
+                    installBanner.style.display = 'block';
+                    installBanner.classList.add('quantum-animate-slide-in');
+                }
+            }, 3000);
+        });
+        
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    deferredPrompt = null;
+                    installBanner.style.display = 'none';
+                }
+            });
+        }
+        
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                installBanner.style.display = 'none';
+                localStorage.setItem('pwa-dismissed', 'true');
+            });
+        }
+        
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+        
+        // Performance Monitoring
+        if ('performance' in window) {
+            window.addEventListener('load', () => {
+                // Log Core Web Vitals
+                const observer = new PerformanceObserver((list) => {
+                    for (const entry of list.getEntries()) {
+                        console.log(`${entry.name}: ${entry.value}`);
+                    }
+                });
+                
+                observer.observe({ entryTypes: ['measure', 'navigation'] });
+                
+                // Report performance metrics
+                setTimeout(() => {
+                    const navigation = performance.getEntriesByType('navigation')[0];
+                    const loadTime = navigation.loadEventEnd - navigation.loadEventStart;
+                    console.log(`Page load time: ${loadTime}ms`);
+                }, 1000);
+            });
+        }
+        
+        // Analytics Integration (Privacy-focused)
+        window.addEventListener('load', () => {
+            // Only track if user hasn't opted out
+            if (!localStorage.getItem('analytics-opt-out')) {
+                // Basic page view tracking
+                const pageData = {
+                    page: location.pathname,
+                    title: document.title,
+                    timestamp: new Date().toISOString(),
+                    userAgent: navigator.userAgent,
+                    language: navigator.language
+                };
+                
+                // Send to analytics endpoint (implement your privacy-compliant solution)
+                fetch('/analytics/pageview', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(pageData)
+                }).catch(() => {}); // Silent fail
+            }
+        });
+        
+        // Theme Persistence
+        const theme = localStorage.getItem('quantum-theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+        
+        // Language Persistence
+        const language = localStorage.getItem('quantum-language') || 'en';
+        document.documentElement.setAttribute('lang', language);
+        
+        // Error Handling
+        window.addEventListener('error', (e) => {
+            console.error('Global error:', e.error);
+            // Optionally send to error tracking service
+        });
+        
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Unhandled promise rejection:', e.reason);
+            // Optionally send to error tracking service
+        });
+    </script>
+    
     {% block scripts %}{% endblock %}
+    
+    <!-- Critical Performance Styles -->
+    <style>
+        /* PWA Install Banner */
+        .pwa-banner {
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--quantum-primary, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: var(--quantum-shadow-medium, 0 12px 40px rgba(0, 0, 0, 0.3));
+            z-index: 10000;
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .pwa-banner-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .pwa-icon {
+            font-size: 20px;
+        }
+        
+        .pwa-text {
+            flex: 1;
+            font-weight: 500;
+        }
+        
+        .pwa-install-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .pwa-install-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .pwa-close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+        }
+        
+        /* Loading Animations */
+        .quantum-loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-left-color: var(--quantum-accent, #4facfe);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Enhanced Focus Styles */
+        .keyboard-navigation *:focus {
+            outline: 3px solid var(--quantum-accent, #4facfe) !important;
+            outline-offset: 2px !important;
+            border-radius: 4px !important;
+        }
+        
+        /* Print Optimizations */
+        @media print {
+            .quantum-nav,
+            .pwa-banner,
+            .quantum-hamburger,
+            .quantum-mobile-menu {
+                display: none !important;
+            }
+            
+            body {
+                background: white !important;
+                color: black !important;
+            }
+        }
+    </style>
 </body>
 </html>
