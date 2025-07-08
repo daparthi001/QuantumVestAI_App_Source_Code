@@ -20,6 +20,11 @@ logger = logging.getLogger(__name__)
 BASE_DIR = Path(__file__).resolve().parent.parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
+
+def get_templates(request: Request) -> Jinja2Templates:
+    """Return app-level templates if available."""
+    return getattr(request.app.state, "templates", templates)
+
 # Demo user database
 DEMO_USERS = {
     "demo": {
@@ -69,7 +74,7 @@ async def login_page(request: Request, msg: str = None, next: str = None):
         if auth_cookie:
             return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "auth/login.html",
             {
                 "request": request,
@@ -160,7 +165,7 @@ async def login_post(
         
     except ValueError as e:
         logger.warning(f"Login validation failed: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "auth/login.html",
             {
                 "request": request,
@@ -176,7 +181,7 @@ async def login_post(
     
     except Exception as e:
         logger.error(f"Login error: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "auth/login.html",
             {
                 "request": request,
@@ -194,7 +199,7 @@ async def login_post(
 async def register_page(request: Request, msg: str = None):
     """Display registration page"""
     try:
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "auth/register.html",
             {
                 "request": request,
@@ -265,7 +270,7 @@ async def register_post(
         
     except ValueError as e:
         logger.warning(f"Registration validation failed: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "auth/register.html",
             {
                 "request": request,
@@ -282,7 +287,7 @@ async def register_post(
     
     except Exception as e:
         logger.error(f"Registration error: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "auth/register.html",
             {
                 "request": request,
@@ -337,7 +342,7 @@ async def profile_page(request: Request):
         else:
             user_data = {"username": "demo", "role": "user", "full_name": "Demo User"}
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "auth/profile.html",
             {
                 "request": request,
@@ -358,7 +363,7 @@ async def profile_page(request: Request):
 async def forgot_password_page(request: Request, msg: str = None):
     """Forgot password page"""
     try:
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "auth/forgot_password.html",
             {
                 "request": request,
@@ -385,7 +390,7 @@ async def forgot_password_post(request: Request, email: str = Form(...)):
             raise ValueError("Please enter a valid email address")
         
         # In demo mode, just show success message
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "auth/forgot_password.html",
             {
                 "request": request,
@@ -397,7 +402,7 @@ async def forgot_password_post(request: Request, email: str = Form(...)):
         )
         
     except ValueError as e:
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "auth/forgot_password.html",
             {
                 "request": request,

@@ -16,6 +16,11 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 templates = Jinja2Templates(directory=str(Path("templates")))
 
+
+def get_templates(request: Request) -> Jinja2Templates:
+    """Return app-level templates if available."""
+    return getattr(request.app.state, "templates", templates)
+
 router = APIRouter(tags=["admin"])
 
 @router.get("/admin")
@@ -59,7 +64,7 @@ async def admin_dashboard(request: Request, current_user: dict = Depends(admin_r
             }
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "admin/dashboard/index.html", 
             {
                 "request": request, 
@@ -72,7 +77,7 @@ async def admin_dashboard(request: Request, current_user: dict = Depends(admin_r
     except Exception as e:
         logger.error(f"Error loading admin dashboard: {str(e)}")
         error_message = str(e)
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "admin/dashboard/index.html", 
             {
                 "request": request, 
@@ -147,7 +152,7 @@ async def user_management(
             "has_next": page < total_pages
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "admin/users.html", 
             {
                 "request": request, 
@@ -162,7 +167,7 @@ async def user_management(
     except Exception as e:
         logger.error(f"Error loading user management: {str(e)}")
         error_message = str(e)
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "admin/users.html", 
             {
                 "request": request, 
@@ -205,7 +210,7 @@ async def user_detail(
             ]
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "admin/user_detail.html", 
             {
                 "request": request, 
@@ -218,7 +223,7 @@ async def user_detail(
     except Exception as e:
         logger.error(f"Error loading user detail for {user_id}: {str(e)}")
         error_message = str(e)
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "admin/user_detail.html", 
             {
                 "request": request, 
@@ -366,7 +371,7 @@ async def model_management(
             }
         ]
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "admin/models.html", 
             {
                 "request": request, 
@@ -379,7 +384,7 @@ async def model_management(
     except Exception as e:
         logger.error(f"Error loading model management: {str(e)}")
         error_message = str(e)
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "admin/models.html", 
             {
                 "request": request, 
@@ -449,7 +454,7 @@ async def api_status_page(
             {"timestamp": "2025-07-07 21:30:00", "level": "INFO", "service": "Auth", "message": "User authenticated successfully"}
         ]
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "admin/api_status.html", 
             {
                 "request": request, 
@@ -464,7 +469,7 @@ async def api_status_page(
     except Exception as e:
         logger.error(f"Error loading API status: {str(e)}")
         error_message = str(e)
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "admin/api_status.html", 
             {
                 "request": request, 
@@ -515,7 +520,7 @@ async def admin_settings_page(
             }
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "admin/settings.html", 
             {
                 "request": request, 
@@ -528,7 +533,7 @@ async def admin_settings_page(
     except Exception as e:
         logger.error(f"Error loading admin settings: {str(e)}")
         error_message = str(e)
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "admin/settings.html", 
             {
                 "request": request, 
@@ -653,7 +658,7 @@ async def features_management(
             }
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "admin/features.html", 
             {
                 "request": request, 
@@ -666,7 +671,7 @@ async def features_management(
     except Exception as e:
         logger.error(f"Error loading features management: {str(e)}")
         error_message = str(e)
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "admin/features.html", 
             {
                 "request": request, 
@@ -685,5 +690,4 @@ async def admin_health_check(current_user: dict = Depends(admin_required)):
         "status": "healthy",
         "service": "admin",
         "timestamp": "2025-07-07T21:40:52Z",
-        "user": current_user["username"] if current_user else "unknown"
-    }
+        "user": current_user["username"] if current_user else "unknown"    }

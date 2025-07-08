@@ -15,6 +15,11 @@ from typing import Optional, Dict, Any
 # Setup router
 router = APIRouter(prefix="/forecast", tags=["forecast"])
 templates = Jinja2Templates(directory=str(Path("templates")))
+
+
+def get_templates(request: Request) -> Jinja2Templates:
+    """Return app-level templates if available."""
+    return getattr(request.app.state, "templates", templates)
 logger = logging.getLogger(__name__)
 
 # Get API URL from environment
@@ -89,7 +94,7 @@ async def forecast_home(request: Request):
         }
         
         # Render the forecast dashboard
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "forecast/index.html",
             {
                 "request": request,
@@ -104,7 +109,7 @@ async def forecast_home(request: Request):
         
     except Exception as e:
         logger.error(f"Error rendering forecast dashboard: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "error.html",
             {
                 "request": request,
@@ -167,7 +172,7 @@ async def stock_forecast(
             ]
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "forecast/stock_detail.html",
             {
                 "request": request,
@@ -182,7 +187,7 @@ async def stock_forecast(
         
     except Exception as e:
         logger.error(f"Error loading stock forecast for {symbol}: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "error.html",
             {
                 "request": request,

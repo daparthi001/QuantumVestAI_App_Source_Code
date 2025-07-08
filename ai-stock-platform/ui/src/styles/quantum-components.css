@@ -395,8 +395,7 @@
     transform: none !important;
   }
   
-  @keyframes quantumFloat,
-  @keyframes quantumPulse {
+  .quantum-bg::before,
+  .quantum-pulse {
     animation: none !important;
-  }
-}
+  }}
