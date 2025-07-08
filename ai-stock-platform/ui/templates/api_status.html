@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block head_extra %}
-<link rel="stylesheet" href="{{ url_for('static', path='/css/admin.css') }}">
+<link rel="stylesheet" href="{{ get_asset_url('css/admin.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -238,7 +238,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', path='/vendors/chart.js/chart.min.js') }}"></script>
+<script src="{{ get_asset_url('vendors/chart.js/chart.min.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize API Performance Chart

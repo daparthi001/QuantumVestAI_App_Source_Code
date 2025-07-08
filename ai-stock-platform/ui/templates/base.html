@@ -16,14 +16,14 @@
     <meta property="og:url" content="{{ request.url }}">
     <meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}">
     <meta property="og:description" content="{% block og_description %}{{ self.description() }}{% endblock %}">
-    <meta property="og:image" content="{{ url_for('static', path='/img/og-image.jpg') }}">
+    <meta property="og:image" content="{{ get_asset_url('img/og-image.jpg') }}">
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="{{ request.url }}">
     <meta property="twitter:title" content="{% block twitter_title %}{{ self.title() }}{% endblock %}">
     <meta property="twitter:description" content="{% block twitter_description %}{{ self.description() }}{% endblock %}">
-    <meta property="twitter:image" content="{{ url_for('static', path='/img/twitter-card.jpg') }}">
+    <meta property="twitter:image" content="{{ get_asset_url('img/twitter-card.jpg') }}">
     
     <!-- Preconnect to external resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,36 +34,36 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Critical CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/quantum-enhancements.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/quantum-dashboard.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/quantum-mobile-enhanced.css') }}">
+    <link rel="stylesheet" href="{{ get_asset_url('css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ get_asset_url('css/quantum-enhancements.css') }}">
+    <link rel="stylesheet" href="{{ get_asset_url('css/quantum-dashboard.css') }}">
+    <link rel="stylesheet" href="{{ get_asset_url('css/quantum-mobile-enhanced.css') }}">
     
     <!-- Progressive CSS Loading -->
-    <link rel="preload" href="{{ url_for('static', path='/css/styles.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="{{ url_for('static', path='/css/dark-mode.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="{{ url_for('static', path='/css/realtime-dashboard.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="{{ url_for('static', path='/css/responsive.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="{{ get_asset_url('css/styles.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="{{ get_asset_url('css/dark-mode.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="{{ get_asset_url('css/realtime-dashboard.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="{{ get_asset_url('css/responsive.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
     
     <!-- Fallback for preload -->
     <noscript>
-        <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', path='/css/dark-mode.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', path='/css/realtime-dashboard.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', path='/css/responsive.css') }}">
+        <link rel="stylesheet" href="{{ get_asset_url('css/styles.css') }}">
+        <link rel="stylesheet" href="{{ get_asset_url('css/dark-mode.css') }}">
+        <link rel="stylesheet" href="{{ get_asset_url('css/realtime-dashboard.css') }}">
+        <link rel="stylesheet" href="{{ get_asset_url('css/responsive.css') }}">
     </noscript>
     
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
     
     <!-- PWA Manifest -->
-    <link rel="manifest" href="{{ url_for('static', path='/manifest.json') }}">
+    <link rel="manifest" href="{{ get_asset_url('manifest.json') }}">
     
     <!-- Favicons -->
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='/img/favicon.svg') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', path='/img/favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', path='/img/favicon-16x16.png') }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', path='/img/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ get_asset_url('img/favicon.svg') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ get_asset_url('img/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ get_asset_url('img/favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" href="{{ get_asset_url('img/apple-touch-icon.png') }}">
     
     <!-- Theme Color -->
     <meta name="theme-color" content="#4facfe">
@@ -186,8 +186,8 @@
         <aside class="sidebar quantum-glass" id="sidebar" role="navigation" aria-label="Secondary navigation">
             <div class="sidebar-header">
                 <a href="/" class="sidebar-logo quantum-nav-brand">
-                    <img src="{{ url_for('static', path='/img/logo.svg') }}" alt="QuantumVestAI Logo" class="logo-default">
-                    <img src="{{ url_for('static', path='/img/logo-collapsed.svg') }}" alt="QV" class="logo-collapsed">
+                    <img src="{{ get_asset_url('img/logo.svg') }}" alt="QuantumVestAI Logo" class="logo-default">
+                    <img src="{{ get_asset_url('img/logo-collapsed.svg') }}" alt="QV" class="logo-collapsed">
                 </a>
                 <button class="sidebar-toggle quantum-btn" id="sidebarToggle" aria-label="Toggle sidebar">
                     <i class="bi bi-chevron-left"></i>
@@ -271,7 +271,7 @@
                     {% if user %}
                     <div class="user-info">
                         <div class="user-avatar">
-                            <img src="{{ url_for('static', path='/img/avatars/default.png') }}" alt="User">
+                            <img src="{{ get_asset_url('img/avatars/default.png') }}" alt="User">
                         </div>
                         <div class="user-details">
                             <span class="user-name">{{ user.username }}</span>
@@ -407,27 +407,26 @@
     </div>
 
     <!-- JavaScript Libraries -->
-    <script src="{{ url_for('static', path='/js/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ url_for('static', path='/vendors/chart.js/chart.min.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYStlZRE+4BJ8FmXp0Fv4Y5SVHU5awsuZVVFIhv" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js" integrity="sha384-C4o3ZJ5LYG4fs/3Gzdh0dX8GZFODdgNpTi27C/medfyqCkCmZJLdnOjFkWDXLI4E" crossorigin="anonymous"></script>
     
     <!-- Enhanced QuantumVestAI Features -->
-    <script src="{{ url_for('static', path='/js/quantum-enhancements.js') }}" defer></script>
-    <script src="{{ url_for('static', path='/js/quantum-i18n.js') }}" defer></script>
-    <script src="{{ url_for('static', path='/js/quantum-search.js') }}" defer></script>
-    <script src="{{ url_for('static', path='/js/quantum-community.js') }}" defer></script>
-    <script src="{{ url_for('static', path='/js/quantum-charts.js') }}" defer></script>
-    <script src="{{ url_for('static', path='/js/quantum-ai.js') }}" defer></script>
+    <script src="{{ get_asset_url('js/quantum-enhancements.js') }}" defer></script>
+    <script src="{{ get_asset_url('js/quantum-i18n.js') }}" defer></script>
+    <script src="{{ get_asset_url('js/quantum-search.js') }}" defer></script>
+    <script src="{{ get_asset_url('js/quantum-community.js') }}" defer></script>
+    <script src="{{ get_asset_url('js/quantum-charts.js') }}" defer></script>
+    <script src="{{ get_asset_url('js/quantum-ai.js') }}" defer></script>
     <!-- Modern Quantum Components -->
-    <script src="{{ url_for('static', path='/js/quantum-dashboard.js') }}" defer></script>
-    <script src="{{ url_for('static', path='/js/quantum-content.js') }}" defer></script>
-    <script src="{{ url_for('static', path='/js/quantum-enhanced-charts.js') }}" defer></script>
-    <script src="{{ url_for('static', path='/js/quantum-pwa.js') }}" defer></script>
+    <script src="{{ get_asset_url('js/quantum-dashboard.js') }}" defer></script>
+    <script src="{{ get_asset_url('js/quantum-content.js') }}" defer></script>
+    <script src="{{ get_asset_url('js/quantum-enhanced-charts.js') }}" defer></script>
+    <script src="{{ get_asset_url('js/quantum-pwa.js') }}" defer></script>
     
     <!-- Legacy UI Scripts -->
-    <script src="{{ url_for('static', path='/js/enhanced-ui.js') }}" defer></script>
-    <script src="{{ url_for('static', path='/js/navigation.js') }}" defer></script>
-    <script src="{{ url_for('static', path='/js/app.js') }}" defer></script>
-    <script src="{{ url_for('static', path='/js/auth.js') }}" defer></script>
+    <script src="{{ get_asset_url('js/enhanced-ui.js') }}" defer></script>
+    <script src="{{ get_asset_url('js/navigation.js') }}" defer></script>
+    <script src="{{ get_asset_url('js/auth.js') }}" defer></script>
     
     <!-- Progressive Web App Support -->
     <script>

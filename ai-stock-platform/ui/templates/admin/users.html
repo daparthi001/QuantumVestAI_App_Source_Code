@@ -9,8 +9,8 @@
 {% endblock %}
 
 {% block head_extra %}
-<link rel="stylesheet" href="{{ url_for('static', path='/css/admin.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', path='/vendors/datatables/dataTables.min.css') }}">
+<link rel="stylesheet" href="{{ get_asset_url('css/admin.css') }}">
+<link rel="stylesheet" href="{{ get_asset_url('vendors/datatables/dataTables.min.css') }}">
 {% endblock %}
 
 {% block content %}

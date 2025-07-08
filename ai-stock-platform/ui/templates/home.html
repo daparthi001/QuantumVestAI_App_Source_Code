@@ -171,7 +171,7 @@
                             <td>
                                 <div class="stock-symbol">
                                     <div class="symbol-logo me-2">
-                                        <img src="https://logo.clearbit.com/{{ stock.symbol.lower() }}.com" alt="{{ stock.name }}" onerror="this.src='{{ url_for('static', path='/img/stock-placeholder.png') }}'">
+<img src="https://logo.clearbit.com/{{ stock.symbol.lower() }}.com" alt="{{ stock.name }}" onerror="this.src='{{ get_asset_url('img/stock-placeholder.png') }}'">
                                     </div>
                                     <div>
                                         <div class="symbol">{{ stock.symbol }}</div>
@@ -330,7 +330,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', path='/js/charts.js') }}"></script>
+<script src="{{ get_asset_url('js/charts.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Hero Chart
