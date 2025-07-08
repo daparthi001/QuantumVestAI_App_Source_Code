@@ -10,7 +10,7 @@ from typing import Optional
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path
-import secrets
+from services.api_client import APIClient
 
 # Setup router
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -75,13 +75,7 @@ async def login_page(request: Request, msg: str = None, next: str = None):
                 "request": request,
                 "msg": msg,
                 "next": next,
-                "demo_mode": True,
-                "demo_accounts": [
-                    {"username": "demo", "password": "demo", "description": "Demo account with full features"},
-                    {"username": "admin", "password": "admin", "description": "Admin account with all permissions"},
-                    {"username": "test", "password": "test", "description": "Test account with basic features"},
-                    {"username": "user", "password": "password", "description": "Regular user account"}
-                ],
+                "demo_mode": False,
                 "page_title": "Login - QuantumVestAI"
             }
         )
@@ -114,45 +108,57 @@ async def login_post(
         
         username = username.strip().lower()
         
-        # Check demo users
-        if username in DEMO_USERS:
-            user_data = DEMO_USERS[username]
-            if user_data["password"] == password:
-                logger.info(f"Demo login successful for {username}")
-                
-                # Create demo token
-                expires = datetime.utcnow() + timedelta(hours=24)
-                token = f"demo_{username}_{int(expires.timestamp())}"
-                
-                # Determine redirect URL
-                redirect_url = next if next and next.startswith('/') else "/dashboard"
-                
-                response = RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
-                
-                # Set authentication cookie
-                max_age = 7 * 24 * 60 * 60 if remember else None  # 7 days or session
-                response.set_cookie(
-                    key="access_token",
-                    value=f"Bearer {token}",
-                    httponly=True,
-                    max_age=max_age,
-                    samesite="lax",
-                    secure=request.url.scheme == "https"
-                )
-                
-                # Set user info cookie for quick access
-                response.set_cookie(
-                    key="user_info",
-                    value=f"{username}|{user_data['role']}|{user_data['full_name']}",
-                    max_age=max_age,
-                    samesite="lax",
-                    secure=request.url.scheme == "https"
-                )
-                
-                return response
-        
-        # If we get here, authentication failed
-        raise ValueError("Invalid username or password")
+        # Authenticate against the main API
+        api = APIClient()
+        try:
+            api_response = api.post("/auth/login", data={
+                "username": username,
+                "password": password
+            })
+        except Exception as api_exc:
+            logger.error(f"API login failed: {api_exc}")
+            raise ValueError("Invalid username or password")
+
+        token = api_response.get("data", {}).get("access_token")
+        if not token:
+            raise ValueError(api_response.get("message", "Login failed"))
+
+        # Fetch user info
+        user_info = {}
+        try:
+            user_api = APIClient(token)
+            me_resp = user_api.get("/auth/me")
+            user_info = me_resp.get("data", {})
+        except Exception:
+            logger.warning("Failed to fetch user info after login")
+
+        # Determine redirect URL
+        redirect_url = next if next and next.startswith('/') else "/dashboard"
+
+        response = RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
+
+        max_age = 7 * 24 * 60 * 60 if remember else None
+        response.set_cookie(
+            key="access_token",
+            value=f"Bearer {token}",
+            httponly=True,
+            max_age=max_age,
+            samesite="lax",
+            secure=request.url.scheme == "https"
+        )
+
+        if user_info:
+            response.set_cookie(
+                key="user_info",
+                value=f"{user_info.get('username', username)}|{user_info.get('role', '')}|{user_info.get('full_name', '')}",
+                max_age=max_age,
+                samesite="lax",
+                secure=request.url.scheme == "https"
+            )
+
+        return response
+
+    except ValueError as e:
         
     except ValueError as e:
         logger.warning(f"Login validation failed: {str(e)}")
@@ -164,13 +170,7 @@ async def login_post(
                 "msg_type": "danger",
                 "username": username,
                 "next": next,
-                "demo_mode": True,
-                "demo_accounts": [
-                    {"username": "demo", "password": "demo", "description": "Demo account with full features"},
-                    {"username": "admin", "password": "admin", "description": "Admin account with all permissions"},
-                    {"username": "test", "password": "test", "description": "Test account with basic features"},
-                    {"username": "user", "password": "password", "description": "Regular user account"}
-                ],
+                "demo_mode": False,
                 "page_title": "Login - QuantumVestAI"
             },
             status_code=400
@@ -186,7 +186,7 @@ async def login_post(
                 "msg_type": "danger",
                 "username": username,
                 "next": next,
-                "demo_mode": True,
+                "demo_mode": False,
                 "page_title": "Login - QuantumVestAI"
             },
             status_code=500
@@ -201,7 +201,7 @@ async def register_page(request: Request, msg: str = None):
             {
                 "request": request,
                 "msg": msg,
-                "demo_mode": True,
+                "demo_mode": False,
                 "page_title": "Register - QuantumVestAI"
             }
         )
@@ -244,22 +244,25 @@ async def register_post(
         
         username = username.strip().lower()
         
-        # Check if user already exists
-        if username in DEMO_USERS:
-            raise ValueError("Username already exists. Please choose a different one.")
-        
-        # In demo mode, we'll just show success without actually creating the user
-        logger.info(f"Demo registration successful for {username}")
-        
-        return templates.TemplateResponse(
-            "auth/register.html",
-            {
-                "request": request,
-                "msg": "Registration successful! Please use one of the demo accounts to login (demo/demo, admin/admin, etc.)",
-                "msg_type": "success",
-                "demo_mode": True,
-                "page_title": "Register - QuantumVestAI"
-            }
+        # Call backend API to create the user
+        api = APIClient()
+        try:
+            api.post(
+                "/auth/register",
+                data={
+                    "username": username,
+                    "email": email,
+                    "password": password,
+                    "full_name": full_name,
+                },
+            )
+        except Exception as api_exc:
+            logger.error(f"API registration failed: {api_exc}")
+            raise ValueError("Registration failed")
+
+        return RedirectResponse(
+            url="/auth/login?msg=Registration+successful!+Please+log+in.",
+            status_code=status.HTTP_302_FOUND
         )
         
     except ValueError as e:
@@ -273,7 +276,7 @@ async def register_post(
                 "username": username,
                 "email": email,
                 "full_name": full_name,
-                "demo_mode": True,
+                "demo_mode": False,
                 "page_title": "Register - QuantumVestAI"
             },
             status_code=400
@@ -287,7 +290,7 @@ async def register_post(
                 "request": request,
                 "msg": "Registration failed due to a technical error. Please try again.",
                 "msg_type": "danger",
-                "demo_mode": True,
+                "demo_mode": False,
                 "page_title": "Register - QuantumVestAI"
             },
             status_code=500
@@ -341,7 +344,7 @@ async def profile_page(request: Request):
             {
                 "request": request,
                 "user": user_data,
-                "demo_mode": True,
+                "demo_mode": False,
                 "page_title": "Profile - QuantumVestAI"
             }
         )
@@ -362,7 +365,7 @@ async def forgot_password_page(request: Request, msg: str = None):
             {
                 "request": request,
                 "msg": msg,
-                "demo_mode": True,
+                "demo_mode": False,
                 "page_title": "Forgot Password - QuantumVestAI"
             }
         )
@@ -390,7 +393,7 @@ async def forgot_password_post(request: Request, email: str = Form(...)):
                 "request": request,
                 "msg": "Password reset instructions have been sent to your email (demo mode - no actual email sent)",
                 "msg_type": "success",
-                "demo_mode": True,
+                "demo_mode": False,
                 "page_title": "Forgot Password - QuantumVestAI"
             }
         )
@@ -403,7 +406,7 @@ async def forgot_password_post(request: Request, email: str = Form(...)):
                 "msg": str(e),
                 "msg_type": "danger",
                 "email": email,
-                "demo_mode": True,
+                "demo_mode": False,
                 "page_title": "Forgot Password - QuantumVestAI"
             },
             status_code=400

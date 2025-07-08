@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block head_extra %}
-<link rel="stylesheet" href="{{ url_for('static', path='/css/admin.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='css/admin.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -237,7 +237,7 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <div class="avatar avatar-sm me-2">
-                                            <img src="{{ user.avatar_url or url_for('static', path='/img/avatars/default.png') }}" alt="{{ user.username }}">
+                                            <img src="{{ user.avatar_url or url_for('static', path='img/avatars/default.png') }}" alt="{{ user.username }}">
                                         </div>
                                         <div>{{ user.username }}</div>
                                     </div>
