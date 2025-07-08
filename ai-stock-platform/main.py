@@ -211,8 +211,10 @@ except Exception as e:
     
     for name, func in fallback_filters.items():
         templates.env.filters[name] = func
+        # CRITICAL FIX: Also add to globals so functions can be called directly in templates
+        templates.env.globals[name] = func
     
-    logger.info(f"Added {len(fallback_filters)} fallback template filters")
+    logger.info(f"Added {len(fallback_filters)} fallback template filters to both filters and globals")
 
 # Import proxy router - with error handling
 try:
@@ -765,30 +767,88 @@ async def dashboard(request: Request):
     logger.info(f"[{request_id}] Dashboard request from {request.client.host if request.client else 'unknown'}")
     
     try:
-        # Ensure critical template filters are available
+        # Ensure critical template filters are available in both filters and globals
         env = app.state.templates.env
-        if 'format_currency' not in env.filters:
-            def format_currency(value, symbol='$'):
-                if value is None: return f"{symbol}0.00"
-                try: return f"{symbol}{float(value):,.2f}"
-                except: return f"{symbol}0.00"
-            env.filters['format_currency'] = format_currency
+        critical_filters = ['format_currency', 'format_percentage', 'format_change_value', 'format_large_number']
+        
+        for filter_name in critical_filters:
+            if filter_name not in env.filters:
+                logger.warning(f"[{request_id}] Critical filter {filter_name} missing from filters, adding fallback")
+                if filter_name == 'format_currency':
+                    def format_currency(value, symbol='$'):
+                        if value is None: return f"{symbol}0.00"
+                        try: return f"{symbol}{float(value):,.2f}"
+                        except: return f"{symbol}0.00"
+                    env.filters[filter_name] = format_currency
+                    env.globals[filter_name] = format_currency
+                elif filter_name == 'format_percentage':
+                    def format_percentage(value, precision=2):
+                        if value is None: return f"0.{precision * '0'}%"
+                        try: return f"{float(value) * 100:.{precision}f}%"
+                        except: return f"0.{precision * '0'}%"
+                    env.filters[filter_name] = format_percentage
+                    env.globals[filter_name] = format_percentage
+                elif filter_name == 'format_change_value':
+                    def format_change_value(value, include_sign=True):
+                        if value is None: return "—"
+                        try:
+                            num_value = float(value)
+                            formatted = f"{num_value:.2f}"
+                            if include_sign and num_value > 0:
+                                formatted = f"+{formatted}"
+                            return formatted
+                        except: return str(value)
+                    env.filters[filter_name] = format_change_value
+                    env.globals[filter_name] = format_change_value
+                elif filter_name == 'format_large_number':
+                    def format_large_number(value, decimal_places=1):
+                        if value is None: return "—"
+                        try:
+                            num_value = float(value)
+                            if abs(num_value) >= 1e9:
+                                return f"{num_value / 1e9:.{decimal_places}f}B"
+                            elif abs(num_value) >= 1e6:
+                                return f"{num_value / 1e6:.{decimal_places}f}M"
+                            elif abs(num_value) >= 1e3:
+                                return f"{num_value / 1e3:.{decimal_places}f}K"
+                            else:
+                                return str(num_value)
+                        except: return str(value)
+                    env.filters[filter_name] = format_large_number
+                    env.globals[filter_name] = format_large_number
+        
+        # Enhanced mock portfolio data with proper error handling
+        try:
+            # In a real application, this would come from a database or API
+            portfolio_data = {
+                "total_value": 125350.75,
+                "daily_change": 0.0234,  # 2.34% 
+                "total_gain": 25350.75,
+                "total_gain_percent": 0.2535,  # 25.35%
+                "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+            }
             
-        if 'format_percentage' not in env.filters:
-            def format_percentage(value, precision=2):
-                if value is None: return f"0.{precision * '0'}%"
-                try: return f"{float(value) * 100:.{precision}f}%"
-                except: return f"0.{precision * '0'}%"
-            env.filters['format_percentage'] = format_percentage
+            # Validate portfolio data
+            for key, value in portfolio_data.items():
+                if key != "last_updated" and value is None:
+                    logger.warning(f"[{request_id}] Portfolio data field {key} is None, using default")
+                    if "percent" in key or "change" in key:
+                        portfolio_data[key] = 0.0
+                    elif "value" in key or "gain" in key:
+                        portfolio_data[key] = 0.0
+            
+        except Exception as portfolio_error:
+            logger.error(f"[{request_id}] Error preparing portfolio data: {portfolio_error}")
+            # Fallback portfolio data
+            portfolio_data = {
+                "total_value": 0.0,
+                "daily_change": 0.0,
+                "total_gain": 0.0,
+                "total_gain_percent": 0.0,
+                "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+            }
         
-        # Mock portfolio data for dashboard
-        portfolio_data = {
-            "total_value": 125350.75,
-            "daily_change": 0.0234,  # 2.34% 
-            "total_gain": 25350.75,
-            "total_gain_percent": 0.2535  # 25.35%
-        }
-        
+        # Enhanced context with better error handling
         context = {
             "request": request, 
             "username": "Demo User",
@@ -800,22 +860,36 @@ async def dashboard(request: Request):
                 {"value": "month", "label": "This Month"},
                 {"value": "year", "label": "This Year"}
             ],
-            "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "last_updated": portfolio_data.get("last_updated", datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")),
             "is_cached": False,
-            # Add get_asset_url directly to context if not registered
-            "get_asset_url": env.filters.get("get_asset_url", 
+            "request_id": request_id,
+            # Add get_asset_url directly to context with fallback
+            "get_asset_url": env.globals.get("get_asset_url", 
                 lambda path, version=None: f"/static/{path}?v={version or os.environ.get('APP_VERSION', 'v1.5.2')}"
             )
         }
         
         logger.info(f"[{request_id}] Rendering dashboard template with portfolio value: {portfolio_data['total_value']}")
-        return app.state.templates.TemplateResponse("dashboard/index.html", context)
+        
+        # Enhanced template rendering with proper error handling
+        try:
+            return app.state.templates.TemplateResponse("dashboard/index.html", context)
+        except Exception as template_error:
+            logger.error(f"[{request_id}] Template rendering failed: {template_error}")
+            logger.error(f"[{request_id}] Template error traceback: {traceback.format_exc()}")
+            
+            # Try alternative template
+            try:
+                return app.state.templates.TemplateResponse("dashboard.html", context)
+            except Exception as alt_template_error:
+                logger.error(f"[{request_id}] Alternative template also failed: {alt_template_error}")
+                raise template_error  # Re-raise original error
         
     except Exception as e:
         logger.error(f"[{request_id}] Error rendering dashboard: {str(e)}")
         logger.error(f"[{request_id}] Full dashboard error traceback: {traceback.format_exc()}")
         
-        # If dashboard/index.html doesn't exist, return a simple HTML response
+        # Enhanced fallback HTML with better error information
         return HTMLResponse(
             content=f"""
             <!DOCTYPE html>
@@ -825,23 +899,73 @@ async def dashboard(request: Request):
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                <style>
+                    .error-container {{ 
+                        min-height: 100vh; 
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center; 
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    }}
+                    .error-card {{ 
+                        background: white; 
+                        border-radius: 15px; 
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+                        max-width: 600px; 
+                        width: 100%; 
+                    }}
+                    .error-icon {{ font-size: 3rem; color: #fd7e14; }}
+                    .request-id {{ 
+                        font-family: 'Courier New', monospace; 
+                        background: #f8f9fa; 
+                        padding: 0.25rem 0.5rem; 
+                        border-radius: 4px; 
+                        font-size: 0.875rem;
+                    }}
+                </style>
             </head>
             <body>
-                <div class="container mt-5">
-                    <div class="row">
-                        <div class="col-md-12 text-center">
-                            <h1>Dashboard</h1>
-                            <p class="lead">Welcome to QuantumVestAI Dashboard</p>
-                            <p>Dashboard is temporarily unavailable. Error ID: {request_id}</p>
-                            <div class="alert alert-info">
-                                <h4>Debug Information:</h4>
-                                <p>Error: {str(e)}</p>
-                                <small>Request ID: {request_id}</small>
+                <div class="error-container">
+                    <div class="error-card">
+                        <div class="card-body text-center p-5">
+                            <div class="error-icon mb-3">⚠️</div>
+                            <h1 class="h3 mb-3">Dashboard Temporarily Unavailable</h1>
+                            <p class="lead text-muted mb-4">We're experiencing technical difficulties with the dashboard.</p>
+                            
+                            <div class="alert alert-info text-start">
+                                <h6 class="alert-heading">🔧 Technical Details</h6>
+                                <p class="mb-2"><strong>Error:</strong> {str(e)[:100]}{'...' if len(str(e)) > 100 else ''}</p>
+                                <p class="mb-2"><strong>Request ID:</strong> <span class="request-id">{request_id}</span></p>
+                                <p class="mb-0"><strong>Time:</strong> {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC</p>
                             </div>
-                            <a href="/login" class="btn btn-primary">Back to Login</a>
+                            
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                                <a href="/dashboard" class="btn btn-primary">
+                                    🔄 Try Again
+                                </a>
+                                <a href="/login" class="btn btn-outline-secondary">
+                                    🏠 Back to Login
+                                </a>
+                            </div>
+                            
+                            <div class="mt-4 text-muted small">
+                                <p>If this problem persists, please contact support with the Request ID above.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
+                
+                <script>
+                    // Auto-retry after 30 seconds
+                    setTimeout(function() {{
+                        const retryBtn = document.querySelector('a[href="/dashboard"]');
+                        if (retryBtn) {{
+                            retryBtn.innerHTML = '🔄 Auto-retry in progress...';
+                            retryBtn.classList.add('disabled');
+                            window.location.reload();
+                        }}
+                    }}, 30000);
+                </script>
             </body>
             </html>
             """,

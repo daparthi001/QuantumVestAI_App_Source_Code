@@ -336,8 +336,10 @@ def register_filters(app):
         for name, func in template_filters.items():
             try:
                 app.state.templates.env.filters[name] = func
+                # CRITICAL FIX: Also add to globals so functions can be called directly in templates
+                app.state.templates.env.globals[name] = func
                 successful_filters += 1
-                logger.debug(f"Successfully registered filter: {name}")
+                logger.debug(f"Successfully registered filter and global: {name}")
             except Exception as filter_error:
                 failed_filters.append((name, str(filter_error)))
                 logger.error(f"Failed to register filter {name}: {filter_error}")
@@ -349,21 +351,31 @@ def register_filters(app):
             for name, error in failed_filters:
                 logger.error(f"Filter {name} error: {error}")
         else:
-            logger.info(f"Successfully registered all {successful_filters} template filters")
+            logger.info(f"Successfully registered all {successful_filters} template filters and globals")
         
-        # Validate critical filters are available
+        # Validate critical filters are available in both filters and globals
         critical_filters = ['format_currency', 'format_percentage', 'format_change_value', 'format_large_number', 'humanize_date']
         missing_critical = []
+        missing_globals = []
         
         for filter_name in critical_filters:
             if filter_name not in app.state.templates.env.filters:
                 missing_critical.append(filter_name)
+            if filter_name not in app.state.templates.env.globals:
+                missing_globals.append(filter_name)
         
         if missing_critical:
-            logger.error(f"Critical filters missing: {missing_critical}")
+            logger.error(f"Critical filters missing from filters: {missing_critical}")
             return False
         
-        logger.info("All critical template filters are available")
+        if missing_globals:
+            logger.warning(f"Critical filters missing from globals (function calls may fail): {missing_globals}")
+            # Don't fail for missing globals, just warn
+        
+        logger.info("All critical template filters are available in filters")
+        if not missing_globals:
+            logger.info("All critical template filters are also available in globals for function calls")
+        
         return successful_filters > 0
         
     except Exception as e:

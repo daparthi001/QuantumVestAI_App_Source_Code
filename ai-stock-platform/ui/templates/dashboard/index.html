@@ -177,7 +177,7 @@
                         <div class="col-md-4">
                             <div class="portfolio-metric">
                                 <div class="metric-label">Total Value</div>
-                                <div class="metric-value">{{ format_currency(portfolio.total_value) if portfolio and portfolio.total_value else '$0.00' }}</div>
+                                <div class="metric-value">{{ format_currency(portfolio.total_value if portfolio else 0) }}</div>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -185,7 +185,7 @@
                                 <div class="metric-label">Daily Change</div>
                                 <div class="metric-value {% if portfolio and portfolio.daily_change and portfolio.daily_change >= 0 %}text-success{% elif portfolio and portfolio.daily_change %}text-danger{% endif %}">
                                     {% if portfolio and portfolio.daily_change %}
-                                        {{ format_percentage(portfolio.daily_change) }}
+                                        {{ format_percentage(portfolio.daily_change if portfolio else 0) }}
                                         {% if portfolio.daily_change >= 0 %}
                                         <i class="bi bi-arrow-up"></i>
                                         {% else %}
@@ -202,8 +202,8 @@
                                 <div class="metric-label">Total Return</div>
                                 <div class="metric-value {% if portfolio and portfolio.total_gain_percent and portfolio.total_gain_percent >= 0 %}text-success{% elif portfolio and portfolio.total_gain_percent %}text-danger{% endif %}">
                                     {% if portfolio and portfolio.total_gain %}
-                                        {{ format_currency(portfolio.total_gain) }}
-                                        <small class="d-block">{{ format_percentage(portfolio.total_gain_percent) if portfolio.total_gain_percent else '+0.00%' }}</small>
+                                        {{ format_currency(portfolio.total_gain if portfolio else 0) }}
+                                        <small class="d-block">{{ format_percentage(portfolio.total_gain_percent if portfolio else 0) }}</small>
                                     {% else %}
                                         $0.00
                                         <small class="d-block">+0.00%</small>
