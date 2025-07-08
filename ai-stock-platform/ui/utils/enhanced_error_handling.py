@@ -60,10 +60,18 @@ class EnhancedTemplateRenderer:
             
         except Exception as e:
             self.error_count += 1
+            
+            # Enhanced error logging with more informative stack traces
             logger.error(f"[{request_id}] Template rendering failed for {template_name}: {str(e)}")
+            logger.error(f"[{request_id}] Full error traceback: {traceback.format_exc()}")
+            
+            # Log context variables for debugging (sanitized)
+            sanitized_context = self._sanitize_context_for_logging(context)
+            logger.error(f"[{request_id}] Template context (sanitized): {json.dumps(sanitized_context, default=str, indent=2)}")
             
             # Try to identify the specific error
             error_details = self._analyze_template_error(e, template_name, context)
+            logger.error(f"[{request_id}] Error analysis: {json.dumps(error_details, default=str, indent=2)}")
             
             # Attempt fallback rendering
             return self._render_fallback(template_name, context, error_details, request)
@@ -85,6 +93,31 @@ class EnhancedTemplateRenderer:
         enhanced_context['render_time'] = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
         
         return enhanced_context
+    
+    def _sanitize_context_for_logging(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Sanitize context data for safe logging (remove sensitive data)"""
+        sanitized = {}
+        sensitive_keys = ['password', 'token', 'secret', 'api_key', 'auth', 'session']
+        
+        for key, value in context.items():
+            # Skip sensitive keys
+            if any(sensitive in key.lower() for sensitive in sensitive_keys):
+                sanitized[key] = "[REDACTED]"
+            # Skip large objects
+            elif hasattr(value, '__len__') and len(str(value)) > 1000:
+                sanitized[key] = f"[LARGE_OBJECT: {type(value).__name__}]"
+            # Skip callable objects except for specific ones we want to log
+            elif callable(value) and not key.startswith('format_'):
+                sanitized[key] = f"[FUNCTION: {value.__name__ if hasattr(value, '__name__') else 'unknown'}]"
+            else:
+                try:
+                    # Try to serialize the value
+                    json.dumps(value, default=str)
+                    sanitized[key] = value
+                except (TypeError, ValueError):
+                    sanitized[key] = f"[NON_SERIALIZABLE: {type(value).__name__}]"
+        
+        return sanitized
     
     def _analyze_template_error(self, error: Exception, template_name: str, context: Dict) -> Dict[str, Any]:
         """Analyze template error to provide detailed debugging information"""
