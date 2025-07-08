@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block title %}Stock Search | QuantumVestAI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/stock-search.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-0">Stock Search</h2>
+            <p class="text-muted">Search for stocks by symbol, company name, or sector</p>
+        </div>
+    </div>
+
+    <!-- Search Form -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form id="stockSearchForm" class="needs-validation" novalidate>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="searchQuery" class="form-label">Search Query</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="searchQuery" 
+                                       name="q" 
+                                       placeholder="Enter stock symbol or company name"
+                                       value="{{ query or '' }}"
+                                       required>
+                                <div class="invalid-feedback">
+                                    Please enter a search query.
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="searchSector" class="form-label">Sector (Optional)</label>
+                                <select class="form-select" id="searchSector" name="sector">
+                                    <option value="">All Sectors</option>
+                                    <option value="Technology">Technology</option>
+                                    <option value="Healthcare">Healthcare</option>
+                                    <option value="Financial">Financial</option>
+                                    <option value="Energy">Energy</option>
+                                    <option value="Consumer">Consumer</option>
+                                    <option value="Industrial">Industrial</option>
+                                    <option value="Utilities">Utilities</option>
+                                    <option value="Materials">Materials</option>
+                                    <option value="Real Estate">Real Estate</option>
+                                    <option value="Communications">Communications</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="searchLimit" class="form-label">Results Limit</label>
+                                <select class="form-select" id="searchLimit" name="limit">
+                                    <option value="10" {% if limit == 10 %}selected{% endif %}>10 results</option>
+                                    <option value="25" {% if limit == 25 %}selected{% endif %}>25 results</option>
+                                    <option value="50" {% if limit == 50 %}selected{% endif %}>50 results</option>
+                                    <option value="100" {% if limit == 100 %}selected{% endif %}>100 results</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="fas fa-search"></i> Search Stocks
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="clearSearch">
+                                    <i class="fas fa-times"></i> Clear
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title">Search Tips</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li><i class="fas fa-info-circle text-info me-2"></i>Use stock symbols (e.g., AAPL, MSFT)</li>
+                        <li><i class="fas fa-info-circle text-info me-2"></i>Search by company name (e.g., Apple)</li>
+                        <li><i class="fas fa-info-circle text-info me-2"></i>Filter by sector for targeted results</li>
+                        <li><i class="fas fa-info-circle text-info me-2"></i>Use partial matches for broader search</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="searchLoading" class="text-center py-4" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Searching for stocks...</p>
+    </div>
+
+    <!-- Error Alert -->
+    {% if error %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Search Error:</strong> {{ error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+    <!-- Search Results -->
+    <div id="searchResults">
+        {% if query %}
+        <div class="row mb-3">
+            <div class="col-12">
+                <h5>Search Results for "{{ query }}"</h5>
+                {% if results %}
+                <p class="text-muted">Found {{ results|length }} result(s)</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if results %}
+        <div class="row">
+            {% for stock in results %}
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card stock-card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="card-title mb-1">{{ stock.symbol }}</h6>
+                                <p class="card-text text-muted small mb-0">{{ stock.name or 'N/A' }}</p>
+                            </div>
+                            {% if stock.sector %}
+                            <span class="badge bg-secondary">{{ stock.sector }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if stock.price %}
+                        <div class="price-info mb-2">
+                            <div class="h5 mb-0">${{ stock.price | round(2) }}</div>
+                            {% if stock.change %}
+                            <div class="small {% if stock.change > 0 %}text-success{% elif stock.change < 0 %}text-danger{% else %}text-muted{% endif %}">
+                                {{ stock.change | round(2) }} ({{ stock.change_percent | round(2) }}%)
+                                {% if stock.change > 0 %}
+                                <i class="fas fa-caret-up"></i>
+                                {% elif stock.change < 0 %}
+                                <i class="fas fa-caret-down"></i>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <div class="row g-2 text-center">
+                            <div class="col-6">
+                                <a href="/stock/{{ stock.symbol }}" class="btn btn-primary btn-sm w-100">
+                                    <i class="fas fa-chart-line"></i> View Details
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <button class="btn btn-outline-primary btn-sm w-100" onclick="addToWatchlist('{{ stock.symbol }}')">
+                                    <i class="far fa-star"></i> Watch
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% elif query %}
+        <div class="text-center py-5">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No results found</h5>
+            <p class="text-muted">Try adjusting your search terms or removing the sector filter</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchForm = document.getElementById('stockSearchForm');
+    const searchLoading = document.getElementById('searchLoading');
+    const searchResults = document.getElementById('searchResults');
+    const clearButton = document.getElementById('clearSearch');
+
+    // Form validation
+    searchForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (searchForm.checkValidity()) {
+            performSearch();
+        }
+        
+        searchForm.classList.add('was-validated');
+    });
+
+    // Clear search
+    clearButton.addEventListener('click', function() {
+        searchForm.reset();
+        searchForm.classList.remove('was-validated');
+        window.location.href = '/stock/search';
+    });
+
+    // Auto-search on parameter change
+    document.getElementById('searchSector').addEventListener('change', function() {
+        if (document.getElementById('searchQuery').value.trim()) {
+            performSearch();
+        }
+    });
+
+    document.getElementById('searchLimit').addEventListener('change', function() {
+        if (document.getElementById('searchQuery').value.trim()) {
+            performSearch();
+        }
+    });
+
+    // Search function
+    function performSearch() {
+        const formData = new FormData(searchForm);
+        const searchParams = new URLSearchParams(formData);
+        
+        showLoading(true);
+        
+        // Redirect to search with parameters
+        window.location.href = `/stock/search?${searchParams.toString()}`;
+    }
+
+    function showLoading(show) {
+        if (show) {
+            searchLoading.style.display = 'block';
+            searchResults.style.display = 'none';
+        } else {
+            searchLoading.style.display = 'none';
+            searchResults.style.display = 'block';
+        }
+    }
+});
+
+// Add to watchlist function
+function addToWatchlist(symbol) {
+    // Check if user is authenticated
+    if (!window.authUtils || !window.authUtils.isAuthenticated()) {
+        window.location.href = `/login?next=${encodeURIComponent(window.location.pathname)}`;
+        return;
+    }
+
+    // Make API call to add to watchlist
+    fetch(`/stock/${symbol}/add-to-watchlist`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${window.authUtils.getToken()}`
+        },
+        body: JSON.stringify({ symbol: symbol })
+    })
+    .then(response => {
+        if (response.ok) {
+            // Update button to show added state
+            const button = event.target.closest('button');
+            button.innerHTML = '<i class="fas fa-star"></i> Added';
+            button.classList.remove('btn-outline-primary');
+            button.classList.add('btn-warning');
+            button.disabled = true;
+            
+            // Show success message
+            showNotification('Stock added to watchlist!', 'success');
+        } else {
+            throw new Error('Failed to add to watchlist');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding to watchlist:', error);
+        showNotification('Failed to add to watchlist. Please try again.', 'error');
+    });
+}
+
+// Simple notification function
+function showNotification(message, type) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const alert = document.createElement('div');
+    alert.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 1050; max-width: 300px;';
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alert);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.parentNode.removeChild(alert);
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}
