@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}{{ data.article.title }} - QuantumVestAI{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/news">News</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Article</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <article class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <!-- Article Header -->
+                    <header class="mb-4">
+                        <h1 class="h2 mb-3">{{ data.article.title }}</h1>
+                        <div class="d-flex align-items-center gap-3 text-muted mb-3">
+                            <span><i class="bi bi-newspaper"></i> {{ data.article.source }}</span>
+                            <span><i class="bi bi-clock"></i> {{ data.article.published_at[:10] }}</span>
+                            <span class="badge bg-{{ 'success' if data.article.sentiment == 'positive' else 'warning' if data.article.sentiment == 'neutral' else 'danger' }}">
+                                {{ data.article.sentiment.title() }}
+                            </span>
+                        </div>
+                        <p class="lead">{{ data.article.summary }}</p>
+                    </header>
+
+                    <!-- Article Content -->
+                    <div class="article-content">
+                        <p>{{ data.article.summary }}</p>
+                        
+                        <!-- Demo article content -->
+                        <p>This is a demo article showcasing the QuantumVestAI news functionality. In a real implementation, this would contain the full article content retrieved from the news API.</p>
+                        
+                        <p>Key highlights from this article include market trends, financial insights, and relevant analysis for investors using the QuantumVestAI platform.</p>
+                        
+                        {% if data.sentiment.status == 'available' %}
+                        <!-- Sentiment Analysis -->
+                        <div class="alert alert-info mt-4">
+                            <h6 class="alert-heading"><i class="bi bi-bar-chart"></i> AI Sentiment Analysis</h6>
+                            <p class="mb-0">
+                                Sentiment Score: <strong>{{ data.sentiment.score }}</strong> 
+                                ({{ data.sentiment.label.title() }})
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Article Actions -->
+                    <div class="d-flex justify-content-between align-items-center mt-4 pt-4 border-top">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-heart"></i> Like
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-share"></i> Share
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-bookmark"></i> Save
+                            </button>
+                        </div>
+                        <div>
+                            <span class="badge bg-secondary">{{ data.article.category.title() }}</span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Related Articles -->
+            {% if data.related %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="card-title mb-0">Related Articles</h6>
+                </div>
+                <div class="card-body">
+                    {% for article in data.related %}
+                    <div class="mb-3 pb-3 {{ 'border-bottom' if not loop.last else '' }}">
+                        <h6 class="mb-2">
+                            <a href="/news/article/{{ article.id }}" class="text-decoration-none">
+                                {{ article.title }}
+                            </a>
+                        </h6>
+                        <div class="text-muted small">
+                            <span>{{ article.source }}</span>
+                            <span class="mx-2">•</span>
+                            <span>{{ article.published_at[:10] }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Market Impact -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="card-title mb-0">Market Impact</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Overall Impact</span>
+                        <span class="badge bg-{{ 'success' if data.article.sentiment == 'positive' else 'warning' if data.article.sentiment == 'neutral' else 'danger' }}">
+                            {{ data.article.sentiment.title() }}
+                        </span>
+                    </div>
+                    <div class="progress mb-3">
+                        <div class="progress-bar {{ 'bg-success' if data.article.sentiment == 'positive' else 'bg-warning' if data.article.sentiment == 'neutral' else 'bg-danger' }}" 
+                             style="width: {{ (data.sentiment.score * 100) if data.sentiment.status == 'available' else 50 }}%"></div>
+                    </div>
+                    <small class="text-muted">
+                        This article may impact market sentiment based on AI analysis.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Article actions
+    const actionButtons = document.querySelectorAll('.btn-outline-primary');
+    actionButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const action = this.textContent.trim();
+            console.log(`Article action: ${action}`);
+            // In a real implementation, this would send an API request
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -853,6 +853,29 @@ async def enhanced_server_error_handler(request: Request, exc: HTTPException):
             status_code=500
         )
 
+# Add top-level routes for common 404 issues
+@app.get("/portfolio", response_class=HTMLResponse)
+async def portfolio_redirect(request: Request):
+    """Top-level portfolio route - redirect to dashboard portfolio"""
+    return RedirectResponse(url="/dashboard/portfolio", status_code=302)
+
+@app.get("/ticker-search")
+async def ticker_search_redirect(request: Request):
+    """Top-level ticker search route - redirect to market search"""
+    query = request.query_params.get("q", "")
+    if query:
+        return RedirectResponse(url=f"/market/search?q={query}", status_code=302)
+    else:
+        return RedirectResponse(url="/market", status_code=302)
+
+@app.get("/api/ticker-search")
+async def ticker_search_api(request: Request):
+    """Top-level ticker search API route"""
+    from routes.market import ticker_search
+    return await ticker_search(request, 
+                             request.query_params.get("q", ""), 
+                             int(request.query_params.get("limit", "10")))
+
 # Import and include routers with error handling
 def include_router_safely(router_module, router_name):
     """Safely include a router with error handling"""
@@ -875,6 +898,7 @@ routers_to_include = [
     ("routes.settings", "settings"),
     ("routes.api_proxy", "api_proxy"),
     ("routes.utils", "utils"),
+    ("controllers.news_controller", "news_controller"),
 ]
 
 for module_name, router_name in routers_to_include:
