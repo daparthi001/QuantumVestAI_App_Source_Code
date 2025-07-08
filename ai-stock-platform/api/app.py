@@ -1,8 +1,8 @@
 """
 API Application Entry Point
 Created: 2025-06-17 00:07:14
-Updated: 2025-06-17 03:18:36
-Author: daparthi001
+Updated: 2025-07-08 12:56:21
+Author: achavala
 """
 import sys
 import os
@@ -12,6 +12,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from sqlalchemy import text
+from jinja2 import Environment
 
 # Import API components
 from core.config import settings
@@ -25,6 +26,14 @@ app = FastAPI(
     version=settings.VERSION,
     description="QuantumVestAI API",
 )
+
+def format_number(value):
+    """Formats a number with commas and two decimal places."""
+    return f"{value:,.2f}"
+
+# Register Jinja2 filter for formatting numbers
+jinja_env = Environment()
+jinja_env.filters['format_number'] = format_number
 
 # Add CORS middleware
 app.add_middleware(
