@@ -61,7 +61,6 @@ async def get_market_data(symbol: str):
         if e.response.status_code == 429:
             raise HTTPException(status_code=429, detail="Upstream rate limited")
         raise HTTPException(status_code=502, detail="Upstream error")
-
     except Exception as e:
         logger.error(f"Error fetching market data for {symbol}: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch data")
@@ -108,7 +107,6 @@ async def get_news(symbol: str):
         logger.error(f"HTTP error fetching news for {symbol}: {e}")
         if e.response.status_code == 429:
             raise HTTPException(status_code=429, detail="Upstream rate limited")
-
         raise HTTPException(status_code=502, detail="Upstream error")
     except Exception as e:
         logger.error(f"Error fetching news for {symbol}: {e}")
@@ -126,7 +124,6 @@ async def get_sentiment(symbol: str):
         logger.error(f"HTTP error fetching sentiment for {symbol}: {e}")
         if e.response.status_code == 429:
             raise HTTPException(status_code=429, detail="Upstream rate limited")
-
         raise HTTPException(status_code=502, detail="Upstream error")
     except Exception as e:
         logger.error(f"Error fetching sentiment for {symbol}: {e}")

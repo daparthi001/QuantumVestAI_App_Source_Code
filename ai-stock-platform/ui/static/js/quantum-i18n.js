@@ -496,8 +496,8 @@ class QuantumI18n {
         elements.forEach(element => {
             const key = element.getAttribute('data-i18n');
             const translation = this.translate(key);
-            
-            if (translation) {
+
+            if (translation && translation !== key) {
                 // Handle different content types
                 if (element.tagName === 'INPUT' && element.type === 'submit') {
                     element.value = translation;
