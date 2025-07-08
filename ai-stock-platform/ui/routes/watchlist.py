@@ -19,6 +19,11 @@ logger = logging.getLogger(__name__)
 BASE_DIR = Path(__file__).resolve().parent.parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
+
+def get_templates(request: Request) -> Jinja2Templates:
+    """Return app-level templates if available."""
+    return getattr(request.app.state, "templates", templates)
+
 # Demo watchlist data (in-memory for demo)
 DEMO_WATCHLIST = [
     {
@@ -150,7 +155,7 @@ async def watchlist_page(request: Request, view: str = "grid"):
             "alerts_triggered": 2
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "watchlist.html",
             {
                 "request": request,
@@ -165,7 +170,7 @@ async def watchlist_page(request: Request, view: str = "grid"):
         
     except Exception as e:
         logger.error(f"Error loading watchlist: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "watchlist.html",
             {
                 "request": request,
@@ -396,7 +401,7 @@ async def portfolio_page(request: Request):
             }
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "portfolio.html",
             {
                 "request": request,
@@ -409,7 +414,7 @@ async def portfolio_page(request: Request):
         
     except Exception as e:
         logger.error(f"Error loading portfolio page: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "error.html",
             {
                 "request": request,
@@ -443,7 +448,7 @@ async def alerts_page(request: Request):
             }
         ]
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "alerts.html",
             {
                 "request": request,
@@ -455,12 +460,11 @@ async def alerts_page(request: Request):
         
     except Exception as e:
         logger.error(f"Error loading alerts page: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "error.html",
             {
                 "request": request,
                 "error": "Unable to load alerts data",
                 "page_title": "Alerts Error"
             },
-            status_code=500
-        )
+            status_code=500        )

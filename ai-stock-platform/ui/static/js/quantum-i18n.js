@@ -48,6 +48,9 @@ class QuantumI18n {
                 'nav.login': 'Login',
                 'nav.logout': 'Logout',
                 'nav.register': 'Register',
+                'nav.brand': 'QuantumVestAI',
+                'nav.forecast': 'Forecast',
+                'nav.profile': 'Profile',
 
                 // Dashboard
                 'dashboard.title': 'QuantumVestAI Dashboard',
@@ -136,6 +139,9 @@ class QuantumI18n {
                 'nav.login': 'Iniciar Sesión',
                 'nav.logout': 'Cerrar Sesión',
                 'nav.register': 'Registrarse',
+                'nav.brand': 'QuantumVestAI',
+                'nav.forecast': 'Pronóstico',
+                'nav.profile': 'Perfil',
 
                 // Dashboard
                 'dashboard.title': 'Panel de QuantumVestAI',
@@ -186,6 +192,9 @@ class QuantumI18n {
                 'nav.login': 'Connexion',
                 'nav.logout': 'Déconnexion',
                 'nav.register': 'Inscription',
+                'nav.brand': 'QuantumVestAI',
+                'nav.forecast': 'Prévisions',
+                'nav.profile': 'Profil',
 
                 // Dashboard
                 'dashboard.title': 'Tableau de Bord QuantumVestAI',
@@ -210,6 +219,9 @@ class QuantumI18n {
                 'nav.login': 'Anmelden',
                 'nav.logout': 'Abmelden',
                 'nav.register': 'Registrieren',
+                'nav.brand': 'QuantumVestAI',
+                'nav.forecast': 'Prognose',
+                'nav.profile': 'Profil',
 
                 // Dashboard
                 'dashboard.title': 'QuantumVestAI Dashboard',
@@ -234,6 +246,9 @@ class QuantumI18n {
                 'nav.login': '登录',
                 'nav.logout': '退出',
                 'nav.register': '注册',
+                'nav.brand': 'QuantumVestAI',
+                'nav.forecast': '预测',
+                'nav.profile': '个人资料',
 
                 // Dashboard
                 'dashboard.title': 'QuantumVestAI 仪表板',
