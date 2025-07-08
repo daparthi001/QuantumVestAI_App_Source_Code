@@ -31,3 +31,23 @@ ModuleNotFoundError: No module named 'controllers'
 2025-07-08 05:53:35,439 - quantumvestai_ui - ERROR - Could not import forecast_controller: No module named 'controllers'
 2025-07-08 05:53:35,439 - quantumvestai_ui - ERROR - Could not import news_controller: No module named 'controllers'
 2025-07-08 05:53:35,439 - quantumvestai_ui - ERROR - Could not import feature_controller: No module named 'controllers'
+2025-07-08 06:27:21,837 - quantumvestai_ui - INFO - ✓ Template global variables configured (now, API_URL, current_year)
+2025-07-08 06:27:21,837 - quantumvestai_ui - ERROR - Error importing controllers or registering filters: No module named 'controllers'
+2025-07-08 06:27:21,838 - quantumvestai_ui - ERROR - Full traceback: Traceback (most recent call last):
+  File "/home/runner/work/QuantumVestAI_App_Source_Code/QuantumVestAI_App_Source_Code/ai-stock-platform/main.py", line 116, in <module>
+    from controllers import auth_controller
+ModuleNotFoundError: No module named 'controllers'
+
+2025-07-08 06:27:21,838 - quantumvestai_ui - WARNING - 🔄 Falling back to built-in template filters to ensure application stability
+2025-07-08 06:27:21,838 - quantumvestai_ui - INFO - Added 5 fallback template filters to both filters and globals
+2025-07-08 06:27:21,838 - quantumvestai_ui - ERROR - Could not import api_proxy: cannot import name 'api_proxy' from 'routes' (unknown location)
+2025-07-08 06:27:21,839 - quantumvestai_ui - ERROR - Could not import auth_controller: No module named 'controllers'
+2025-07-08 06:27:21,839 - quantumvestai_ui - ERROR - Could not import dashboard_controller: No module named 'controllers'
+2025-07-08 06:27:21,839 - quantumvestai_ui - ERROR - Could not import market_controller: No module named 'controllers'
+2025-07-08 06:27:21,839 - quantumvestai_ui - ERROR - Could not import stock_controller: No module named 'controllers'
+2025-07-08 06:27:21,839 - quantumvestai_ui - ERROR - Could not import watchlist_controller: No module named 'controllers'
+2025-07-08 06:27:21,839 - quantumvestai_ui - ERROR - Could not import profile_controller: No module named 'controllers'
+2025-07-08 06:27:21,840 - quantumvestai_ui - ERROR - Could not import forecast_controller: No module named 'controllers'
+2025-07-08 06:27:21,840 - quantumvestai_ui - ERROR - Could not import news_controller: No module named 'controllers'
+2025-07-08 06:27:21,840 - quantumvestai_ui - ERROR - Could not import feature_controller: No module named 'controllers'
+2025-07-08 06:27:21,847 - quantumvestai_ui - ERROR - Failed to include api_proxy router: 'APIRouter' object has no attribute 'router'
