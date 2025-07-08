@@ -52,6 +52,9 @@ app = FastAPI(
     debug=DEBUG
 )
 
+# Will be initialized in startup event
+trending_stocks_service = None
+
 # Configure CORS
 app = configure_cors(app)
 
@@ -290,42 +293,102 @@ async def get_current_user(request: Request, token: str = Depends(oauth2_scheme)
 
 @app.get("/api/v1/stocks/trending")
 async def trending_stocks(request: Request, page: int = 1, limit: int = 10):
-    """Get trending stocks with pagination validation"""
+    """Get trending stocks with real-time data and caching"""
     logger.info("Trending stocks endpoint accessed")
     
-    # Validate pagination parameters
-    pagination = validate_pagination_params(page, limit)
+    try:
+        # Check if service is initialized
+        if trending_stocks_service is None:
+            logger.error("Trending stocks service not initialized")
+            return create_error_response(
+                message="Service not available",
+                error_code="SERVICE_UNAVAILABLE", 
+                request_id=getattr(request.state, 'request_id', None)
+            )
+        
+        # Validate pagination parameters
+        pagination = validate_pagination_params(page, limit)
+        
+        # Use the trending stocks service to get data
+        result = await trending_stocks_service.get_trending_stocks(
+            page=pagination["page"], 
+            limit=pagination["limit"]
+        )
+        
+        return create_success_response(
+            data=result,
+            message="Trending stocks retrieved successfully",
+            request_id=getattr(request.state, 'request_id', None)
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in trending stocks endpoint: {e}")
+        # Return error response
+        return create_error_response(
+            message="Failed to fetch trending stocks",
+            error_code="INTERNAL_SERVER_ERROR",
+            request_id=getattr(request.state, 'request_id', None)
+        )
+
+
+@app.get("/api/v1/stocks/trending/cache/status")
+async def get_trending_cache_status(request: Request):
+    """Get cache status for trending stocks - useful for monitoring"""
+    logger.info("Cache status endpoint accessed")
     
-    # Mock data with pagination
-    all_stocks = [
-        {"symbol": "AAPL", "name": "Apple Inc.", "change_percent": 2.1, "price": 198.45},
-        {"symbol": "MSFT", "name": "Microsoft Corporation", "change_percent": 1.8, "price": 425.63},
-        {"symbol": "AMZN", "name": "Amazon.com Inc.", "change_percent": 1.5, "price": 187.12},
-        {"symbol": "GOOGL", "name": "Alphabet Inc.", "change_percent": 1.2, "price": 176.89},
-        {"symbol": "NVDA", "name": "NVIDIA Corporation", "change_percent": 3.2, "price": 1024.78},
-        {"symbol": "TSLA", "name": "Tesla Inc.", "change_percent": -0.5, "price": 248.50},
-        {"symbol": "META", "name": "Meta Platforms Inc.", "change_percent": 2.3, "price": 385.20},
-        {"symbol": "NFLX", "name": "Netflix Inc.", "change_percent": 0.8, "price": 445.75}
-    ]
+    try:
+        if trending_stocks_service is None:
+            return create_error_response(
+                message="Service not available",
+                error_code="SERVICE_UNAVAILABLE",
+                request_id=getattr(request.state, 'request_id', None)
+            )
+        
+        cache_status = trending_stocks_service.get_cache_status()
+        
+        return create_success_response(
+            data=cache_status,
+            message="Cache status retrieved successfully",
+            request_id=getattr(request.state, 'request_id', None)
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting cache status: {e}")
+        return create_error_response(
+            message="Failed to get cache status",
+            error_code="INTERNAL_SERVER_ERROR",
+            request_id=getattr(request.state, 'request_id', None)
+        )
+
+
+@app.post("/api/v1/stocks/trending/cache/invalidate")
+async def invalidate_trending_cache(request: Request):
+    """Invalidate trending stocks cache - forces fresh data fetch"""
+    logger.info("Cache invalidation endpoint accessed")
     
-    # Apply pagination
-    start_idx = (pagination["page"] - 1) * pagination["limit"]
-    end_idx = start_idx + pagination["limit"]
-    paginated_stocks = all_stocks[start_idx:end_idx]
-    
-    return create_success_response(
-        data={
-            "stocks": paginated_stocks,
-            "pagination": {
-                "page": pagination["page"],
-                "limit": pagination["limit"],
-                "total": len(all_stocks),
-                "has_next": end_idx < len(all_stocks),
-                "has_prev": pagination["page"] > 1
-            }
-        },
-        request_id=getattr(request.state, 'request_id', None)
-    )
+    try:
+        if trending_stocks_service is None:
+            return create_error_response(
+                message="Service not available",
+                error_code="SERVICE_UNAVAILABLE",
+                request_id=getattr(request.state, 'request_id', None)
+            )
+        
+        trending_stocks_service.invalidate_cache()
+        
+        return create_success_response(
+            data={"message": "Cache invalidated successfully"},
+            message="Trending stocks cache has been cleared",
+            request_id=getattr(request.state, 'request_id', None)
+        )
+        
+    except Exception as e:
+        logger.error(f"Error invalidating cache: {e}")
+        return create_error_response(
+            message="Failed to invalidate cache",
+            error_code="INTERNAL_SERVER_ERROR",
+            request_id=getattr(request.state, 'request_id', None)
+        )
 
 
 @app.get("/api/v1/stocks/{symbol}")
@@ -381,9 +444,34 @@ async def get_stock(request: Request, symbol: str):
 @app.on_event("startup")
 async def startup_event():
     """Enhanced startup event with database initialization"""
+    global trending_stocks_service
+    
     logger.info(f"Starting QuantumVestAI API v{API_VERSION}")
     logger.info(f"Environment: {API_ENV}")
     logger.info(f"Debug mode: {DEBUG}")
+    
+    # Initialize services
+    try:
+        # Import directly to avoid circular imports
+        import sys
+        import os
+        sys.path.append(os.path.dirname(__file__))
+        
+        # Import directly without going through __init__.py
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "trending_stocks_service", 
+            os.path.join(os.path.dirname(__file__), "services", "trending_stocks_service.py")
+        )
+        trending_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(trending_module)
+        
+        trending_stocks_service = trending_module.TrendingStocksService()
+        logger.info("Trending stocks service initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize trending stocks service: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
     
     # Initialize database
     if initialize_database():
