@@ -176,12 +176,50 @@ async def market_overview(request: Request):
             }
         ]
         
+        data = {
+            "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "overview": {
+                "status": "available",
+                "indices": list(DEMO_MARKET_DATA.get("indices", {}).values()),
+                "summary": {
+                    "advancing": 3500,
+                    "advancing_percent": 55.0,
+                    "declining": 2800,
+                    "declining_percent": 44.0,
+                    "total_volume": 1_500_000_000,
+                    "total_market_cap": 50_000_000_000_000,
+                    "new_highs": 120,
+                    "new_lows": 45,
+                    "market_mood": 20
+                }
+            },
+            "sectors": {
+                "status": "available",
+                "data": [
+                    {
+                        "id": name.lower().replace(" ", "-"),
+                        "name": name,
+                        "change_percent": info.get("change_pct"),
+                        "volume": info.get("volume")
+                    }
+                    for name, info in DEMO_MARKET_DATA.get("sectors", {}).items()
+                ]
+            },
+            "movers": {
+                "status": "available",
+                "gainers": DEMO_MARKET_DATA.get("top_movers", {}).get("gainers", []),
+                "losers": DEMO_MARKET_DATA.get("top_movers", {}).get("losers", [])
+            },
+            "sentiment": None,
+            "user": None
+        }
+
         return get_templates(request).TemplateResponse(
             "market/overview.html",
             {
                 "request": request,
                 "demo_mode": True,
-                "data": DEMO_MARKET_DATA,
+                "data": data,
                 "market_news": market_news,
                 "page_title": "Market Overview - QuantumVestAI"
             }
@@ -194,10 +232,17 @@ async def market_overview(request: Request):
             {
                 "request": request,
                 "demo_mode": True,
-                "data": {"indices": {}, "sectors": {}, "top_movers": {}},
+                "data": {
+                    "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
+                    "overview": None,
+                    "sectors": None,
+                    "movers": None,
+                    "sentiment": None,
+                    "user": None,
+                },
                 "market_news": [],
                 "error": "Failed to load market data",
-                "page_title": "Market Overview Error"
+                "page_title": "Market Overview Error",
             },
             status_code=500
         )
