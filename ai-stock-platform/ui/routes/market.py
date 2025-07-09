@@ -181,7 +181,7 @@ async def market_overview(request: Request):
             {
                 "request": request,
                 "demo_mode": True,
-                "market_data": DEMO_MARKET_DATA,
+                "data": DEMO_MARKET_DATA,
                 "market_news": market_news,
                 "page_title": "Market Overview - QuantumVestAI"
             }
@@ -194,7 +194,7 @@ async def market_overview(request: Request):
             {
                 "request": request,
                 "demo_mode": True,
-                "market_data": {"indices": {}, "sectors": {}, "top_movers": {}},
+                "data": {"indices": {}, "sectors": {}, "top_movers": {}},
                 "market_news": [],
                 "error": "Failed to load market data",
                 "page_title": "Market Overview Error"
