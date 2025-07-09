@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 from twitter_sentiment_simple import TwitterSentimentAnalyzer
 from twitter_config import twitter_config
+from services.trending_stocks_service import TrendingStocksService
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,7 @@ class SocialMediaAPI:
     
     def __init__(self):
         self.twitter_analyzer = None
+        self.trending_service = TrendingStocksService()
     
     def get_twitter_analyzer(self):
         """Get or create Twitter sentiment analyzer instance"""
@@ -79,52 +81,9 @@ class SocialMediaAPI:
     async def get_trending_stocks(self, limit: int = 10) -> Dict[str, Any]:
         """Get trending stocks based on Twitter activity"""
         try:
-            # Get the Twitter analyzer
-            analyzer = self.get_twitter_analyzer()
-            
-            # For now, return demo data with proper structure
-            # In a real implementation, this would analyze multiple stocks
-            demo_trending = [
-                {
-                    "ticker": "AAPL",
-                    "tweet_count": 1250,
-                    "engagement": 15000,
-                    "sentiment": 0.15,
-                    "volume_change": 0.08
-                },
-                {
-                    "ticker": "TSLA",
-                    "tweet_count": 980,
-                    "engagement": 12000,
-                    "sentiment": 0.22,
-                    "volume_change": 0.12
-                },
-                {
-                    "ticker": "MSFT",
-                    "tweet_count": 750,
-                    "engagement": 9500,
-                    "sentiment": 0.05,
-                    "volume_change": 0.03
-                },
-                {
-                    "ticker": "GOOGL",
-                    "tweet_count": 620,
-                    "engagement": 7800,
-                    "sentiment": -0.02,
-                    "volume_change": -0.01
-                },
-                {
-                    "ticker": "AMZN",
-                    "tweet_count": 580,
-                    "engagement": 6900,
-                    "sentiment": 0.08,
-                    "volume_change": 0.05
-                }
-            ]
-            
-            # Apply limit
-            trending_data = demo_trending[:limit]
-            
+            trending_result = await self.trending_service.get_trending_stocks(page=1, limit=limit)
+            trending_data = trending_result.get("stocks", [])
+
             return {
                 "status": "success",
                 "data": {

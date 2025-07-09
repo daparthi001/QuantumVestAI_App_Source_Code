@@ -3,9 +3,15 @@ Authentication Tests
 Created: 2025-05-19 04:07:03
 Author: daparthi001
 """
+import os
+import sys
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+sys.path.append(ROOT)
+sys.path.append(os.path.join(ROOT, "api"))
 import pytest
+pytest.importorskip("httpx")
 from fastapi.testclient import TestClient
-from main import app
+from api.main import app
 from core.security import create_access_token
 
 client = TestClient(app)

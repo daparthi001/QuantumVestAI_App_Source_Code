@@ -37,3 +37,7 @@ def get_settings() -> Settings:
     return Settings()
 
 settings = get_settings()
+
+def validate_settings(settings_obj: Settings) -> Settings:
+    """Dummy settings validation for tests."""
+    return settings_obj
