@@ -26,5 +26,4 @@ __all__ = [
     "WatchList",
     "Position",
     "Transaction",
-    "PortfolioSummary",
-    "TransactionType"]
+    "PortfolioSummary",    "TransactionType"]

@@ -18,5 +18,4 @@ async def test_health():
     health_data = await get_health_data()
     print(json.dumps(health_data, indent=2))
     print("Health check function test completed")
-
 if __name__ == "__main__":    asyncio.run(test_health())

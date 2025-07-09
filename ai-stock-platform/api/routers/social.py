@@ -17,6 +17,7 @@ sys.path.append(parent_dir)
 
 # Import Twitter configuration and analyzer
 from twitter_config import twitter_config
+from services.trending_stocks_service import TrendingStocksService
 
 logger = logging.getLogger(__name__)
 
@@ -142,9 +143,10 @@ class TwitterSentimentAnalyzer:
 # Social Media API endpoints
 class SocialAPI:
     """Social media API endpoints"""
-    
+
     def __init__(self):
         self.twitter_analyzer = TwitterSentimentAnalyzer()
+        self.trending_service = TrendingStocksService()
     
     async def get_twitter_sentiment(self, symbol: str, days: int = 7, max_tweets: int = 500):
         """Get Twitter sentiment analysis for a stock symbol"""
@@ -182,71 +184,17 @@ class SocialAPI:
     async def get_trending_stocks(self, limit: int = 10):
         """Get trending stocks based on Twitter activity"""
         try:
-            # Demo trending data with realistic structure
-            demo_trending = [
-                {
-                    "ticker": "AAPL",
-                    "tweet_count": 1250,
-                    "engagement": 15000,
-                    "sentiment": 0.15,
-                    "volume_change": 0.08
-                },
-                {
-                    "ticker": "TSLA", 
-                    "tweet_count": 980,
-                    "engagement": 12000,
-                    "sentiment": 0.22,
-                    "volume_change": 0.12
-                },
-                {
-                    "ticker": "MSFT",
-                    "tweet_count": 750,
-                    "engagement": 9500,
-                    "sentiment": 0.05,
-                    "volume_change": 0.03
-                },
-                {
-                    "ticker": "GOOGL",
-                    "tweet_count": 620,
-                    "engagement": 7800,
-                    "sentiment": -0.02,
-                    "volume_change": -0.01
-                },
-                {
-                    "ticker": "AMZN",
-                    "tweet_count": 580,
-                    "engagement": 6900,
-                    "sentiment": 0.08,
-                    "volume_change": 0.05
-                },
-                {
-                    "ticker": "NVDA",
-                    "tweet_count": 520,
-                    "engagement": 6200,
-                    "sentiment": 0.18,
-                    "volume_change": 0.15
-                },
-                {
-                    "ticker": "META",
-                    "tweet_count": 480,
-                    "engagement": 5800,
-                    "sentiment": -0.05,
-                    "volume_change": 0.02
-                }
-            ]
-            
-            # Apply limit
-            trending_data = demo_trending[:limit]
-            
+            trending_result = await self.trending_service.get_trending_stocks(page=1, limit=limit)
+            trending_data = trending_result.get("stocks", [])
+
             return {
                 "status": "success",
                 "data": {
                     "trending_tickers": trending_data,
                     "count": len(trending_data),
                     "last_updated": datetime.now().isoformat(),
-                    "note": "Demo data - Real Twitter API integration available with credentials"
                 },
-                "message": "Successfully retrieved trending stocks from Twitter"
+                "message": "Successfully retrieved trending stocks from Twitter",
             }
             
         except Exception as e:
@@ -277,13 +225,12 @@ class SocialAPI:
             return {
                 "status": "success",
                 "data": {
-                    "status": "healthy" if has_credentials else "demo_mode",
+                    "status": "healthy" if has_credentials else "not_configured",
                     "configuration": config_status,
                     "api_status": api_status,
                     "last_checked": datetime.now().isoformat(),
-                    "note": "Running in demo mode" if not has_credentials else "Twitter API configured"
                 },
-                "message": "Twitter API health check completed"
+                "message": "Twitter API health check completed",
             }
             
         except Exception as e:
@@ -307,5 +254,4 @@ async def get_trending_tickers(limit: int = 10):
     return await social_api.get_trending_stocks(limit)
 
 def get_twitter_health():
-    """Get Twitter API health status"""
-    return social_api.check_twitter_health()
+    """Get Twitter API health status"""    return social_api.check_twitter_health()
