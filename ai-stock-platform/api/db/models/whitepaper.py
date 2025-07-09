@@ -8,6 +8,7 @@ from db.base_class import Base
 class Whitepaper(Base):
     """Whitepaper model for storing uploaded documents."""
     __tablename__ = "whitepapers"
+    __table_args__ = {"extend_existing": True}
     
     id = Column(String, primary_key=True, default=lambda: str(uuid4()))
     title = Column(String, nullable=False)
@@ -30,11 +31,11 @@ class Whitepaper(Base):
 class WhitepaperAnalysis(Base):
     """Model for storing whitepaper analysis results."""
     __tablename__ = "whitepaper_analyses"
+    __table_args__ = {"extend_existing": True}
     
     id = Column(String, primary_key=True, default=lambda: str(uuid4()))
     whitepaper_id = Column(String, ForeignKey("whitepapers.id"))
     analysis_data = Column(JSON, nullable=False)
     created_at = Column(DateTime, nullable=False)
     
-    # Relationships
-    whitepaper = relationship("Whitepaper", back_populates="analyses")
+    # Relationships    whitepaper = relationship("Whitepaper", back_populates="analyses")

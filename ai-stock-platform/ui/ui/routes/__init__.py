@@ -1,16 +1,10 @@
+"""Compatibility layer for legacy imports.
+
+This module re-exports objects from :mod:`ui.routes` so that code importing
+``ui.routes.*`` continues to function.
 """
-UI Routes Module - Import Compatibility Layer
-
-This module provides backward compatibility for code importing from ui.routes.
-New code should import directly from routes.
-"""
-
-# Import all routes directly to make them available through ui.routes
-from routes.auth import *
-from routes.admin import *
-from routes.forecast import *
-from routes.predictability import *
-from routes.watchlist import *
-    pass
-
-__all__ = []
+from ...routes.auth import *  # noqa: F401,F403
+from ...routes.admin import *  # noqa: F401,F403
+from ...routes.forecast import *  # noqa: F401,F403
+from ...routes.predictability import *  # noqa: F401,F403
+from ...routes.watchlist import *  # noqa: F401,F403

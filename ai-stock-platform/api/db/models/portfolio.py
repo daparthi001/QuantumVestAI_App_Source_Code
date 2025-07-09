@@ -22,6 +22,7 @@ class TransactionType(str, enum.Enum):
 class Position(Base, TimestampMixin):
     """Portfolio position model"""
     __tablename__ = "positions"
+    __table_args__ = {"extend_existing": True}
 
     # Primary fields
     id: Mapped[int] = Column(Integer, primary_key=True, index=True)
@@ -89,6 +90,7 @@ class Position(Base, TimestampMixin):
 class Transaction(Base, TimestampMixin):
     """Portfolio transaction model"""
     __tablename__ = "transactions"
+    __table_args__ = {"extend_existing": True}
 
     # Primary fields
     id: Mapped[int] = Column(Integer, primary_key=True, index=True)
