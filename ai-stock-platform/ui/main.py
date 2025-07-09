@@ -116,35 +116,7 @@ async def service_worker():
 API_URL = os.environ.get("API_URL", "http://localhost:8000")
 API_V1_URL = f"{API_URL}/api/v1"
 
-# Enhanced template filters and utilities setup
-try:
-    # Import and register comprehensive template filters
-    from utils.template_filters import register_filters, validate_template_filters, get_template_filter_status
-    
-    # Register all template filters
-    filter_registration_success = register_filters(app)
-    
-    if filter_registration_success:
-        logger.info("✓ Comprehensive template filters registered successfully")
-        
-        # Validate that critical filters are working
-        validation_success = validate_template_filters(app)
-        if validation_success:
-            logger.info("✓ Template filter validation passed")
-        else:
-            logger.warning("⚠ Template filter validation failed, but registration succeeded")
-    else:
-        logger.error("✗ Template filter registration failed, adding fallback filters")
-        # Add minimal fallback filters if comprehensive registration fails
-        _add_fallback_filters(templates)
-
-except ImportError as e:
-    logger.error(f"Could not import template filters module: {e}")
-    _add_fallback_filters(templates)
-except Exception as e:
-    logger.error(f"Error setting up template filters: {e}")
-    _add_fallback_filters(templates)
-
+# Helper to add fallback filters. Defined before attempting imports so it is available during error handling
 def _add_fallback_filters(templates):
     """Add minimal fallback filters if comprehensive system fails"""
     def get_asset_url(path, version=None):
@@ -171,7 +143,7 @@ def _add_fallback_filters(templates):
         """Format large numbers with K, M, B suffixes"""
         if not isinstance(value, (int, float)):
             return str(value)
-        
+
         if abs(value) >= 1e9:
             return f"{value / 1e9:.1f}B"
         elif abs(value) >= 1e6:
@@ -208,15 +180,15 @@ def _add_fallback_filters(templates):
                 value = datetime.fromisoformat(value.replace('Z', '+00:00'))
             elif not isinstance(value, datetime):
                 return str(value)
-            
+
             now = datetime.utcnow()
             if value.tzinfo is not None:
                 # Convert to UTC for comparison
                 value = value.replace(tzinfo=None)
-            
+
             diff = now - value
             seconds = diff.total_seconds()
-            
+
             if seconds < 60:
                 return "just now"
             elif seconds < 3600:
@@ -245,8 +217,37 @@ def _add_fallback_filters(templates):
     templates.env.filters["format_change_value"] = format_change_value
     templates.env.filters["humanize_date"] = humanize_date
     templates.env.filters["format_number"] = format_number
-    
+
     logger.info("✓ Fallback template filters registered")
+
+# Enhanced template filters and utilities setup
+try:
+    # Import and register comprehensive template filters
+    from utils.template_filters import register_filters, validate_template_filters, get_template_filter_status
+    
+    # Register all template filters
+    filter_registration_success = register_filters(app)
+    
+    if filter_registration_success:
+        logger.info("✓ Comprehensive template filters registered successfully")
+        
+        # Validate that critical filters are working
+        validation_success = validate_template_filters(app)
+        if validation_success:
+            logger.info("✓ Template filter validation passed")
+        else:
+            logger.warning("⚠ Template filter validation failed, but registration succeeded")
+    else:
+        logger.error("✗ Template filter registration failed, adding fallback filters")
+        # Add minimal fallback filters if comprehensive registration fails
+        _add_fallback_filters(templates)
+
+except ImportError as e:
+    logger.error(f"Could not import template filters module: {e}")
+    _add_fallback_filters(templates)
+except Exception as e:
+    logger.error(f"Error setting up template filters: {e}")
+    _add_fallback_filters(templates)
 
 # Add globals for template context
 templates.env.globals["now"] = datetime.utcnow
