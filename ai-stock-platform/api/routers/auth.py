@@ -17,7 +17,8 @@ from api.core.auth.dependencies import get_current_user, get_current_active_user
 from api.core.database import get_db_session
 from api.core.config import settings
 from api.models.response import StandardResponse
-from api.models.user import User
+# Use the SQLAlchemy model from the consolidated db.models package
+from db.models.user import User
 from api.schemas.auth import Token, UserResponse
 
 # Create router WITHOUT a prefix (prefix will be added in main.py)

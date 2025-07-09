@@ -1,7 +1,16 @@
 """
 Application configuration.
 """
-from pydantic_settings import BaseSettings
+try:
+    from pydantic_settings import BaseSettings, SettingsConfigDict
+except Exception:  # noqa: BLE001 - fallback for environments without pydantic_settings
+    from pydantic import BaseModel
+
+    class BaseSettings(BaseModel):
+        class Config:
+            extra = "ignore"
+
+    SettingsConfigDict = dict
 import os
 from functools import lru_cache
 
