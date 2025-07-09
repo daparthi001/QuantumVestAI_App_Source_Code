@@ -16,6 +16,11 @@ API_URL = "http://quantumvestai-dev-api:8000/api/v1"
 # Setup router and templates
 router = APIRouter()
 templates = Jinja2Templates(directory=str(Path("/app/templates")))
+
+
+def get_templates(request: Request) -> Jinja2Templates:
+    """Return app-level templates if available."""
+    return getattr(request.app.state, "templates", templates)
 logger = logging.getLogger(__name__)
 
 @router.get("/profile", response_class=HTMLResponse)
