@@ -88,6 +88,14 @@ app.add_middleware(
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 app.state.templates = templates
 
+
+def get_templates(request: Request) -> Jinja2Templates:
+    """Return the application templates object."""
+    return getattr(request.app.state, "templates", templates)
+
+# Expose helper to templates in case a page references it
+templates.env.globals["get_templates"] = get_templates
+
 # Mount static files
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
@@ -835,10 +843,10 @@ async def track_pageview(request: Request, pageview_data: PageviewRequest):
 async def enhanced_not_found_handler(request: Request, exc: HTTPException):
     """Enhanced 404 error handler"""
     try:
-        return templates.TemplateResponse(
-            "404.html", 
+        return get_templates(request).TemplateResponse(
+            "404.html",
             {
-                "request": request, 
+                "request": request,
                 "path": request.url.path,
                 "api_url": API_URL
             },
@@ -857,10 +865,10 @@ async def enhanced_not_found_handler(request: Request, exc: HTTPException):
 async def enhanced_server_error_handler(request: Request, exc: HTTPException):
     """Enhanced 500 error handler"""
     try:
-        return templates.TemplateResponse(
-            "errors/500.html", 
+        return get_templates(request).TemplateResponse(
+            "errors/500.html",
             {
-                "request": request, 
+                "request": request,
                 "error": str(exc),
                 "api_url": API_URL
             },
@@ -917,6 +925,7 @@ routers_to_include = [
     ("routes.watchlist", "watchlist"),
     ("routes.predictability", "predictability"),
     ("routes.settings", "settings"),
+    ("routes.ai_api", "ai_api"),
     ("routes.api_proxy", "api_proxy"),
     ("routes.utils", "utils"),
     ("controllers.news_controller", "news_controller"),

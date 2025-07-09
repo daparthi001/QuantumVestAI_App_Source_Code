@@ -13,6 +13,10 @@ from pathlib import Path
 
 router = APIRouter()
 templates = Jinja2Templates(directory=str(Path("/app/templates")))
+
+def get_templates(request: Request) -> Jinja2Templates:
+    """Return app-level templates if available."""
+    return getattr(request.app.state, "templates", templates)
 logger = logging.getLogger("quantumvestai.watchlist_controller")
 
 # Get API URL from environment or use default
@@ -44,7 +48,7 @@ async def view_watchlist(request: Request):
         )
     except Exception as e:
         logger.error(f"Watchlist error: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "error.html",
             {"request": request, "error": str(e)},
             status_code=500

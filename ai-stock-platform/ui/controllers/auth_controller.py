@@ -16,10 +16,11 @@ from pathlib import Path
 router = APIRouter()
 logger = logging.getLogger("quantumvestai.auth_controller")
 
-# Get templates from app state
-def get_templates():
-    from main import app
-    return app.state.templates
+templates = Jinja2Templates(directory=str(Path("templates")))
+
+def get_templates(request: Request) -> Jinja2Templates:
+    """Return app-level templates if available."""
+    return getattr(request.app.state, "templates", templates)
 
 # Get API URL from environment or use default
 API_URL = os.environ.get("API_URL", "http://quantumvestai-dev-api:8000/api/v1")
@@ -64,8 +65,8 @@ def format_error_message(error_data):
 @router.get("/auth/login", response_class=HTMLResponse)
 async def login_page(request: Request, next: str = "/dashboard", msg: str = None):
     """Render login page"""
-    templates = get_templates()
-    return templates.TemplateResponse(
+    templates = get_templates(request)
+    return get_templates(request).TemplateResponse(
         "auth/login.html", 
         {
             "request": request, 
@@ -86,7 +87,7 @@ async def login_post(
 ):
     """Process login form submission"""
     logger.info(f"Login attempt for username: {username}")
-    templates = get_templates()
+    templates = get_templates(request)
     
     try:
         # TODO: Add main API login logic here
@@ -124,7 +125,7 @@ async def login_post(
                 logger.info(f"Emergency login successful for {username}")
                 return response
                 
-            return templates.TemplateResponse(
+            return get_templates(request).TemplateResponse(
                 "auth/login.html",
                 {
                     "request": request, 
@@ -182,7 +183,7 @@ async def login_post(
             logger.info(f"Emergency login successful for {username}")
             return response
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "auth/login.html",
             {
                 "request": request, 
@@ -194,7 +195,7 @@ async def login_post(
         )
     except Exception as e:
         logger.error(f"Unexpected error during login: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "auth/login.html",
             {
                 "request": request, 
@@ -220,8 +221,8 @@ async def logout_shortcut():
 @router.get("/auth/register", response_class=HTMLResponse)
 async def register_page(request: Request):
     """Render registration page"""
-    templates = get_templates()
-    return templates.TemplateResponse(
+    templates = get_templates(request)
+    return get_templates(request).TemplateResponse(
         "auth/register.html", 
         {
             "request": request,
@@ -242,11 +243,11 @@ async def register_post(
 ):
     """Process registration form submission"""
     logger.info(f"Registration attempt for username: {username}")
-    templates = get_templates()
+    templates = get_templates(request)
     
     # Check if terms were accepted
     if not terms:
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "auth/register.html",
             {
                 "request": request, 
@@ -260,7 +261,7 @@ async def register_post(
     
     # Check if passwords match
     if password != confirm_password:
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "auth/register.html",
             {
                 "request": request, 
@@ -307,7 +308,7 @@ async def register_post(
                 error_msg = f"Registration failed: {response.text[:100]}"
         
         logger.warning(f"Registration failed for {username}: {error_msg}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "auth/register.html",
             {
                 "request": request, 
@@ -330,7 +331,7 @@ async def register_post(
             )
         
         # If not in emergency mode, show error
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "auth/register.html",
             {
                 "request": request, 
@@ -343,7 +344,7 @@ async def register_post(
         )
     except Exception as e:
         logger.exception(f"Unexpected error during registration: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "auth/register.html",
             {
                 "request": request, 
@@ -358,8 +359,8 @@ async def register_post(
 @router.get("/auth/password-reset", response_class=HTMLResponse)
 async def password_reset_page(request: Request):
     """Render password reset request page"""
-    templates = get_templates()
-    return templates.TemplateResponse(
+    templates = get_templates(request)
+    return get_templates(request).TemplateResponse(
         "auth/password_reset.html", 
         {
             "request": request,
@@ -370,14 +371,14 @@ async def password_reset_page(request: Request):
 @router.post("/auth/password-reset")
 async def password_reset_post(request: Request, email: str = Form(...)):
     """Process password reset request"""
-    templates = get_templates()
+    templates = get_templates(request)
     
     try:
         # TODO: Add password reset logic here
         # For now, just show success message
         
         # Always show success message for security (don't reveal if email exists)
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "auth/password_reset.html",
             {
                 "request": request,
@@ -390,7 +391,7 @@ async def password_reset_post(request: Request, email: str = Form(...)):
     except Exception as e:
         logger.error(f"Error during password reset: {str(e)}")
         # Still show success message for security
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "auth/password_reset.html",
             {
                 "request": request,
