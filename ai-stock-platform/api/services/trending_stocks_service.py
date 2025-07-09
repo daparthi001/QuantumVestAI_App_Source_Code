@@ -235,3 +235,4 @@ class TrendingStocksService:
             "ttl_seconds": self.cache_ttl,
             "items_count": len(self._cache.get("stocks", [])),
             "last_updated": self._cache_timestamp.isoformat()        }
+
