@@ -511,5 +511,6 @@ async def startup_event():
     logger.info("Enhanced QuantumVestAI API startup complete")
 
 
-# Check if this script is executed directlyif __name__ == "__main__":    import uvicorn
+
+if __name__ == "__main__":    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
