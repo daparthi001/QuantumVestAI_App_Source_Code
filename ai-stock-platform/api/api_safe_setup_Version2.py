@@ -73,7 +73,8 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
-from ...db.session import get_db
+# Updated import to absolute path to avoid relative import issues
+from db.session import get_db
 from ...schemas.token import TokenData
 from ...schemas.user import User
 
