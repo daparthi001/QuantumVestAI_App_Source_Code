@@ -84,6 +84,8 @@ class ConnectionManager:
                     
     async def handle_disconnection(self, websocket: WebSocket):
         """Remove a websocket from all tracking structures."""
-        for client_id, connections in self.active_connections.copy().items():            if websocket in connections:
-                await self.disconnect(websocket, client_id)
-                break
+
+        for client_id, connections in self.active_connections.copy().items():           
+            if websocket in connections:
+              await self.disconnect(websocket, client_id)
+              break
