@@ -150,5 +150,4 @@ class ARIMAModel(BaseModel):
             "rmse": 2.37,
             "mae": 1.98,
             "mape": 1.06,
-            "accuracy": 70.0
-        }
+            "accuracy": 70.0        }

@@ -7,18 +7,19 @@ from .models import (
     PricePredictionModel,
     SentimentAnalysisModel,
     TrendAnalysisModel,
-    PortfolioOptimizationModel
+    PortfolioOptimizationModel,
 )
 from .preprocessing import (
     DataPreprocessor,
     FeatureEngineering,
-    DataNormalization
+    DataNormalization,
 )
 from .evaluation import (
     ModelEvaluator,
     PerformanceMetrics,
-    BacktestEngine
+    BacktestEngine,
 )
+from .ensemble_model import EnsemblePredictor, linear_regression_predict
 
 __all__ = [
     "PricePredictionModel",
@@ -29,6 +30,7 @@ __all__ = [
     "FeatureEngineering",
     "DataNormalization",
     "ModelEvaluator",
-    "PerformanceMetrics",
-    "BacktestEngine"
+    "PerformanceMetrics",    "BacktestEngine",
+    "EnsemblePredictor",
+    "linear_regression_predict",
 ]

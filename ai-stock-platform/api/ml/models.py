@@ -214,5 +214,4 @@ class ModelManager:
             'predicted_close': predictions
         })
         
-        predictions_df = predictions_df.set_index('date')
-        return predictions_df
+        predictions_df = predictions_df.set_index('date')        return predictions_df
