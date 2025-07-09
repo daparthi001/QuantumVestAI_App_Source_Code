@@ -16,6 +16,11 @@ logger = logging.getLogger(__name__)
 # Initialize templates
 templates = Jinja2Templates(directory="templates")
 
+
+def get_templates(request: Request) -> Jinja2Templates:
+    """Return app-level templates if available."""
+    return getattr(request.app.state, "templates", templates)
+
 router = APIRouter(tags=["features"])
 
 @router.get("/features")
@@ -43,7 +48,7 @@ async def sentiment_analysis(
             # Fetch sentiment analysis data
             sentiment_data = await api_client.get_sentiment_analysis(ticker, period)
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "features/sentiment.html",
             {
                 "request": request,
@@ -56,7 +61,7 @@ async def sentiment_analysis(
         )
     except Exception as e:
         logger.error(f"Error loading sentiment analysis feature: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "features/sentiment.html",
             {
                 "request": request,
@@ -87,7 +92,7 @@ async def multi_factor_analysis(
             # Fetch multi-factor analysis data
             analysis_data = await api_client.get_multi_factor_analysis(ticker)
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "features/multi_factor.html",
             {
                 "request": request,
@@ -99,7 +104,7 @@ async def multi_factor_analysis(
         )
     except Exception as e:
         logger.error(f"Error loading multi-factor analysis feature: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "features/multi_factor.html",
             {
                 "request": request,
@@ -126,7 +131,7 @@ async def portfolio_optimization(
         # Fetch portfolio optimization data
         optimization_data = await api_client.get_portfolio_optimization(user_id=user.get("id") if user else None)
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "features/portfolio_optimization.html",
             {
                 "request": request,
@@ -137,7 +142,7 @@ async def portfolio_optimization(
         )
     except Exception as e:
         logger.error(f"Error loading portfolio optimization feature: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "features/portfolio_optimization.html",
             {
                 "request": request,
@@ -167,7 +172,7 @@ async def extended_predictions(
             # Fetch extended prediction data
             prediction_data = await api_client.get_extended_predictions(ticker, interval)
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "features/extended_predictions.html",
             {
                 "request": request,
@@ -180,7 +185,7 @@ async def extended_predictions(
         )
     except Exception as e:
         logger.error(f"Error loading extended predictions feature: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "features/extended_predictions.html",
             {
                 "request": request,
@@ -208,7 +213,7 @@ async def custom_indicators(
         # Fetch custom indicators data
         indicators_data = await api_client.get_custom_indicators(user_id=user.get("id") if user else None)
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "features/custom_indicators.html",
             {
                 "request": request,
@@ -222,7 +227,7 @@ async def custom_indicators(
         )
     except Exception as e:
         logger.error(f"Error loading custom indicators feature: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "features/custom_indicators.html",
             {
                 "request": request,
