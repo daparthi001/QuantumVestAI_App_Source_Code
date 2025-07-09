@@ -1,8 +1,15 @@
 """
 Tests for the API client service.
 """
+import os
+import sys
 import pytest
 from unittest.mock import patch, MagicMock
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+sys.path.append(ROOT)
+sys.path.append(os.path.join(ROOT, "ai-stock-platform"))
+sys.path.append(os.path.join(ROOT, "ai-stock-platform", "api"))
+pytest.importorskip("requests")
 import requests
 import json
 

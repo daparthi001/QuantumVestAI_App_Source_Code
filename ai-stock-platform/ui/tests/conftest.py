@@ -2,7 +2,13 @@
 Pytest configuration and fixtures for QuantumVestAI UI tests.
 """
 import os
+import sys
 import pytest
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+sys.path.append(ROOT)
+sys.path.append(os.path.join(ROOT, "ai-stock-platform"))
+sys.path.append(os.path.join(ROOT, "ai-stock-platform", "api"))
+pytest.importorskip("httpx")
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock

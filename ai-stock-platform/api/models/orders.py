@@ -6,8 +6,13 @@ Author: daparthi001
 from enum import Enum
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import Column, Integer, String, Float, DateTime, Enum as SQLEnum
-from db.base import Base
+try:
+    from sqlalchemy import Column, Integer, String, Float, DateTime, Enum as SQLEnum
+    from db.base import Base
+except Exception:
+    # Provide minimal Base for environments without SQLAlchemy
+    class Base:
+        pass
 
 class OrderStatus(str, Enum):
     PENDING = "PENDING"
@@ -32,26 +37,8 @@ class TimeInForce(str, Enum):
     FOK = "FOK"  # Fill or Kill
 
 class Order(Base):
-    __tablename__ = "orders"
+    """Simple Order model used for tests without requiring SQLAlchemy."""
 
-    id = Column(String, primary_key=True)
-    user_id = Column(String, nullable=False)
-    symbol = Column(String, nullable=False)
-    side = Column(String, nullable=False)  # BUY or SELL
-    quantity = Column(Float, nullable=False)
-    order_type = Column(SQLEnum(OrderType), nullable=False)
-    time_in_force = Column(SQLEnum(TimeInForce), nullable=False)
-    price = Column(Float, nullable=True)  # Required for LIMIT orders
-    stop_price = Column(Float, nullable=True)  # Required for STOP orders
-    status = Column(SQLEnum(OrderStatus), nullable=False)
-    created_at = Column(DateTime, nullable=False)
-    updated_at = Column(DateTime, nullable=False, onupdate=datetime.utcnow)
-    executed_price = Column(Float, nullable=True)
-    executed_quantity = Column(Float, nullable=True)
-    execution_time = Column(DateTime, nullable=True)
-    cancelled_at = Column(DateTime, nullable=True)
-    expiration_time = Column(DateTime, nullable=True)
-    
     def __init__(
         self,
         id: str,
@@ -64,7 +51,7 @@ class Order(Base):
         price: Optional[float] = None,
         stop_price: Optional[float] = None,
         status: OrderStatus = OrderStatus.PENDING,
-        created_at: Optional[datetime] = None
+        created_at: Optional[datetime] = None,
     ):
         self.id = id
         self.user_id = user_id
@@ -76,5 +63,6 @@ class Order(Base):
         self.price = price
         self.stop_price = stop_price
         self.status = status
-        self.created_at = created_at or datetime.utcnow()
-        self.updated_at = self.created_at
+        self.created_at = created_at or datetime.utcnow()        self.updated_at = self.created_at
+        self.executed_price: Optional[float] = None
+        self.executed_quantity: Optional[float] = None

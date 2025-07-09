@@ -4,6 +4,7 @@ Created: 2025-05-20 05:09:26
 Author: daparthi001
 """
 import pytest
+pytest.importorskip("sqlalchemy")
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import SQLAlchemyError

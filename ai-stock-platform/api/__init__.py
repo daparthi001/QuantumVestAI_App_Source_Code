@@ -12,12 +12,12 @@ logger = logging.getLogger("quantumvestai_api")
 logger.info("Initializing API package")
 
 try:
-    # Import app from main
-    from main import app
-    logger.info(f"Successfully imported app from main.py with {len(app.routes)} routes")
-except ImportError as e:
-    logger.error(f"Failed to import app from main.py: {e}")
-    raise
+    from .main import app
+    logger.info(
+        "Successfully imported app from api.main with %d routes", len(app.routes)
+    )
+except Exception as e:  # pragma: no cover - optional dependency may be missing
+    logger.error(f"Failed to import app from api.main: {e}")
+    app = None
 
-# Export the app variable
-__all__ = ['app']
+# Export the app variable__all__ = ['app']

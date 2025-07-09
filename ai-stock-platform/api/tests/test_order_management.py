@@ -3,11 +3,16 @@ Order Management Service Tests
 Created: 2025-05-19 04:49:34
 Author: daparthi001
 """
+import os
+import sys
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+sys.path.append(ROOT)
+sys.path.append(os.path.join(ROOT, "api"))
 import pytest
 from unittest.mock import Mock, AsyncMock
 from datetime import datetime
-from services.order_management import OrderManagementService
-from models.orders import Order, OrderStatus, OrderType, TimeInForce
+from api.services.order_management import OrderManagementService
+from api.models.orders import Order, OrderStatus, OrderType, TimeInForce
 
 @pytest.fixture
 def market_data_mock():

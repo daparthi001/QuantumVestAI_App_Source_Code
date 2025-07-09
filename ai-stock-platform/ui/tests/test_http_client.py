@@ -6,8 +6,15 @@ Last updated: 2025-01-18
 Updated by: daparthi001
 """
 
+import os
+import sys
 import asyncio
 import pytest
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+sys.path.append(ROOT)
+sys.path.append(os.path.join(ROOT, "ai-stock-platform"))
+sys.path.append(os.path.join(ROOT, "ai-stock-platform", "api"))
+pytest.importorskip("httpx")
 import httpx
 import time
 from unittest.mock import AsyncMock, patch, MagicMock
