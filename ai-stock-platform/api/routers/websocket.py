@@ -16,6 +16,7 @@ from db.models.user import User
 # both when the package is executed and when files are run directly.
 from websocket.manager import ConnectionManager
 
+
 logger = logging.getLogger("api")
 
 router = APIRouter()
