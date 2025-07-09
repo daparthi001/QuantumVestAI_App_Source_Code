@@ -13,6 +13,11 @@ from pathlib import Path
 
 router = APIRouter()
 templates = Jinja2Templates(directory=str(Path(__file__).resolve().parent.parent / "templates"))
+
+
+def get_templates(request: Request) -> Jinja2Templates:
+    """Return app-level templates if available."""
+    return getattr(request.app.state, "templates", templates)
 logger = logging.getLogger("quantumvestai.stock_controller")
 
 # Get API URL from environment or use default
@@ -89,7 +94,7 @@ async def stock_search(
                 result.setdefault('change', None)
                 result.setdefault('change_percent', None)
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "stocks/search.html",
             {
                 "request": request,
@@ -104,7 +109,7 @@ async def stock_search(
         )
     except Exception as e:
         logger.error(f"Stock search error: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "stocks/search.html",
             {
                 "request": request,
@@ -207,7 +212,7 @@ async def stock_detail(
             stock_data["sentiment"] = {"status": "unavailable", "reason": "demo_mode"}
             stock_data["in_watchlist"] = False
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "stocks/detail.html",
             {
                 "request": request, 
@@ -220,7 +225,7 @@ async def stock_detail(
         raise e
     except Exception as e:
         logger.error(f"Stock detail error for {ticker}: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "error.html",
             {"request": request, "error": str(e), "user": None, "demo_mode": True},
             status_code=500

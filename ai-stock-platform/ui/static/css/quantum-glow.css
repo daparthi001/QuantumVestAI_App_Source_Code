@@ -1,0 +1,36 @@
+/*
+ * QuantumVestAI Glow Theme
+ * Adds vibrant gradients and subtle shadows for a premium feel
+ */
+:root {
+  --glow-primary: linear-gradient(135deg, #00d4ff 0%, #090979 100%);
+  --glow-accent: linear-gradient(135deg, #f55555 0%, #f7ba2a 100%);
+  --glow-bg: radial-gradient(circle at top left, #1a2a3a, #000000);
+}
+
+body.glow-theme {
+  background: var(--glow-bg);
+  background-attachment: fixed;
+}
+
+.glow-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  padding: 1rem;
+}
+
+.glow-btn {
+  background-image: var(--glow-primary);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: opacity 0.2s ease;
+}
+
+.glow-btn:hover {
+  opacity: 0.85;
+}
