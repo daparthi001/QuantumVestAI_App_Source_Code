@@ -170,7 +170,7 @@ settings = get_settings()
 
     def setup_requirements(self):
         """Create requirements.txt"""
-        requirements = '''fastapi==0.104.1
+        requirements = '''fastapi==0.105.0
 uvicorn==0.24.0
 sqlalchemy==2.0.23
 pydantic==2.5.2
@@ -180,7 +180,7 @@ passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
 email-validator==2.1.0.post1
 psycopg2-binary==2.9.9
-boto3==1.29.3
+boto3==1.34.7
 pandas==2.1.3
 numpy==1.26.2
 scikit-learn==1.3.2
