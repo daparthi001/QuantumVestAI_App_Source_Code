@@ -7,12 +7,14 @@ from typing import Optional
 from jose import jwt
 from pydantic import BaseModel
 
-from ..config import settings
+from ..config import get_settings
+
+config = get_settings()
 
 class TokenHandler:
-    SECRET_KEY = settings.SECRET_KEY
-    ALGORITHM = settings.ALGORITHM
-    ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
+    SECRET_KEY = config.SECRET_KEY
+    ALGORITHM = config.ALGORITHM
+    ACCESS_TOKEN_EXPIRE_MINUTES = config.ACCESS_TOKEN_EXPIRE_MINUTES
 
     @classmethod
     def create_access_token(cls, data: dict, expires_delta: Optional[timedelta] = None) -> str:
