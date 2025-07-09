@@ -3,21 +3,14 @@ WebSocket Package
 Created: 2025-05-20 04:36:10
 Author: daparthi001
 """
-from .manager import WebSocketManager
-from .connection import WebSocketConnection
-from .messages import WSMessage, WSResponse
-from .handlers import (
-    MarketDataHandler,
-    PortfolioHandler,
-    AlertHandler
-)
+"""Simplified exports for the local WebSocket utilities."""
+
+# Only the connection manager exists in this module hierarchy. The
+# previous implementation attempted to expose several classes that are not
+# actually present in the repository which caused import errors when the
+# package was initialised.
+
+from .manager import ConnectionManager
 
 __all__ = [
-    "WebSocketManager",
-    "WebSocketConnection",
-    "WSMessage",
-    "WSResponse",
-    "MarketDataHandler",
-    "PortfolioHandler",
-    "AlertHandler"
-]
+    "ConnectionManager",]
