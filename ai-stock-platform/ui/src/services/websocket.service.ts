@@ -1,343 +1,110 @@
-/**
- * WebSocket Service for Real-time Data
- * Created: 2025-06-19 18:06:43
- * Author: daparthi001
- */
-import io from 'socket.io-client';
-import { BehaviorSubject } from 'rxjs';
-import authService from './auth.service';
+import { Subject } from 'rxjs';
 
-// WebSocket connection states
-export enum ConnectionState {
-  DISCONNECTED = 'disconnected',
-  CONNECTING = 'connecting',
-  CONNECTED = 'connected',
-  RECONNECTING = 'reconnecting',
-  ERROR = 'error'
-}
-
-// WebSocket event types for enhanced real-time data
-export enum EventTypes {
-  // Market data events
-  PRICE_UPDATE = 'price_update',
-  MARKET_STATUS = 'market_status',
-  PRICE_ALERT = 'price_alert',
-  VOLUME_SPIKE = 'volume_spike',
-  MARKET_OVERVIEW = 'market_overview',
-  TOP_MOVERS = 'top_movers',
-  SECTOR_PERFORMANCE = 'sector_performance',
-  
-  // User-specific events
-  WATCHLIST_UPDATE = 'watchlist_update',
-  PORTFOLIO_UPDATE = 'portfolio_update',
-  ALERT_TRIGGERED = 'alert_triggered',
-  ORDER_STATUS = 'order_status',
-  
-  // System events
-  SYSTEM_NOTIFICATION = 'system_notification',
-  MAINTENANCE_ALERT = 'maintenance_alert',
-  
-  // Chat events
-  CHAT_MESSAGE = 'chat_message',
-  USER_TYPING = 'user_typing'
-}
-
-// Socket message interface
-export interface SocketMessage {
-  type: EventTypes;
+export interface WebSocketMessage {
+  type: string;
   data: any;
-  timestamp: string;
 }
 
 class WebSocketService {
-  private socket: ReturnType<typeof io> | null = null;
-  private connectionStateSubject = new BehaviorSubject<ConnectionState>(ConnectionState.DISCONNECTED);
-  private messagesSubject = new BehaviorSubject<SocketMessage[]>([]);
-  private subscribedSymbols = new Set<string>();
-  private reconnectTimer: NodeJS.Timeout | null = null;
-  
-  // Observable streams
-  public connectionState$ = this.connectionStateSubject.asObservable();
-  public messages$ = this.messagesSubject.asObservable();
-  
-  // Event-specific streams
-  private eventStreams: Record<EventTypes, BehaviorSubject<any>> = {} as Record<EventTypes, BehaviorSubject<any>>;
-  
+  private socket: WebSocket | null = null;
+  private reconnectAttempts = 0;
+  private readonly maxReconnectAttempts = 5;
+  private readonly reconnectDelay = 3000;
+  private eventCallbacks: Record<string, Set<(data: any) => void>> = {};
+  private messageSubject = new Subject<WebSocketMessage>();
+  private readonly baseUrl: string;
+
   constructor() {
-    // Initialize event streams
-    Object.values(EventTypes).forEach(eventType => {
-      this.eventStreams[eventType] = new BehaviorSubject<any>(null);
-    });
-    
-    // Auto-connect if we have auth token
-    if (authService.getToken()) {
-      this.connect();
+    this.baseUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:8000/ws';
+    const token = localStorage.getItem('qvai_token') || '';
+    if (token) {
+      this.connect(token);
     }
-    
-    // Listen for auth changes
-    authService.token.subscribe(token => {
-      if (token) {
-        this.connect();
-      } else {
-        this.disconnect();
+  }
+
+  private connect(token: string): void {
+    if (this.socket) return;
+    try {
+      this.socket = new WebSocket(`${this.baseUrl}?token=${token}`);
+      this.setupListeners();
+    } catch (error) {
+      console.error('WebSocket connection failed:', error);
+      this.scheduleReconnect();
+    }
+  }
+
+  private setupListeners(): void {
+    if (!this.socket) return;
+    this.socket.onopen = () => {
+      this.reconnectAttempts = 0;
+      Object.keys(this.eventCallbacks).forEach((evt) => {
+        this.send('subscribe', { type: evt });
+      });
+    };
+
+    this.socket.onmessage = (event) => {
+      try {
+        const message: WebSocketMessage = JSON.parse(event.data);
+        const cbs = this.eventCallbacks[message.type];
+        cbs?.forEach((cb) => cb(message.data));
+        this.messageSubject.next(message);
+      } catch (err) {
+        console.error('Error parsing WebSocket message:', err);
       }
-    });
-  }
-  
-  /**
-   * Connect to WebSocket
-   */
-  public connect(): void {
-    if (this.socket) {
-      return; // Already connected or connecting
-    }
-    
-    const token = authService.getToken();
-    if (!token) {
-      console.error('Cannot connect to WebSocket: No auth token');
-      return;
-    }
-    
-    const wsUrl = process.env.REACT_APP_WEBSOCKET_URL || 'wss://dev.quantumvestai.com/ws';
-    
-    this.connectionStateSubject.next(ConnectionState.CONNECTING);
-    
-    this.socket = io(wsUrl, {
-      transports: ['websocket'],
-      auth: {
-        token
-      },
-      reconnection: false, // We'll handle reconnection ourselves
-      timeout: 10000 // 10 seconds connection timeout
-    });
-    
-    // Set up event listeners
-    this.setupSocketEventListeners();
-  }
-  
-  /**
-   * Disconnect from WebSocket
-   */
-  public disconnect(): void {
-    if (!this.socket) {
-      return;
-    }
-    
-    this.socket.disconnect();
-    this.socket = null;
-    this.connectionStateSubject.next(ConnectionState.DISCONNECTED);
-    this.clearReconnectTimer();
-  }
-  
-  /**
-   * Subscribe to real-time updates for a stock symbol
-   * @param symbol Stock symbol
-   */
-  public subscribeToSymbol(symbol: string): void {
-    if (!this.socket || this.connectionStateSubject.value !== ConnectionState.CONNECTED) {
-      // Queue the subscription for when we're connected
-      this.subscribedSymbols.add(symbol);
-      this.connect();
-      return;
-    }
-    
-    if (!this.subscribedSymbols.has(symbol)) {
-      this.subscribedSymbols.add(symbol);
-      this.socket.emit('subscribe', { symbols: [symbol] });
-    }
-  }
-  
-  /**
-   * Unsubscribe from real-time updates for a stock symbol
-   * @param symbol Stock symbol
-   */
-  public unsubscribeFromSymbol(symbol: string): void {
-    if (!this.socket || this.connectionStateSubject.value !== ConnectionState.CONNECTED) {
-      this.subscribedSymbols.delete(symbol);
-      return;
-    }
-    
-    if (this.subscribedSymbols.has(symbol)) {
-      this.subscribedSymbols.delete(symbol);
-      this.socket.emit('unsubscribe', { symbols: [symbol] });
-    }
-  }
-  
-  /**
-   * Get an observable for a specific event type
-   * @param eventType WebSocket event type
-   */
-  public on<T>(eventType: EventTypes): BehaviorSubject<T> {
-    return this.eventStreams[eventType] as BehaviorSubject<T>;
-  }
-  
-  /**
-   * Get current connection state
-   */
-  public getConnectionState(): ConnectionState {
-    return this.connectionStateSubject.value;
-  }
-  
-  /**
-   * Send a message through the WebSocket
-   * @param type Event type
-   * @param data Data to send
-   */
-  public send(type: string, data: any): void {
-    if (!this.socket || this.connectionStateSubject.value !== ConnectionState.CONNECTED) {
-      console.error('Cannot send message: WebSocket not connected');
-      return;
-    }
-    
-    this.socket.emit(type, data);
-  }
-  
-  // Setup WebSocket event listeners
-  private setupSocketEventListeners(): void {
-    if (!this.socket) {
-      return;
-    }
-    
-    // Connection events
-    this.socket.on('connect', this.handleConnect.bind(this));
-    this.socket.on('disconnect', this.handleDisconnect.bind(this));
-    this.socket.on('connect_error', this.handleError.bind(this));
-    
-    // Message event
-    this.socket.on('message', this.handleMessage.bind(this));
-    
-    // Set up listeners for all event types
-    Object.values(EventTypes).forEach(eventType => {
-      this.socket?.on(eventType, (data: any) => {
-        this.eventStreams[eventType].next(data);
-        
-        // Also add to general messages stream
-        const message: SocketMessage = {
-          type: eventType,
-          data,
-          timestamp: new Date().toISOString()
-        };
-        
-        const currentMessages = this.messagesSubject.value;
-        this.messagesSubject.next([...currentMessages, message]);
-      });
-    });
-  }
-  
-  // Handle successful connection
-  private handleConnect(): void {
-    console.log('WebSocket connected');
-    this.connectionStateSubject.next(ConnectionState.CONNECTED);
-    
-    // Subscribe to all previously subscribed symbols
-    if (this.subscribedSymbols.size > 0) {
-      this.socket?.emit('subscribe', { symbols: Array.from(this.subscribedSymbols) });
-    }
-  }
-  
-  // Handle disconnection
-  private handleDisconnect(): void {
-    console.log('WebSocket disconnected');
-    this.connectionStateSubject.next(ConnectionState.DISCONNECTED);
-    this.socket = null;
-    
-    // Try to reconnect
-    this.attemptReconnect();
-  }
-  
-  // Handle connection error
-  private handleError(error: Error): void {
-    console.error('WebSocket error:', error);
-    // You can implement reconnection or error reporting logic here
+    };
+
+    this.socket.onclose = () => {
+      this.socket = null;
+      this.scheduleReconnect();
+    };
+
+    this.socket.onerror = (err) => {
+      console.error('WebSocket error:', err);
+    };
   }
 
-  // Handle incoming messages
-  private handleMessage(_message: any): void {
-    // Implement message handling if needed
+  private scheduleReconnect(): void {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) return;
+    this.reconnectAttempts += 1;
+    setTimeout(() => {
+      const token = localStorage.getItem('qvai_token') || '';
+      if (token) {
+        this.connect(token);
+      }
+    }, this.reconnectDelay);
   }
 
-  // Attempt to reconnect
-  private attemptReconnect(): void {
-    // Implement reconnection logic if needed
-  }
-
-  // Clear the reconnect timer
-  private clearReconnectTimer(): void {
-    if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer);
-      this.reconnectTimer = null;
+  private send(type: string, data: any): void {
+    if (this.socket?.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify({ type, data }));
     }
   }
 
-  /**
-   * Subscribe to real-time market data
-   */
-  public subscribeToMarketData(): void {
-    if (this.socket) {
-      this.socket.emit('subscribe', { 
-        type: 'market_data',
-        symbols: ['SPY', 'QQQ', 'DIA', 'VIX']
-      });
+  subscribe(eventType: string, callback: (data: any) => void): void {
+    if (!this.eventCallbacks[eventType]) {
+      this.eventCallbacks[eventType] = new Set();
     }
+    this.eventCallbacks[eventType].add(callback);
+    this.send('subscribe', { type: eventType });
   }
 
-  /**
-   * Subscribe to portfolio updates
-   */
-  public subscribeToPortfolio(): void {
-    if (this.socket) {
-      this.socket.emit('subscribe', { 
-        type: 'portfolio_updates'
-      });
-    }
+  unsubscribe(eventType: string): void {
+    this.eventCallbacks[eventType]?.clear();
+    delete this.eventCallbacks[eventType];
+    this.send('unsubscribe', { type: eventType });
   }
 
-  /**
-   * Subscribe to top movers
-   */
-  public subscribeToTopMovers(): void {
-    if (this.socket) {
-      this.socket.emit('subscribe', { 
-        type: 'top_movers'
-      });
-    }
+  subscribeSymbol(symbol: string): void {
+    this.send('subscribe', { symbol });
   }
 
-  /**
-   * Get event stream for specific event type
-   */
-  public getEventStream(eventType: EventTypes) {
-    return this.eventStreams[eventType];
+  unsubscribeSymbol(symbol: string): void {
+    this.send('unsubscribe', { symbol });
   }
 
-  /**
-   * Send a message to the server
-   */
-  public sendMessage(type: string, data: any): void {
-    if (this.socket && this.socket.connected) {
-      this.socket.emit('message', { type, data, timestamp: new Date().toISOString() });
-    }
+  onMessage(): Subject<WebSocketMessage> {
+    return this.messageSubject;
   }
+}
 
-  /**
-   * Subscribe to an event type
-   */
-  public subscribe(eventType: string, callback: (data: any) => void): void {
-    if (this.eventStreams[eventType as EventTypes]) {
-      this.eventStreams[eventType as EventTypes].subscribe(callback);
-    }
-  }
-
-  /**
-   * Unsubscribe from an event type
-   */
-  public unsubscribe(eventType: string): void {
-    // For RxJS BehaviorSubject, we don't need to explicitly unsubscribe 
-    // unless we're tracking subscriptions, which we're not in this simple implementation
-    console.log(`Unsubscribed from ${eventType}`);
-  }
-} // <-- THIS closes the class!
-
-// Export the singleton instance
-const wsService = new WebSocketService();
-export default wsService;
+const wsService = new WebSocketService();export default wsService;

@@ -5,7 +5,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Card, Table, Badge } from 'react-bootstrap';
-import { wsService } from '../services/websocket';
+import wsService from '../services/websocket.service';
 import { formatPrice, formatChange } from '../utils/formatters';
 
 interface StockPrice {
@@ -28,7 +28,7 @@ const StockTicker: React.FC<StockTickerProps> = ({ symbols, onSelect }) => {
     useEffect(() => {
         // Subscribe to symbols
         symbols.forEach(symbol => {
-            wsService.subscribe(symbol);
+            wsService.subscribeSymbol(symbol);
         });
 
         // Handle real-time updates
@@ -60,7 +60,7 @@ const StockTicker: React.FC<StockTickerProps> = ({ symbols, onSelect }) => {
         return () => {
             subscription.unsubscribe();
             symbols.forEach(symbol => {
-                wsService.unsubscribe(symbol);
+                wsService.unsubscribeSymbol(symbol);
             });
         };
     }, [symbols]);
