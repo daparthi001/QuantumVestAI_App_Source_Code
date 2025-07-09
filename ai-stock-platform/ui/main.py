@@ -845,7 +845,6 @@ async def enhanced_not_found_handler(request: Request, exc: HTTPException):
     try:
         return get_templates(request).TemplateResponse(
             "404.html",
-
             {
                 "request": request,
                 "path": request.url.path,
