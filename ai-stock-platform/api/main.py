@@ -512,7 +512,8 @@ async def startup_event():
 
 
 # Check if this script is executed directly
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+if __name__ == "__main__":   
+  import uvicorn
+  uvicorn.run(app, host="0.0.0.0", port=8000)
 
