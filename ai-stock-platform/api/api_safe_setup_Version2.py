@@ -75,8 +75,8 @@ from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 # Updated import to absolute path to avoid relative import issues
 from db.session import get_db
-from ...schemas.token import TokenData
-from ...schemas.user import User
+from schemas.token import TokenData
+from chemas.user import User
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
