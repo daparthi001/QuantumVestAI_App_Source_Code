@@ -43,5 +43,4 @@ class ModelBase(Base):
         return cls(**{
             key: value
             for key, value in data.items()
-            if hasattr(cls, key)
-        })
+            if hasattr(cls, key)        })

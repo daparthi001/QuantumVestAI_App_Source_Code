@@ -209,5 +209,4 @@ class LSTMStockModel:
             "predicted_prices": prediction_prices,
             "upper_bounds": upper_bounds,
             "lower_bounds": lower_bounds,
-            "confidence_levels": confidence_levels
-        }
+            "confidence_levels": confidence_levels        }
