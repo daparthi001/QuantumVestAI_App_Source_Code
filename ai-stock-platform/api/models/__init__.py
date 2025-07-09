@@ -27,3 +27,4 @@ __all__ = [
     "Position",
     "Transaction",
     "PortfolioSummary",    "TransactionType"]
+
