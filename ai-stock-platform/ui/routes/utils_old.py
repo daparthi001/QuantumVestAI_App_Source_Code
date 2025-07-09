@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional, List, Dict, Any
 from ui.services.yahoo_finance import YahooFinanceService
-API_URL = "http://quantumvestai-dev-api:8000/api/v1"
+API_URL = "http://quantumvestai-dev-api:8000"
 
 # Router setup for utility endpoints
 router = APIRouter(prefix="/utils", tags=["utilities"])

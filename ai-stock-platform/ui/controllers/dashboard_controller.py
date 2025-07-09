@@ -15,7 +15,7 @@ import json
 import os
 from datetime import datetime, timedelta
 
-API_URL = "http://quantumvestai-dev-api:8000/api/v1"
+API_URL = "http://quantumvestai-dev-api:8000"
 # Auth dependencies removed as per requirements
 
 # Define mock metrics classes that do nothing
@@ -156,7 +156,7 @@ async def dashboard(
         
         if dashboard_data is None:
             # Check if app.state has settings attribute
-            api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://quantumvestai-dev-api:8000/api/v1'))
+            api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://quantumvestai-dev-api:8000'))
             
             try:
                 # Get portfolio data from API using centralized HTTP client

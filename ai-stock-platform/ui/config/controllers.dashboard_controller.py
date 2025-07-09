@@ -14,7 +14,7 @@ import os
 from datetime import datetime, timedelta
 from metrics import http_requests_total, http_request_duration_seconds
 
-API_URL = "http://quantumvestai-dev-api:8000/api/v1"
+API_URL = "http://quantumvestai-dev-api:8000"
 # Set up logging
 logger = logging.getLogger(__name__)
 

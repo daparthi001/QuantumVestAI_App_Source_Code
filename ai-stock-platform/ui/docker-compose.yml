@@ -11,7 +11,7 @@ services:
     environment:
       - PORT=3000
       - DEBUG=true
-      - API_BASE_URL=http://quantumvestai-dev-api:8000/api/v1
+      - API_BASE_URL=http://quantumvestai-dev-api:8000
       - ENVIRONMENT=development
     volumes:
       - ./ui:/app/ui

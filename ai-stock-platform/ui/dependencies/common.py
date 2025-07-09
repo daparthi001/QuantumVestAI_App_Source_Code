@@ -6,7 +6,7 @@ from core.config.constants import (
     DEFAULT_PAGE_SIZE,
     MAX_PAGE_SIZE
 )
-API_URL = "http://quantumvestai-dev-api:8000/api/v1"
+API_URL = "http://quantumvestai-dev-api:8000"
 async def get_api_client(request: Request) -> APIClient:
     """
     Dependency to get API client without authentication (demo mode)
