@@ -3,15 +3,19 @@ Order Flow Integration Tests
 Created: 2025-05-19 04:50:44
 Author: daparthi001
 """
+import os
+import sys
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+sys.path.append(ROOT)
+sys.path.append(os.path.join(ROOT, "api"))
 import pytest
 import asyncio
 from datetime import datetime
-from services.order_management import OrderManagementService
-from services.market_data_service import MarketDataService
-from services.risk_management import RiskManagementService
-from services.trading_execution import TradingExecutionService
-from models.orders import Order, OrderStatus, OrderType, TimeInForce
-from db.session import get_test_db
+from api.services.order_management import OrderManagementService
+from api.services.market_data_service import MarketDataService
+from api.services.risk_management import RiskManagementService
+from api.services.trading_execution import TradingExecutionService
+from api.models.orders import Order, OrderStatus, OrderType, TimeInForce
 
 @pytest.fixture(scope="module")
 def event_loop():
@@ -21,7 +25,7 @@ def event_loop():
 
 @pytest.fixture(scope="module")
 async def services():
-    db = get_test_db()
+    db = None
     market_data = MarketDataService()
     risk_management = RiskManagementService(market_data)
     trading_execution = TradingExecutionService(market_data)

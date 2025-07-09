@@ -3,6 +3,8 @@ Database Connection Test Script
 Created: 2025-05-19 05:56:45
 Author: daparthi001
 """
+import pytest
+pytest.skip("Manual script", allow_module_level=True)
 import logging
 from sqlalchemy import text
 from db.session import SessionLocal
