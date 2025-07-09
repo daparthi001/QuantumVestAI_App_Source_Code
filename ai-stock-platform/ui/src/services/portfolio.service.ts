@@ -4,7 +4,7 @@
  * Author: daparthi001
  */
 import { api } from './api';
-import { wsService } from './websocket';
+import wsService, { WebSocketMessage } from './websocket.service';
 import authService from './auth.service';
 import { Position, Transaction, PortfolioSummary } from '../types/portfolio';
 import { Subject } from 'rxjs';
@@ -36,7 +36,7 @@ export const portfolioService = {
             wsService.subscribe('PORTFOLIO_UPDATES');
         }
         
-        wsService.onMessage().subscribe((message) => {
+        wsService.onMessage().subscribe((message: WebSocketMessage) => {
             if (message.type === 'PORTFOLIO_UPDATE') {
                 subject.next(message.data);
                 callback(message.data);
@@ -46,5 +46,4 @@ export const portfolioService = {
         return subject;
     }
 };
-
 export default portfolioService;
