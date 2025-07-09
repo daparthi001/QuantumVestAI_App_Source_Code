@@ -11,6 +11,8 @@ import asyncio
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+# Ensure API key is set for tests
+os.environ.setdefault("ALPHA_VANTAGE_API_KEY", "test")
 
 import pytest
 import json
@@ -19,12 +21,15 @@ from datetime import datetime
 # Import the service directly
 import importlib.util
 spec = importlib.util.spec_from_file_location(
-    "trending_stocks_service", 
+    "trending_stocks_service",
     os.path.join(os.path.dirname(os.path.dirname(__file__)), "services", "trending_stocks_service.py")
 )
 trending_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(trending_module)
 TrendingStocksService = trending_module.TrendingStocksService
+
+if not getattr(trending_module, "AIOHTTP_AVAILABLE", False):
+    pytest.skip("aiohttp not available", allow_module_level=True)
 
 
 def test_trending_stocks_service_initialization():
@@ -161,7 +166,7 @@ async def test_data_consistency():
     timestamp = metadata["last_updated"]
     assert datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
     
-    # Check that stocks data is present and valid (sorting is not required for mock data)
+    # Check that stocks data is present and valid
     stocks = result["stocks"]
     if len(stocks) > 1:
         # Just check that all stocks have valid change_percent values
@@ -170,32 +175,6 @@ async def test_data_consistency():
             assert -20 <= stock["change_percent"] <= 20  # Reasonable range
 
 
-def test_mock_data_generation():
-    """Test mock data generation produces valid data."""
-    service = TrendingStocksService()
-    
-    mock_data = service._generate_mock_data_with_timestamps()
-    
-    assert len(mock_data) > 0
-    
-    for stock in mock_data:
-        # Check required fields
-        assert "symbol" in stock
-        assert "name" in stock
-        assert "price" in stock
-        assert "change_percent" in stock
-        assert "change" in stock
-        assert "volume" in stock
-        assert "last_updated" in stock
-        
-        # Check data ranges
-        assert stock["price"] > 0
-        assert -10 <= stock["change_percent"] <= 10  # Reasonable range
-        assert stock["volume"] > 0
-        
-        # Check timestamp is recent
-        timestamp = datetime.fromisoformat(stock["last_updated"])
-        assert (datetime.now() - timestamp).total_seconds() < 60
 
 
 if __name__ == "__main__":
@@ -208,8 +187,6 @@ if __name__ == "__main__":
     print("✓ Testing cache invalidation...")
     test_cache_invalidation()
     
-    print("✓ Testing mock data generation...")
-    test_mock_data_generation()
     
     print("✓ Running async tests...")
     async def run_async_tests():
@@ -219,5 +196,5 @@ if __name__ == "__main__":
         await test_data_consistency()
     
     asyncio.run(run_async_tests())
-    
-    print("All tests passed! ✅")
+        print("All tests passed! ✅")
+

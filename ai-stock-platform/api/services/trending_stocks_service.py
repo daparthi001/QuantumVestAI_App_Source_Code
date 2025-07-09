@@ -27,7 +27,9 @@ class TrendingStocksService:
     """Service for managing trending stocks data with real-time updates and caching."""
     
     def __init__(self):
-        self.api_key = os.getenv("ALPHA_VANTAGE_API_KEY", "demo")
+        self.api_key = os.getenv("ALPHA_VANTAGE_API_KEY")
+        if not self.api_key:
+            raise RuntimeError("ALPHA_VANTAGE_API_KEY must be set for real-time data access")
         self.base_url = "https://www.alphavantage.co/query"
         self.cache_ttl = int(os.getenv("CACHE_TTL_TRENDING_STOCKS", "300"))  # 5 minutes
         self._cache: Dict[str, Any] = {}
@@ -233,3 +235,4 @@ class TrendingStocksService:
             "ttl_seconds": self.cache_ttl,
             "items_count": len(self._cache.get("stocks", [])),
             "last_updated": self._cache_timestamp.isoformat()        }
+
