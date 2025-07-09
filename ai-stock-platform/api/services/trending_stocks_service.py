@@ -2,7 +2,7 @@
 Trending Stocks Service
 
 This service handles fetching and caching trending stock data,
-providing real-time updates while maintaining fallback capabilities.
+providing real-time updates only.
 
 Created: 2025-01-09
 Author: AI Assistant
@@ -12,7 +12,6 @@ import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 import os
-import random
 
 # Try to import aiohttp, fallback to None if not available
 try:
@@ -31,16 +30,12 @@ class TrendingStocksService:
         self.api_key = os.getenv("ALPHA_VANTAGE_API_KEY", "demo")
         self.base_url = "https://www.alphavantage.co/query"
         self.cache_ttl = int(os.getenv("CACHE_TTL_TRENDING_STOCKS", "300"))  # 5 minutes
-        self.enable_real_data = os.getenv("ENABLE_REAL_DATA", "false").lower() == "true"
         self._cache: Dict[str, Any] = {}
         self._cache_timestamp: Optional[datetime] = None
         
         # Log dependency status
-        if AIOHTTP_AVAILABLE:
-            logger.info("aiohttp available - real API calls enabled")
-        else:
-            logger.warning("aiohttp not available - falling back to mock data only")
-            self.enable_real_data = False  # Force disable real data if aiohttp is not available
+        if not AIOHTTP_AVAILABLE:
+            raise RuntimeError("aiohttp is required for real-time data access")
         
         # Default trending symbols to fetch
         self.trending_symbols = [
@@ -76,17 +71,12 @@ class TrendingStocksService:
             
         except Exception as e:
             logger.error(f"Error fetching trending stocks: {e}")
-            # Return fallback mock data
-            return self._get_fallback_data(page, limit)
+            raise
     
     async def _fetch_trending_stocks(self) -> List[Dict[str, Any]]:
         """Fetch trending stocks data from external API."""
-        if not self.enable_real_data or self.api_key == "demo" or not AIOHTTP_AVAILABLE:
-            if not AIOHTTP_AVAILABLE:
-                logger.info("Using mock data (aiohttp not available)")
-            else:
-                logger.info("Using mock data (real data disabled or demo API key)")
-            return self._generate_mock_data_with_timestamps()
+        if not AIOHTTP_AVAILABLE:
+            raise RuntimeError("aiohttp is required for real-time data access")
         
         stocks_data = []
         
@@ -182,43 +172,6 @@ class TrendingStocksService:
             logger.error(f"Error parsing data for {symbol}: {e}")
             return None
     
-    def _generate_mock_data_with_timestamps(self) -> List[Dict[str, Any]]:
-        """Generate mock data with current timestamps and slight variations."""
-        import random
-        
-        base_stocks = [
-            {"symbol": "AAPL", "name": "Apple Inc.", "price": 198.45, "change_percent": 2.1},
-            {"symbol": "MSFT", "name": "Microsoft Corporation", "price": 425.63, "change_percent": 1.8},
-            {"symbol": "AMZN", "name": "Amazon.com Inc.", "price": 187.12, "change_percent": 1.5},
-            {"symbol": "GOOGL", "name": "Alphabet Inc.", "price": 176.89, "change_percent": 1.2},
-            {"symbol": "NVDA", "name": "NVIDIA Corporation", "price": 1024.78, "change_percent": 3.2},
-            {"symbol": "TSLA", "name": "Tesla Inc.", "price": 248.50, "change_percent": -0.5},
-            {"symbol": "META", "name": "Meta Platforms Inc.", "price": 385.20, "change_percent": 2.3},
-            {"symbol": "NFLX", "name": "Netflix Inc.", "price": 445.75, "change_percent": 0.8},
-            {"symbol": "CRM", "name": "Salesforce Inc.", "price": 285.40, "change_percent": 1.7},
-            {"symbol": "ADBE", "name": "Adobe Inc.", "price": 545.20, "change_percent": -0.3}
-        ]
-        
-        # Add slight random variations to simulate real-time changes
-        for stock in base_stocks:
-            # Add small random variation to price (±2%)
-            price_variation = random.uniform(-0.02, 0.02)
-            stock["price"] = round(stock["price"] * (1 + price_variation), 2)
-            
-            # Add small random variation to change_percent (±0.5%)
-            change_variation = random.uniform(-0.5, 0.5)
-            stock["change_percent"] = round(stock["change_percent"] + change_variation, 2)
-            
-            # Calculate change in dollars
-            stock["change"] = round(stock["price"] * stock["change_percent"] / 100, 2)
-            
-            # Add mock volume
-            stock["volume"] = random.randint(1000000, 50000000)
-            
-            # Add timestamp
-            stock["last_updated"] = datetime.now().isoformat()
-        
-        return base_stocks
     
     def _is_cache_valid(self) -> bool:
         """Check if cache is valid based on TTL."""
@@ -255,15 +208,10 @@ class TrendingStocksService:
             "metadata": {
                 "last_updated": self._cache.get("timestamp") if self._cache else datetime.now().isoformat(),
                 "cache_ttl_seconds": self.cache_ttl,
-                "data_source": "real" if self.enable_real_data else "mock"
+                "data_source": "real"
             }
         }
     
-    def _get_fallback_data(self, page: int, limit: int) -> Dict[str, Any]:
-        """Return fallback mock data when API fails."""
-        logger.warning("Using fallback mock data due to API failure")
-        mock_data = self._generate_mock_data_with_timestamps()
-        return self._get_paginated_data(mock_data, page, limit)
     
     def invalidate_cache(self) -> None:
         """Manually invalidate the cache to force fresh data fetch."""
@@ -284,5 +232,4 @@ class TrendingStocksService:
             "age_seconds": age_seconds,
             "ttl_seconds": self.cache_ttl,
             "items_count": len(self._cache.get("stocks", [])),
-            "last_updated": self._cache_timestamp.isoformat()
-        }
+            "last_updated": self._cache_timestamp.isoformat()        }

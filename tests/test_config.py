@@ -3,6 +3,11 @@ Configuration Tests
 Created: 2025-05-20 04:27:13
 Author: daparthi001
 """
+import os
+import sys
+ROOT = os.path.join(os.path.dirname(__file__), "..", "ai-stock-platform")
+sys.path.append(ROOT)
+sys.path.append(os.path.join(ROOT, "api"))
 import pytest
 from api.core.config import Settings, validate_settings
 

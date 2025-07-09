@@ -3,6 +3,8 @@ API Endpoint Test Script
 Created: 2025-06-19 03:54:33
 Author: daparthi001
 """
+import pytest
+pytest.skip("Manual script", allow_module_level=True)
 import requests
 import sys
 import json

@@ -4,6 +4,8 @@ Created: 2025-05-20 04:29:52
 Author: daparthi001
 """
 import pytest
+pytest.importorskip("alembic")
+pytest.importorskip("sqlalchemy")
 from alembic.config import Config
 from alembic.script import ScriptDirectory
 from alembic.runtime.environment import EnvironmentContext

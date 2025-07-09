@@ -6,6 +6,8 @@ Author: daparthi001
 This file can be run directly on the server to check if the health function works
 without going through the API routes.
 """
+import pytest
+pytest.skip("Manual script", allow_module_level=True)
 import asyncio
 import json
 from health_check import get_health_data
@@ -16,6 +18,4 @@ async def test_health():
     health_data = await get_health_data()
     print(json.dumps(health_data, indent=2))
     print("Health check function test completed")
-
-if __name__ == "__main__":
-    asyncio.run(test_health())
+if __name__ == "__main__":    asyncio.run(test_health())
