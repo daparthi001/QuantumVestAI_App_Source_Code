@@ -38,7 +38,7 @@ def setup_error_handlers(app: FastAPI):
         
         if "text/html" in accept and templates:
             # Return HTML response for browser requests
-            return templates.TemplateResponse(
+            return get_templates(request).TemplateResponse(
                 "errors/401.html",
                 {"request": request, "detail": exc.detail},
                 status_code=401
@@ -57,7 +57,7 @@ def setup_error_handlers(app: FastAPI):
         
         if "text/html" in accept and templates:
             # Return HTML response for browser requests
-            return templates.TemplateResponse(
+            return get_templates(request).TemplateResponse(
                 "errors/403.html",
                 {"request": request, "detail": exc.detail},
                 status_code=403
@@ -76,7 +76,7 @@ def setup_error_handlers(app: FastAPI):
         
         if "text/html" in accept and templates:
             # Return HTML response for browser requests
-            return templates.TemplateResponse(
+            return get_templates(request).TemplateResponse(
                 "errors/404.html",
                 {"request": request, "detail": exc.detail},
                 status_code=404
@@ -96,7 +96,7 @@ def setup_error_handlers(app: FastAPI):
         
         if "text/html" in accept and templates:
             # Return HTML response for browser requests
-            return templates.TemplateResponse(
+            return get_templates(request).TemplateResponse(
                 "errors/500.html",
                 {"request": request},
                 status_code=500

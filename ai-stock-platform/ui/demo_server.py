@@ -64,7 +64,7 @@ templates.env.globals.update({
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
     """Main dashboard"""
-    return templates.TemplateResponse("dashboard/index.html", {
+    return get_templates(request).TemplateResponse("dashboard/index.html", {
         "request": request,
         "portfolio": portfolio,
         "periods": periods,
