@@ -5,8 +5,9 @@ import os
 import sys
 import pytest
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-sys.path.append(ROOT)
-sys.path.append(os.path.join(ROOT, "api"))
+# Ensure ai-stock-platform packages are discoverable
+sys.path.append(os.path.join(ROOT, "ai-stock-platform"))
+sys.path.append(os.path.join(ROOT, "ai-stock-platform", "api"))
 
 pytest.importorskip("httpx")
 from fastapi import FastAPI
