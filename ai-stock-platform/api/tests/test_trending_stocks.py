@@ -196,5 +196,5 @@ if __name__ == "__main__":
         await test_data_consistency()
     
     asyncio.run(run_async_tests())
-        print("All tests passed! ✅")
+    print("All tests passed! ✅")
 
