@@ -4,7 +4,7 @@ Created: 2025-05-19 04:08:26
 Author: daparthi001
 """
 from fastapi import WebSocket
-from typing import Dict, Set
+from typing import Dict, Set, Any
 import asyncio
 import json
 import logging
@@ -60,8 +60,22 @@ class ConnectionManager:
                     **data
                 }
             }
-            
+
             for websocket in self.symbol_subscribers[symbol].copy():
+                try:
+                    await websocket.send_json(message)
+                except Exception as e:
+                    logger.error(f"Error sending message to client: {e}")
+                    await self.handle_disconnection(websocket)
+
+    async def broadcast_event(self, event_type: str, data: Any):
+        if event_type in self.symbol_subscribers:
+            message = {
+                "type": event_type,
+                "data": data,
+            }
+
+            for websocket in self.symbol_subscribers[event_type].copy():
                 try:
                     await websocket.send_json(message)
                 except Exception as e:
@@ -72,5 +86,4 @@ class ConnectionManager:
         # Clean up disconnected websocket
         for client_id, connections in self.active_connections.copy().items():
             if websocket in connections:
-                await self.disconnect(websocket, client_id)
-                break
+                await self.disconnect(websocket, client_id)                break

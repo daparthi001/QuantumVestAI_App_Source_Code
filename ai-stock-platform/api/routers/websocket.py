@@ -3,45 +3,18 @@ WebSocket Router Implementation
 Created: 2025-05-19 03:43:23
 Author: daparthi001
 """
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
-from typing import Dict, Set, Optional
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from typing import Optional
 import logging
-import json
 from datetime import datetime
 
 from core.security import get_current_user
 from db.models.user import User
-from services.stock_service import StockService
-from core.config import settings
+from api.websocket.manager import ConnectionManager
 
 logger = logging.getLogger("api")
 
 router = APIRouter()
-
-# Store active connections
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: Dict[str, Set[WebSocket]] = {}
-    
-    async def connect(self, websocket: WebSocket, client_id: str):
-        await websocket.accept()
-        if client_id not in self.active_connections:
-            self.active_connections[client_id] = set()
-        self.active_connections[client_id].add(websocket)
-    
-    async def disconnect(self, websocket: WebSocket, client_id: str):
-        if client_id in self.active_connections:
-            self.active_connections[client_id].remove(websocket)
-            if not self.active_connections[client_id]:
-                del self.active_connections[client_id]
-    
-    async def broadcast(self, client_id: str, message: dict):
-        if client_id in self.active_connections:
-            for connection in self.active_connections[client_id]:
-                try:
-                    await connection.send_json(message)
-                except Exception as e:
-                    logger.error(f"Error broadcasting to client {client_id}: {str(e)}")
 
 manager = ConnectionManager()
 
@@ -110,17 +83,16 @@ async def websocket_endpoint(
 async def handle_subscription(websocket: WebSocket, data: dict, user: Optional[User]):
     """Handle subscription requests"""
     try:
-        # Validate subscription request
-        if "topic" not in data:
+        payload = data.get("data", data)
+        topic = payload.get("type") or payload.get("symbol") or payload.get("topic")
+        if not topic:
             await websocket.send_json({
                 "error": "Missing topic in subscription request",
                 "timestamp": datetime.utcnow().isoformat()
             })
             return
-        
-        # Add subscription logic here
-        # Example: Subscribe to stock updates
-        topic = data["topic"]
+
+        await manager.subscribe(websocket, topic)
         await websocket.send_json({
             "type": "subscribed",
             "topic": topic,
@@ -137,16 +109,16 @@ async def handle_subscription(websocket: WebSocket, data: dict, user: Optional[U
 async def handle_unsubscription(websocket: WebSocket, data: dict, user: Optional[User]):
     """Handle unsubscription requests"""
     try:
-        # Validate unsubscription request
-        if "topic" not in data:
+        payload = data.get("data", data)
+        topic = payload.get("type") or payload.get("symbol") or payload.get("topic")
+        if not topic:
             await websocket.send_json({
                 "error": "Missing topic in unsubscription request",
                 "timestamp": datetime.utcnow().isoformat()
             })
             return
-        
-        # Add unsubscription logic here
-        topic = data["topic"]
+
+        await manager.unsubscribe(websocket, topic)
         await websocket.send_json({
             "type": "unsubscribed",
             "topic": topic,
@@ -157,5 +129,4 @@ async def handle_unsubscription(websocket: WebSocket, data: dict, user: Optional
         logger.error(f"Unsubscription error: {str(e)}")
         await websocket.send_json({
             "error": "Unsubscription failed",
-            "timestamp": datetime.utcnow().isoformat()
-        })
+            "timestamp": datetime.utcnow().isoformat()        })

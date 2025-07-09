@@ -11,6 +11,7 @@ import logging
 from datetime import datetime
 import json
 import uuid
+import asyncio
 
 from fastapi import FastAPI, Request, HTTPException, status, Depends, Response
 from fastapi.responses import JSONResponse
@@ -25,6 +26,7 @@ from core.responses import create_success_response, create_error_response
 from core.validation import validate_user_login, validate_stock_symbol_param, validate_pagination_params
 from core.database import initialize_database, get_database_health, check_database_connection
 from core.exceptions import ValidationError, AuthenticationError, NotFoundError
+from routers.websocket import router as websocket_router, manager as websocket_manager
 
 # Configure logging
 logging.basicConfig(
@@ -54,6 +56,8 @@ app = FastAPI(
 
 # Will be initialized in startup event
 trending_stocks_service = None
+ws_manager = websocket_manager
+broadcast_task = None
 
 # Configure CORS
 app = configure_cors(app)
@@ -61,6 +65,9 @@ app = configure_cors(app)
 # Add enhanced middleware
 app.add_middleware(ErrorHandlerMiddleware)
 app.add_middleware(RateLimitMiddleware)
+
+# Include WebSocket routes
+app.include_router(websocket_router)
 
 # Request logging middleware
 @app.middleware("http")
@@ -440,11 +447,27 @@ async def get_stock(request: Request, symbol: str):
         raise NotFoundError(f"Stock with symbol {validated_symbol} not found")
 
 
+async def trending_stock_broadcaster() -> None:
+    """Background task that pushes trending stock updates to websocket clients."""
+    while True:
+        try:
+            if trending_stocks_service:
+                result = await trending_stocks_service.get_trending_stocks()
+                stocks = result.get("stocks", []) if isinstance(result, dict) else []
+                for stock in stocks:
+                    await ws_manager.broadcast_stock_update(stock.get("symbol", ""), stock)
+                await ws_manager.broadcast_event("top_movers", stocks)
+                await ws_manager.broadcast_event("market_overview", stocks)
+        except Exception as e:
+            logger.error(f"Error broadcasting trending stocks: {e}")
+        await asyncio.sleep(30)
+
+
 # --- STARTUP EVENT ---
 @app.on_event("startup")
 async def startup_event():
     """Enhanced startup event with database initialization"""
-    global trending_stocks_service
+    global trending_stocks_service, broadcast_task
     
     logger.info(f"Starting QuantumVestAI API v{API_VERSION}")
     logger.info(f"Environment: {API_ENV}")
@@ -462,13 +485,15 @@ async def startup_event():
             logger.info("Service validation passed - trending_stocks_service is available")
         else:
             logger.error("Service validation failed - trending_stocks_service is None")
-            
+
     except Exception as e:
         logger.error(f"Failed to initialize trending stocks service: {e}")
         import traceback
         logger.error(traceback.format_exc())
         # Set to None to ensure consistent state
         trending_stocks_service = None
+
+    broadcast_task = asyncio.create_task(trending_stock_broadcaster())
     
     # Initialize database
     if initialize_database():
@@ -488,5 +513,4 @@ async def startup_event():
 
 # Check if this script is executed directly
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import uvicorn    uvicorn.run(app, host="0.0.0.0", port=8000)
