@@ -20,6 +20,7 @@ from .evaluation import (
     BacktestEngine,
 )
 from .ensemble_model import EnsemblePredictor, linear_regression_predict
+from .agent_system import AIAgent, AgentManager
 
 __all__ = [
     "PricePredictionModel",
@@ -33,4 +34,6 @@ __all__ = [
     "PerformanceMetrics",    "BacktestEngine",
     "EnsemblePredictor",
     "linear_regression_predict",
+    "AIAgent",
+    "AgentManager",
 ]
