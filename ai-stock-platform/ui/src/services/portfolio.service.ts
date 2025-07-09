@@ -32,18 +32,13 @@ export const portfolioService = {
         
         const token = authService.getToken();
         if (token) {
-            wsService.connect(token);
-            wsService.subscribe('PORTFOLIO_UPDATES');
+            wsService.subscribe('PORTFOLIO_UPDATES', (data: any) => {
+                subject.next(data);
+                callback(data);
+            });
         }
-        
-        wsService.onMessage().subscribe((message: WebSocketMessage) => {
-            if (message.type === 'PORTFOLIO_UPDATE') {
-                subject.next(message.data);
-                callback(message.data);
-            }
-        });
+
 
         return subject;
     }
-};
-export default portfolioService;
+};export default portfolioService;
