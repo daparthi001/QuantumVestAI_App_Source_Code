@@ -88,5 +88,12 @@ This document provides a comprehensive list of API and UI endpoints for the Quan
 - **GET** `/api/v1/data/industries/performance` - Get industry performance
 
 ---
-
 Feel free to reach out for further assistance or to report issues!
+## Environment Setup
+To create a virtual environment and install dependencies, run:
+```bash
+./setup_env.sh
+```
+Activate it with `source venv/bin/activate`.
+
+
