@@ -62,6 +62,7 @@ class Order(Base):
         self.time_in_force = time_in_force
         self.price = price
         self.stop_price = stop_price
-        self.status = status        self.created_at = created_at or datetime.utcnow()        self.updated_at = self.created_at
-        self.executed_price: Optional[float] = None
-        self.executed_quantity: Optional[float] = None
+        self.status = status
+        self.created_at = created_at or datetime.utcnow()
+        self.updated_at = self.created_at
+        self.executed_price: Optional[float] = None        self.executed_quantity: Optional[float] = None
