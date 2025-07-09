@@ -15,6 +15,7 @@ from db.models.associations import user_watchlist, user_portfolio
 class Stock(Base, TimestampMixin):
     """Stock model for basic stock information."""
     __tablename__ = "stocks"
+    __table_args__ = {"extend_existing": True}
     
     # Primary fields
     id: Mapped[int] = Column(Integer, primary_key=True, index=True)
@@ -65,6 +66,7 @@ class Stock(Base, TimestampMixin):
 class WatchList(Base, TimestampMixin):
     """User's stock watchlist."""
     __tablename__ = "watchlists"
+    __table_args__ = {"extend_existing": True}
     
     id: Mapped[int] = Column(Integer, primary_key=True)
     user_id: Mapped[int] = Column(
@@ -93,6 +95,7 @@ class WatchList(Base, TimestampMixin):
 class StockPrice(Base, TimestampMixin):
     """Historical stock price data."""
     __tablename__ = "stock_prices"
+    __table_args__ = {"extend_existing": True}
     
     id: Mapped[int] = Column(Integer, primary_key=True)
     stock_id: Mapped[int] = Column(
@@ -127,6 +130,7 @@ class StockPrice(Base, TimestampMixin):
 class Alert(Base, TimestampMixin):
     """Price alerts for stocks."""
     __tablename__ = "alerts"
+    __table_args__ = {"extend_existing": True}
     
     id: Mapped[int] = Column(Integer, primary_key=True)
     user_id: Mapped[int] = Column(

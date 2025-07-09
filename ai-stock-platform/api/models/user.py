@@ -4,33 +4,8 @@ Created: 2025-05-19 03:27:22
 Updated: 2025-05-21 15:48:25
 Author: daparthi001
 """
-from sqlalchemy import Column, Integer, String, Boolean, Float
-from sqlalchemy.orm import relationship
-from db.base_class import Base
-from db.base import TimestampMixin
-from core.security import get_password_hash
+"""Backward compatibility wrapper for the :mod:`db.models.user` model."""
 
-class User(Base, TimestampMixin):
-    """User model for authentication and profile"""
-    __tablename__ = "users"
-
-    # Authentication fields
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True, nullable=False)
-    username = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
-    full_name = Column(String)
-    is_active = Column(Boolean, default=True)
-    is_superuser = Column(Boolean, default=False)
-
-    # Relationships
-    positions = relationship("Position", back_populates="user", cascade="all, delete-orphan")
-    transactions = relationship("Transaction", back_populates="user", cascade="all, delete-orphan")
-    watchlists = relationship("WatchList", back_populates="user", cascade="all, delete-orphan")
-
-    def set_password(self, password: str) -> None:
-        """Set encrypted password"""
-        self.hashed_password = get_password_hash(password)
-
-    def __repr__(self) -> str:
-        return f"<User {self.username}>"
+# Export the User model used across the API
+from db.models.user import User
+__all__ = ["User"]

@@ -12,6 +12,10 @@ from core.utils.password_utils import get_password_hash
 class User(Base, TimestampMixin):
     """User model for authentication and profile"""
     __tablename__ = "users"
+    # In test environments this module may be imported more than once under
+    # different module names.  ``extend_existing`` avoids duplicate table
+    # errors when SQLAlchemy registers the model multiple times.
+    __table_args__ = {"extend_existing": True}
 
     # Authentication fields
     id = Column(Integer, primary_key=True, index=True)
@@ -31,5 +35,4 @@ class User(Base, TimestampMixin):
         """Set encrypted password"""
         self.hashed_password = get_password_hash(password)
 
-    def __repr__(self) -> str:
-        return f"<User {self.username}>"
+    def __repr__(self) -> str:        return f"<User {self.username}>"

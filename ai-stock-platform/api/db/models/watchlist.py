@@ -6,6 +6,7 @@ from db.base_class import Base, TimestampMixin
 
 class Watchlist(Base, TimestampMixin):
     __tablename__ = "watchlists"
+    __table_args__ = {"extend_existing": True}
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
@@ -14,5 +15,4 @@ class Watchlist(Base, TimestampMixin):
     is_public = Column(Boolean, default=False)
 
     # Relationships
-    user = relationship("User", back_populates="watchlists")
-    stocks = relationship("WatchlistStock", back_populates="watchlist", cascade="all, delete-orphan")
+    user = relationship("User", back_populates="watchlists")    stocks = relationship("WatchlistStock", back_populates="watchlist", cascade="all, delete-orphan")

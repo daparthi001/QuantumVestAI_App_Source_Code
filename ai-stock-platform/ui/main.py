@@ -116,7 +116,6 @@ async def service_worker():
 API_URL = os.environ.get("API_URL", "http://localhost:8000")
 API_V1_URL = f"{API_URL}/api/v1"
 
-# Helper to add fallback filters. Defined before attempting imports so it is available during error handling
 def _add_fallback_filters(templates):
     """Add minimal fallback filters if comprehensive system fails"""
     def get_asset_url(path, version=None):
@@ -230,7 +229,7 @@ try:
     
     if filter_registration_success:
         logger.info("✓ Comprehensive template filters registered successfully")
-        
+
         # Validate that critical filters are working
         validation_success = validate_template_filters(app)
         if validation_success:

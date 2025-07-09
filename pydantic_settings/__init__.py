@@ -8,4 +8,5 @@ class BaseSettings(BaseModel):
 
 SettingsConfigDict = dict
 
+
 __all__ = ["BaseSettings", "SettingsConfigDict"]

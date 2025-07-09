@@ -6,6 +6,8 @@ from db.base_class import Base, TimestampMixin
 
 class StockForecast(Base, TimestampMixin):
     __tablename__ = "stock_forecasts"
+    __table_args__ = (UniqueConstraint('ticker', 'forecast_date', 'model_name'),
+                      {"extend_existing": True})
 
     id = Column(Integer, primary_key=True, index=True)
     ticker = Column(String(20), ForeignKey("stocks.ticker"))
@@ -17,8 +19,6 @@ class StockForecast(Base, TimestampMixin):
     forecast_3m = Column(Numeric(10, 2))
     confidence_score = Column(Numeric(5, 2))
 
-    # Unique constraint to prevent duplicate forecasts
-    __table_args__ = (UniqueConstraint('ticker', 'forecast_date', 'model_name'),)
+    # Unique constraint to prevent duplicate forecasts defined above
 
-    # Relationships
-    stock = relationship("Stock", back_populates="forecasts")
+    # Relationships    stock = relationship("Stock", back_populates="forecasts")
