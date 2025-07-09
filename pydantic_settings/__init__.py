@@ -1,14 +1,12 @@
-"""Minimal stub for the :mod:`pydantic_settings` package used in tests."""
+from pydantic import BaseModel
 
-try:  # pragma: no cover - prefer the real package if available
-    from pydantic_settings import BaseSettings, SettingsConfigDict  # type: ignore
-except Exception:  # pragma: no cover - fallback implementation
-    from pydantic import BaseModel
+# Simple stub of pydantic-settings for tests
+class BaseSettings(BaseModel):
+    """Minimal replacement for pydantic_settings.BaseSettings"""
 
-    class BaseSettings(BaseModel):
-        class Config:
-            extra = "ignore"
+    model_config: dict = {}
 
-    SettingsConfigDict = dict
+SettingsConfigDict = dict
+
 
 __all__ = ["BaseSettings", "SettingsConfigDict"]
