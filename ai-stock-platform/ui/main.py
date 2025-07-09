@@ -376,7 +376,7 @@ async def index(request: Request):
             }
         ]
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "index.html", 
             {
                 "request": request,
@@ -413,7 +413,7 @@ async def login_page(request: Request, msg: str = None):
         if AuthUtils.is_authenticated(request):
             return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "login.html", 
             {
                 "request": request, 
@@ -480,7 +480,7 @@ async def enhanced_login_post(
     
     except ValueError as e:
         logger.warning(f"[{request_id}] Login validation failed: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "login.html",
             {
                 "request": request,
@@ -496,7 +496,7 @@ async def enhanced_login_post(
     
     except Exception as e:
         logger.error(f"[{request_id}] Login error: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "login.html",
             {
                 "request": request,
@@ -520,7 +520,7 @@ async def register_page(request: Request, msg: str = None):
         if AuthUtils.is_authenticated(request):
             return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "register.html", 
             {
                 "request": request, 
@@ -579,7 +579,7 @@ async def register_post(
         
     except ValueError as e:
         logger.warning(f"[{request_id}] Registration validation failed: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "register.html",
             {
                 "request": request,
@@ -596,7 +596,7 @@ async def register_post(
     
     except Exception as e:
         logger.error(f"[{request_id}] Registration error: {str(e)}")
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "register.html",
             {
                 "request": request,
@@ -644,7 +644,7 @@ async def enhanced_dashboard(request: Request):
             "top_movers": {}
         }
         
-        return templates.TemplateResponse(
+        return get_templates(request).TemplateResponse(
             "dashboard/index.html",
             {
                 "request": request, 
