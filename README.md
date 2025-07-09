@@ -96,4 +96,14 @@ To create a virtual environment and install dependencies, run:
 ```
 Activate it with `source venv/bin/activate`.
 
+## External API Key
+To fetch real-time stock market data you must set the `ALPHA_VANTAGE_API_KEY`
+environment variable. Sign up for a free key at
+[Alpha Vantage](https://www.alphavantage.co/support/#api-key) and export it
+before starting the API server:
+```bash
+export ALPHA_VANTAGE_API_KEY=your_key_here
+```
+Without this key the trending stock endpoints will not return current data.
+
 
