@@ -1,0 +1,2 @@
+-r ai-stock-platform/api/requirements.txt
+-r ai-stock-platform/ui/requirements.txt
