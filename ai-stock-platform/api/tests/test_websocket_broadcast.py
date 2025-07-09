@@ -3,10 +3,14 @@ import asyncio
 import os
 import sys
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+sys.path.append(ROOT)
+sys.path.append(os.path.join(ROOT, "api"))
+import pytest
+pytest.importorskip("httpx")
 
 from fastapi.testclient import TestClient
-from main import app, ws_manager
+from api.main import app, ws_manager
 
 
 def test_websocket_broadcasts_updates():

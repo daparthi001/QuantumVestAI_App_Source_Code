@@ -20,6 +20,7 @@ import sys
 
 # CRITICAL FIX: Define BASE_DIR before using it
 BASE_DIR = Path(__file__).resolve().parent
+os.makedirs(BASE_DIR / "logs", exist_ok=True)
 
 # Configure logging
 log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
@@ -40,9 +41,9 @@ log_config = {
         },
         "file": {
             "level": log_level,
-            "formatter": "standard", 
+            "formatter": "standard",
             "class": "logging.FileHandler",
-            "filename": "logs/app.log",
+            "filename": str(BASE_DIR / "logs" / "app.log"),
             "mode": "a",
         },
     },
