@@ -4,7 +4,7 @@ Pytest configuration and fixtures for QuantumVestAI UI tests.
 import os
 import sys
 import pytest
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 sys.path.append(ROOT)
 sys.path.append(os.path.join(ROOT, "ai-stock-platform"))
 sys.path.append(os.path.join(ROOT, "ai-stock-platform", "api"))
