@@ -16,7 +16,7 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 # API Configuration
-API_URL = "http://quantumvestai-dev-api:8000/api/v1"
+API_URL = "http://quantumvestai-dev-api:8000"
 
 # Templates setup
 templates = Jinja2Templates(directory="templates")

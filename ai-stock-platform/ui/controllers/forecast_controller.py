@@ -23,7 +23,7 @@ def get_templates(request: Request) -> Jinja2Templates:
 logger = logging.getLogger(__name__)
 
 # Get API URL from environment
-API_URL = os.environ.get("API_URL", "http://quantumvestai-dev-api:8000/api/v1")
+API_URL = os.environ.get("API_URL", "http://quantumvestai-dev-api:8000")
 API_V1_URL = f"{API_URL}/api/v1"
 
 @router.get("/", response_class=HTMLResponse)

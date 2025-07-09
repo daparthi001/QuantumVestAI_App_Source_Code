@@ -27,7 +27,7 @@ JWT_ALGORITHM = "HS256"
 TOKEN_EXPIRE_MINUTES = int(os.getenv("TOKEN_EXPIRE_MINUTES", "60"))
 
 # API Configuration
-API_URL = os.getenv("API_URL", "http://quantumvestai-dev-api:8000/api/v1")
+API_URL = os.getenv("API_URL", "http://quantumvestai-dev-api:8000")
 
 # get_current_user function removed as per requirements
 

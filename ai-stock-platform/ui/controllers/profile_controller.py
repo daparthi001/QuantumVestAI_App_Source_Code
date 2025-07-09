@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Optional
 from services.api_client import APIClient
 from core.config.settings import settings
-API_URL = "http://quantumvestai-dev-api:8000/api/v1"
+API_URL = "http://quantumvestai-dev-api:8000"
 
 # Setup router and templates
 router = APIRouter()

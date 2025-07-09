@@ -21,7 +21,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 # Get API URL from environment or use default
-API_URL = os.environ.get("API_URL", "http://quantumvestai-dev-api:8000/api/v1")
+API_URL = os.environ.get("API_URL", "http://quantumvestai-dev-api:8000")
 API_V1_URL = f"{API_URL}/api/v1"
 
 @router.post("/login")
