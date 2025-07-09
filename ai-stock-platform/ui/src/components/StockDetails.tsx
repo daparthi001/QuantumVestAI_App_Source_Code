@@ -7,6 +7,7 @@ import { Container, Row, Col, Card, Button, Spinner, Alert, Badge, Tab, Tabs } f
 import { useParams, Link } from 'react-router-dom';
 import { ROUTES } from '../config/constants';
 import apiService, { Stock } from '../services/api-service';
+import { mlService, PredictionResult } from '../services/ml-service';
 
 const StockDetails: React.FC = () => {
   const { symbol } = useParams<{ symbol: string }>();
@@ -14,6 +15,7 @@ const StockDetails: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('overview');
+  const [prediction, setPrediction] = useState<PredictionResult | null>(null);
 
   useEffect(() => {
     if (symbol) {
@@ -27,6 +29,8 @@ const StockDetails: React.FC = () => {
       setError(null);
       const data = await apiService.getStockDetails(symbol);
       setStock(data);
+      setPrediction(null);
+      await fetchPrediction(symbol);
     } catch (err) {
       console.error('Error fetching stock details:', err);
       setError('Failed to load stock details. Please try again.');
@@ -45,6 +49,15 @@ const StockDetails: React.FC = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPrediction = async (sym: string) => {
+    try {
+      const result = await mlService.getPrediction(sym, 'next_day');
+      setPrediction(result);
+    } catch (err) {
+      console.error('Error fetching prediction:', err);
     }
   };
 
@@ -119,13 +132,24 @@ const StockDetails: React.FC = () => {
               <h6>52 Week Range</h6>
               <div>{formatCurrency(stock['52_week_low'] || 0)} - {formatCurrency(stock['52_week_high'] || 0)}</div>
             </Col>
-            <Col md={3} className="text-center">
-              <h6>Market Cap</h6>
-              <div>{stock.market_cap}</div>
+          <Col md={3} className="text-center">
+            <h6>Market Cap</h6>
+            <div>{stock.market_cap}</div>
+          </Col>
+        </Row>
+        {prediction && (
+          <Row className="mt-3">
+            <Col className="text-center">
+              <h6>Next Day Prediction</h6>
+              <h4>{formatCurrency(prediction.predicted_price)}</h4>
+              <div className="text-muted small">
+                Model: {prediction.model_version} | Confidence: {(prediction.confidence * 100).toFixed(1)}%
+              </div>
             </Col>
           </Row>
-        </Card.Body>
-      </Card>
+        )}
+      </Card.Body>
+    </Card>
 
       {/* Detailed Information Tabs */}
       <Tabs

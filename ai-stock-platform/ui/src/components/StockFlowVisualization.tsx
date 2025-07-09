@@ -23,6 +23,7 @@ import {
 } from 'chart.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import wsService from '../services/websocket.service';
+import { mlService } from '../services/ml-service';
 
 // Register ChartJS components
 ChartJS.register(
@@ -69,6 +70,7 @@ const StockFlowVisualization: React.FC<FlowVisualizationProps> = ({
   const [selectedTimeframe, setSelectedTimeframe] = useState<'1m' | '5m' | '15m' | '1h' | '1d'>('5m');
   const [loading, setLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [modelPredictions, setModelPredictions] = useState<Record<string, number>>({});
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -106,19 +108,40 @@ const StockFlowVisualization: React.FC<FlowVisualizationProps> = ({
         flow,
         timestamp: new Date().toISOString(),
         sector: ['Technology', 'Healthcare', 'Finance', 'Energy'][Math.floor(Math.random() * 4)],
-        prediction: showPredictions ? basePrice + change + (Math.random() - 0.5) * 20 : undefined
+        prediction: showPredictions ? modelPredictions[symbol] ?? basePrice + change : undefined
       };
     });
+  }, [stocks, showPredictions, modelPredictions]);
+
+  const fetchPredictions = useCallback(async () => {
+    if (!showPredictions) {
+      setModelPredictions({});
+      return;
+    }
+    try {
+      const results = await Promise.all(
+        stocks.map(s => mlService.getPrediction(s, 'next_day').catch(() => null))
+      );
+      const map: Record<string, number> = {};
+      results.forEach(res => {
+        if (res) {
+          map[res.symbol] = res.predicted_price;
+        }
+      });
+      setModelPredictions(map);
+    } catch (err) {
+      console.error('Error fetching predictions', err);
+    }
   }, [stocks, showPredictions]);
 
-  const updateFlowData = useCallback(() => {
+  const updateFlowData = useCallback(async () => {
     setLoading(true);
-    // Simulate API call delay
+    await fetchPredictions();
     setTimeout(() => {
       setFlowData(generateMockFlowData());
       setLoading(false);
     }, 500);
-  }, [generateMockFlowData]);
+  }, [generateMockFlowData, fetchPredictions]);
 
   const togglePlayPause = () => {
     setIsPlaying(!isPlaying);
