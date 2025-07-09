@@ -4,47 +4,47 @@
 
 # Import and expose all routers for easier imports elsewhere
 try:
-    from routes.auth import router as auth_router
+    from .auth import router as auth_router
 except ImportError:
     auth_router = None
 
 try:
-    from routes.dashboard import router as dashboard_router
+    from .dashboard import router as dashboard_router
 except ImportError:
     dashboard_router = None
 
 try:
-    from routes.forecast import router as forecast_router
+    from .forecast import router as forecast_router
 except ImportError:
     forecast_router = None
 
 try:
-    from routes.market import router as market_router
+    from .market import router as market_router
 except ImportError:
     market_router = None
 
 try:
-    from routes.watchlist import router as watchlist_router
+    from .watchlist import router as watchlist_router
 except ImportError:
     watchlist_router = None
 
 try:
-    from routes.predictability import router as predictability_router
+    from .predictability import router as predictability_router
 except ImportError:
     predictability_router = None
 
 try:
-    from routes.settings import router as settings_router
+    from .settings import router as settings_router
 except ImportError:
     settings_router = None
 
 try:
-    from routes.api_proxy import router as api_proxy_router
+    from .api_proxy import router as api_proxy_router
 except ImportError:
     api_proxy_router = None
 
 try:
-    from routes.utils import router as utils_router
+    from .utils import router as utils_router
 except ImportError:
     utils_router = None
 
@@ -60,5 +60,4 @@ all_routers = [
         settings_router,
         api_proxy_router,
         utils_router
-    ] if router is not None
-]
+    ] if router is not None]

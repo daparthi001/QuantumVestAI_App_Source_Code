@@ -31,3 +31,13 @@ class TokenHandler:
     @classmethod
     def decode_token(cls, token: str) -> Optional[BaseModel]:
         return jwt.decode(token, cls.SECRET_KEY, algorithms=[cls.ALGORITHM])
+
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    """Convenience wrapper to create an access token using :class:`TokenHandler`."""
+    return TokenHandler.create_access_token(data, expires_delta)
+
+
+def decode_token(token: str) -> Optional[BaseModel]:
+    """Convenience wrapper to decode a JWT token."""
+    return TokenHandler.decode_token(token)

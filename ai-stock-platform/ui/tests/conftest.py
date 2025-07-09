@@ -8,6 +8,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")
 sys.path.append(ROOT)
 sys.path.append(os.path.join(ROOT, "ai-stock-platform"))
 sys.path.append(os.path.join(ROOT, "ai-stock-platform", "api"))
+sys.path.append(os.path.join(ROOT, "ai-stock-platform", "ui"))
 pytest.importorskip("httpx")
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
