@@ -18,5 +18,5 @@ try:
     )
 except Exception as e:  # pragma: no cover - optional dependency may be missing
     logger.error(f"Failed to import app from api.main: {e}")
-    app = None
-# Export the app variable__all__ = ['app']
+    app = None# Export the app variable
+__all__ = ["app"]

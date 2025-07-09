@@ -85,5 +85,5 @@ class ConnectionManager:
     async def handle_disconnection(self, websocket: WebSocket):
         # Clean up disconnected websocket
         for client_id, connections in self.active_connections.copy().items():
-            if websocket in connections:
-                await self.disconnect(websocket, client_id)                break
+            if websocket in connections:                await self.disconnect(websocket, client_id)
+                break

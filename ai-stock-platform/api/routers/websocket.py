@@ -12,7 +12,10 @@ from core.security import get_current_user
 from db.models.user import User
 # Import the local websocket manager using a relative import to avoid package
 # resolution issues when the application is executed as a module
-from ..websocket.manager import ConnectionManager
+# Import the local websocket manager using an absolute path so the module works
+# both when the package is executed and when files are run directly.
+from websocket.manager import ConnectionManager
+
 
 logger = logging.getLogger("api")
 
