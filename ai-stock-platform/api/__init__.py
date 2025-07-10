@@ -16,8 +16,11 @@ logger.info("Initializing API package")
 # ``core`` resolve to ``api.core`` rather than the sibling package at the
 # repository root.
 _pkg_path = Path(__file__).resolve().parent
+_parent = _pkg_path.parent
 if str(_pkg_path) not in sys.path:
     sys.path.insert(0, str(_pkg_path))
+if str(_parent) not in sys.path:
+    sys.path.insert(0, str(_parent))
 
 # Map the name ``core`` to this package's ``core`` module so imports of ``core``
 # resolve correctly even when a sibling ``ui.core`` package exists.
