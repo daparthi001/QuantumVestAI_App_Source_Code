@@ -9,7 +9,8 @@ import time
 import os
 from typing import Generator, Dict, Any
 from sqlalchemy import create_engine, event, text
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
+from db.base import Base
 from sqlalchemy.pool import QueuePool
 from sqlalchemy.exc import OperationalError
 from urllib.parse import quote_plus
@@ -145,4 +146,4 @@ def get_db() -> Generator:
     try:
         yield db
     finally:
-        db.close()  # Make sure this line is properly indented
+        db.close()
