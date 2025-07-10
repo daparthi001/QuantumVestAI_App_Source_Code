@@ -116,10 +116,10 @@ async def login_post(
         # Authenticate against the main API
         api = APIClient()
         try:
-            api_response = api.post("/auth/login", data={
-                "username": username,
-                "password": password
-            })
+            api_response = api.post_form(
+                "/auth/login",
+                data={"username": username, "password": password}
+            )
         except Exception as api_exc:
             logger.error(f"API login failed: {api_exc}")
             raise ValueError("Invalid username or password")

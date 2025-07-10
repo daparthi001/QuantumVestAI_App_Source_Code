@@ -6,6 +6,7 @@ import importlib, sys
 # effects during test collection.
 from api.core import config, logger
 from api.core.config.settings import settings, Settings, get_settings
+from . import http_client
 
 # Lightweight HTTP client utilities are provided by the UI core package.
 from ui.core import http_client as ui_http_client
@@ -19,6 +20,7 @@ sys.modules.setdefault(__name__ + ".config", config)
 sys.modules.setdefault(__name__ + ".logger", logger)
 
 # Re-export commonly used components from api.core
+
 HTTPClient = ui_http_client.HTTPClient
 HTTPClientConfig = ui_http_client.HTTPClientConfig
 get_http_client = ui_http_client.get_http_client
