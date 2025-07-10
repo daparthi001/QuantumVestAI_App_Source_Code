@@ -108,7 +108,39 @@ class APIClient:
         
         self.logger.debug(f"Making POST request to {url}")
         try:
-            response = requests.post(url, data=json.dumps(data) if data else None, headers=self._get_headers(), timeout=self.timeout)
+            response = requests.post(
+                url,
+                data=json.dumps(data) if data else None,
+                headers=self._get_headers(),
+                timeout=self.timeout,
+            )
+            return self._handle_response(response)
+        except Timeout:
+            self.logger.error(f"Request to {normalized_endpoint} timed out")
+            raise Timeout(f"Request to API timed out: {normalized_endpoint}")
+        except ConnectionError:
+            self.logger.error(f"Connection to API failed: {normalized_endpoint}")
+            raise ConnectionError(f"Could not connect to API: {self.base_url}")
+        except Exception as e:
+            self.logger.error(f"Unexpected error in API POST request: {str(e)}")
+            raise
+
+    def post_form(self, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Make a POST request with form-encoded data."""
+        normalized_endpoint = self._normalize_endpoint(endpoint)
+        url = f"{self.base_url}{normalized_endpoint}"
+
+        headers = self._get_headers()
+        headers["Content-Type"] = "application/x-www-form-urlencoded"
+
+        self.logger.debug(f"Making FORM POST request to {url}")
+        try:
+            response = requests.post(
+                url,
+                data=data,
+                headers=headers,
+                timeout=self.timeout,
+            )
             return self._handle_response(response)
         except Timeout:
             self.logger.error(f"Request to {normalized_endpoint} timed out")
@@ -210,7 +242,7 @@ class APIClient:
                 "username": username,
                 "password": password
             }
-            response = self.post("/auth/login", data=auth_data)
+            response = self.post_form("/auth/login", data=auth_data)
             return response
         except Exception as e:
             self.logger.error(f"Authentication failed: {str(e)}")

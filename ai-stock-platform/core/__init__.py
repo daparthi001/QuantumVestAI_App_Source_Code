@@ -8,14 +8,15 @@ from api.core import (
     utils,
 )
 from api.core.config.settings import settings, Settings, get_settings
+from . import http_client
 
 # Re-export commonly used components from api.core
-HTTPClient = utils.http_client.HTTPClient
-HTTPClientConfig = utils.http_client.HTTPClientConfig
-get_http_client = utils.http_client.get_http_client
-safe_get_json = utils.http_client.safe_get_json
-safe_post_json = utils.http_client.safe_post_json
-cleanup_http_clients = utils.http_client.cleanup_http_clients
+HTTPClient = http_client.HTTPClient
+HTTPClientConfig = http_client.HTTPClientConfig
+get_http_client = http_client.get_http_client
+safe_get_json = http_client.safe_get_json
+safe_post_json = http_client.safe_post_json
+cleanup_http_clients = http_client.cleanup_http_clients
 
 __all__ = [
     "HTTPClient",
