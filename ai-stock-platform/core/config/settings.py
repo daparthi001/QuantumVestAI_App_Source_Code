@@ -1,1 +1,3 @@
-from ui.core.config.settings import *
+from api.core.config import settings, Settings, get_settings
+
+__all__ = ["settings", "Settings", "get_settings"]

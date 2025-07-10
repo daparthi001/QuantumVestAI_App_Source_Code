@@ -1,34 +1,8 @@
-"""Compatibility module redirecting to API core utilities."""
+"""Compatibility layer aliasing to api.core."""
+import importlib, sys
 
-from api.core import (
-    config,
-    middleware,
-    security,
-    utils,
-)
-from api.core.config.settings import settings, Settings, get_settings
-from api.core.logger import logger, setup_logger
-from .http_client import (
-    HTTPClient,
-    HTTPClientConfig,
-    get_http_client,
-    safe_get_json,
-    safe_post_json,
-    cleanup_http_clients,
-)
+module = sys.modules.get('api.core')
+if module is None:
+    module = importlib.import_module('api.core')
 
-
-
-__all__ = [
-    "HTTPClient",
-    "HTTPClientConfig",
-    "get_http_client",
-    "safe_get_json",
-    "safe_post_json",
-    "cleanup_http_clients",
-    "settings",
-    "Settings",
-    "get_settings",
-    "logger",
-    "setup_logger",
-]
+sys.modules[__name__] = module
