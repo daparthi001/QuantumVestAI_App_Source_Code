@@ -46,6 +46,35 @@ class User(Base, TimestampMixin):
     def set_password(self, password: str) -> None:
         """Set encrypted password"""
         self.hashed_password = get_password_hash(password)
+    def __repr__(self) -> str:
+        return f"<User {self.username}>"
+
+    @classmethod
+    async def get_by_username(cls, db: AsyncSession, username: str) -> Optional["User"]:
+        """Fetch a user by username."""
+        result = await db.execute(select(cls).where(cls.username == username))
+        return result.scalar_one_or_none()
+
+    @classmethod
+    async def get_by_email(cls, db: AsyncSession, email: str) -> Optional["User"]:
+        """Fetch a user by email."""
+        result = await db.execute(select(cls).where(cls.email == email))
+        return result.scalar_one_or_none()
+
+    def __repr__(self) -> str:
+        return f"<User {self.username}>"
+
+    @classmethod
+    async def get_by_username(cls, db: AsyncSession, username: str) -> Optional["User"]:
+        """Fetch a user by username."""
+        result = await db.execute(select(cls).where(cls.username == username))
+        return result.scalar_one_or_none()
+
+    @classmethod
+    async def get_by_email(cls, db: AsyncSession, email: str) -> Optional["User"]:
+        """Fetch a user by email."""
+        result = await db.execute(select(cls).where(cls.email == email))
+        return result.scalar_one_or_none()
 
     def __repr__(self) -> str:
         return f"<User {self.username}>"
