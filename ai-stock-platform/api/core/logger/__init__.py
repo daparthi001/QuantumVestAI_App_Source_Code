@@ -11,7 +11,10 @@ from pathlib import Path
 from logging.handlers import RotatingFileHandler
 from typing import Optional
 
-from core.config.settings import settings
+# Use a relative import here so that this module can be loaded
+# during package initialisation before the `core` alias is
+# registered in ``api.__init__``.
+from ..config.settings import settings
 
 def setup_logger(
     name: str = "app",
