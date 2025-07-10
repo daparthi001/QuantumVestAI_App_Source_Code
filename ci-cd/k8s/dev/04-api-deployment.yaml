@@ -62,6 +62,36 @@ spec:
             secretKeyRef:
               name: quantumvestai-cluster-rds-credentials
               key: password
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ui-secrets
+              key: JWT_SECRET_KEY
+        - name: TWITTER_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ui-secrets
+              key: TWITTER_API_KEY
+        - name: TWITTER_API_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: ui-secrets
+              key: TWITTER_API_SECRET
+        - name: TWITTER_ACCESS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: ui-secrets
+              key: TWITTER_ACCESS_TOKEN
+        - name: TWITTER_ACCESS_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: ui-secrets
+              key: TWITTER_ACCESS_SECRET
+        - name: ALPHA_VANTAGE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ui-secrets
+              key: ALPHA_VANTAGE_API_KEY
         - name: PYTHONPATH
           value: /app
         - name: PYTHONUNBUFFERED
