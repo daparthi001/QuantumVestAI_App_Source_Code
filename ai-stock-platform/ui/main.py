@@ -17,6 +17,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
+from .services.api_client import APIClient
 
 # Define BASE_DIR first
 BASE_DIR = Path(__file__).resolve().parent
@@ -383,7 +384,7 @@ async def index(request: Request):
                 "user": user,
                 "api_url": API_URL,
                 "request_id": request_id,
-                "demo_mode": True,
+                "demo_mode": False,
                 "portfolio": demo_portfolio,
                 "data": {
                     "user": user,
@@ -420,7 +421,7 @@ async def login_page(request: Request, msg: str = None):
                 "msg": msg,
                 "api_url": API_URL,
                 "request_id": request_id,
-                "demo_mode": True
+                "demo_mode": False
             }
         )
     except Exception as e:
@@ -449,34 +450,26 @@ async def enhanced_login_post(
         if not password or len(password) < 3:
             raise ValueError("Password must be at least 3 characters long")
         
-        # Demo authentication (accepts demo/demo, admin/admin, test/test)
-        valid_users = {
-            "demo": "demo",
-            "admin": "admin", 
-            "test": "test",
-            "user": "password"
-        }
-        
-        if username.lower() in valid_users and password == valid_users[username.lower()]:
-            logger.info(f"[{request_id}] Demo login successful for {username}")
-            
-            # Create demo token
-            expires = datetime.utcnow() + timedelta(hours=24)
-            token = f"demo_{username}_{int(expires.timestamp())}"
-            
-            redirect_response = RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
-            redirect_response.set_cookie(
-                key="access_token",
-                value=f"Bearer {token}",
-                httponly=True,
-                max_age=86400 if remember else None,
-                samesite="lax",
-                secure=request.url.scheme == "https"
-            )
-            
-            return redirect_response
-        else:
-            raise ValueError("Invalid username or password. Try demo/demo, admin/admin, or test/test")
+        api = APIClient()
+        api_resp = api.post_form(
+            "/auth/login",
+            data={"username": username, "password": password}
+        )
+        token = api_resp.get("data", {}).get("access_token")
+        if not token:
+            raise ValueError(api_resp.get("message", "Login failed"))
+
+        redirect_response = RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
+        max_age = 30 * 24 * 60 * 60 if remember else None
+        redirect_response.set_cookie(
+            key="access_token",
+            value=f"Bearer {token}",
+            httponly=True,
+            max_age=max_age,
+            samesite="lax",
+            secure=request.url.scheme == "https"
+        )
+        return redirect_response
     
     except ValueError as e:
         logger.warning(f"[{request_id}] Login validation failed: {str(e)}")
@@ -489,7 +482,7 @@ async def enhanced_login_post(
                 "username": username,
                 "api_url": API_URL,
                 "request_id": request_id,
-                "demo_mode": True
+                "demo_mode": False
             },
             status_code=400
         )
@@ -505,7 +498,7 @@ async def enhanced_login_post(
                 "username": username,
                 "api_url": API_URL,
                 "request_id": request_id,
-                "demo_mode": True
+                "demo_mode": False
             },
             status_code=500
         )
@@ -527,7 +520,7 @@ async def register_page(request: Request, msg: str = None):
                 "msg": msg,
                 "api_url": API_URL,
                 "request_id": request_id,
-                "demo_mode": True
+                "demo_mode": False
             }
         )
     except Exception as e:
@@ -569,11 +562,19 @@ async def register_post(
         if not terms:
             raise ValueError("You must accept the Terms of Service and Privacy Policy")
         
-        # For demo purposes, just redirect to login with success message
-        logger.info(f"[{request_id}] Demo registration successful for {username}")
-        
+        api = APIClient()
+        api.post(
+            "/auth/register",
+            data={
+                "username": username,
+                "email": email,
+                "password": password,
+                "full_name": username,
+            },
+        )
+
         return RedirectResponse(
-            url="/login?msg=Registration successful! Please log in with your new account.",
+            url="/login?msg=Registration+successful!+Please+log+in.",
             status_code=status.HTTP_302_FOUND
         )
         
@@ -589,7 +590,7 @@ async def register_post(
                 "email": email,
                 "api_url": API_URL,
                 "request_id": request_id,
-                "demo_mode": True
+                "demo_mode": False
             },
             status_code=400
         )
@@ -606,7 +607,7 @@ async def register_post(
                 "email": email,
                 "api_url": API_URL,
                 "request_id": request_id,
-                "demo_mode": True
+                "demo_mode": False
             },
             status_code=500
         )
@@ -651,7 +652,7 @@ async def enhanced_dashboard(request: Request):
                 "user": user,
                 "api_url": API_URL,
                 "request_id": request_id,
-                "demo_mode": True,
+                "demo_mode": False,
                 "portfolio": demo_portfolio,
                 "market_summary": market_summary,
                 "popular_stocks": [],
@@ -701,7 +702,7 @@ async def enhanced_health_check():
             "updated": "2025-07-07 21:54:42",
             "features": {
                 "enhanced_error_handling": "enabled",
-                "demo_mode": "enabled",
+                "demo_mode": "disabled",
                 "responsive_design": "enabled",
                 "real_time_updates": "enabled",
                 "template_filters": "enhanced"
