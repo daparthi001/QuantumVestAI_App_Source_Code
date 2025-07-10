@@ -12,6 +12,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 import os
+from core.config import settings
 
 # Try to import aiohttp, fallback to None if not available
 try:
@@ -27,9 +28,12 @@ class TrendingStocksService:
     """Service for managing trending stocks data with real-time updates and caching."""
     
     def __init__(self):
-        self.api_key = os.getenv("ALPHA_VANTAGE_API_KEY")
+        # Use configured API key or fallback to the default demo key
+        self.api_key = os.getenv("ALPHA_VANTAGE_API_KEY", settings.ALPHA_VANTAGE_API_KEY)
         if not self.api_key:
-            raise RuntimeError("ALPHA_VANTAGE_API_KEY must be set for real-time data access")
+            raise RuntimeError(
+                "ALPHA_VANTAGE_API_KEY must be set for real-time data access"
+            )
         self.base_url = "https://www.alphavantage.co/query"
         self.cache_ttl = int(os.getenv("CACHE_TTL_TRENDING_STOCKS", "300"))  # 5 minutes
         self._cache: Dict[str, Any] = {}
