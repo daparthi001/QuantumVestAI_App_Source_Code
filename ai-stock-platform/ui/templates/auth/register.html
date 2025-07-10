@@ -34,7 +34,7 @@
         <div id="error-container" class="alert alert-danger" style="display:none;"></div>
         {% endif %}
 
-        <form id="registration-form" action="/auth/register" method="POST">
+        <form id="registration-form" action="/register" method="POST">
             <div class="form-group">
                 <label for="username">Username</label>
                 <input type="text" id="username" name="username" class="form-control" value="{{ username|default('') }}" required>
