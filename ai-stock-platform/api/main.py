@@ -27,6 +27,7 @@ from core.validation import validate_user_login, validate_stock_symbol_param, va
 from core.database import initialize_database, get_database_health, check_database_connection
 from core.exceptions import ValidationError, AuthenticationError, NotFoundError
 from routers.websocket import router as websocket_router, manager as websocket_manager
+from routers.auth import router as auth_router
 
 # Configure logging
 logging.basicConfig(
@@ -66,8 +67,9 @@ app = configure_cors(app)
 app.add_middleware(ErrorHandlerMiddleware)
 app.add_middleware(RateLimitMiddleware)
 
-# Include WebSocket routes
+# Include WebSocket and authentication routes
 app.include_router(websocket_router)
+app.include_router(auth_router, prefix="/api/v1/auth")
 
 # Request logging middleware
 @app.middleware("http")
