@@ -101,7 +101,8 @@ Activate it with `source venv/bin/activate`.
 To fetch real-time stock market data you must set the `ALPHA_VANTAGE_API_KEY`
 environment variable. Sign up for a free key at
 [Alpha Vantage](https://www.alphavantage.co/support/#api-key) and export it
-before starting the API server:
+before starting the API server. If the variable is not set the application will
+fall back to the public **demo** key which has strict rate limits:
 ```bash
 export ALPHA_VANTAGE_API_KEY=your_key_here
 ```
