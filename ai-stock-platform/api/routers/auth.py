@@ -302,4 +302,5 @@ async def password_reset_request_options():
 
 @router.options("/password-reset/confirm")
 async def password_reset_confirm_options():
-    """Handle CORS preflight requests for password reset confirm endpoint"""    return Response(status_code=200)
+    """Handle CORS preflight requests for password reset confirm endpoint"""
+    return Response(status_code=200)
