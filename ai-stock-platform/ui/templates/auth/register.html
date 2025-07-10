@@ -10,7 +10,7 @@
         
         <!-- Add date reference safely -->
         {% if now is defined %}
-        <p class="auth-timestamp" style="font-size: 10px; opacity: 0.5;">{{ now.strftime('%Y-%m-%d') }}</p>
+        <p class="auth-timestamp" style="font-size: 10px; opacity: 0.5;">{{ now().strftime('%Y-%m-%d') }}</p>
         {% endif %}
 
         <!-- Error display with basic formatting -->

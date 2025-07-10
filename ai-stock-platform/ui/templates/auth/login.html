@@ -147,7 +147,7 @@
             <p class="tagline">Quantum-powered investment analytics</p>
             <!-- Remove or safely handle datetime reference -->
             {% if now is defined %}
-            <p class="timestamp" style="font-size: 10px; opacity: 0.5;">{{ now.strftime('%Y-%m-%d') }}</p>
+            <p class="timestamp" style="font-size: 10px; opacity: 0.5;">{{ now().strftime('%Y-%m-%d') }}</p>
             {% endif %}
         </div>
         
