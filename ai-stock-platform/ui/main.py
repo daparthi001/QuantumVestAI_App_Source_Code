@@ -19,7 +19,6 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from ui.services.api_client import APIClient
 
-
 # Define BASE_DIR first
 BASE_DIR = Path(__file__).resolve().parent
 
