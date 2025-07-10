@@ -434,7 +434,7 @@
     <div class="text-center mt-5 mb-5">
         <h3>Ready to Get Started?</h3>
         <p class="lead">Join thousands of investors using AI to make smarter investment decisions.</p>
-        <a href="/register" class="btn btn-primary btn-lg me-3">Start Free Trial</a>
+        <a href="/auth/register" class="btn btn-primary btn-lg me-3">Start Free Trial</a>
         <a href="/contact" class="btn btn-outline-primary btn-lg">Contact Sales</a>
     </div>
 </div>
@@ -471,7 +471,6 @@ function selectPlan(planId) {
     
     // Simulate plan selection
     alert(`Selected ${planId} plan! Redirecting to registration...`);
-    window.location.href = `/register?plan=${planId}&billing=${isYearly ? 'yearly' : 'monthly'}`;
+    window.location.href = `/auth/register?plan=${planId}&billing=${isYearly ? 'yearly' : 'monthly'}`;
 }
-</script>
-{% endblock %}
+</script>{% endblock %}

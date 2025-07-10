@@ -28,7 +28,7 @@
         {% endif %}
         
         <div class="auth-body">
-            <form method="post" action="/register" id="registerForm" novalidate>
+            <form method="post" action="/auth/register" id="registerForm" novalidate>
                 <div class="mb-3">
                     <label for="username" class="form-label">Username</label>
                     <input type="text" 
@@ -299,7 +299,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Submit form normally
                 const fallbackForm = document.createElement('form');
                 fallbackForm.method = 'POST';
-                fallbackForm.action = '/register';
+                fallbackForm.action = '/auth/register';
                 
                 Object.keys(data).forEach(key => {
                     if (key !== 'terms') {

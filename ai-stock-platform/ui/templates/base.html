@@ -164,7 +164,7 @@
                     </a>
                 </li>
                 <li class="quantum-nav-item">
-                    <a href="/register" class="quantum-nav-link {% if '/register' in request.url.path %}active{% endif %}" data-i18n="nav.register">
+                    <a href="/auth/register" class="quantum-nav-link {% if '/auth/register' in request.url.path %}active{% endif %}" data-i18n="nav.register">
                         Register
                     </a>
                 </li>
@@ -300,7 +300,7 @@
                     {% else %}
                     <div class="auth-buttons">
                         <a href="/login" class="btn btn-outline-primary btn-sm" data-i18n="nav.login">Login</a>
-                        <a href="/register" class="btn btn-primary btn-sm" data-i18n="nav.register">Register</a>
+                        <a href="/auth/register" class="btn btn-primary btn-sm" data-i18n="nav.register">Register</a>
                     </div>
                     {% endif %}
                 </div>
