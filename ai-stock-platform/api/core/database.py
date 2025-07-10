@@ -7,6 +7,11 @@ import logging
 import os
 from typing import Optional
 from contextlib import contextmanager
+from sqlalchemy.ext.asyncio import (
+    create_async_engine,
+    AsyncSession,
+)
+from sqlalchemy.orm import sessionmaker
 
 logger = logging.getLogger("api")
 
@@ -124,3 +129,15 @@ def get_db_connection():
     """Get database connection"""
     with db_manager.get_connection() as conn:
         yield conn
+
+
+# Async engine and session for FastAPI dependencies
+DATABASE_URL = os.environ.get("ASYNC_DATABASE_URL", "sqlite+aiosqlite:///./test.db")
+async_engine = create_async_engine(DATABASE_URL, future=True)
+AsyncSessionLocal = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
+
+
+async def get_db_session():
+    """Yield an async database session."""
+    async with AsyncSessionLocal() as session:
+        yield session
