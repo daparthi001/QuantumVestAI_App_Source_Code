@@ -1,4 +1,5 @@
-"""Compatibility module redirecting to API core utilities."""
+"""Compatibility layer aliasing to api.core."""
+import importlib, sys
 
 # Import the API configuration modules we rely on. Avoid importing optional
 # subpackages that would trigger database connections or other heavy side
