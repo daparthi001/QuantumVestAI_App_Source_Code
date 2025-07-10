@@ -30,6 +30,7 @@ class User(Base, TimestampMixin):
     full_name = Column(String)
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
+    role = Column(String, default="free", nullable=False)
 
     # Relationships
     positions = relationship(
