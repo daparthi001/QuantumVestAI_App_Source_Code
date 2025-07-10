@@ -65,6 +65,13 @@ class Settings(BaseSettings):
     TWITTER_ACCESS_TOKEN: Optional[str] = Field(default=None, env='TWITTER_ACCESS_TOKEN')
     TWITTER_ACCESS_TOKEN_SECRET: Optional[str] = Field(default=None, env='TWITTER_ACCESS_TOKEN_SECRET')
     SLACK_WEBHOOK_URL: Optional[str] = Field(default=None, env='SLACK_WEBHOOK_URL')
+
+    # Stock Market Data
+    ALPHA_VANTAGE_API_KEY: str = Field(default="demo", env='ALPHA_VANTAGE_API_KEY')
+
+    # Cache settings
+    CACHE_TTL_TRENDING_STOCKS: int = Field(default=300, env='CACHE_TTL_TRENDING_STOCKS')
+    ENABLE_REAL_DATA: bool = Field(default=False, env='ENABLE_REAL_DATA')
     
     # Logging
     LOG_LEVEL: str = Field(default="INFO", env='LOG_LEVEL')
