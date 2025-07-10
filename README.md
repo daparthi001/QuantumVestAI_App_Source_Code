@@ -1,6 +1,7 @@
 # QuantumVestAI Application Endpoints Documentation
 
 This document provides a comprehensive list of API and UI endpoints for the QuantumVestAI application.
+For screenshots and icons used in the interface, see [UI Visuals](docs/UI_IMAGES.md).
 
 ---
 
