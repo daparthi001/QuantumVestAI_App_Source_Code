@@ -12,7 +12,7 @@ from pydantic import BaseModel, EmailStr, Field
 import logging
 
 from core.security.tokens import create_access_token
-from core.security.auth import (
+from core.security import (
     verify_password,
     get_password_hash,
     get_current_user,
