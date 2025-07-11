@@ -5,6 +5,7 @@ Author: daparthi001
 """
 from sqlalchemy import Column, Integer, String, Boolean
 from sqlalchemy.orm import relationship
+from db.models.associations import user_watchlist
 
 from db.base import Base, TimestampMixin
 from core.utils.password_utils import get_password_hash
@@ -41,6 +42,11 @@ class User(Base, TimestampMixin):
     )
     watchlists = relationship(
         "WatchList", back_populates="user", cascade="all, delete-orphan"
+    )
+    watchlist = relationship(
+        "Stock",
+        secondary=user_watchlist,
+        back_populates="watched_by",
     )
 
     def set_password(self, password: str) -> None:
