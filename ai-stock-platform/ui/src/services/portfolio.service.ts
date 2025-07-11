@@ -4,7 +4,7 @@
  * Author: daparthi001
  */
 import { api } from './api';
-import wsService, { WebSocketMessage } from './websocket.service';
+import wsService from './websocket.service';
 import authService from './auth.service';
 import { Position, Transaction, PortfolioSummary } from '../types/portfolio';
 import { Subject } from 'rxjs';
