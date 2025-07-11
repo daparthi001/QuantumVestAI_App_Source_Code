@@ -139,6 +139,14 @@ except Exception as e:
     engine = create_engine("sqlite:///fallback.db")
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     logger.warning("Using fallback SQLite database due to connection error")
+    # Automatically create tables for the fallback database so basic
+    # authentication and other features continue working when PostgreSQL
+    # is unavailable.
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Initialized fallback SQLite database")
+    except Exception as init_err:
+        logger.error("Failed to initialize fallback database: %s", str(init_err))
 
 def get_db() -> Generator:
     """Get database session"""
