@@ -13,6 +13,8 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import sessionmaker
 
+from db.base import Base
+
 logger = logging.getLogger("api")
 
 
@@ -141,3 +143,14 @@ async def get_db_session():
     """Yield an async database session."""
     async with AsyncSessionLocal() as session:
         yield session
+
+
+async def create_db_and_tables() -> None:
+    """Create database tables if they do not exist."""
+    try:
+        async with async_engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database tables created or verified")
+    except Exception as e:
+        logger.error(f"Failed to create tables: {e}")
+        raise
