@@ -49,6 +49,12 @@ class Stock(Base, TimestampMixin):
         secondary=user_watchlist,
         back_populates="watchlist"
     )
+    # Individual watchlist entries for this stock
+    watchlist_entries: Mapped[List["WatchList"]] = relationship(
+        "WatchList",
+        back_populates="stock",
+        cascade="all, delete-orphan",
+    )
     price_history: Mapped[List["StockPrice"]] = relationship(
         "StockPrice",
         back_populates="stock",
