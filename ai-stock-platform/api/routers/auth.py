@@ -12,19 +12,19 @@ from pydantic import BaseModel, EmailStr, Field
 import logging
 
 from core.security.tokens import create_access_token
-from core.security.auth import (
+from core.security import (
     verify_password,
     get_password_hash,
     get_current_user,
     get_current_active_user,
 )
-from api.core.database import get_db_session
-from api.core.config import settings
-from api.models.response import StandardResponse
+from core.database import get_db_session
+from core.config import settings
+from core.models.response import StandardResponse
 
 # Use the SQLAlchemy model from the consolidated db.models package
 from db.models.user import User
-from api.schemas.auth import Token, UserResponse
+from api.schemas.auth import TokenResponse, UserBase
 
 # Create router WITHOUT a prefix (prefix will be added in main.py)
 router = APIRouter(tags=["Authentication"])
@@ -105,7 +105,7 @@ async def login(
     return StandardResponse(
         status="success",
         message="Login successful",
-        data=Token(access_token=access_token, token_type="bearer"),
+        data=TokenResponse(access_token=access_token, token_type="bearer"),
     )
 
 
@@ -204,7 +204,7 @@ async def get_me(current_user: User = Depends(get_current_active_user)):
     return StandardResponse(
         status="success",
         message="User details retrieved",
-        data=UserResponse.from_orm(current_user),
+        data=UserBase(**current_user.__dict__),
     )
 
 

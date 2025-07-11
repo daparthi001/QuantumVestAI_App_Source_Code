@@ -38,6 +38,7 @@ This is a complete, production-ready web UI for the QuantumVestAI platform featu
 ### 📋 Watchlist & Portfolio
 - **Portfolio Management**: Track holdings and performance
 - **Watchlist**: Custom stock watchlists with alerts
+- **Floating Watchlist Button**: Quick access to your watchlist from any page
 - **Price Alerts**: Configurable price notifications
 - **Performance Analytics**: ROI, risk metrics, and allocation
 

@@ -1,4 +1,4 @@
 """Configuration compatibility layer."""
-from ui.core.config.settings import settings, Settings, get_settings
+from api.core.config import settings, Settings, get_settings
 
 __all__ = ["settings", "Settings", "get_settings"]
