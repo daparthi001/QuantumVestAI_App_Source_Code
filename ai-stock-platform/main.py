@@ -470,21 +470,26 @@ async def options_universal(rest_of_path: str):
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    """Serve the index page"""
+    """Landing page showing marketing content or redirecting authenticated users."""
     try:
-        logger.info(f"Rendering index page. API URL: {API_URL}")
+        logger.info(f"Rendering landing page. API URL: {API_URL}")
+
+        if request.cookies.get("access_token"):
+            return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
+
         return app.state.templates.TemplateResponse(
-            "index.html", 
+            "home.html",
             {
                 "request": request,
                 # Add get_asset_url directly to context if not registered
-                "get_asset_url": app.state.templates.env.filters.get("get_asset_url", 
+                "get_asset_url": app.state.templates.env.filters.get(
+                    "get_asset_url",
                     lambda path, version=None: f"/static/{path}?v={version or os.environ.get('APP_VERSION', 'v1.5.2')}"
                 )
             }
         )
     except Exception as e:
-        logger.error(f"Error rendering index page: {str(e)}")
+        logger.error(f"Error rendering landing page: {str(e)}")
         return HTMLResponse(
             content=f"""
             <html>
