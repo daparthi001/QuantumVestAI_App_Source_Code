@@ -14,4 +14,5 @@ class WatchlistStock(Base):
     added_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
-    watchlist = relationship("Watchlist", back_populates="stocks")    stock = relationship("Stock", back_populates="watchlists")
+    watchlist = relationship("Watchlist", back_populates="stocks")
+    stock = relationship("Stock", back_populates="watchlists")

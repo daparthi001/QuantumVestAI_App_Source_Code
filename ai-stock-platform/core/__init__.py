@@ -4,7 +4,16 @@ import importlib, sys
 # Import the API configuration modules we rely on. Avoid importing optional
 # subpackages that would trigger database connections or other heavy side
 # effects during test collection.
-from api.core import config, logger
+from api.core import (
+    config,
+    logger,
+    exceptions as api_exceptions,
+    responses as api_responses,
+    validation as api_validation,
+    database as api_database,
+    security as api_security,
+    models as api_models,
+)
 from api.core.config.settings import settings, Settings, get_settings
 from . import http_client
 
@@ -18,6 +27,12 @@ import sys
 
 sys.modules.setdefault(__name__ + ".config", config)
 sys.modules.setdefault(__name__ + ".logger", logger)
+sys.modules.setdefault(__name__ + ".exceptions", api_exceptions)
+sys.modules.setdefault(__name__ + ".responses", api_responses)
+sys.modules.setdefault(__name__ + ".validation", api_validation)
+sys.modules.setdefault(__name__ + ".database", api_database)
+sys.modules.setdefault(__name__ + ".security", api_security)
+sys.modules.setdefault(__name__ + ".models", api_models)
 
 # Re-export commonly used components from api.core
 

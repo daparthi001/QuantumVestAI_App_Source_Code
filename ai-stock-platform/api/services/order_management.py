@@ -1,5 +1,5 @@
 import uuid
-from models.orders import Order, OrderStatus, OrderType, TimeInForce
+from api.models.orders import Order, OrderStatus, OrderType, TimeInForce
 
 class OrderManagementService:
     def __init__(self, market_data, risk_management, trading_execution):

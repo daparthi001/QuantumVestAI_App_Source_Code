@@ -1,9 +1,10 @@
-import sys
 from pathlib import Path
-_pkg_path = Path(__file__).resolve().parent.parent / 'ai-stock-platform' / 'models'
-__path__ = [str(_pkg_path)]
-if str(_pkg_path) not in sys.path:
-    sys.path.insert(0, str(_pkg_path))
+import sys
 
-from importlib import import_module
-sys.modules[__name__] = import_module('api.models')
+# Make the API models package importable as ``models`` without side effects.
+root_dir = Path(__file__).resolve().parent
+api_models = root_dir / 'ai-stock-platform' / 'api' / 'models'
+__path__ = [str(root_dir), str(api_models)]
+for p in __path__:
+    if p not in sys.path:
+        sys.path.insert(0, p)

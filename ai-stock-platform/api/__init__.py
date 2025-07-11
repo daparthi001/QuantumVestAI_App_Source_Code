@@ -25,7 +25,14 @@ if str(_parent) not in sys.path:
 # Map the name ``core`` to this package's ``core`` module so imports of ``core``
 # resolve correctly even when a sibling ``ui.core`` package exists.
 import importlib
-sys.modules.setdefault('core', importlib.import_module('api.core'))
+core_pkg = importlib.import_module('api.core')
+sys.modules.setdefault('core', core_pkg)
+for name in ("exceptions", "responses", "validation", "database", "security", "models"):
+    submod = f"api.core.{name}"
+    try:
+        sys.modules.setdefault(f"core.{name}", importlib.import_module(submod))
+    except Exception:
+        pass
 
 # Remove local ``multipart`` stub if present so the real ``python-multipart``
 # package can be used by FastAPI/Starlette.

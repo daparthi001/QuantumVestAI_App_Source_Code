@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Optional
 
 class Base:
-    """Lightweight base class when SQLAlchemy isn't available."""
+    """Lightweight base class for tests without SQLAlchemy."""
     pass
 
 class OrderStatus(str, Enum):
