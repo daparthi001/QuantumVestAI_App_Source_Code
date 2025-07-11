@@ -500,6 +500,11 @@ async def startup_event():
     # Initialize database
     if initialize_database():
         logger.info("Database initialized successfully")
+        try:
+            from core.database import create_db_and_tables
+            await create_db_and_tables()
+        except Exception as e:
+            logger.error(f"Database table creation failed: {e}")
     else:
         logger.warning("Database initialization failed - running in degraded mode")
     
