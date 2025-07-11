@@ -55,10 +55,11 @@ class User(Base, TimestampMixin):
         secondary=user_watchlist,
         back_populates="watched_by",
     )
-    watchlist = relationship(
-        "Stock",
-        secondary=user_watchlist,
-        back_populates="watched_by",
+
+    alerts = relationship(
+        "Alert",
+        back_populates="user",
+        cascade="all, delete-orphan",
     )
 
     def set_password(self, password: str) -> None:
