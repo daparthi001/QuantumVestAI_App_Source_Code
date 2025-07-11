@@ -68,6 +68,18 @@ class Stock(Base, TimestampMixin):
         back_populates="stock",
         cascade="all, delete-orphan"
     )
+
+    # Portfolio relationships
+    positions: Mapped[List["Position"]] = relationship(
+        "Position",
+        back_populates="stock",
+        cascade="all, delete-orphan",
+    )
+    transactions: Mapped[List["Transaction"]] = relationship(
+        "Transaction",
+        back_populates="stock",
+        cascade="all, delete-orphan",
+    )
     
     def __repr__(self) -> str:
         return f"<Stock {self.ticker}>"
