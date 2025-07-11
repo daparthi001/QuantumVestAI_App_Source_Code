@@ -15,6 +15,11 @@ from sqlalchemy.pool import QueuePool
 from sqlalchemy.exc import OperationalError
 from urllib.parse import quote_plus
 
+# Import all models so that Base.metadata is fully populated when using
+# the fallback SQLite database. Without this, `Base.metadata.create_all`
+# would create no tables, leading to missing table errors.
+import db.models  # noqa: F401
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
