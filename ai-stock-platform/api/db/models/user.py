@@ -48,7 +48,13 @@ class User(Base, TimestampMixin):
     )
     # Older code expects this attribute name
     watchlists = watchlist_entries
+
     # Simple many-to-many relationship for stocks a user is watching
+    watchlist = relationship(
+        "Stock",
+        secondary=user_watchlist,
+        back_populates="watched_by",
+    )
     watchlist = relationship(
         "Stock",
         secondary=user_watchlist,
