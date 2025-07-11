@@ -40,8 +40,17 @@ class User(Base, TimestampMixin):
     transactions = relationship(
         "Transaction", back_populates="user", cascade="all, delete-orphan"
     )
-    watchlists = relationship(
-        "WatchList", back_populates="user", cascade="all, delete-orphan"
+    # Detailed watchlist entries with notes/targets
+    watchlist_entries = relationship(
+        "WatchList",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    # Simple many-to-many relationship for stocks a user is watching
+    watchlist = relationship(
+        "Stock",
+        secondary=user_watchlist,
+        back_populates="watched_by",
     )
     watchlist = relationship(
         "Stock",
