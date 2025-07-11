@@ -66,3 +66,4 @@ class WatchlistPerformanceResponse(BaseModel):
     watchlist_id: int
     name: str
     performance: WatchlistPerformance
+

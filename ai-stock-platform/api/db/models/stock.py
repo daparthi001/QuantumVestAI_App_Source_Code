@@ -55,6 +55,9 @@ class Stock(Base, TimestampMixin):
         back_populates="stock",
         cascade="all, delete-orphan",
     )
+    # Alias used by older code
+    watchlists = watchlist_entries
+
     price_history: Mapped[List["StockPrice"]] = relationship(
         "StockPrice",
         back_populates="stock",

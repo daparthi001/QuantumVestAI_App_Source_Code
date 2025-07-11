@@ -188,5 +188,6 @@ async def get_watchlist_performance(
     
     if not performance:
         raise ResourceNotFoundError(f"Watchlist {watchlist_id} not found")
-    
+
     return performance
+
