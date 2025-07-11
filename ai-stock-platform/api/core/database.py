@@ -149,7 +149,7 @@ async def create_db_and_tables() -> None:
     """Create database tables if they do not exist."""
     try:
         async with async_engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
+            await conn.run_sync(Base.metadata.create_all, checkfirst=True)
         logger.info("Database tables created or verified")
     except Exception as e:
         logger.error(f"Failed to create tables: {e}")
