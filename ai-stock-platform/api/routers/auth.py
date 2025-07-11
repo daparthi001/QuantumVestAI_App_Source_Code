@@ -24,7 +24,7 @@ from core.models.response import StandardResponse
 
 # Use the SQLAlchemy model from the consolidated db.models package
 from db.models.user import User
-from api.schemas.auth import TokenResponse, UserBase
+from schemas.auth import TokenResponse, UserBase
 
 # Create router WITHOUT a prefix (prefix will be added in main.py)
 router = APIRouter(tags=["Authentication"])
