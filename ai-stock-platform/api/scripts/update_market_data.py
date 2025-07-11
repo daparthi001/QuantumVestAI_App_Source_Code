@@ -19,25 +19,27 @@ logger = logging.getLogger(__name__)
 
 async def update_all_stocks() -> None:
     """Fetch latest data for all stocks and update the database."""
-    db = SessionLocal()
-    service = StockService(db)
-    try:
-        stocks: List[Stock] = db.query(Stock).all()
-        if not stocks:
-            logger.info("No stocks found in database; nothing to update")
-            return
+    # Use a context manager so the session is always closed
+    with SessionLocal() as db:
+        service = StockService(db)
+        try:
+            stocks: List[Stock] = db.query(Stock).all()
+            if not stocks:
+                logger.info("No stocks found in database; nothing to update")
+                return
 
-        for stock in stocks:
-            try:
-                updated = await service.update_stock_data(stock.ticker)
-                if updated:
-                    logger.info("Updated %s", stock.ticker)
-                else:
-                    logger.info("No data returned for %s", stock.ticker)
-            except Exception as exc:
-                logger.warning("Failed to update %s: %s", stock.ticker, exc)
-    finally:
-        db.close()
+            for stock in stocks:
+                try:
+                    updated = await service.update_stock_data(stock.ticker)
+                    if updated:
+                        logger.info("Updated %s", stock.ticker)
+                    else:
+                        logger.info("No data returned for %s", stock.ticker)
+                except Exception as exc:
+                    logger.warning("Failed to update %s: %s", stock.ticker, exc)
+        except Exception:
+            # Any database errors should be surfaced after logging
+            raise
 
 
 if __name__ == "__main__":
