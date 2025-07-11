@@ -14,6 +14,7 @@ from typing import Optional, Dict, Any
 
 from core.config import settings
 from db.session import get_db
+from db.models.user import User
 from core.exceptions import AuthenticationError
 
 # Password context for hashing
@@ -54,7 +55,6 @@ async def get_current_user(
     db: Session = Depends(get_db)
 ):
     """Get current user from token."""
-    from db.models.user import User  # Import here to avoid circular imports
     
     try:
         payload = jwt.decode(
