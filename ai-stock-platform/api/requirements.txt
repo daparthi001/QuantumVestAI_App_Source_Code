@@ -16,3 +16,4 @@ aiohttp==3.9.5
 tweepy==4.14.0
 textblob==0.17.1
 nltk==3.8.1
+aiosqlite==0.19.0
