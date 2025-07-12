@@ -9,6 +9,10 @@ from typing import Optional
 from contextlib import contextmanager
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from core.config import get_settings
+from pathlib import Path
+from alembic import command
+from alembic.config import Config
+
 from sqlalchemy.orm import sessionmaker
 
 settings = get_settings()
@@ -159,13 +163,18 @@ async def get_db_session():
 
 
 async def create_db_and_tables() -> None:
-    """Create database tables if they do not exist."""
+    """Create database tables if they do not exist and optionally run migrations."""
     try:
         # Import models to register them with the Base metadata
         from db import models  # noqa: F401
         async with async_engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all, checkfirst=True)
         logger.info("Database tables created or verified")
+
+        if os.environ.get("RUN_DB_MIGRATIONS", "false").lower() == "true":
+            logger.info("Running database migrations")
+            alembic_cfg = Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
+            command.upgrade(alembic_cfg, "head")
     except Exception as e:
         logger.error(f"Failed to create tables: {e}")
         raise
