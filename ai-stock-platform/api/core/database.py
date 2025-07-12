@@ -11,8 +11,10 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from core.config import get_settings
 from pathlib import Path
 
+
 from alembic import command
 from alembic.config import Config
+
 
 from sqlalchemy.orm import sessionmaker
 
@@ -177,12 +179,12 @@ async def create_db_and_tables() -> None:
             try:
                 from alembic import command  # type: ignore
                 from alembic.config import Config  # type: ignore
-            except ImportError as exc:
-                logger.error("Alembic is required to run migrations")
-                raise exc
+            except ImportError:
+                logger.error("Alembic is required to run migrations but is not installed")
+            else:
+                alembic_cfg = Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
+                command.upgrade(alembic_cfg, "head")
 
-            alembic_cfg = Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
-            command.upgrade(alembic_cfg, "head")
     except Exception as e:
         logger.error(f"Failed to create tables: {e}")
         raise
