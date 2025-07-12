@@ -12,6 +12,7 @@ from core.config import get_settings
 from pathlib import Path
 from alembic import command
 from alembic.config import Config
+
 from sqlalchemy.orm import sessionmaker
 
 settings = get_settings()

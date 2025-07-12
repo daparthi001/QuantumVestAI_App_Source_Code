@@ -15,6 +15,11 @@ from sqlalchemy.pool import QueuePool
 from sqlalchemy.exc import OperationalError
 from urllib.parse import quote_plus
 
+# Import all models so that Base.metadata is fully populated when using
+# the fallback SQLite database. Without this, `Base.metadata.create_all`
+# would create no tables, leading to missing table errors.
+import db.models  # noqa: F401
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -139,6 +144,14 @@ except Exception as e:
     engine = create_engine("sqlite:///fallback.db")
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     logger.warning("Using fallback SQLite database due to connection error")
+    # Automatically create tables for the fallback database so basic
+    # authentication and other features continue working when PostgreSQL
+    # is unavailable.
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Initialized fallback SQLite database")
+    except Exception as init_err:
+        logger.error("Failed to initialize fallback database: %s", str(init_err))
 
 def get_db() -> Generator:
     """Get database session"""
