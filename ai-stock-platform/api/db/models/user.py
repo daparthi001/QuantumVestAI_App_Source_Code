@@ -4,7 +4,7 @@ Created: 2025-05-21 17:07:45
 Author: daparthi001
 """
 from sqlalchemy import Column, Integer, String, Boolean
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, synonym
 from db.models.associations import user_watchlist
 
 from db.base import Base, TimestampMixin
@@ -27,7 +27,12 @@ class User(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     username = Column(String, unique=True, index=True, nullable=False)
+    # Some early migrations named the column ``hashed_password`` while later
+    # ones used ``password_hash``.  To work with databases created by either
+    # migration history we store the value under ``hashed_password`` and expose
+    # ``password_hash`` as a backward-compatible synonym.
     hashed_password = Column(String, nullable=False)
+    password_hash = synonym("hashed_password")
     full_name = Column(String)
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
