@@ -7,7 +7,7 @@ Updated: 2025-06-14 23:14:45 by daparthi001
 import logging
 import time
 import os
-from typing import Generator, Dict, Any
+from typing import Generator, Dict, Any, AsyncGenerator
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import sessionmaker, Session
 from db.base import Base
@@ -155,6 +155,15 @@ except Exception as e:
 
 def get_db() -> Generator:
     """Get database session"""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+async def get_db_async() -> AsyncGenerator[Session, None]:
+    """Asynchronous wrapper for ``get_db`` to support ``async for`` usage in tests."""
     db = SessionLocal()
     try:
         yield db
