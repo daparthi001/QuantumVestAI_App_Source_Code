@@ -8,12 +8,25 @@
 # resolve to this folder only.  To allow Python to also find the installed
 # library, we extend ``__path__`` into a namespace package.
 
-
 from pkgutil import extend_path
+
+try:
+    from pkg_resources import get_distribution
+except Exception:  # pragma: no cover - setuptools may not be installed
+    get_distribution = None
+
 
 __path__ = extend_path(__path__, __name__)  # type: ignore[misc]
 
 # When the real Alembic library is installed, Python will discover its modules
 # via the extended search path above.  If it's missing, importing things like
 # ``alembic.config`` will fail normally.
+
+if get_distribution:
+    try:  # pragma: no cover - relies on packaging metadata
+        __version__ = get_distribution("alembic").version
+    except Exception:
+        __version__ = "unknown"
+else:  # pragma: no cover - pkg_resources missing
+    __version__ = "unknown"
 
