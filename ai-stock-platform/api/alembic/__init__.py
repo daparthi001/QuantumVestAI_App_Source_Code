@@ -15,6 +15,7 @@ try:
 except Exception:  # pragma: no cover - setuptools may not be installed
     get_distribution = None
 
+
 __path__ = extend_path(__path__, __name__)  # type: ignore[misc]
 
 # When the real Alembic library is installed, Python will discover its modules
@@ -28,3 +29,4 @@ if get_distribution:
         __version__ = "unknown"
 else:  # pragma: no cover - pkg_resources missing
     __version__ = "unknown"
+
