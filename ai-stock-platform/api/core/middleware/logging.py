@@ -8,7 +8,7 @@ from typing import Callable
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from core.logging import logger
+from core.logging_setup import logger
 
 class LoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(
