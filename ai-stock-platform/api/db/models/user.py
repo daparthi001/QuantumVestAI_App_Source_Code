@@ -27,11 +27,14 @@ class User(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     username = Column(String, unique=True, index=True, nullable=False)
-    # Most database schemas historically used the ``password_hash`` column
-    # name. Map that column to the ``hashed_password`` attribute so existing
-    # code continues to work without requiring a migration.
-    hashed_password = Column("password_hash", String, nullable=False)
-    # Some legacy code still references ``password_hash`` directly.
+    # Historically the column name toggled between ``hashed_password`` and
+    # ``password_hash`` across different deployments.  The ORM always exposes
+    # the ``hashed_password`` attribute but we also provide ``password_hash``
+    # as a synonym for backwards compatibility.  The underlying column uses the
+    # older ``hashed_password`` name so existing databases continue to work
+    # without migrations.
+    hashed_password = Column(String, nullable=False)
+
     password_hash = synonym("hashed_password")
     full_name = Column(String)
     is_active = Column(Boolean, default=True)
