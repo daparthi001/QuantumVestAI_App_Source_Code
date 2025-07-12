@@ -5,15 +5,10 @@ Author: AI Assistant
 """
 import logging
 import os
-from typing import Optional
 from contextlib import contextmanager
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from core.config import get_settings
-from pathlib import Path
-
 from sqlalchemy.orm import sessionmaker
 
-settings = get_settings()
 
 from db.base import Base
 
@@ -145,8 +140,20 @@ def _convert_to_async(db_url: str) -> str:
         return db_url.replace("sqlite:///", "sqlite+aiosqlite:///")
     return db_url
 
-DATABASE_URL = os.environ.get(
-    "ASYNC_DATABASE_URL", _convert_to_async(settings.SQLALCHEMY_DATABASE_URI)
+# Build database URL from environment variables
+db_user = os.environ.get("DB_USER", "dbadmin")
+db_password = os.environ.get("DB_PASSWORD", "")
+db_host = os.environ.get("DB_HOST", "localhost")
+db_port = os.environ.get("DB_PORT", "5432")
+db_name = os.environ.get("DB_NAME", "quantumvestai")
+
+default_sync_url = os.environ.get(
+    "DATABASE_URL",
+    f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}",
+)
+
+DATABASE_URL = _convert_to_async(
+    os.environ.get("ASYNC_DATABASE_URL", default_sync_url)
 )
 async_engine = create_async_engine(DATABASE_URL, future=True)
 AsyncSessionLocal = sessionmaker(

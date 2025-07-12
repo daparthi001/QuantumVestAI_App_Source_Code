@@ -8,6 +8,7 @@ import logging
 import time
 import os
 from typing import Generator, Dict, Any, AsyncGenerator
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import sessionmaker, Session
 from db.base import Base
@@ -160,4 +161,12 @@ def get_db() -> Generator:
         yield db
     finally:
         db.close()
+
+
+async def get_db_async() -> AsyncGenerator[AsyncSession, None]:
+    """Yield an async database session using core.database utilities."""
+    from core.database import get_db_session
+
+    async for session in get_db_session():
+        yield session
 
