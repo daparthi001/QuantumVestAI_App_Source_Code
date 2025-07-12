@@ -34,6 +34,7 @@ class User(Base, TimestampMixin):
     # older ``hashed_password`` name so existing databases continue to work
     # without migrations.
     hashed_password = Column(String, nullable=False)
+
     password_hash = synonym("hashed_password")
     full_name = Column(String)
     is_active = Column(Boolean, default=True)
