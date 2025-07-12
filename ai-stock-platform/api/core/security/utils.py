@@ -10,7 +10,7 @@ from passlib.context import CryptContext
 from db.models.user import User
 from core.config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 class SecurityUtils:
     """Security utility functions"""
