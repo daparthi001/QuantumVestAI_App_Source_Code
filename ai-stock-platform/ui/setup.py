@@ -18,7 +18,7 @@ setup(
         "httpx>=0.19.0",
         "pydantic>=1.8.0",
         "python-jose[cryptography]>=3.3.0",
-        "passlib[bcrypt]>=1.7.4",
+        "passlib>=1.7.4",
         "yfinance>=0.1.70",
         "pandas>=1.3.0",
         "numpy>=1.21.0",

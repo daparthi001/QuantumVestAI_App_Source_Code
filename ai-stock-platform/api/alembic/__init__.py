@@ -12,3 +12,4 @@ try:  # Attempt to import the real library components
     import_module("alembic.config")  # type: ignore[unused-ignore]
 except Exception as exc:  # pragma: no cover - import side effects
     raise ImportError("The Alembic library is required to run migrations") from exc
+

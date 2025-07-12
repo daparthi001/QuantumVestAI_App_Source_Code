@@ -108,4 +108,28 @@ export ALPHA_VANTAGE_API_KEY=your_key_here
 ```
 Without this key the trending stock endpoints will not return current data.
 
+## Database Setup
 
+The API uses asynchronous SQLAlchemy connections. Before running the server you must
+configure two environment variables:
+
+```bash
+export ASYNC_DATABASE_URL=postgresql+asyncpg://user:password@localhost/dbname
+export RUN_DB_MIGRATIONS=true
+```
+
+`ASYNC_DATABASE_URL` provides the connection string for the async engine. If it is
+not set the server falls back to a local SQLite file (`test.db`). `RUN_DB_MIGRATIONS`
+controls whether the application automatically creates tables on startup.
+
+For local development you can initialize a PostgreSQL database by running:
+
+```bash
+./ai-stock-platform/api/scripts/init_local_db.sh
+```
+
+If the tables are missing at startup, the API will attempt to create them
+automatically.
+
+
+\n

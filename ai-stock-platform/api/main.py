@@ -500,6 +500,20 @@ async def startup_event():
     # Initialize database
     if initialize_database():
         logger.info("Database initialized successfully")
+        run_migrations = os.environ.get("RUN_DB_MIGRATIONS", "0").lower() in ("1", "true", "yes")
+        try:
+            from sqlalchemy import inspect
+            from core.database import async_engine, create_db_and_tables
+
+            async with async_engine.begin() as conn:
+                has_users = await conn.run_sync(lambda sconn: inspect(sconn).has_table("users"))
+
+            if run_migrations or not has_users:
+                await create_db_and_tables()
+            else:
+                logger.info("Database tables already exist; skipping creation")
+        except Exception as e:
+            logger.error(f"Database table creation failed: {e}")
     else:
         logger.warning("Database initialization failed - running in degraded mode")
     

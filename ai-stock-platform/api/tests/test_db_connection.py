@@ -13,7 +13,7 @@ import logging
 from typing import Generator, Optional
 from datetime import datetime
 
-from db.session import Base, get_db
+from db.session import Base, get_db, get_db_async
 from core.config import settings
 from core.logger import setup_logger
 
@@ -213,7 +213,7 @@ class TestDatabaseConnection:
         """Test async database operations."""
         try:
             # Get async session
-            async for db in get_db():
+            async for db in get_db_async():
                 # Execute simple query
                 result = await db.execute(text("SELECT 1"))
                 assert await result.scalar() == 1

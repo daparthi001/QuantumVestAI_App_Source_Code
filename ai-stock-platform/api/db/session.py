@@ -7,7 +7,7 @@ Updated: 2025-06-14 23:14:45 by daparthi001
 import logging
 import time
 import os
-from typing import Generator, Dict, Any
+from typing import Generator, Dict, Any, AsyncGenerator
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import sessionmaker, Session
 from db.base import Base
@@ -160,3 +160,4 @@ def get_db() -> Generator:
         yield db
     finally:
         db.close()
+

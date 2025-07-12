@@ -5,12 +5,12 @@ Author: daparthi001
 """
 from passlib.context import CryptContext
 
-# Configure password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Configure password hashing. Use pbkdf2_sha256 to avoid bcrypt dependency issues
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 def get_password_hash(password: str) -> str:
     """
-    Generate password hash using bcrypt
+    Generate password hash using pbkdf2_sha256
     
     Args:
         password: Plain text password
