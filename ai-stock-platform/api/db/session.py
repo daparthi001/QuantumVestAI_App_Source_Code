@@ -161,11 +161,3 @@ def get_db() -> Generator:
     finally:
         db.close()
 
-
-async def get_db_async() -> AsyncGenerator[Session, None]:
-    """Asynchronous wrapper for ``get_db`` to support ``async for`` usage in tests."""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()

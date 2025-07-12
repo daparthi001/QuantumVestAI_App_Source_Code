@@ -159,26 +159,3 @@ async def get_db_session():
     async with AsyncSessionLocal() as session:
         yield session
 
-
-async def create_db_and_tables() -> None:
-    """Create database tables if they do not exist and optionally run migrations."""
-    try:
-        # Import models to register them with the Base metadata
-        from db import models  # noqa: F401
-        async with async_engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all, checkfirst=True)
-        logger.info("Database tables created or verified")
-
-        if os.environ.get("RUN_DB_MIGRATIONS", "false").lower() == "true":
-            logger.info("Running database migrations")
-            import importlib.util
-            if importlib.util.find_spec("alembic.config") is None:
-                logger.error("Alembic is required to run migrations but is not installed")
-            else:
-                from alembic import command  # type: ignore
-                from alembic.config import Config  # type: ignore
-                alembic_cfg = Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
-                command.upgrade(alembic_cfg, "head")
-    except Exception as e:
-        logger.error(f"Failed to create tables: {e}")
-        raise

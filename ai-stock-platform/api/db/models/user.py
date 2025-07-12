@@ -34,6 +34,7 @@ class User(Base, TimestampMixin):
     # compatibility.  Using a synonym keeps both attribute names referring to the
     # same underlying column without forcing existing databases to migrate.
     hashed_password = Column(String, nullable=False)
+
     password_hash = synonym("hashed_password")
     full_name = Column(String)
     is_active = Column(Boolean, default=True)
