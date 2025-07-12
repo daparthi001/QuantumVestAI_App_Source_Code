@@ -27,8 +27,8 @@ class User(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     username = Column(String, unique=True, index=True, nullable=False)
-    # Some early migrations named the column ``hashed_password`` while later
-    # ones used ``password_hash``.  To work with databases created by either
+    # Some early migrations named the password column ``hashed_password`` while
+    # later ones used ``password_hash``.  To support databases created by either
     # migration history we store the value under ``hashed_password`` and expose
     # ``password_hash`` as a backward-compatible synonym.
     hashed_password = Column(String, nullable=False)
