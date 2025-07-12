@@ -1,14 +1,30 @@
 """Alembic database migration components."""
 
-# This lightweight package primarily houses the migration scripts under
-# ``alembic/versions``.  The real Alembic library provides the ``alembic``
-# package with modules like ``alembic.config`` and ``alembic.script`` which our
-# tests expect to import.  If the library isn't installed, importing this
-# package should fail so that ``pytest.importorskip("alembic")`` correctly skips
-# migration tests instead of raising obscure errors during import later on.
-try:  # Attempt to import the real library components
-    from importlib import import_module
+# This lightweight package primarily stores the application's migration
+# scripts under ``alembic/versions``.  When running the application we expect
+# the real Alembic library to be installed so helper modules like
+# ``alembic.config`` and ``alembic.script`` are available.  Because this
+# directory shares the package name, importing ``alembic`` would normally
+# resolve to this folder only.  To allow Python to also find the installed
+# library, we extend ``__path__`` into a namespace package.
 
-    import_module("alembic.config")  # type: ignore[unused-ignore]
-except Exception as exc:  # pragma: no cover - import side effects
-    raise ImportError("The Alembic library is required to run migrations") from exc
+from pkgutil import extend_path
+
+try:
+    from pkg_resources import get_distribution
+except Exception:  # pragma: no cover - setuptools may not be installed
+    get_distribution = None
+
+__path__ = extend_path(__path__, __name__)  # type: ignore[misc]
+
+# When the real Alembic library is installed, Python will discover its modules
+# via the extended search path above.  If it's missing, importing things like
+# ``alembic.config`` will fail normally.
+
+if get_distribution:
+    try:  # pragma: no cover - relies on packaging metadata
+        __version__ = get_distribution("alembic").version
+    except Exception:
+        __version__ = "unknown"
+else:  # pragma: no cover - pkg_resources missing
+    __version__ = "unknown"
