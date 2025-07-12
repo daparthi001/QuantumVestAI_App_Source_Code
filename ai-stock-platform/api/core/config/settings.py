@@ -75,6 +75,11 @@ class Settings(BaseSettings):
     
     # Logging
     LOG_LEVEL: str = Field(default="INFO", env='LOG_LEVEL')
+
+    @property
+    def SQLALCHEMY_DATABASE_URI(self) -> str:
+        """Compatibility alias used by older code and tests."""
+        return self.get_db_url()
     
     # Allow extra fields
     model_config = {'extra': 'ignore', 'env_file': '.env', 'case_sensitive': False}
