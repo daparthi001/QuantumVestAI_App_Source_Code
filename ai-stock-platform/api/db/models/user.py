@@ -32,6 +32,7 @@ class User(Base, TimestampMixin):
     # migration history we store the value under ``hashed_password`` and expose
     # ``password_hash`` as a backward-compatible synonym.
     hashed_password = Column(String, nullable=False)
+
     password_hash = synonym("hashed_password")
     full_name = Column(String)
     is_active = Column(Boolean, default=True)
