@@ -28,3 +28,4 @@ if get_distribution:
         __version__ = "unknown"
 else:  # pragma: no cover - pkg_resources missing
     __version__ = "unknown"
+
