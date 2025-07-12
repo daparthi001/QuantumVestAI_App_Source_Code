@@ -7,11 +7,11 @@ import logging
 import os
 from typing import Optional
 from contextlib import contextmanager
-from sqlalchemy.ext.asyncio import (
-    create_async_engine,
-    AsyncSession,
-)
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from core.config import get_settings
 from sqlalchemy.orm import sessionmaker
+
+settings = get_settings()
 
 from db.base import Base
 
@@ -134,9 +134,22 @@ def get_db_connection():
 
 
 # Async engine and session for FastAPI dependencies
-DATABASE_URL = os.environ.get("ASYNC_DATABASE_URL", "sqlite+aiosqlite:///./test.db")
+
+def _convert_to_async(db_url: str) -> str:
+    """Convert synchronous DB URL to an async-compatible URL."""
+    if db_url.startswith("postgresql://"):
+        return db_url.replace("postgresql://", "postgresql+asyncpg://")
+    if db_url.startswith("sqlite:///"):
+        return db_url.replace("sqlite:///", "sqlite+aiosqlite:///")
+    return db_url
+
+DATABASE_URL = os.environ.get(
+    "ASYNC_DATABASE_URL", _convert_to_async(settings.SQLALCHEMY_DATABASE_URI)
+)
 async_engine = create_async_engine(DATABASE_URL, future=True)
-AsyncSessionLocal = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
+AsyncSessionLocal = sessionmaker(
+    async_engine, class_=AsyncSession, expire_on_commit=False
+)
 
 
 async def get_db_session():
