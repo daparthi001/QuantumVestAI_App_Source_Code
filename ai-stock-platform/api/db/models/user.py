@@ -27,10 +27,12 @@ class User(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     username = Column(String, unique=True, index=True, nullable=False)
-    # Some early migrations named the column ``hashed_password`` while later
-    # ones used ``password_hash``.  To work with databases created by either
-    # migration history we store the value under ``hashed_password`` and expose
-    # ``password_hash`` as a backward-compatible synonym.
+    # The original schema stored the encrypted password under the
+    # ``hashed_password`` column.  Later revisions renamed the column to
+    # ``password_hash``.  Newer code should continue to access the attribute as
+    # ``hashed_password`` while ``password_hash`` remains available for backward
+    # compatibility.  Using a synonym keeps both attribute names referring to the
+    # same underlying column without forcing existing databases to migrate.
     hashed_password = Column(String, nullable=False)
     password_hash = synonym("hashed_password")
     full_name = Column(String)
