@@ -33,6 +33,7 @@ class User(Base, TimestampMixin):
     # ``password_hash`` column and expose ``password_hash`` as a synonym.  This
     # keeps the application code stable without requiring a migration.
     hashed_password = Column("password_hash", String, nullable=False)
+
     password_hash = synonym("hashed_password")
     full_name = Column(String)
     is_active = Column(Boolean, default=True)
