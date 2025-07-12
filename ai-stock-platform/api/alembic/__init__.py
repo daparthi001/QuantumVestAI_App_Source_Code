@@ -2,19 +2,18 @@
 
 # This lightweight package primarily stores the application's migration
 # scripts under ``alembic/versions``.  When running the application we expect
-# the real Alembic library to be installed so we can import helper modules like
-# ``alembic.config`` and ``alembic.script``.  Since this directory shares the
-# same name as the real package, importing ``alembic`` would normally resolve to
-# this folder only.  To allow Python to also find the installed library we
-# extend ``__path__`` into a namespace package before attempting the import.
+# the real Alembic library to be installed so helper modules like
+# ``alembic.config`` and ``alembic.script`` are available.  Because this
+# directory shares the package name, importing ``alembic`` would normally
+# resolve to this folder only.  To allow Python to also find the installed
+# library, we extend ``__path__`` into a namespace package.
+
 
 from pkgutil import extend_path
 
 __path__ = extend_path(__path__, __name__)  # type: ignore[misc]
 
-try:  # Attempt to import the real library components
-    from importlib import import_module
+# When the real Alembic library is installed, Python will discover its modules
+# via the extended search path above.  If it's missing, importing things like
+# ``alembic.config`` will fail normally.
 
-    import_module("alembic.config")  # type: ignore[unused-ignore]
-except Exception as exc:  # pragma: no cover - import side effects
-    raise ImportError("The Alembic library is required to run migrations") from exc
