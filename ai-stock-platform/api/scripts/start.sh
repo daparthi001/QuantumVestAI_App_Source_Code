@@ -12,7 +12,11 @@ timeout 30 bash -c "until curl -s http://${POSTGRES_SERVER}:${POSTGRES_PORT}; do
 # Run migrations if needed
 if [ "${AUTO_MIGRATE}" = "true" ]; then
     echo "Running database migrations..."
-    alembic upgrade head
+    if command -v alembic >/dev/null 2>&1; then
+        alembic upgrade head
+    else
+        echo "Alembic not installed; skipping migrations" >&2
+    fi
 fi
 
 # Start the application
