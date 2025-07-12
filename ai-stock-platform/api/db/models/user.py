@@ -27,11 +27,12 @@ class User(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     username = Column(String, unique=True, index=True, nullable=False)
-    # Some early migrations named the column ``hashed_password`` while later
-    # ones used ``password_hash``.  To work with databases created by either
-    # migration history we store the value under ``hashed_password`` and expose
-    # ``password_hash`` as a backward-compatible synonym.
-    hashed_password = Column(String, nullable=False)
+    # Historically the underlying column was named ``password_hash`` but some
+    # migrations used ``hashed_password``.  To support databases created by
+    # either set of migrations we map the ``hashed_password`` attribute to the
+    # ``password_hash`` column and expose ``password_hash`` as a synonym.  This
+    # keeps the application code stable without requiring a migration.
+    hashed_password = Column("password_hash", String, nullable=False)
     password_hash = synonym("hashed_password")
     full_name = Column(String)
     is_active = Column(Boolean, default=True)
