@@ -3,8 +3,9 @@
 Startup test for QuantumVestAI UI to validate template filters
 """
 
-import sys
 import os
+import sys
+
 sys.path.append('.')
 
 def test_app_startup():
@@ -13,11 +14,12 @@ def test_app_startup():
     
     try:
         # Test minimal FastAPI app creation
+        from datetime import datetime
+        from pathlib import Path
+
         from fastapi import FastAPI
         from fastapi.templating import Jinja2Templates
-        from pathlib import Path
-        from datetime import datetime
-        
+
         # Create app similar to main.py
         BASE_DIR = Path('.').resolve()
         app = FastAPI(title="QuantumVestAI UI Test")
@@ -31,7 +33,9 @@ def test_app_startup():
         
         # Test template filter registration (main.py style)
         try:
-            from utils.template_filters import register_filters, validate_template_filters, get_template_filter_status
+            from utils.template_filters import (get_template_filter_status,
+                                                register_filters,
+                                                validate_template_filters)
             
             filter_success = register_filters(app)
             print(f"✓ Template filter registration: {filter_success}")

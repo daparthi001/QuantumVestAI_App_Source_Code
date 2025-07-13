@@ -3,26 +3,20 @@ Risk Analysis Router
 Created: 2025-05-20 04:54:55
 Author: daparthi001
 """
-from fastapi import APIRouter, Depends, Query, Path, status
-from sqlalchemy.orm import Session
-from typing import List, Optional, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
+from core.exceptions import PermissionDeniedError, ResourceNotFoundError
 from core.security import get_current_user
-from core.exceptions import ResourceNotFoundError, PermissionDeniedError
-from db.session import get_db
 from db.models.user import User
+from db.session import get_db
+from fastapi import APIRouter, Depends, Path, Query, status
+from schemas.risk import (CorrelationResponse, MarketRiskResponse,
+                          PortfolioRiskResponse, RiskAlertResponse,
+                          RiskFactorResponse, ScenarioAnalysisResponse,
+                          StressTestResponse, VaRResponse)
 from services.risk_service import RiskService
-from schemas.risk import (
-    PortfolioRiskResponse,
-    MarketRiskResponse,
-    RiskFactorResponse,
-    StressTestResponse,
-    ScenarioAnalysisResponse,
-    RiskAlertResponse,
-    CorrelationResponse,
-    VaRResponse
-)
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/risk",

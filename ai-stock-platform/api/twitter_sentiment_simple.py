@@ -2,13 +2,14 @@
 Simplified Twitter Sentiment Analysis for Stocks
 This version works without complex configuration dependencies
 """
+import asyncio
 import logging
+import re
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
 import tweepy
 from textblob import TextBlob
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
-import re
-import asyncio
 from twitter_config import twitter_config
 
 logger = logging.getLogger("api.social")

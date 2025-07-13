@@ -4,7 +4,9 @@ Created: 2025-05-21 16:32:45
 Author: daparthi001
 """
 from typing import Any
+
 from sqlalchemy.ext.declarative import as_declarative, declared_attr
+
 
 @as_declarative()
 class Base:

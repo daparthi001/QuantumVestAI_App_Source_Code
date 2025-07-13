@@ -3,14 +3,14 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
+from db.models.user import User as DBUser
+from db.session import get_db
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-from db.session import get_db
-from db.models.user import User as DBUser
 from .tokens import TokenHandler
 
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")

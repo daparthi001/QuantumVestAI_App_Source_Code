@@ -5,6 +5,7 @@ This is a simplified version that works without additional dependencies
 import os
 from typing import Optional
 
+
 class TwitterConfig:
     """Simple Twitter configuration class"""
     

@@ -3,11 +3,12 @@
 Create admin user for QuantumVestAI application.
 """
 
+import argparse
+import logging
 import os
 import sys
-import logging
-import argparse
 from datetime import datetime
+
 import psycopg2
 from passlib.context import CryptContext
 

@@ -3,19 +3,18 @@ WebSocket Router Implementation
 Created: 2025-05-19 03:43:23
 Author: daparthi001
 """
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from typing import Optional
 import logging
 from datetime import datetime
+from typing import Optional
 
 from core.security import get_current_user
 from db.models.user import User
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 # Import the local websocket manager using a relative import to avoid package
 # resolution issues when the application is executed as a module
 # Import the local websocket manager using an absolute path so the module works
 # both when the package is executed and when files are run directly.
 from websocket.manager import ConnectionManager
-
 
 logger = logging.getLogger("api")
 

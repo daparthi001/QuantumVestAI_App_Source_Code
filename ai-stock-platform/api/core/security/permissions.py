@@ -7,6 +7,7 @@ from typing import List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+
 class Permission(str, Enum):
     READ = "read"
     WRITE = "write"

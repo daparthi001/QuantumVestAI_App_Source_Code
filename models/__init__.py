@@ -1,5 +1,5 @@
-from pathlib import Path
 import sys
+from pathlib import Path
 
 # Make the API models package importable as ``models`` without side effects.
 root_dir = Path(__file__).resolve().parent

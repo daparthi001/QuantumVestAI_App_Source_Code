@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Date, ForeignKey, Integer, Numeric, String, UniqueConstraint
-from sqlalchemy.orm import relationship
-
 from db.base_class import Base, TimestampMixin
+from sqlalchemy import (Column, Date, ForeignKey, Integer, Numeric, String,
+                        UniqueConstraint)
+from sqlalchemy.orm import relationship
 
 
 class StockForecast(Base, TimestampMixin):

@@ -3,18 +3,22 @@ Tests for the API client service.
 """
 import os
 import sys
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
+
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 sys.path.append(ROOT)
 sys.path.append(os.path.join(ROOT, "ai-stock-platform"))
 sys.path.append(os.path.join(ROOT, "ai-stock-platform", "api"))
 pytest.importorskip("requests")
-import requests
 import json
 
-from ui.services.api_client import APIClient
+import requests
 from core.config.settings import settings
+
+from ui.services.api_client import APIClient
+
 
 def test_api_client_initialization():
     """Test API client initializes with correct values."""

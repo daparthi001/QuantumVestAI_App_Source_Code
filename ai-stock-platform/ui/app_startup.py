@@ -6,9 +6,10 @@ Last updated: 2025-01-18
 Updated by: daparthi001
 """
 
-import logging
 import asyncio
+import logging
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ async def lifespan(app: FastAPI):
     try:
         # Initialize HTTP client configuration
         from core.http_client import HTTPClientConfig, get_http_client
-        
+
         # Test HTTP client initialization
         async with get_http_client() as client:
             logger.info("HTTP client initialized successfully")
@@ -119,7 +120,7 @@ async def health_check():
     """
     try:
         from core.http_client import get_http_client
-        
+
         # Test HTTP client
         async with get_http_client() as client:
             # Basic health check - just verify client creation
@@ -152,7 +153,7 @@ def add_health_endpoints(app: FastAPI):
     async def get_http_health():
         """HTTP client specific health check."""
         try:
-            from core.http_client import get_http_client, HTTPClientConfig
+            from core.http_client import HTTPClientConfig, get_http_client
             
             config = HTTPClientConfig()
             async with get_http_client() as client:
@@ -177,8 +178,9 @@ def add_health_endpoints(app: FastAPI):
 
 if __name__ == "__main__":
     # Example of how to run the application
-    import uvicorn
     import os
+
+    import uvicorn
     
     app = create_app()
     add_health_endpoints(app)

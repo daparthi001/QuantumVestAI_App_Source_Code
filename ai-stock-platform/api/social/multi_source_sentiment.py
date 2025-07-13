@@ -5,11 +5,13 @@ Author: AI Assistant for QuantumVestAI
 """
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
-import aiohttp
 import re
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+import aiohttp
 from textblob import TextBlob
+
 from .twitter_sentiment import TwitterSentimentAnalyzer
 
 logger = logging.getLogger("api.social.multi_source")

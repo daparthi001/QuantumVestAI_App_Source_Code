@@ -3,12 +3,14 @@ QuantumVestAI API Client
 Last Updated: 2025-06-18 21:25:28
 Author: daparthi001
 """
-import requests
 import json
 import logging
-from typing import Dict, Any, Optional, Union
-from requests.exceptions import RequestException, Timeout, ConnectionError
+from typing import Any, Dict, Optional, Union
+
+import requests
 from core.config.settings import settings
+from requests.exceptions import ConnectionError, RequestException, Timeout
+
 
 class APIClient:
     """Client for interacting with the QuantumVestAI backend API"""

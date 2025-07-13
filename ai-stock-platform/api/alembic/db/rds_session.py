@@ -1,10 +1,11 @@
-import boto3
+import logging
 import os
+
+import boto3
+from core.config import settings
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from core.config import settings
-import logging
 
 logger = logging.getLogger(__name__)
 

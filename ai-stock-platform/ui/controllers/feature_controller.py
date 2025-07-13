@@ -3,14 +3,15 @@ QuantumVestAI Feature Controller
 Updated: 2025-06-19 02:20:19
 Author: daparthi001
 """
-from fastapi import APIRouter, Request, HTTPException, Form
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
-import requests
+import json
 import logging
 import os
-import json
 from pathlib import Path
+
+import requests
+from fastapi import APIRouter, Form, HTTPException, Request
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
 
 # Setup router
 router = APIRouter(prefix="/features", tags=["features"])

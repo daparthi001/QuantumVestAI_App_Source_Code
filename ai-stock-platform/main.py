@@ -3,20 +3,21 @@ Main application file for QuantumVestAI UI
 Updated: 2025-06-20 19:31:29
 Author: daparthi001
 """
-import os
 import json
-import requests
+import logging
+import os
+import sys
 import traceback
-from fastapi import FastAPI, HTTPException, Request, Form, status
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from datetime import datetime, timedelta
+from logging.config import dictConfig
+from pathlib import Path
+
+import requests
+from fastapi import FastAPI, Form, HTTPException, Request, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime, timedelta
-import logging
-from pathlib import Path
-from logging.config import dictConfig
-import sys
 
 # CRITICAL FIX: Define BASE_DIR before using it
 BASE_DIR = Path(__file__).resolve().parent
@@ -67,7 +68,9 @@ app = FastAPI(
 
 # Add request ID middleware for better error tracking
 import uuid
+
 from starlette.middleware.base import BaseHTTPMiddleware
+
 
 class RequestIDMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
@@ -115,7 +118,9 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "ui" / "static")), nam
 # Import controllers - moved after app creation
 try:
     from controllers import auth_controller
-    from utils.template_filters import register_filters, validate_template_filters, get_template_filter_status
+    from utils.template_filters import (get_template_filter_status,
+                                        register_filters,
+                                        validate_template_filters)
 
     # Register template filters with app.state.templates
     filter_success = register_filters(app)

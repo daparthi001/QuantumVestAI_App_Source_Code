@@ -3,9 +3,9 @@ FastAPI App Structure Checker
 Created: 2025-06-19 04:20:11
 Author: daparthi001
 """
-import sys
-import os
 import inspect
+import os
+import sys
 
 # Check if we can import the main app
 print("Checking app structure...")

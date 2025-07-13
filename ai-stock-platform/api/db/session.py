@@ -5,21 +5,21 @@ Author: daparthi001
 Updated: 2025-06-14 23:14:45 by daparthi001
 """
 import logging
-import time
 import os
-from typing import Generator, Dict, Any, AsyncGenerator
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import create_engine, event, text
-from sqlalchemy.orm import sessionmaker, Session
-from db.base import Base
-from sqlalchemy.pool import QueuePool
-from sqlalchemy.exc import OperationalError
+import time
+from typing import Any, AsyncGenerator, Dict, Generator
 from urllib.parse import quote_plus
 
 # Import all models so that Base.metadata is fully populated when using
 # the fallback SQLite database. Without this, `Base.metadata.create_all`
 # would create no tables, leading to missing table errors.
 import db.models  # noqa: F401
+from db.base import Base
+from sqlalchemy import create_engine, event, text
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import QueuePool
 
 # Configure logging
 logging.basicConfig(

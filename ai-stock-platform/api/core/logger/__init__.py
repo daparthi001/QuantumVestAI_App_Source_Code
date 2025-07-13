@@ -4,17 +4,18 @@ Created: 2025-05-21 14:16:44
 Author: daparthi001
 Updated: 2025-06-14 20:28:31 by daparthi001
 """
+import logging
 import os
 import sys
-import logging
-from pathlib import Path
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 from typing import Optional
 
 # Use a relative import here so that this module can be loaded
 # during package initialisation before the `core` alias is
 # registered in ``api.__init__``.
 from ..config.settings import settings
+
 
 def setup_logger(
     name: str = "app",

@@ -1,10 +1,9 @@
 """HTTP client utilities (UI compatibility)."""
-from typing import Optional, Dict, Any
-from ui.core.http_client import (
-    HTTPClient,
-    HTTPClientConfig,
-)
+from typing import Any, Dict, Optional
+
+from ui.core.http_client import HTTPClient, HTTPClientConfig
 from ui.core.http_client import get_http_client as _get_http_client
+
 
 async def get_http_client():
     async with _get_http_client() as client:

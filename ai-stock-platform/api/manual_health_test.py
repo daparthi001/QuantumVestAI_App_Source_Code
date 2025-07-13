@@ -7,10 +7,13 @@ This file can be run directly on the server to check if the health function work
 without going through the API routes.
 """
 import pytest
+
 pytest.skip("Manual script", allow_module_level=True)
 import asyncio
 import json
+
 from health_check import get_health_data
+
 
 async def test_health():
     """Test the health function directly"""

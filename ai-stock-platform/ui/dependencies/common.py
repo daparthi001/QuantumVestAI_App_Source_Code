@@ -1,11 +1,11 @@
-from fastapi import Query, Request
-from typing import Optional, Dict, Any, Tuple
 from datetime import datetime
+from typing import Any, Dict, Optional, Tuple
+
+from core.config.constants import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
+from fastapi import Query, Request
+
 from ui.services.api_client import APIClient
-from core.config.constants import (
-    DEFAULT_PAGE_SIZE,
-    MAX_PAGE_SIZE
-)
+
 API_URL = "http://quantumvestai-dev-api:8000"
 async def get_api_client(request: Request) -> APIClient:
     """

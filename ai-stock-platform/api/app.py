@@ -4,21 +4,21 @@ Created: 2025-06-17 00:07:14
 Updated: 2025-07-08 12:56:21
 Author: achavala
 """
-import sys
 import os
-from pathlib import Path
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
-from fastapi.middleware.cors import CORSMiddleware
+import sys
 from datetime import datetime
-from sqlalchemy import text
-from jinja2 import Environment
+from pathlib import Path
 
 # Import API components
 from core.config import settings
 from core.logger import logger
 from db.session import engine, get_db
-from routers import auth, users, stocks, alerts, watchlists, analytics, social
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from jinja2 import Environment
+from routers import alerts, analytics, auth, social, stocks, users, watchlists
+from sqlalchemy import text
 
 # Create API application
 app = FastAPI(
@@ -115,6 +115,7 @@ logger.info(
 
 if __name__ == "__main__":
     import uvicorn
+
     # Use the PORT from settings
     port = getattr(settings, "PORT", 8000)
     uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)

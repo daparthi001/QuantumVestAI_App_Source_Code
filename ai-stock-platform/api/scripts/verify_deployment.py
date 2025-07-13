@@ -3,11 +3,13 @@ Deployment Verification Script
 Created: 2025-05-19 05:43:23
 Author: daparthi001
 """
-import requests
+import os
 import sys
 import time
-from typing import Dict, Any
-import os
+from typing import Any, Dict
+
+import requests
+
 
 def verify_deployment(base_url: str) -> None:
     """Verify the deployment by checking various endpoints"""

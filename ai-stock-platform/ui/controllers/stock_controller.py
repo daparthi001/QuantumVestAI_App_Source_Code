@@ -3,14 +3,15 @@ Stock Controller for QuantumVestAI
 Created: 2025-06-17 20:54:48
 Author: daparthi001
 """
-import os
-import aiohttp
 import logging
-from fastapi import APIRouter, Request, Query, HTTPException, Form
-from ui.config.constants import AVAILABLE_MODELS, MODEL_ENSEMBLE
+import os
+from pathlib import Path
+
+import aiohttp
+from fastapi import APIRouter, Form, HTTPException, Query, Request
+
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from pathlib import Path
 
 router = APIRouter()
 templates = Jinja2Templates(directory=str(Path(__file__).resolve().parent.parent / "templates"))

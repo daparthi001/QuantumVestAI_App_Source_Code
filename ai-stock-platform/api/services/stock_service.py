@@ -4,16 +4,18 @@ Created: 2025-05-19 03:29:10
 Author: daparthi001
 Updated: 2025-01-09 (AI Assistant) - Added Warren Buffett analysis methods
 """
-import aiohttp
 import asyncio
-from typing import Optional, List, Dict, Any
-from sqlalchemy.orm import Session
-from models.stock import Stock, WatchList
+import logging
+from typing import Any, Dict, List, Optional
+
+import aiohttp
 # Import settings explicitly from the configuration module to avoid
 # accidentally importing the module itself when the `core.config`
 # package is present in the Python path.
 from core.config.settings import settings
-import logging
+from sqlalchemy.orm import Session
+
+from models.stock import Stock, WatchList
 
 logger = logging.getLogger(__name__)
 

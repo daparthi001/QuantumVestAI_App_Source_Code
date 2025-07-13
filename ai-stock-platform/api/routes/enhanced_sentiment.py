@@ -3,18 +3,21 @@ Enhanced Sentiment Analysis API Routes
 Created: 2025-01-09
 Author: AI Assistant for QuantumVestAI
 """
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
-from fastapi.responses import JSONResponse
-from typing import Dict, List, Any, Optional
-from datetime import datetime, timedelta
 import asyncio
 import logging
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
-from api.social.multi_source_sentiment import MultiSourceSentimentAnalyzer
-from api.services.notification_manager import notification_manager, NotificationChannel, NotificationPriority
+from api.services.notification_manager import (NotificationChannel,
+                                               NotificationPriority,
+                                               notification_manager)
 from api.services.premium_manager import premium_manager
+from api.social.multi_source_sentiment import MultiSourceSentimentAnalyzer
 from core.auth import get_current_user
-from schemas.sentiment import SentimentAnalysisRequest, SentimentAnalysisResponse
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi.responses import JSONResponse
+from schemas.sentiment import (SentimentAnalysisRequest,
+                               SentimentAnalysisResponse)
 
 logger = logging.getLogger("api.routes.sentiment")
 

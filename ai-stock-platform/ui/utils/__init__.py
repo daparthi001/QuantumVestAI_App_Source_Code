@@ -9,13 +9,9 @@ Author: daparthi001
 
 # Import formatters with error handling
 try:
-    from utils.formatters import (
-        format_currency, 
-        format_percentage, 
-        format_date, 
-        format_large_number,
-        format_change_value
-    )
+    from utils.formatters import (format_change_value, format_currency,
+                                  format_date, format_large_number,
+                                  format_percentage)
     __formatters_available = True
 except ImportError as e:
     # Create fallback functions if formatters can't be imported
@@ -72,13 +68,10 @@ except ImportError as e:
 
 # Import validators with error handling
 try:
-    from utils.validators import (
-        validate_ticker_symbol,
-        validate_email,
-        validate_password_strength,
-        validate_numeric_range,
-        validate_date_range
-    )
+    from utils.validators import (validate_date_range, validate_email,
+                                  validate_numeric_range,
+                                  validate_password_strength,
+                                  validate_ticker_symbol)
     __validators_available = True
 except ImportError as e:
     # Create fallback validators if validators can't be imported
@@ -115,13 +108,9 @@ except ImportError as e:
 
 # Import helpers with error handling
 try:
-    from utils.helpers import (
-        get_current_date,
-        generate_chart_colors,
-        parse_timeframe,
-        calculate_percent_change,
-        truncate_text
-    )
+    from utils.helpers import (calculate_percent_change, generate_chart_colors,
+                               get_current_date, parse_timeframe,
+                               truncate_text)
     __helpers_available = True
 except ImportError as e:
     # Create fallback helpers if helpers can't be imported

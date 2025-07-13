@@ -3,10 +3,11 @@ Minimal API for Testing Endpoints
 Created: 2025-06-19 04:20:11
 Author: daparthi001
 """
-from fastapi import FastAPI, HTTPException
-import uvicorn
 import os
 import sys
+
+import uvicorn
+from fastapi import FastAPI, HTTPException
 
 # Print debugging information
 print(f"Starting minimal API...")

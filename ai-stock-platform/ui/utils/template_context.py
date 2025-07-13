@@ -7,10 +7,10 @@ Provides common template context variables and utilities for all templates.
 This ensures consistent availability of essential variables like `now`, `user`, etc.
 """
 
-import os
 import logging
+import os
 from datetime import datetime
-from typing import Dict, Any, Optional, Callable
+from typing import Any, Callable, Dict, Optional
 
 logger = logging.getLogger("quantumvestai_ui.template_context")
 

@@ -3,24 +3,20 @@ Market Data Router
 Created: 2025-05-20 04:47:45
 Author: daparthi001
 """
-from fastapi import APIRouter, Depends, Query, Path, status
-from sqlalchemy.orm import Session
-from typing import List, Optional, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
+from core.exceptions import PermissionDeniedError, ResourceNotFoundError
 from core.security import get_current_user
-from core.exceptions import ResourceNotFoundError, PermissionDeniedError
-from db.session import get_db
 from db.models.user import User
+from db.session import get_db
+from fastapi import APIRouter, Depends, Path, Query, status
+from schemas.market_data import (EarningsCalendarResponse,
+                                 HistoricalDataResponse, MarketIndexResponse,
+                                 ScreenerResponse, SectorPerformanceResponse,
+                                 TechnicalIndicatorResponse)
 from services.data_service import MarketDataService
-from schemas.market_data import (
-    HistoricalDataResponse,
-    TechnicalIndicatorResponse,
-    MarketIndexResponse,
-    SectorPerformanceResponse,
-    EarningsCalendarResponse,
-    ScreenerResponse
-)
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/data",

@@ -1,12 +1,13 @@
 """QuantumVestAI Data API using Yahoo Finance"""
 
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import JSONResponse
-import httpx
 import logging
+import time
 from datetime import datetime
 from urllib.parse import urlencode
-import time
+
+import httpx
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
 
 router = APIRouter(prefix="/api/ai", tags=["ai-data"])
 logger = logging.getLogger(__name__)

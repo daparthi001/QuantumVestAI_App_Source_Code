@@ -4,13 +4,14 @@ Seed data initialization for QuantumVestAI database
 Created: 2025-05-15 20:23:18
 Author: daparthi001
 """
+import logging
 import os
 import sys
-import logging
 from datetime import datetime
+
+from passlib.context import CryptContext
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from passlib.context import CryptContext
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -21,7 +22,8 @@ pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 # Import models
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from db.models import User, Stock, Watchlist, WatchlistStock
+from db.models import Stock, User, Watchlist, WatchlistStock
+
 
 def seed_data():
     """Seed initial data into the database"""

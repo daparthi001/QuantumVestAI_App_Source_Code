@@ -6,6 +6,7 @@ Author: daparthi001
 from sqlalchemy import Column, DateTime
 from sqlalchemy.sql import func
 
+
 class TimestampMixin:
     """Mixin for adding timestamp columns to models"""
     created_at = Column(

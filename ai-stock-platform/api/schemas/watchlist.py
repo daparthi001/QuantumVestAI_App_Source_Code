@@ -3,9 +3,11 @@ Watchlist Schemas
 Created: 2025-05-20 04:44:57
 Author: daparthi001
 """
-from pydantic import BaseModel, constr
-from typing import List, Optional
 from datetime import datetime
+from typing import List, Optional
+
+from pydantic import BaseModel, constr
+
 
 class WatchlistBase(BaseModel):
     """Base watchlist schema."""

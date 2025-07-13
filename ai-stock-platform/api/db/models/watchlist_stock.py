@@ -1,8 +1,7 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
+from db.base_class import Base
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-
-from db.base_class import Base
 
 
 class WatchlistStock(Base):

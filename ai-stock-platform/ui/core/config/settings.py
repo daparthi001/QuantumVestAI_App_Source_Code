@@ -4,10 +4,11 @@ Last Updated: 2025-06-20 05:47:22
 Author: daparthi001settings.py
 """
 import os
-from pathlib import Path
-from dotenv import load_dotenv
-from typing import Dict, Any, List, Optional
 from functools import lru_cache
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+from dotenv import load_dotenv
 
 # Load environment variables from .env file if it exists
 load_dotenv()

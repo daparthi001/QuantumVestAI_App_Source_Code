@@ -1,6 +1,8 @@
+from typing import Callable, List
+
 import numpy as np
 import pandas as pd
-from typing import Callable, List
+
 
 class EnsemblePredictor:
     """Combine multiple prediction models by averaging their outputs."""

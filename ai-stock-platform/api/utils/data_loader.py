@@ -5,20 +5,20 @@ These functions handle fetching data from various sources,
 including APIs, databases, and local files.
 """
 
-import pandas as pd
-import numpy as np
-from typing import Dict, Any, List, Optional, Union, Tuple
-import logging
-import aiohttp
 import asyncio
 import json
-from datetime import datetime, timedelta
+import logging
 import os
-from sqlalchemy.orm import Session
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+import aiohttp
+import numpy as np
+import pandas as pd
 from core.config import settings
-from db.models.stock import Stock, StockPrice
 from core.exceptions import ExternalAPIError
+from db.models.stock import Stock, StockPrice
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger("api")
 

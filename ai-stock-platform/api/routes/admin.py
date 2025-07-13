@@ -1,8 +1,9 @@
 """
 Admin Routes
 """
-from fastapi import APIRouter, Depends, HTTPException, status
 from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException, status
 
 router = APIRouter(prefix="/api/v1/admin", tags=["admin"])
 

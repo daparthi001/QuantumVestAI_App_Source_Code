@@ -1,9 +1,11 @@
 """
 Tests for authentication routes.
 """
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 from fastapi import status
+
 
 def test_login_page_get(client):
     """Test that login page loads successfully."""

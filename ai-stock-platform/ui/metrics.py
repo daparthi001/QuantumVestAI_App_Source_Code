@@ -6,8 +6,9 @@ Author: daparthi001
 This module provides Prometheus metrics for monitoring the application.
 """
 
-from prometheus_client import Counter, Histogram, Gauge
 import time
+
+from prometheus_client import Counter, Gauge, Histogram
 
 # Define metrics
 http_requests_total = Counter(

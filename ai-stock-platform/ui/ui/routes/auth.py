@@ -7,4 +7,4 @@ New code should import directly from routes.auth.
 
 # Import directly from the real routes package
 API_URL = "http://quantumvestai-dev-api:8000"
-from ...routes.auth import router__all__ = ['router']
+from ...routes.auth import =, ['router'], router__all__

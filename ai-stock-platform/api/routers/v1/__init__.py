@@ -3,11 +3,12 @@ API v1 Router
 Created: 2025-06-19 16:40:55
 Author: daparthi001
 """
-from fastapi import APIRouter
 import os
-import sys
 import socket
+import sys
 from datetime import datetime
+
+from fastapi import APIRouter
 
 router = APIRouter()
 

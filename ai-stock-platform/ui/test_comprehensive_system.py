@@ -7,8 +7,9 @@ Author: AI Assistant
 This test validates the complete template filter and error handling system.
 """
 
-import sys
 import os
+import sys
+
 sys.path.append('.')
 
 def run_comprehensive_test():
@@ -28,16 +29,19 @@ def run_comprehensive_test():
         print("\n📋 Test 1: Template Filter System")
         print("-" * 30)
         
+        from pathlib import Path
+
         from fastapi import FastAPI
         from fastapi.templating import Jinja2Templates
-        from pathlib import Path
         
         app = FastAPI()
         templates = Jinja2Templates(directory='.')
         app.state.templates = templates
         
         # Test comprehensive template filter registration
-        from utils.template_filters import register_filters, validate_template_filters, get_template_filter_status
+        from utils.template_filters import (get_template_filter_status,
+                                            register_filters,
+                                            validate_template_filters)
         
         success = register_filters(app)
         print(f"✓ Filter registration: {success}")
@@ -70,7 +74,8 @@ def run_comprehensive_test():
         print("\n🛡️ Test 2: Enhanced Error Handling")
         print("-" * 30)
         
-        from utils.enhanced_error_handling import EnhancedTemplateRenderer, create_error_response
+        from utils.enhanced_error_handling import (EnhancedTemplateRenderer,
+                                                   create_error_response)
         
         renderer = EnhancedTemplateRenderer(templates)
         print("✓ Enhanced template renderer created")
@@ -94,7 +99,8 @@ def run_comprehensive_test():
         print("\n⚙️ Test 3: Comprehensive Middleware")
         print("-" * 30)
         
-        from utils.comprehensive_error_middleware import ComprehensiveErrorMiddleware
+        from utils.comprehensive_error_middleware import \
+            ComprehensiveErrorMiddleware
         
         middleware = ComprehensiveErrorMiddleware(app, templates, debug_mode=True)
         print("✓ Comprehensive error middleware created")
@@ -131,9 +137,10 @@ def run_comprehensive_test():
         app.add_middleware(ComprehensiveErrorMiddleware, templates=templates, debug_mode=True)
         
         # Test template rendering with the complete system
-        from fastapi import Request
         from unittest.mock import Mock
-        
+
+        from fastapi import Request
+
         # Create mock request
         mock_request = Mock(spec=Request)
         mock_request.url.path = "/test"

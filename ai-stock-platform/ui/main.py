@@ -4,19 +4,20 @@ Updated: 2025-07-07 21:54:42
 Author: hemanth9398
 Version: 2.0.0 - Complete Production Ready Application
 """
-import os
 import json
 import logging
+import os
 import sys
 from datetime import datetime, timedelta
-from pathlib import Path
 from logging.config import dictConfig
+from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Request, Form, status, Query
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi import FastAPI, Form, HTTPException, Query, Request, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.middleware.cors import CORSMiddleware
+
 from ui.services.api_client import APIClient
 
 # Define BASE_DIR first
@@ -104,8 +105,9 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="stat
 @app.get("/sw.js")
 async def service_worker():
     """Serve service worker from root path"""
-    from fastapi.responses import FileResponse
     import os
+
+    from fastapi.responses import FileResponse
     
     sw_path = os.path.join(BASE_DIR, "static", "sw.js")
     if os.path.exists(sw_path):
@@ -223,8 +225,10 @@ def _add_fallback_filters(templates):
 # Enhanced template filters and utilities setup
 try:
     # Import and register comprehensive template filters
-    from utils.template_filters import register_filters, validate_template_filters, get_template_filter_status
-    
+    from utils.template_filters import (get_template_filter_status,
+                                        register_filters,
+                                        validate_template_filters)
+
     # Register all template filters
     filter_registration_success = register_filters(app)
     
@@ -712,7 +716,8 @@ async def enhanced_health_check():
     
     # Add template filter status
     try:
-        from utils.template_filters import get_template_filter_status, validate_template_filters
+        from utils.template_filters import (get_template_filter_status,
+                                            validate_template_filters)
         
         filter_status = get_template_filter_status()
         validation_result = validate_template_filters(app)
@@ -808,6 +813,8 @@ def create_fallback_login_html(msg=None):
 
 # Analytics endpoint for pageview tracking
 from pydantic import BaseModel
+
+
 class PageviewRequest(BaseModel):
     page: str
     title: str

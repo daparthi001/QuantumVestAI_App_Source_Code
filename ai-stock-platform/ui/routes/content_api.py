@@ -1,6 +1,7 @@
 """Content API routes providing demo data for the UI."""
-from fastapi import APIRouter
 from datetime import datetime
+
+from fastapi import APIRouter
 
 router = APIRouter(prefix="/api/content", tags=["content"])
 

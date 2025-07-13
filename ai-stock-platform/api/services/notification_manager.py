@@ -6,13 +6,14 @@ Author: AI Assistant for QuantumVestAI
 import asyncio
 import json
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Callable
-from enum import Enum
 import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from dataclasses import dataclass
+from datetime import datetime, timedelta
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional
+
 import aiohttp
 
 logger = logging.getLogger("api.notifications")

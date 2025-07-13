@@ -7,18 +7,19 @@ This middleware provides world-class error handling, graceful degradation,
 and comprehensive logging for all application errors.
 """
 
+import json
 import logging
-from fastapi import Request, HTTPException
+import time
+import traceback
+from datetime import datetime
+from typing import Any, Callable
+
+from fastapi import HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
-from typing import Callable, Any
-import traceback
-import time
-import json
-from datetime import datetime
-
-from utils.enhanced_error_handling import get_enhanced_renderer, create_error_response
+from utils.enhanced_error_handling import (create_error_response,
+                                           get_enhanced_renderer)
 
 logger = logging.getLogger("quantumvestai_ui.middleware")
 

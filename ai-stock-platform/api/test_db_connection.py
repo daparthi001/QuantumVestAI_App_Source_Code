@@ -4,19 +4,20 @@ Created: 2025-05-20 05:09:26
 Author: daparthi001
 """
 import pytest
-pytest.skip("Requires SQLAlchemy", allow_module_level=True)
-import pytest
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.exc import SQLAlchemyError
-import os
-import logging
-from typing import Generator, Optional
-from datetime import datetime
 
-from db.session import Base, get_db
+pytest.skip("Requires SQLAlchemy", allow_module_level=True)
+import logging
+import os
+from datetime import datetime
+from typing import Generator, Optional
+
+import pytest
 from core.config import settings
 from core.logger import setup_logger
+from db.session import Base, get_db
+from sqlalchemy import create_engine, text
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session, sessionmaker
 
 # Setup logging
 logger = setup_logger(__name__)

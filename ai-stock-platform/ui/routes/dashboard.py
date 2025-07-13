@@ -3,13 +3,14 @@ QuantumVestAI Dashboard Routes
 Updated: 2025-07-07 21:54:42
 Author: hemanth9398
 """
-from fastapi import APIRouter, Request, Query
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
-from typing import Optional, List
 import logging
 from datetime import datetime
 from pathlib import Path
+from typing import List, Optional
+
+from fastapi import APIRouter, Query, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
 
 # Setup router
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])

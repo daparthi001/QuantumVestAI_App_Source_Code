@@ -6,11 +6,10 @@ Author: AI Assistant
 import logging
 import os
 from contextlib import contextmanager
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
-
 
 from db.base import Base
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 
 logger = logging.getLogger("api")
 

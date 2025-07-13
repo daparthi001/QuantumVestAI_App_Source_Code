@@ -4,30 +4,32 @@ Updated: 2025-06-19 15:34:18
 Enhanced: 2025-01-09 (AI Assistant)
 Author: daparthi001
 """
-import os
-import sys
-import socket
-import logging
-from datetime import datetime
-import json
-import uuid
 import asyncio
+import json
+import logging
+import os
+import socket
+import sys
+import uuid
+from datetime import datetime
 
-from fastapi import FastAPI, Request, HTTPException, status, Depends, Response
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
-
+from core.database import (check_database_connection, get_database_health,
+                           initialize_database)
+from core.exceptions import AuthenticationError, NotFoundError, ValidationError
+from core.middleware.cors import configure_cors
 # Import enhanced core modules
 from core.middleware.error_handler import ErrorHandlerMiddleware
 from core.middleware.rate_limit import RateLimitMiddleware
-from core.middleware.cors import configure_cors
-from core.responses import create_success_response, create_error_response
-from core.validation import validate_user_login, validate_stock_symbol_param, validate_pagination_params
-from core.database import initialize_database, get_database_health, check_database_connection
-from core.exceptions import ValidationError, AuthenticationError, NotFoundError
-from routers.websocket import router as websocket_router, manager as websocket_manager
+from core.responses import create_error_response, create_success_response
+from core.validation import (validate_pagination_params,
+                             validate_stock_symbol_param, validate_user_login)
+from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from routers.auth import router as auth_router
+from routers.websocket import manager as websocket_manager
+from routers.websocket import router as websocket_router
 
 # Configure logging
 logging.basicConfig(
@@ -502,8 +504,8 @@ async def startup_event():
         logger.info("Database initialized successfully")
         run_migrations = os.environ.get("RUN_DB_MIGRATIONS", "0").lower() in ("1", "true", "yes")
         try:
-            from sqlalchemy import inspect
             from core.database import async_engine, create_db_and_tables
+            from sqlalchemy import inspect
 
             async with async_engine.begin() as conn:
                 has_users = await conn.run_sync(lambda sconn: inspect(sconn).has_table("users"))

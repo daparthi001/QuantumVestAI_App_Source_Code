@@ -3,21 +3,21 @@ Social Media Integration Router
 Created: 2025-01-09
 Author: AI Assistant
 """
-import logging
-from datetime import datetime
-from typing import Dict, Any, Optional
 import asyncio
+import logging
 import os
 import sys
+from datetime import datetime
+from typing import Any, Dict, Optional
 
 # Add the current directory to path for imports
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 
+from services.trending_stocks_service import TrendingStocksService
 # Import Twitter configuration and analyzer
 from twitter_config import twitter_config
-from services.trending_stocks_service import TrendingStocksService
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +96,7 @@ class TwitterSentimentAnalyzer:
     async def _get_demo_sentiment_data(self, symbol: str) -> Dict[str, Any]:
         """Generate realistic demo sentiment data"""
         import random
-        
+
         # Generate a realistic sentiment score between -1 and 1
         sentiment_score = random.uniform(-0.3, 0.4)  # Slightly biased positive
         

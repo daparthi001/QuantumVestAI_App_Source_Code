@@ -3,13 +3,14 @@ QuantumVestAI Predictability Routes
 Updated: 2025-07-07 21:54:42
 Author: hemanth9398
 """
-from fastapi import APIRouter, Request, Query
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
-from typing import Optional, Dict, Any, List
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Query, Request
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
 
 # Setup router
 router = APIRouter(prefix="/predictability", tags=["predictability"])

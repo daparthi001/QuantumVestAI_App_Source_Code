@@ -4,10 +4,11 @@ Updated: 2025-06-19 03:33:28
 Enhanced: 2025-01-09 (AI Assistant)
 Author: daparthi001
 """
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 import os
 from typing import List
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 # Try to import settings safely
 try:

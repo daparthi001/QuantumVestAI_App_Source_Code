@@ -3,9 +3,11 @@ Reports Schemas
 Created: 2025-05-20 04:57:51
 Author: daparthi001
 """
-from pydantic import BaseModel, HttpUrl, EmailStr
-from typing import List, Dict, Optional, Any
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, EmailStr, HttpUrl
+
 
 class ReportParameters(BaseModel):
     """Report parameters schema."""

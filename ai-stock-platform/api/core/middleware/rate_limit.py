@@ -3,13 +3,14 @@ Rate Limiting Middleware
 Created: 2025-01-09
 Author: AI Assistant
 """
+import logging
+import time
+from collections import defaultdict
+from typing import Callable, Dict
+
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-import time
-import logging
-from typing import Dict, Callable
-from collections import defaultdict
 
 from ..exceptions import RateLimitError
 from ..responses import create_rate_limit_response

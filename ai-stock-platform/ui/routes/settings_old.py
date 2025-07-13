@@ -3,14 +3,15 @@ QuantumVestAI Settings Routes
 Last Updated: 2025-07-07 21:44:54
 Author: hemanth9398
 """
-from fastapi import APIRouter, Request, Form, HTTPException, Depends
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
-from typing import Optional, Dict, Any
-from services.api_client import APIClient
-from config.settings import settings
 import logging
 from pathlib import Path
+from typing import Any, Dict, Optional
+
+from config.settings import settings
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
+from services.api_client import APIClient
 
 # Setup logging
 logger = logging.getLogger(__name__)

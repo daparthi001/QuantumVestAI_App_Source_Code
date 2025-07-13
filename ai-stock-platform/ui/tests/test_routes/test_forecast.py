@@ -1,8 +1,10 @@
 """
 Tests for forecast routes.
 """
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
+
 
 def test_ticker_search_page(client):
     """Test that ticker search page loads correctly."""

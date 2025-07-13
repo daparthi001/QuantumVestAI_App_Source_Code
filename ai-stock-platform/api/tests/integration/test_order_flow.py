@@ -5,17 +5,20 @@ Author: daparthi001
 """
 import os
 import sys
+
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 sys.path.append(ROOT)
 sys.path.append(os.path.join(ROOT, "api"))
-import pytest
 import asyncio
 from datetime import datetime
-from api.services.order_management import OrderManagementService
+
+import pytest
+from api.models.orders import Order, OrderStatus, OrderType, TimeInForce
 from api.services.market_data_service import MarketDataService
+from api.services.order_management import OrderManagementService
 from api.services.risk_management import RiskManagementService
 from api.services.trading_execution import TradingExecutionService
-from api.models.orders import Order, OrderStatus, OrderType, TimeInForce
+
 
 @pytest.fixture(scope="module")
 def event_loop():

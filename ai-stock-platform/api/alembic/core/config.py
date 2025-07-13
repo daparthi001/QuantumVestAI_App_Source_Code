@@ -1,7 +1,9 @@
-from pydantic import BaseSettings
-from typing import List, Union, Optional
 import os
 from datetime import timedelta
+from typing import List, Optional, Union
+
+from pydantic import BaseSettings
+
 
 class Settings(BaseSettings):
     # ... existing settings ...

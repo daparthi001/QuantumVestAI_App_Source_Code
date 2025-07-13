@@ -3,27 +3,26 @@ Analytics Router
 Created: 2025-05-20 05:03:42
 Author: daparthi001
 """
-from fastapi import APIRouter, Depends, Query, Path, status, Request
-from sqlalchemy.orm import Session
-from typing import List, Optional, Dict, Any
 from datetime import datetime
-from pydantic import BaseModel
+from typing import Any, Dict, List, Optional
 
+from core.exceptions import PermissionDeniedError, ResourceNotFoundError
 from core.security import get_current_user
-from core.exceptions import ResourceNotFoundError, PermissionDeniedError
-from db.session import get_db
 from db.models.user import User
+from db.session import get_db
+from fastapi import APIRouter, Depends, Path, Query, Request, status
+from pydantic import BaseModel
+from schemas.analytics import (CustomAnalyticsResponse,
+                               MarketAnalyticsResponse,
+                               PerformanceAnalyticsResponse,
+                               PortfolioAnalyticsResponse,
+                               PredictiveAnalyticsResponse,
+                               RiskAnalyticsResponse,
+                               SentimentAnalyticsResponse,
+                               TradingAnalyticsResponse)
 from services.analytics_service import AnalyticsService
-from schemas.analytics import (
-    PortfolioAnalyticsResponse,
-    MarketAnalyticsResponse,
-    TradingAnalyticsResponse,
-    RiskAnalyticsResponse,
-    PerformanceAnalyticsResponse,
-    PredictiveAnalyticsResponse,
-    SentimentAnalyticsResponse,
-    CustomAnalyticsResponse
-)
+from sqlalchemy.orm import Session
+
 
 # Pageview tracking model
 class PageviewRequest(BaseModel):

@@ -7,8 +7,8 @@ Updated by: daparthi001
 """
 
 import asyncio
-import sys
 import os
+import sys
 
 # Add the current directory to the Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -19,7 +19,8 @@ async def test_http_client_integration():
     
     # Test 1: HTTP client creation and configuration
     try:
-        from core.http_client import HTTPClientConfig, HTTPClient, get_http_client
+        from core.http_client import (HTTPClient, HTTPClientConfig,
+                                      get_http_client)
         
         config = HTTPClientConfig()
         client = HTTPClient(config)
@@ -59,8 +60,8 @@ async def test_http_client_integration():
     
     # Test 2: Global HTTP client management
     try:
-        from core.http_client import get_http_client, cleanup_http_clients
-        
+        from core.http_client import cleanup_http_clients, get_http_client
+
         # Test global client access
         async with get_http_client() as client:
             assert client is not None
@@ -77,7 +78,7 @@ async def test_http_client_integration():
     # Test 3: Utility functions
     try:
         from core.http_client import safe_get_json, safe_post_json
-        
+
         # Test safe_get_json with default value
         result = await safe_get_json(
             url="https://invalid-url-for-testing.com",
@@ -114,9 +115,10 @@ async def test_http_client_integration():
         print("✓ Retry delay calculation works correctly")
         
         # Test retryable error detection
-        import httpx
         from unittest.mock import MagicMock
-        
+
+        import httpx
+
         # Request errors should be retryable
         request_error = httpx.RequestError("Connection failed")
         assert client._is_retryable_error(request_error)
@@ -152,7 +154,7 @@ async def test_existing_code_compatibility():
     try:
         # Test that the new HTTP client doesn't break existing imports
         import httpx
-        
+
         # Test that basic httpx functionality still works
         async with httpx.AsyncClient() as client:
             # This should work without our custom client
@@ -181,7 +183,7 @@ def test_configuration_validation():
     
     try:
         from core.http_client import HTTPClientConfig
-        
+
         # Test default configuration
         config = HTTPClientConfig()
         

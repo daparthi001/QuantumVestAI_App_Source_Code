@@ -7,9 +7,12 @@ Updated: 2025-06-14 20:28:31 by daparthi001
 import logging
 import os
 from typing import Optional
-from pydantic import Field, SecretStr, validator
-from pydantic_settings import BaseSettings
 from urllib.parse import quote
+
+from pydantic import Field, SecretStr, validator
+
+from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
     """Application settings"""

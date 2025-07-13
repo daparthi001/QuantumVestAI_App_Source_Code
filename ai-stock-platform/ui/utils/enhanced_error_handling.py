@@ -7,14 +7,15 @@ This module provides world-class error handling for template rendering failures,
 template filter errors, and graceful degradation for missing functionality.
 """
 
+import json
 import logging
-from typing import Optional, Dict, Any, Union
-from fastapi import Request, HTTPException
+import traceback
+from datetime import datetime
+from typing import Any, Dict, Optional, Union
+
+from fastapi import HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from datetime import datetime
-import traceback
-import json
 
 logger = logging.getLogger("quantumvestai_ui.error_handling")
 

@@ -11,10 +11,10 @@ print("=" * 50)
 
 try:
     print("Testing imports...")
-    import sys
     import os
+    import sys
     from pathlib import Path
-    
+
     # Add current directory to path
     current_dir = Path(__file__).parent
     sys.path.insert(0, str(current_dir))

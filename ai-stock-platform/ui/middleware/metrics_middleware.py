@@ -6,8 +6,10 @@ Updated: 2025-06-16 03:41:30 by daparthi001
 """
 import logging
 import time
+
 from fastapi import Request
-from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from starlette.middleware.base import (BaseHTTPMiddleware,
+                                       RequestResponseEndpoint)
 from starlette.responses import Response
 
 # Configure logging

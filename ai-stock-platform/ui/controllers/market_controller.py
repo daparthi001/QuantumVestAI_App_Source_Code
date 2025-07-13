@@ -4,15 +4,18 @@ Last updated: 2025-06-20 04:32:00
 Updated by: daparthi001
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Query, Path, status, Response
-from fastapi.responses import HTMLResponse, JSONResponse
-from typing import Optional, List, Dict, Any, Union
-import httpx
 import logging
-import time
 import os
+import time
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Union
+
+import httpx
 from core.http_client import safe_get_json
+from fastapi import (APIRouter, Depends, HTTPException, Path, Query, Request,
+                     Response, status)
+from fastapi.responses import HTMLResponse, JSONResponse
+
 API_URL = "http://quantumvestai-dev-api:8000"
 # Import dependencies with fallback
 try:

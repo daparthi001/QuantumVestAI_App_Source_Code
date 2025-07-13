@@ -4,9 +4,11 @@ Created: 2025-05-21 16:40:40
 Author: daparthi001
 """
 from typing import Any
+
 from sqlalchemy import Column, DateTime
 from sqlalchemy.ext.declarative import as_declarative, declared_attr
 from sqlalchemy.sql import func
+
 
 @as_declarative()
 class Base:

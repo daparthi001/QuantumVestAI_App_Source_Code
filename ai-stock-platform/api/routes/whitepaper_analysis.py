@@ -1,8 +1,9 @@
 """
 Whitepaper Analysis Routes
 """
-from fastapi import APIRouter, UploadFile, File, HTTPException
 from datetime import datetime
+
+from fastapi import APIRouter, File, HTTPException, UploadFile
 
 router = APIRouter(prefix="/api/v1/whitepaper", tags=["whitepaper"])
 
