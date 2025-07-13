@@ -25,190 +25,10 @@ def get_templates(request: Request) -> Jinja2Templates:
     """Return app-level templates if available."""
     return getattr(request.app.state, "templates", templates)
 
-# Demo predictability data
-DEMO_PREDICTABILITY_SCORES = {
-    "AAPL": {
-        "symbol": "AAPL",
-        "name": "Apple Inc.",
-        "current_price": 185.50,
-        "predictability_score": 85.2,
-        "volatility": 0.25,
-        "trend_strength": 0.78,
-        "pattern_recognition": 0.82,
-        "market_correlation": 0.73,
-        "volume_predictability": 0.79,
-        "sector": "Technology",
-        "rank": 1,
-        "confidence": 0.89,
-        "risk_level": "Medium",
-        "patterns": {
-            "bullish_patterns": ["Cup and Handle", "Ascending Triangle"],
-            "bearish_patterns": [],
-            "neutral_patterns": ["Consolidation"]
-        },
-        "support_resistance": {
-            "support_levels": [175.00, 170.00, 165.00],
-            "resistance_levels": [190.00, 195.00, 200.00]
-        },
-        "momentum_indicators": {
-            "rsi": 65.4,
-            "macd": 2.15,
-            "stochastic": 68.2,
-            "williams_r": -25.8
-        }
-    },
-    "MSFT": {
-        "symbol": "MSFT",
-        "name": "Microsoft Corporation",
-        "current_price": 365.25,
-        "predictability_score": 82.7,
-        "volatility": 0.22,
-        "trend_strength": 0.75,
-        "pattern_recognition": 0.88,
-        "market_correlation": 0.71,
-        "volume_predictability": 0.76,
-        "sector": "Technology",
-        "rank": 2,
-        "confidence": 0.85,
-        "risk_level": "Medium",
-        "patterns": {
-            "bullish_patterns": ["Flag Pattern", "Rising Channel"],
-            "bearish_patterns": [],
-            "neutral_patterns": ["Sideways Trend"]
-        },
-        "support_resistance": {
-            "support_levels": [350.00, 345.00, 340.00],
-            "resistance_levels": [370.00, 375.00, 380.00]
-        },
-        "momentum_indicators": {
-            "rsi": 58.9,
-            "macd": 1.85,
-            "stochastic": 62.1,
-            "williams_r": -35.2
-        }
-    },
-    "GOOGL": {
-        "symbol": "GOOGL",
-        "name": "Alphabet Inc.",
-        "current_price": 134.56,
-        "predictability_score": 78.9,
-        "volatility": 0.28,
-        "trend_strength": 0.68,
-        "pattern_recognition": 0.79,
-        "market_correlation": 0.69,
-        "volume_predictability": 0.73,
-        "sector": "Communication Services",
-        "rank": 3,
-        "confidence": 0.81,
-        "risk_level": "Medium-High",
-        "patterns": {
-            "bullish_patterns": ["Breakout", "Bullish Divergence"],
-            "bearish_patterns": [],
-            "neutral_patterns": ["Range Bound"]
-        },
-        "support_resistance": {
-            "support_levels": [130.00, 125.00, 120.00],
-            "resistance_levels": [140.00, 145.00, 150.00]
-        },
-        "momentum_indicators": {
-            "rsi": 71.3,
-            "macd": 3.22,
-            "stochastic": 75.8,
-            "williams_r": -18.4
-        }
-    },
-    "TSLA": {
-        "symbol": "TSLA",
-        "name": "Tesla Inc.",
-        "current_price": 189.34,
-        "predictability_score": 65.4,
-        "volatility": 0.45,
-        "trend_strength": 0.58,
-        "pattern_recognition": 0.62,
-        "market_correlation": 0.55,
-        "volume_predictability": 0.68,
-        "sector": "Consumer Cyclical",
-        "rank": 8,
-        "confidence": 0.67,
-        "risk_level": "High",
-        "patterns": {
-            "bullish_patterns": ["Momentum Breakout"],
-            "bearish_patterns": ["Head and Shoulders"],
-            "neutral_patterns": ["Volatile Range"]
-        },
-        "support_resistance": {
-            "support_levels": [180.00, 175.00, 170.00],
-            "resistance_levels": [195.00, 200.00, 210.00]
-        },
-        "momentum_indicators": {
-            "rsi": 82.1,
-            "macd": 5.67,
-            "stochastic": 88.9,
-            "williams_r": -8.2
-        }
-    },
-    "NVDA": {
-        "symbol": "NVDA",
-        "name": "NVIDIA Corp",
-        "current_price": 245.67,
-        "predictability_score": 81.3,
-        "volatility": 0.35,
-        "trend_strength": 0.85,
-        "pattern_recognition": 0.78,
-        "market_correlation": 0.67,
-        "volume_predictability": 0.82,
-        "sector": "Technology",
-        "rank": 4,
-        "confidence": 0.84,
-        "risk_level": "Medium-High",
-        "patterns": {
-            "bullish_patterns": ["Strong Uptrend", "Bullish Flag"],
-            "bearish_patterns": [],
-            "neutral_patterns": []
-        },
-        "support_resistance": {
-            "support_levels": [230.00, 220.00, 210.00],
-            "resistance_levels": [250.00, 260.00, 270.00]
-        },
-        "momentum_indicators": {
-            "rsi": 76.5,
-            "macd": 4.33,
-            "stochastic": 81.7,
-            "williams_r": -15.6
-        }
-    }
-}
+# Demo predictability data removed
+DEMO_PREDICTABILITY_SCORES = {}
 
-SECTOR_PREDICTABILITY = {
-    "Technology": {
-        "avg_score": 82.4,
-        "volatility": 0.27,
-        "trend_consistency": 0.79,
-        "top_stocks": ["AAPL", "MSFT", "NVDA"],
-        "risk_level": "Medium"
-    },
-    "Healthcare": {
-        "avg_score": 76.8,
-        "volatility": 0.21,
-        "trend_consistency": 0.73,
-        "top_stocks": ["JNJ", "PFE", "UNH"],
-        "risk_level": "Low-Medium"
-    },
-    "Finance": {
-        "avg_score": 74.2,
-        "volatility": 0.29,
-        "trend_consistency": 0.71,
-        "top_stocks": ["JPM", "BAC", "WFC"],
-        "risk_level": "Medium"
-    },
-    "Energy": {
-        "avg_score": 68.9,
-        "volatility": 0.38,
-        "trend_consistency": 0.64,
-        "top_stocks": ["XOM", "CVX", "COP"],
-        "risk_level": "High"
-    }
-}
+SECTOR_PREDICTABILITY = {}
 
 @router.get("/", response_class=HTMLResponse)
 async def predictability_page(
@@ -226,55 +46,18 @@ async def predictability_page(
         if ticker in DEMO_PREDICTABILITY_SCORES:
             stock_data = DEMO_PREDICTABILITY_SCORES[ticker]
         else:
-            # Generate demo data for any ticker
-            stock_data = {
-                "symbol": ticker,
-                "name": f"{ticker} Corporation",
-                "current_price": 100.00,
-                "predictability_score": 70.5,
-                "volatility": 0.30,
-                "trend_strength": 0.65,
-                "pattern_recognition": 0.70,
-                "market_correlation": 0.60,
-                "volume_predictability": 0.68,
-                "sector": "Technology",
-                "rank": 10,
-                "confidence": 0.72,
-                "risk_level": "Medium",
-                "patterns": {
-                    "bullish_patterns": ["Neutral"],
-                    "bearish_patterns": [],
-                    "neutral_patterns": ["Consolidation"]
-                },
-                "support_resistance": {
-                    "support_levels": [95.00, 90.00, 85.00],
-                    "resistance_levels": [105.00, 110.00, 115.00]
-                },
-                "momentum_indicators": {
-                    "rsi": 55.0,
-                    "macd": 0.50,
-                    "stochastic": 60.0,
-                    "williams_r": -40.0
-                }
-            }
+            stock_data = {}
         
         # Generate historical predictability scores
         historical_scores = []
-        base_score = stock_data["predictability_score"]
+        base_score = stock_data.get("predictability_score", 0)
         for i in range(30):
             date = (datetime.now() - timedelta(days=29-i)).strftime("%Y-%m-%d")
-            score = base_score + (5 * (i % 7 - 3) / 10) + (2 * (i % 3 - 1))
-            historical_scores.append({
-                "date": date,
-                "score": max(0, min(100, score))
-            })
+            score = base_score
+            historical_scores.append({"date": date, "score": score})
         
         # Top ranked stocks for comparison
-        top_stocks = sorted(
-            DEMO_PREDICTABILITY_SCORES.values(),
-            key=lambda x: x["predictability_score"],
-            reverse=True
-        )[:10]
+        top_stocks = []
         
         return get_templates(request).TemplateResponse(
             "predictability.html",
@@ -432,18 +215,7 @@ async def get_predictability_score_api(request: Request, symbol: str):
     try:
         symbol = symbol.upper()
         
-        if symbol in DEMO_PREDICTABILITY_SCORES:
-            data = DEMO_PREDICTABILITY_SCORES[symbol]
-        else:
-            # Generate demo data
-            data = {
-                "symbol": symbol,
-                "predictability_score": 70.0,
-                "volatility": 0.30,
-                "trend_strength": 0.65,
-                "confidence": 0.72,
-                "risk_level": "Medium"
-            }
+        data = {}
         
         return JSONResponse({
             "status": "success",
@@ -467,12 +239,8 @@ async def get_ranking_api(
 ):
     """API endpoint for predictability ranking"""
     try:
-        all_stocks = list(DEMO_PREDICTABILITY_SCORES.values())
-        
-        if sector:
-            all_stocks = [stock for stock in all_stocks if stock["sector"] == sector]
-        
-        ranked_stocks = sorted(all_stocks, key=lambda x: x["predictability_score"], reverse=True)[:limit]
+        all_stocks = []
+        ranked_stocks = []
         
         return JSONResponse({
             "status": "success",
@@ -497,6 +265,6 @@ async def predictability_health_check():
         "service": "predictability",
         "timestamp": datetime.utcnow().isoformat(),
         "demo_mode": True,
-        "stocks_analyzed": len(DEMO_PREDICTABILITY_SCORES),
-        "sectors_available": len(SECTOR_PREDICTABILITY)
+        "stocks_analyzed": 0,
+        "sectors_available": 0
     }

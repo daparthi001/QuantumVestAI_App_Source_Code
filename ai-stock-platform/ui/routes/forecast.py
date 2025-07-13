@@ -26,87 +26,10 @@ def get_templates(request: Request) -> Jinja2Templates:
     """Return app-level templates if available."""
     return getattr(request.app.state, "templates", templates)
 
-# Demo forecast data
-DEMO_PREDICTIONS = {
-    "AAPL": {
-        "current_price": 185.50,
-        "predictions": {
-            "7d": {"price": 192.75, "confidence": 0.78, "trend": "bullish", "probability": 0.73},
-            "30d": {"price": 198.25, "confidence": 0.72, "trend": "bullish", "probability": 0.68},
-            "90d": {"price": 205.50, "confidence": 0.65, "trend": "bullish", "probability": 0.61}
-        },
-        "models": {
-            "LSTM": {"price": 194.20, "confidence": 0.75, "accuracy": 0.82},
-            "Prophet": {"price": 191.30, "confidence": 0.80, "accuracy": 0.78},
-            "XGBoost": {"price": 196.15, "confidence": 0.73, "accuracy": 0.79},
-            "Ensemble": {"price": 193.88, "confidence": 0.76, "accuracy": 0.80}
-        },
-        "factors": {
-            "technical": {"score": 7.2, "signals": ["MA_BULLISH", "RSI_OVERSOLD"]},
-            "fundamental": {"score": 8.1, "factors": ["STRONG_EARNINGS", "GROWTH_OUTLOOK"]},
-            "sentiment": {"score": 6.8, "sentiment": "positive", "news_count": 45}
-        }
-    },
-    "MSFT": {
-        "current_price": 365.25,
-        "predictions": {
-            "7d": {"price": 371.80, "confidence": 0.81, "trend": "bullish", "probability": 0.76},
-            "30d": {"price": 378.50, "confidence": 0.74, "trend": "bullish", "probability": 0.71},
-            "90d": {"price": 385.75, "confidence": 0.68, "trend": "bullish", "probability": 0.64}
-        },
-        "models": {
-            "LSTM": {"price": 372.45, "confidence": 0.78, "accuracy": 0.84},
-            "Prophet": {"price": 370.25, "confidence": 0.82, "accuracy": 0.81},
-            "XGBoost": {"price": 375.90, "confidence": 0.76, "accuracy": 0.83},
-            "Ensemble": {"price": 372.87, "confidence": 0.79, "accuracy": 0.83}
-        },
-        "factors": {
-            "technical": {"score": 7.8, "signals": ["MOMENTUM_STRONG", "VOLUME_INCREASE"]},
-            "fundamental": {"score": 8.5, "factors": ["CLOUD_GROWTH", "AI_LEADERSHIP"]},
-            "sentiment": {"score": 7.5, "sentiment": "positive", "news_count": 38}
-        }
-    },
-    "GOOGL": {
-        "current_price": 134.56,
-        "predictions": {
-            "7d": {"price": 138.20, "confidence": 0.72, "trend": "bullish", "probability": 0.67},
-            "30d": {"price": 142.15, "confidence": 0.69, "trend": "bullish", "probability": 0.63},
-            "90d": {"price": 148.30, "confidence": 0.62, "trend": "bullish", "probability": 0.58}
-        },
-        "models": {
-            "LSTM": {"price": 139.85, "confidence": 0.71, "accuracy": 0.77},
-            "Prophet": {"price": 136.90, "confidence": 0.75, "accuracy": 0.74},
-            "XGBoost": {"price": 140.65, "confidence": 0.68, "accuracy": 0.76},
-            "Ensemble": {"price": 139.13, "confidence": 0.71, "accuracy": 0.76}
-        },
-        "factors": {
-            "technical": {"score": 6.9, "signals": ["SUPPORT_LEVEL", "BULLISH_PATTERN"]},
-            "fundamental": {"score": 7.8, "factors": ["AD_REVENUE_GROWTH", "SEARCH_DOMINANCE"]},
-            "sentiment": {"score": 6.5, "sentiment": "neutral", "news_count": 32}
-        }
-    }
-}
+# Demo forecast data removed
+DEMO_PREDICTIONS = {}
 
-MARKET_SENTIMENT = {
-    "overall": {
-        "score": 72,
-        "trend": "bullish",
-        "confidence": 0.74,
-        "factors": ["Fed_Policy_Stable", "Earnings_Strong", "Economic_Data_Positive"]
-    },
-    "sectors": {
-        "Technology": {"score": 78, "trend": "bullish"},
-        "Healthcare": {"score": 65, "trend": "neutral"},
-        "Finance": {"score": 70, "trend": "bullish"}, 
-        "Energy": {"score": 82, "trend": "very_bullish"},
-        "Consumer": {"score": 68, "trend": "neutral"}
-    },
-    "risk_factors": [
-        {"factor": "Inflation", "impact": "medium", "probability": 0.35},
-        {"factor": "Geopolitical", "impact": "low", "probability": 0.20},
-        {"factor": "Interest_Rates", "impact": "medium", "probability": 0.40}
-    ]
-}
+MARKET_SENTIMENT = {}
 
 @router.get("/", response_class=HTMLResponse)
 async def forecast_home(request: Request):
@@ -114,21 +37,8 @@ async def forecast_home(request: Request):
     try:
         logger.info("Loading forecast dashboard in demo mode")
         
-        # Get top predictions
+        # Demo predictions removed
         top_predictions = []
-        for symbol, data in DEMO_PREDICTIONS.items():
-            pred_30d = data["predictions"]["30d"]
-            top_predictions.append({
-                "symbol": symbol,
-                "current_price": data["current_price"],
-                "predicted_price": pred_30d["price"],
-                "confidence": pred_30d["confidence"],
-                "trend": pred_30d["trend"],
-                "change_pct": ((pred_30d["price"] - data["current_price"]) / data["current_price"]) * 100
-            })
-        
-        # Sort by confidence
-        top_predictions.sort(key=lambda x: x["confidence"], reverse=True)
         
         return get_templates(request).TemplateResponse(
             "forecast.html",
@@ -137,7 +47,7 @@ async def forecast_home(request: Request):
                 "demo_mode": True,
                 "predictions": top_predictions,
                 "market_sentiment": MARKET_SENTIMENT,
-                "featured_stocks": ["AAPL", "MSFT", "GOOGL"],
+                "featured_stocks": [],
                 "page_title": "AI Forecast - QuantumVestAI"
             }
         )
@@ -170,42 +80,19 @@ async def stock_forecast(
         logger.info(f"Loading forecast for {symbol} with timeframe {timeframe}")
         
         if symbol not in DEMO_PREDICTIONS:
-            # Generate demo data for any symbol
-            base_price = 100.0
-            demo_data = {
-                "current_price": base_price,
-                "predictions": {
-                    "7d": {"price": base_price * 1.02, "confidence": 0.70, "trend": "bullish", "probability": 0.65},
-                    "30d": {"price": base_price * 1.05, "confidence": 0.65, "trend": "bullish", "probability": 0.60},
-                    "90d": {"price": base_price * 1.08, "confidence": 0.60, "trend": "bullish", "probability": 0.55}
-                },
-                "models": {
-                    "LSTM": {"price": base_price * 1.04, "confidence": 0.68, "accuracy": 0.75},
-                    "Prophet": {"price": base_price * 1.03, "confidence": 0.72, "accuracy": 0.73},
-                    "XGBoost": {"price": base_price * 1.06, "confidence": 0.65, "accuracy": 0.77},
-                    "Ensemble": {"price": base_price * 1.04, "confidence": 0.68, "accuracy": 0.75}
-                },
-                "factors": {
-                    "technical": {"score": 6.5, "signals": ["NEUTRAL"]},
-                    "fundamental": {"score": 7.0, "factors": ["STABLE"]},
-                    "sentiment": {"score": 6.0, "sentiment": "neutral", "news_count": 15}
-                }
-            }
+            demo_data = {}
         else:
             demo_data = DEMO_PREDICTIONS[symbol]
         
         # Get prediction for requested timeframe
-        if timeframe in demo_data["predictions"]:
-            prediction = demo_data["predictions"][timeframe]
-        else:
-            prediction = demo_data["predictions"]["30d"]
+        prediction = {}
         
         # Generate historical chart data
         historical_data = []
-        current_price = demo_data["current_price"]
+        current_price = demo_data.get("current_price", 0)
         for i in range(30):
             date = (datetime.now() - timedelta(days=29-i)).strftime("%Y-%m-%d")
-            price = current_price * (0.95 + (i * 0.003) + (0.02 * (i % 7 - 3) / 10))
+            price = current_price
             historical_data.append({"date": date, "price": round(price, 2)})
         
         return get_templates(request).TemplateResponse(
@@ -303,19 +190,10 @@ async def get_predictions_api(
         if symbols:
             symbol_list = [s.strip().upper() for s in symbols.split(",")]
         else:
-            symbol_list = list(DEMO_PREDICTIONS.keys())
-        
+            symbol_list = []
+
         predictions = {}
-        for symbol in symbol_list[:10]:  # Limit to 10 symbols
-            if symbol in DEMO_PREDICTIONS:
-                data = DEMO_PREDICTIONS[symbol]
-                if timeframe in data["predictions"]:
-                    predictions[symbol] = {
-                        "current_price": data["current_price"],
-                        "prediction": data["predictions"][timeframe],
-                        "models": data["models"]
-                    }
-        
+
         return {
             "status": "success",
             "predictions": predictions,
@@ -337,7 +215,7 @@ async def get_market_sentiment_api(request: Request):
     try:
         return {
             "status": "success",
-            "sentiment": MARKET_SENTIMENT,
+            "sentiment": {},
             "timestamp": datetime.utcnow().isoformat()
         }
         
@@ -357,6 +235,6 @@ async def forecast_health_check():
         "service": "forecast",
         "timestamp": datetime.utcnow().isoformat(),
         "demo_mode": True,
-        "models_available": ["LSTM", "Prophet", "XGBoost", "Ensemble"],
-        "predictions_count": len(DEMO_PREDICTIONS)
+        "models_available": [],
+        "predictions_count": 0
     }
