@@ -30,6 +30,14 @@ except ImportError as e:
     TrendingStocksService = None
     TRENDING_STOCKS_SERVICE_AVAILABLE = False
 
+try:
+    from services.forecast_service import ForecastService
+    FORECAST_SERVICE_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: ForecastService not available - {e}")
+    ForecastService = None
+    FORECAST_SERVICE_AVAILABLE = False
+
 # Only include available services in __all__
 __all__ = []
 if STOCK_SERVICE_AVAILABLE:
@@ -38,3 +46,5 @@ if ANALYTICS_SERVICE_AVAILABLE:
     __all__.append('AnalyticsService')
 if TRENDING_STOCKS_SERVICE_AVAILABLE:
     __all__.append('TrendingStocksService')
+if FORECAST_SERVICE_AVAILABLE:
+    __all__.append('ForecastService')

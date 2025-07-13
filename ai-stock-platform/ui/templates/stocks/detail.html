@@ -145,13 +145,21 @@
                     <div class="d-flex align-items-center">
                         <div class="me-2">
                             <span class="small me-1">Forecast days:</span>
-                            <div class="btn-group btn-group-sm">
-                                <a href="/stock/{{ stock.ticker }}?forecast_days=7" class="btn btn-outline-primary {% if stock.forecast_days == 7 %}active{% endif %}">7</a>
-                                <a href="/stock/{{ stock.ticker }}?forecast_days=14" class="btn btn-outline-primary {% if stock.forecast_days == 14 %}active{% endif %}">14</a>
-                                <a href="/stock/{{ stock.ticker }}?forecast_days=30" class="btn btn-outline-primary {% if stock.forecast_days == 30 %}active{% endif %}">30</a>
-                            </div>
-                        </div>
-                        <a href="/forecast/{{ stock.ticker }}" class="btn btn-sm btn-primary">Advanced Analysis</a>
+                              <div class="btn-group btn-group-sm">
+                                  <a href="/stock/{{ stock.ticker }}?forecast_days=7&model={{ stock.model }}" class="btn btn-outline-primary {% if stock.forecast_days == 7 %}active{% endif %}">7</a>
+                                  <a href="/stock/{{ stock.ticker }}?forecast_days=14&model={{ stock.model }}" class="btn btn-outline-primary {% if stock.forecast_days == 14 %}active{% endif %}">14</a>
+                                  <a href="/stock/{{ stock.ticker }}?forecast_days=30&model={{ stock.model }}" class="btn btn-outline-primary {% if stock.forecast_days == 30 %}active{% endif %}">30</a>
+                              </div>
+                          </div>
+                          <div class="me-2">
+                              <span class="small me-1">Model:</span>
+                              <div class="btn-group btn-group-sm">
+                                  {% for m in available_models %}
+                                  <a href="/stock/{{ stock.ticker }}?forecast_days={{ stock.forecast_days }}&model={{ m }}" class="btn btn-outline-primary {% if stock.model == m %}active{% endif %}">{{ m|capitalize }}</a>
+                                  {% endfor %}
+                              </div>
+                          </div>
+                          <a href="/forecast/{{ stock.ticker }}" class="btn btn-sm btn-primary">Advanced Analysis</a>
                     </div>
                 </div>
                 <div class="card-body">
