@@ -1229,8 +1229,8 @@ class QuantumCommunity {
 
     // Utility methods
     getCurrentUserId() {
-        // Get from session/localStorage or return demo user
-        return localStorage.getItem('quantum-user-id') || 'demo-user';
+        // Get from session/localStorage; return null if not set
+        return localStorage.getItem('quantum-user-id');
     }
 
     getUserLevel() {
