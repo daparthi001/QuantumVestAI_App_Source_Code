@@ -165,3 +165,10 @@ async def get_db_session():
     async with AsyncSessionLocal() as session:
         yield session
 
+
+async def create_db_and_tables() -> None:
+    """Create all database tables using the async engine."""
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+
