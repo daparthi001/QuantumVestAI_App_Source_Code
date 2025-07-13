@@ -300,20 +300,29 @@ class AuthUtils:
     @staticmethod
     def get_user_info(request: Request) -> dict:
         """Get user information from request"""
-        if AuthUtils.is_authenticated(request):
-            return {
-                "username": "demo",
-                "email": "demo@quantumvestai.com",
-                "role": "user",
-                "is_authenticated": True,
-                "features_enabled": {
-                    "advanced_analytics": True,
-                    "real_time_data": True,
-                    "portfolio_management": True,
-                    "ai_predictions": True
+        if not AuthUtils.is_authenticated(request):
+            return {"is_authenticated": False}
+
+        # Try to parse user information from the cookie set at login
+        user_cookie = request.cookies.get("user_info")
+        if user_cookie:
+            parts = user_cookie.split("|")
+            if len(parts) >= 3:
+                username, role, full_name = parts[0], parts[1], parts[2]
+                return {
+                    "username": username,
+                    "full_name": full_name,
+                    "role": role,
+                    "is_authenticated": True,
                 }
-            }
-        return {"is_authenticated": False}
+
+        # Fallback to demo user if cookie format unexpected
+        return {
+            "username": "demo",
+            "email": "demo@quantumvestai.com",
+            "role": "user",
+            "is_authenticated": True,
+        }
 
 # Enhanced route handlers
 @app.get("/", response_class=HTMLResponse)
