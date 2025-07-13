@@ -61,6 +61,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code (which may include an actual package.json that will overwrite our placeholder)
 COPY . .
 
+# Ensure the startup script is executable after copying
+RUN chmod +x /app/scripts/start.sh
+
 RUN if [ -f package.json ] && grep -q '"dependencies"' package.json; then \
       npm install && npm run build; \
     else \
