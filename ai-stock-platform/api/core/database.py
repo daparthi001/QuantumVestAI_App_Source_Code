@@ -168,7 +168,10 @@ async def get_db_session():
 
 async def create_db_and_tables() -> None:
     """Create all database tables using the async engine."""
-    async with async_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-
+    try:
+        async with async_engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database tables created successfully")
+    except Exception as e:  # pragma: no cover - log runtime errors
+        logger.error("Failed to create database tables: %s", str(e))
+        raise
