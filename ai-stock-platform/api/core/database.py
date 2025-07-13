@@ -175,4 +175,3 @@ async def create_db_and_tables() -> None:
     except Exception as e:  # pragma: no cover - log runtime errors
         logger.error("Failed to create database tables: %s", str(e))
         raise
-
