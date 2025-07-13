@@ -5,10 +5,11 @@ Author: daparthi001
 """
 from datetime import datetime, timedelta
 from typing import Any, Union
+
+from core.config import settings
+from db.models.user import User
 from jose import jwt
 from passlib.context import CryptContext
-from db.models.user import User
-from core.config import settings
 
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 

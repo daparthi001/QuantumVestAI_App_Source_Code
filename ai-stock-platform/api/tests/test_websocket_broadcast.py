@@ -7,10 +7,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 sys.path.append(ROOT)
 sys.path.append(os.path.join(ROOT, "api"))
 import pytest
+
 pytest.importorskip("httpx")
 
-from fastapi.testclient import TestClient
 from api.main import app, ws_manager
+from fastapi.testclient import TestClient
 
 
 def test_websocket_broadcasts_updates():

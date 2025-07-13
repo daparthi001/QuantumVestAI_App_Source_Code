@@ -4,16 +4,17 @@ Seed sample data for QuantumVestAI application development.
 This script is streamlined for Kubernetes execution.
 """
 
-import os
-import sys
-import logging
 import argparse
+import json
+import logging
+import os
+import random
+import sys
+from datetime import datetime, timedelta
+
 import psycopg2
 import psycopg2.extras
-import json
 import requests
-from datetime import datetime, timedelta
-import random
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')

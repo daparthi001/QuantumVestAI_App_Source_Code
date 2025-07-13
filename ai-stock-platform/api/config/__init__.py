@@ -5,7 +5,9 @@ Author: daparthi001
 """
 import os
 from typing import List
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
     """Application Settings"""

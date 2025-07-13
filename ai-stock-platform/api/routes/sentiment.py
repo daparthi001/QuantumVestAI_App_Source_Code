@@ -1,8 +1,9 @@
 """
 Sentiment Analysis Routes
 """
-from fastapi import APIRouter, HTTPException
 from datetime import datetime
+
+from fastapi import APIRouter, HTTPException
 
 router = APIRouter(prefix="/api/v1/sentiment", tags=["sentiment"])
 

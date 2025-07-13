@@ -3,14 +3,15 @@ QuantumVestAI Forecast Controller
 Last Updated: 2025-07-07 21:39:48
 Author: hemanth9398
 """
-from fastapi import APIRouter, Request, HTTPException, Query
+import logging
+import os
+from pathlib import Path
+from typing import Any, Dict, Optional
+
+import requests
+from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-import requests
-import logging
-from pathlib import Path
-import os
-from typing import Optional, Dict, Any
 
 # Setup router
 router = APIRouter(prefix="/forecast", tags=["forecast"])

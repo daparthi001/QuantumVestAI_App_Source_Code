@@ -3,23 +3,18 @@ Watchlist Router
 Created: 2025-05-20 04:44:57
 Author: daparthi001
 """
-from fastapi import APIRouter, Depends, Query, Path, status
-from sqlalchemy.orm import Session
 from typing import List
 
-from core.security import get_current_user
 from core.exceptions import ResourceNotFoundError, ValidationError
-from db.session import get_db
+from core.security import get_current_user
 from db.models.user import User
+from db.session import get_db
+from fastapi import APIRouter, Depends, Path, Query, status
+from schemas.watchlist import (WatchlistCreate, WatchlistDetailResponse,
+                               WatchlistPerformanceResponse, WatchlistResponse,
+                               WatchlistStockAdd, WatchlistUpdate)
 from services.watchlist_service import WatchlistService
-from schemas.watchlist import (
-    WatchlistCreate,
-    WatchlistUpdate,
-    WatchlistResponse,
-    WatchlistDetailResponse,
-    WatchlistStockAdd,
-    WatchlistPerformanceResponse
-)
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/watchlists",

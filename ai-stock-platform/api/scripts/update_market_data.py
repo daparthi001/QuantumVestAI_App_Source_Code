@@ -9,8 +9,8 @@ import asyncio
 import logging
 from typing import List
 
-from db.session import SessionLocal
 from db.models.stock import Stock
+from db.session import SessionLocal
 from services.stock_service import StockService
 
 logging.basicConfig(level=logging.INFO)

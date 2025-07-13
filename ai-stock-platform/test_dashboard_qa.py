@@ -170,7 +170,7 @@ def test_error_scenarios():
     
     try:
         from template_filters import template_filters
-        
+
         # Test with None values
         test_results = []
         

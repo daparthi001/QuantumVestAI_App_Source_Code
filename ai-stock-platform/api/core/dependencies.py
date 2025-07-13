@@ -1,14 +1,15 @@
 """
 Common dependencies for API endpoints.
 """
+from typing import Generator, Optional
+
+from core.exceptions import AuthenticationError
+from core.security import decode_token
+from db.session import SessionLocal
 from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-from typing import Generator, Optional
 
-from core.security import decode_token
-from db.session import SessionLocal
-from core.exceptions import AuthenticationError
 from models.user import User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")

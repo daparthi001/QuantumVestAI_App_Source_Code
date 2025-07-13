@@ -3,14 +3,15 @@ QuantumVestAI Admin Routes
 Last Updated: 2025-07-07 21:40:52
 Author: hemanth9398
 """
-from fastapi import APIRouter, Request, Depends, HTTPException, Form, Query
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
-from config.settings import settings
-from services.api_client import APIClient
-from typing import Optional, Dict, Any, List
 import logging
 from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+from config.settings import settings
+from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
+from services.api_client import APIClient
 
 # Initialize logger and templates
 logger = logging.getLogger(__name__)

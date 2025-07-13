@@ -9,28 +9,28 @@ This module provides functionality for:
 - Assessing market potential and innovation factors
 """
 
-import re
-import pandas as pd
-import numpy as np
-from typing import Dict, List, Any, Optional, Tuple, Set
-import logging
-from datetime import datetime
-import os
-from pathlib import Path
-import json
 import asyncio
-import aiohttp
+import json
+import logging
+import os
+import re
 from collections import Counter
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set, Tuple
 
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.decomposition import NMF, LatentDirichletAllocation
-from nltk.tokenize import sent_tokenize, word_tokenize
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
+import aiohttp
 import nltk
+import numpy as np
+import pandas as pd
 from gensim import corpora
 from gensim.models import LdaModel
 from gensim.utils import simple_preprocess
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import sent_tokenize, word_tokenize
+from sklearn.decomposition import NMF, LatentDirichletAllocation
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 from models.finbert_sentiment import FinBertSentiment
 

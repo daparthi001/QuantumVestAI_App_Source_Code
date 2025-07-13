@@ -4,13 +4,15 @@ Last Updated: 2025-06-18 21:25:28
 Author: daparthi001
 """
 import logging
-from fastapi import APIRouter, Request, Form, UploadFile, File, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from typing import Optional
-from services.api_client import APIClient
+
 from core.config.settings import settings
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
+from services.api_client import APIClient
+
 API_URL = "http://quantumvestai-dev-api:8000"
 
 # Setup router and templates

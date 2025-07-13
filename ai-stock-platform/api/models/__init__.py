@@ -6,9 +6,10 @@ Author: daparthi001
 """
 try:
     from db.base import TimestampMixin
-    from db.models.user import User
+    from db.models.portfolio import (PortfolioSummary, Position, Transaction,
+                                     TransactionType)
     from db.models.stock import Stock, WatchList
-    from db.models.portfolio import Position, Transaction, PortfolioSummary, TransactionType
+    from db.models.user import User
 except Exception:  # pragma: no cover - optional in test environment
     TimestampMixin = object
     User = object

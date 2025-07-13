@@ -3,9 +3,11 @@ Integration Schemas
 Created: 2025-05-20 04:56:23
 Author: daparthi001
 """
-from pydantic import BaseModel, HttpUrl, SecretStr, EmailStr
-from typing import List, Dict, Optional, Any
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, EmailStr, HttpUrl, SecretStr
+
 
 class IntegrationConfig(BaseModel):
     """Integration configuration schema."""

@@ -5,11 +5,12 @@ Author: daparthi001
 """
 import logging
 import sys
-from pathlib import Path
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 from typing import Optional
 
 from core.config import settings
+
 
 def setup_logging(
     log_level: Optional[str] = None,

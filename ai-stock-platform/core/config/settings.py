@@ -1,3 +1,3 @@
-from api.core.config import settings, Settings, get_settings
+from api.core.config import Settings, get_settings, settings
 
 __all__ = ["settings", "Settings", "get_settings"]

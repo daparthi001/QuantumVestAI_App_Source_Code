@@ -1,5 +1,5 @@
-from pathlib import Path
 import sys
+from pathlib import Path
 
 _pkg_path = Path(__file__).resolve().parent.parent / 'ai-stock-platform' / 'ui'
 __path__ = [str(_pkg_path)]

@@ -4,11 +4,11 @@ Created: 2025-05-19 05:29:26
 Author: daparthi001
 """
 from logging.config import fileConfig
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+
 from alembic import context
 from core.config import settings
 from db.base import Base
+from sqlalchemy import engine_from_config, pool
 
 config = context.config
 

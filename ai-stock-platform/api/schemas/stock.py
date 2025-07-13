@@ -4,9 +4,11 @@ Created: 2025-05-19 03:29:10
 Author: daparthi001
 Updated: 2025-01-09 (AI Assistant) - Added Warren Buffett analysis schemas
 """
-from pydantic import BaseModel
 from datetime import datetime
 from typing import List, Optional
+
+from pydantic import BaseModel
+
 
 class StockBase(BaseModel):
     symbol: str

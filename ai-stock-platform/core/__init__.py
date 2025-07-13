@@ -1,29 +1,27 @@
 """Compatibility layer aliasing to api.core."""
-import importlib, sys
-
-# Import the API configuration modules we rely on. Avoid importing optional
-# subpackages that would trigger database connections or other heavy side
-# effects during test collection.
-from api.core import (
-    config,
-    logger,
-    exceptions as api_exceptions,
-    responses as api_responses,
-    validation as api_validation,
-    database as api_database,
-    security as api_security,
-    models as api_models,
-)
-from api.core.config.settings import settings, Settings, get_settings
-from . import http_client
-
-# Lightweight HTTP client utilities are provided by the UI core package.
-from ui.core import http_client as ui_http_client
-
+import importlib
 # Expose api.core submodules under the ``core`` namespace so imports like
 # ``core.logger`` resolve correctly even when this lightweight compatibility
 # package is imported first.
 import sys
+
+# Import the API configuration modules we rely on. Avoid importing optional
+# subpackages that would trigger database connections or other heavy side
+# effects during test collection.
+from api.core import config
+from api.core import database as api_database
+from api.core import exceptions as api_exceptions
+from api.core import logger
+from api.core import models as api_models
+from api.core import responses as api_responses
+from api.core import security as api_security
+from api.core import validation as api_validation
+from api.core.config.settings import Settings, get_settings, settings
+
+# Lightweight HTTP client utilities are provided by the UI core package.
+from ui.core import http_client as ui_http_client
+
+from . import http_client
 
 sys.modules.setdefault(__name__ + ".config", config)
 sys.modules.setdefault(__name__ + ".logger", logger)

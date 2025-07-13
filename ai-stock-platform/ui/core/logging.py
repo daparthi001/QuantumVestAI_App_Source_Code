@@ -5,13 +5,14 @@ Updated: 2025-06-15 03:42:15
 Author: daparthi001
 """
 import logging
-import sys
 import os
-from pathlib import Path
+import sys
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 from typing import Optional
 
 from core.config import settings
+
 
 def setup_logging(
     name: str = "app",

@@ -15,6 +15,7 @@ import os
 from functools import lru_cache
 from urllib.parse import quote
 
+
 class Settings(BaseSettings):
     # Database connection details
     DB_HOST: str = os.getenv("DB_HOST", "localhost")

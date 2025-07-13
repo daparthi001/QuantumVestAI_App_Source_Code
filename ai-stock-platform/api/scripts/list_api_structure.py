@@ -9,7 +9,8 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict, List
+
 
 def get_directory_structure(path: Path, indent: str = "", is_last: bool = True) -> List[str]:
     """Get the directory structure as a list of strings."""

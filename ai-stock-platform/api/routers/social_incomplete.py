@@ -2,6 +2,7 @@
 
 from app.main import get_twitter_scheduler
 
+
 @router.get("/twitter/sentiment/{ticker}")
 def get_stock_twitter_sentiment(
     ticker: str,

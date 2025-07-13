@@ -9,9 +9,9 @@ Tests dashboard rendering with template filters to prevent future regressions.
 
 import os
 import sys
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime
+from pathlib import Path
+from unittest.mock import MagicMock, Mock, patch
 
 # Add paths
 BASE_DIR = Path(__file__).resolve().parent
@@ -165,7 +165,7 @@ class TestDashboardTemplateContext:
     def test_dashboard_template_filter_usage(self):
         """Test that template filters work correctly with dashboard data"""
         from template_filters import template_filters
-        
+
         # Test data similar to what dashboard would use
         portfolio_value = 125350.75
         daily_change = 0.0234  # 2.34%
@@ -186,7 +186,7 @@ class TestDashboardTemplateContext:
     def test_dashboard_error_handling(self):
         """Test that dashboard handles missing or invalid data gracefully"""
         from template_filters import template_filters
-        
+
         # Test filters with None/invalid data (simulating API failures)
         assert template_filters['format_currency'](None) == "$0.00"
         assert template_filters['format_percentage'](None) == "0.00%"
@@ -227,7 +227,7 @@ class TestTemplateFilterRegistration:
     def test_critical_filters_with_sample_data(self):
         """Test critical filters with realistic dashboard data"""
         from template_filters import template_filters
-        
+
         # Test format_currency with typical portfolio values
         test_values = [100.00, 1250.50, 125000.75, 1250000.99]
         for value in test_values:

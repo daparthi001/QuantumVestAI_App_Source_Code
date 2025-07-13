@@ -1,8 +1,9 @@
-import logging
 import json
+import logging
 import traceback
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
 
 class JsonFormatter(logging.Formatter):
     """Custom formatter that outputs log entries as JSON."""

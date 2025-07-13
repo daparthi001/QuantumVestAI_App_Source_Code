@@ -3,10 +3,11 @@ Configuration Test Script
 Created: 2025-05-22 05:06:41
 Author: daparthi001
 """
-import os
 import logging
+import os
+
 from core.config import Settings
-from core.config.settings import settings, get_db_url
+from core.config.settings import get_db_url, settings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

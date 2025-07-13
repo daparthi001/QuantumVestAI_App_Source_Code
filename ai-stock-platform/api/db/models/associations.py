@@ -3,8 +3,8 @@ Database Association Tables
 Created: 2025-05-20 20:31:25
 Author: daparthi001
 """
-from sqlalchemy import Table, Column, Integer, ForeignKey
 from db.base import Base
+from sqlalchemy import Column, ForeignKey, Integer, Table
 
 # Association table for user watchlists
 user_watchlist = Table(

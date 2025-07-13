@@ -1,7 +1,6 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, JSON
-from sqlalchemy.orm import relationship
-
 from db.base_class import Base, TimestampMixin
+from sqlalchemy import JSON, Column, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
 
 
 class UserActivityLog(Base, TimestampMixin):

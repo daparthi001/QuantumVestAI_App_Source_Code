@@ -3,11 +3,13 @@ Base Model Implementation
 Created: 2025-05-19 03:44:39
 Author: daparthi001
 """
-from sqlalchemy import Column, Integer, DateTime, String
+from datetime import datetime
+
+from db.base import Base
+from sqlalchemy import Column, DateTime, Integer, String
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.sql import func
-from datetime import datetime
-from db.base import Base
+
 
 class TimestampMixin:
     """Mixin for timestamp columns"""

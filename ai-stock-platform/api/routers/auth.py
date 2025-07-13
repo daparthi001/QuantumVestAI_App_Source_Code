@@ -3,28 +3,23 @@ Authentication Router
 Updated: 2025-06-19 18:00:37
 Author: daparthi001
 """
+import logging
 from datetime import timedelta
 from typing import Annotated, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Body
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel, EmailStr, Field
-import logging
 
-from core.security.tokens import create_access_token
-from core.security import (
-    verify_password,
-    get_password_hash,
-    get_current_user,
-    get_current_active_user,
-)
-from core.database import get_db_session
 from core.config import settings
+from core.database import get_db_session
 from core.models.response import StandardResponse
-
+from core.security import (get_current_active_user, get_current_user,
+                           get_password_hash, verify_password)
+from core.security.tokens import create_access_token
 # Use the SQLAlchemy model from the consolidated db.models package
 from db.models.user import User
+from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
+from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import BaseModel, EmailStr, Field
 from schemas.auth import TokenResponse, UserBase
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # Create router WITHOUT a prefix (prefix will be added in main.py)
 router = APIRouter(tags=["Authentication"])

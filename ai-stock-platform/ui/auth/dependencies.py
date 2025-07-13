@@ -2,16 +2,15 @@
 # Last updated: 2025-06-20 04:10:30
 # Updated by: daparthi001
 
-from typing import Optional, Dict, Any
-import jwt
-from datetime import datetime, timedelta
 import logging
 import os
 import time
+from datetime import datetime, timedelta
+from typing import Any, Dict, Optional
 
-from fastapi import HTTPException, status, Depends, Request, Response, Cookie
+import jwt
+from fastapi import Cookie, Depends, HTTPException, Request, Response, status
 from fastapi.security import HTTPBearer
-
 from services.httpx_client import HTTPXService, create_httpx_service
 
 # OAuth2 scheme for token extraction

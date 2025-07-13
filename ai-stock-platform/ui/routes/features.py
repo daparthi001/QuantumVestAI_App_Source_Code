@@ -3,12 +3,13 @@ QuantumVestAI Features Routes
 Last Updated: 2025-07-07 21:38:39
 Author: daparthi001
 """
-from fastapi import APIRouter, Request, Depends, Query, HTTPException
+import logging
+from pathlib import Path
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from services.api_client import APIClient
-from pathlib import Path
-import logging
 
 # Initialize logger
 logger = logging.getLogger(__name__)

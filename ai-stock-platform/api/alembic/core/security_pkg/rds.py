@@ -4,8 +4,9 @@ RDS security utilities for QuantumVestAI.
 This module provides security utilities for working with Amazon RDS.
 """
 
-import boto3
 import logging
+
+import boto3
 from botocore.exceptions import ClientError
 from core.config import settings
 
@@ -16,9 +17,9 @@ def validate_rds_connection():
     Validates that the application can connect to the RDS instance.
     """
     try:
+        from db.rds_session import get_connection_url
         from sqlalchemy import create_engine, text
         from sqlalchemy.exc import SQLAlchemyError
-        from db.rds_session import get_connection_url
 
         connection_url = get_connection_url()
         # Create a temporary engine just for testing

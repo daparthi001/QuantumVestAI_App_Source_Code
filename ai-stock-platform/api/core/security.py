@@ -4,18 +4,18 @@ Created: 2025-05-20 04:43:53
 Updated: 2025-06-17 17:03:55
 Author: daparthi001
 """
+from datetime import datetime, timedelta
+from typing import Any, Dict, Optional
+
+from core.config import settings
+from core.exceptions import AuthenticationError
+from db.models.user import User
+from db.session import get_db
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
-
-from core.config import settings
-from db.session import get_db
-from db.models.user import User
-from core.exceptions import AuthenticationError
 
 # Password context for hashing
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")

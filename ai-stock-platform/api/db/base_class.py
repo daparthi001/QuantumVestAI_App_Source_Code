@@ -5,9 +5,11 @@ Author: daparthi001
 """
 from datetime import datetime
 from typing import Any
+
+from sqlalchemy import Column, DateTime, Integer
 from sqlalchemy.ext.declarative import as_declarative, declared_attr
-from sqlalchemy import Column, Integer, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
+
 
 @as_declarative()
 class Base:

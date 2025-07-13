@@ -7,8 +7,11 @@ and application-level configurations.
 """
 import os
 from typing import Optional
+
 from pydantic import BaseModel, Field, PostgresDsn, SecretStr
+
 from pydantic_settings import BaseSettings
+
 
 class DatabaseSettings(BaseModel):
     """Database configuration settings"""

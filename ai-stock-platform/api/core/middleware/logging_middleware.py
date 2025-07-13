@@ -6,10 +6,11 @@ Author: daparthi001
 import time
 import uuid
 from typing import Callable
+
+from core.logger import logger
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from core.logger import logger
 
 class LoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(

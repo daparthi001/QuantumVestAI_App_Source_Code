@@ -1,15 +1,15 @@
-import yfinance as yf
-import pandas as pd
 import logging
 import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Union, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import pandas as pd
+import yfinance as yf
+from config.constants import (DATE_FORMAT, DEFAULT_TICKERS, MARKET_INDICES,
+                              TIMEFRAME_1D, TIMEFRAME_1Y, TIMEFRAME_MAX)
 from config.settings import settings
-from config.constants import (
-    DATE_FORMAT, MARKET_INDICES, DEFAULT_TICKERS,
-    TIMEFRAME_1D, TIMEFRAME_1Y, TIMEFRAME_MAX
-)
+
 
 class YahooFinanceService:
     """Service for interacting with Yahoo Finance API"""
@@ -179,7 +179,7 @@ class YahooFinanceService:
         try:
             # Use yfinance's search functionality
             import yfinance as yf
-            
+
             # Get tickers that match the query
             tickers = yf.Tickers(query).tickers
             

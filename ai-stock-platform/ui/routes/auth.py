@@ -3,13 +3,14 @@ QuantumVestAI Authentication Routes
 Updated: 2025-07-07 21:54:42
 Author: hemanth9398
 """
-from fastapi import APIRouter, Request, Form, HTTPException, status
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
-from typing import Optional
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Optional
+
+from fastapi import APIRouter, Form, HTTPException, Request, status
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
 from services.api_client import APIClient
 
 # Setup router

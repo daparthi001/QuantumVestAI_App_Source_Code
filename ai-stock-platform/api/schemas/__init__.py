@@ -1,9 +1,9 @@
 """
 Schemas package initialization.
 """
-from .user import User, UserCreate, UserBase, UserUpdate, UserProfile
-from .token import Token, TokenData
 from .stock import *
+from .token import Token, TokenData
+from .user import User, UserBase, UserCreate, UserProfile, UserUpdate
 from .watchlist import *
 from .whitepaper import *
 

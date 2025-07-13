@@ -4,10 +4,11 @@ Works without complex FastAPI dependencies for testing
 """
 import logging
 from datetime import datetime
-from typing import Dict, Any, Optional
-from twitter_sentiment_simple import TwitterSentimentAnalyzer
-from twitter_config import twitter_config
+from typing import Any, Dict, Optional
+
 from services.trending_stocks_service import TrendingStocksService
+from twitter_config import twitter_config
+from twitter_sentiment_simple import TwitterSentimentAnalyzer
 
 logger = logging.getLogger(__name__)
 

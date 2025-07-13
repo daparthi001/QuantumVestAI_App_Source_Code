@@ -2,17 +2,18 @@
 # Last updated: 2025-06-20 02:51:31
 # Updated by: daparthi001
 
-from fastapi import APIRouter, HTTPException, Request, Query, status
+import json
+import logging
+import os
+import time
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Union
+
+import httpx
+from fastapi import APIRouter, HTTPException, Query, Request, status
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from typing import Optional, List, Dict, Any, Union
-import httpx
-import logging
-import time
-import json
-import os
-from datetime import datetime, timedelta
-from metrics import http_requests_total, http_request_duration_seconds
+from metrics import http_request_duration_seconds, http_requests_total
 
 API_URL = "http://quantumvestai-dev-api:8000"
 # Set up logging

@@ -3,16 +3,16 @@ Database Initialization Module
 Created: 2025-05-21 18:56:12
 Author: daparthi001
 """
-import os
 import logging
-import time
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import OperationalError, ProgrammingError
+import os
 import socket
+import time
 
-from db.base import Base
-from db.session import engine, SessionLocal
 from core.config import settings
+from db.base import Base
+from db.session import SessionLocal, engine
+from sqlalchemy.exc import OperationalError, ProgrammingError
+from sqlalchemy.orm import Session
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

@@ -1,13 +1,14 @@
+import asyncio
 import os
 import sys
-import asyncio
+
 import pandas as pd
 
 ROOT = os.path.join(os.path.dirname(__file__), "..", "ai-stock-platform")
 sys.path.append(ROOT)
 sys.path.append(os.path.join(ROOT, "api"))
 
-from api.ml.agent_system import AIAgent, AgentManager
+from api.ml.agent_system import AgentManager, AIAgent
 
 
 def test_agent_manager_async_predictions():

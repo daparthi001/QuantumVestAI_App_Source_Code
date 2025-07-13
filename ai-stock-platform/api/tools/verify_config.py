@@ -3,12 +3,13 @@ Configuration Verification Tool
 Created: 2025-05-21 19:07:45
 Author: daparthi001
 """
+import logging
 import os
 import sys
-import logging
-from sqlalchemy import text
-from db.session import SessionLocal
+
 from core.config import settings
+from db.session import SessionLocal
+from sqlalchemy import text
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

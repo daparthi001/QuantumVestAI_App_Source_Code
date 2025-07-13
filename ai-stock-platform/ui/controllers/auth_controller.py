@@ -3,15 +3,16 @@ Authentication Controller for QuantumVestAI
 Updated: 2025-06-20 23:13:04
 Author: daparthi001
 """
-import os
-import requests
-import logging
 import json
-from fastapi import APIRouter, Request, Form, status, HTTPException, Depends
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
+import logging
+import os
 from datetime import datetime, timedelta
 from pathlib import Path
+
+import requests
+from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
 
 router = APIRouter()
 logger = logging.getLogger("quantumvestai.auth_controller")

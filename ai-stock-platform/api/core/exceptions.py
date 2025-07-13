@@ -5,8 +5,9 @@ Updated: 2025-06-17 18:33:20
 Enhanced: 2025-01-09 (AI Assistant)
 Author: daparthi001
 """
+from typing import Any, Dict, Optional
+
 from fastapi import HTTPException, status
-from typing import Optional, Dict, Any
 
 
 class APIException(HTTPException):

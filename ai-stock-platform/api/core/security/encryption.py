@@ -2,7 +2,9 @@
 Encryption and hashing utilities.
 """
 from cryptography.fernet import Fernet
+
 from ..config import settings
+
 
 class EncryptionService:
     def __init__(self):

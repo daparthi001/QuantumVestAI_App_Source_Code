@@ -3,12 +3,12 @@ Core Middleware Implementation
 Created: 2025-05-20 20:04:12
 Author: daparthi001
 """
+from core.config import settings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
-from core.config import settings
 
 def setup_middleware(app: FastAPI) -> None:
     """Configure middleware for the FastAPI application.

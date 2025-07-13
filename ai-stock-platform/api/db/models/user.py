@@ -3,15 +3,14 @@ User Model Module
 Created: 2025-05-21 17:07:45
 Author: daparthi001
 """
-from sqlalchemy import Column, Integer, String, Boolean
-from sqlalchemy.orm import relationship, synonym
-from db.models.associations import user_watchlist
-
-from db.base import Base, TimestampMixin
-from core.utils.password_utils import get_password_hash
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from typing import Optional
+
+from core.utils.password_utils import get_password_hash
+from db.base import Base, TimestampMixin
+from db.models.associations import user_watchlist
+from sqlalchemy import Boolean, Column, Integer, String, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import relationship, synonym
 
 
 class User(Base, TimestampMixin):
@@ -35,8 +34,8 @@ class User(Base, TimestampMixin):
 
     _pwd_column_name = "hashed_password"
     try:  # Introspect the DB to determine which column actually exists
-        from sqlalchemy import create_engine, inspect
         from core.config import get_settings
+        from sqlalchemy import create_engine, inspect
 
         settings = get_settings()
         engine = create_engine(settings.SQLALCHEMY_DATABASE_URI)

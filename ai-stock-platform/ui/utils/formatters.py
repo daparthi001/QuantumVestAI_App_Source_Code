@@ -5,7 +5,7 @@ Updated: 2025-06-18 02:30:22
 Author: daparthi001
 """
 import locale
-from typing import Union, Optional
+from typing import Optional, Union
 
 # Set locale for number formatting with error handling
 try:
@@ -44,7 +44,7 @@ def format_date(value, format_string: str = "%Y-%m-%d") -> str:
     
     try:
         from datetime import datetime
-        
+
         # Handle different input types
         if isinstance(value, str):
             # Try to parse string date

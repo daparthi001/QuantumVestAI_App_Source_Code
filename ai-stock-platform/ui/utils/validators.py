@@ -1,7 +1,9 @@
 import re
-from typing import Union, Tuple, Optional, Any, Dict
-from datetime import datetime, date
+from datetime import date, datetime
+from typing import Any, Dict, Optional, Tuple, Union
+
 import yfinance as yf
+
 
 def validate_ticker_symbol(ticker: str) -> Tuple[bool, Optional[str]]:
     """

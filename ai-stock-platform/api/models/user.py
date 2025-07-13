@@ -8,4 +8,5 @@ Author: daparthi001
 
 # Export the User model used across the API
 from db.models.user import User
+
 __all__ = ["User"]

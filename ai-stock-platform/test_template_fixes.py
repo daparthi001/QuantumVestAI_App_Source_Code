@@ -48,7 +48,7 @@ def test_template_filters():
     
     try:
         from template_filters import template_filters
-        
+
         # Test critical filters exist
         critical_filters = ['format_currency', 'format_percentage', 'format_change_value', 'format_large_number']
         

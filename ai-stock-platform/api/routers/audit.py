@@ -3,26 +3,20 @@ Audit Router
 Created: 2025-05-20 05:02:05
 Author: daparthi001
 """
-from fastapi import APIRouter, Depends, Query, Path, status, BackgroundTasks
-from sqlalchemy.orm import Session
-from typing import List, Optional, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
+from core.exceptions import PermissionDeniedError, ResourceNotFoundError
 from core.security import get_current_user
-from core.exceptions import ResourceNotFoundError, PermissionDeniedError
-from db.session import get_db
 from db.models.user import User
+from db.session import get_db
+from fastapi import APIRouter, BackgroundTasks, Depends, Path, Query, status
+from schemas.audit import (AuditEventResponse, AuditExportResponse,
+                           AuditFilterResponse, AuditLogResponse,
+                           AuditSearchResponse, AuditStatisticsResponse,
+                           AuditTrailResponse, UserActivityResponse)
 from services.audit_service import AuditService
-from schemas.audit import (
-    AuditLogResponse,
-    AuditTrailResponse,
-    AuditEventResponse,
-    AuditFilterResponse,
-    AuditExportResponse,
-    AuditStatisticsResponse,
-    AuditSearchResponse,
-    UserActivityResponse
-)
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/audit",

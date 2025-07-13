@@ -1,16 +1,15 @@
 """
 Custom middleware for the API.
 """
+import logging
 import time
 import uuid
+
+from core import settings
+from core.config import settings
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
-import logging
-from core import settings
-
-
-from core.config import settings
 
 logger = logging.getLogger(__name__)
 

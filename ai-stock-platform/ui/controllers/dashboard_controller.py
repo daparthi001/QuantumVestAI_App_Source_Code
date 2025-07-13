@@ -4,16 +4,18 @@ Last updated: 2025-06-20 05:25:00
 Author: daparthi001
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Query, status, Response
+import json
+import logging
+import os
+import time
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Union
+
+import httpx
+from fastapi import (APIRouter, Depends, HTTPException, Query, Request,
+                     Response, status)
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from typing import Optional, List, Dict, Any, Union
-import httpx
-import logging
-import time
-import json
-import os
-from datetime import datetime, timedelta
 
 API_URL = "http://quantumvestai-dev-api:8000"
 # Auth dependencies removed as per requirements

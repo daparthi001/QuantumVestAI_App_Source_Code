@@ -4,11 +4,11 @@ Created: 2025-06-17 18:33:20
 Author: daparthi001
 """
 
-from fastapi import FastAPI, Request, status
-from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
-
 from core.exceptions import AuthenticationError, ValidationError
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
 
 def configure_exception_handlers(app: FastAPI) -> FastAPI:
     """Configure exception handlers for FastAPI application"""

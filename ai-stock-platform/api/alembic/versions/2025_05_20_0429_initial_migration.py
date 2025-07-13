@@ -7,8 +7,8 @@ Revision ID: a1b2c3d4e5f6
 Revises: 
 Create Date: 2025-05-20 04:29:52
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers

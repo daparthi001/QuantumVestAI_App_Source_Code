@@ -1,6 +1,8 @@
 # ui/services/forecast_service.py
+from typing import Any, Dict, List, Optional
+
 from ui.services.api_client import APIClient
-from typing import Dict, Any, Optional, List
+
 
 def get_stock_info(ticker: str, token: Optional[str] = None) -> Optional[Dict[str, Any]]:
     client = APIClient(token=token)

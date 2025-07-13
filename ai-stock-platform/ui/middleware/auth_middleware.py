@@ -5,13 +5,15 @@ Author: daparthi001
 Updated: 2025-06-16 03:41:30 by daparthi001
 """
 import logging
-from fastapi import Request, HTTPException
-from fastapi.security import OAuth2PasswordBearer
-from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-from starlette.responses import Response, JSONResponse, RedirectResponse
-from jose import JWTError, jwt
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any, List, Union
+from typing import Any, Dict, List, Optional, Union
+
+from fastapi import HTTPException, Request
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
+from starlette.middleware.base import (BaseHTTPMiddleware,
+                                       RequestResponseEndpoint)
+from starlette.responses import JSONResponse, RedirectResponse, Response
 
 # Configure logging
 logger = logging.getLogger(__name__)

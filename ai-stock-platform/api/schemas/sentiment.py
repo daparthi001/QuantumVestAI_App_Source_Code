@@ -3,9 +3,11 @@ Sentiment Analysis Schemas
 Created: 2025-05-20 04:46:38
 Author: daparthi001
 """
-from pydantic import BaseModel, Field
-from typing import List, Dict, Optional
 from datetime import datetime
+from typing import Dict, List, Optional
+
+from pydantic import BaseModel, Field
+
 
 class SentimentScore(BaseModel):
     """Sentiment score schema."""

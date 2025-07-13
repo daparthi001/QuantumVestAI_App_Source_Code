@@ -4,8 +4,9 @@ Test script for template filters
 Tests the template filter registration and validation functionality
 """
 
-import sys
 import os
+import sys
+
 sys.path.append('.')
 
 def test_template_filters():

@@ -8,18 +8,20 @@ Created: 2025-01-09
 Author: AI Assistant
 """
 import asyncio
-import sys
 import os
+import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 # Ensure API key is set for tests
 os.environ.setdefault("ALPHA_VANTAGE_API_KEY", "test")
 
-import pytest
+# Import the service directly
+import importlib.util
 import json
 from datetime import datetime
 
-# Import the service directly
-import importlib.util
+import pytest
+
 spec = importlib.util.spec_from_file_location(
     "trending_stocks_service",
     os.path.join(os.path.dirname(os.path.dirname(__file__)), "services", "trending_stocks_service.py")

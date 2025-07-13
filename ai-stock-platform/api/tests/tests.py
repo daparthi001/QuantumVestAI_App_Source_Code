@@ -3,10 +3,11 @@ Database Connection Test Script
 Created: 2025-05-22 00:05:34
 Author: daparthi001
 """
-import os
 import logging
-import psycopg2
+import os
 from time import sleep
+
+import psycopg2
 
 # Configure logging
 logging.basicConfig(

@@ -3,7 +3,8 @@ Auth Service - Authentication functionality removed
 """
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
 import jwt
 from fastapi import HTTPException, status
 from pydantic import BaseModel

@@ -4,15 +4,16 @@ Created: 2025-05-20 04:29:52
 Author: daparthi001
 """
 import pytest
+
 pytest.importorskip("alembic")
 pytest.importorskip("sqlalchemy")
 from alembic.config import Config
-from alembic.script import ScriptDirectory
 from alembic.runtime.environment import EnvironmentContext
+from alembic.script import ScriptDirectory
+from core.config import settings
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from core.config import settings
 
 def test_migrations_can_run():
     """Test that migrations can run successfully."""

@@ -4,13 +4,15 @@ Created: 2025-05-21 17:31:58
 Author: daparthi001
 """
 from datetime import datetime
-from typing import Optional, List
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Table, Boolean
-from sqlalchemy.orm import relationship, Mapped
-from sqlalchemy.sql import func
+from typing import List, Optional
 
 from db.base import Base, TimestampMixin
-from db.models.associations import user_watchlist, user_portfolio
+from db.models.associations import user_portfolio, user_watchlist
+from sqlalchemy import (Boolean, Column, DateTime, Float, ForeignKey, Integer,
+                        String, Table)
+from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy.sql import func
+
 
 class Stock(Base, TimestampMixin):
     """Stock model for basic stock information."""

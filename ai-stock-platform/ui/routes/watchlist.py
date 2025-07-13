@@ -3,13 +3,14 @@ QuantumVestAI Watchlist Routes
 Updated: 2025-07-07 21:54:42
 Author: hemanth9398
 """
-from fastapi import APIRouter, Request, Form
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
-from typing import Optional, List
 import logging
 from datetime import datetime
 from pathlib import Path
+from typing import List, Optional
+
+from fastapi import APIRouter, Form, Request
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
 
 # Setup router
 router = APIRouter(prefix="/watchlist", tags=["watchlist"])

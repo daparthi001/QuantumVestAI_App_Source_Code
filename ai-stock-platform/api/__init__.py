@@ -25,6 +25,7 @@ if str(_parent) not in sys.path:
 # Map the name ``core`` to this package's ``core`` module so imports of ``core``
 # resolve correctly even when a sibling ``ui.core`` package exists.
 import importlib
+
 core_pkg = importlib.import_module('api.core')
 sys.modules.setdefault('core', core_pkg)
 for name in ("exceptions", "responses", "validation", "database", "security", "models"):
@@ -44,6 +45,7 @@ for p in list(sys.path):
 
 try:
     from .main import app
+
     # Re-insert package path at the front in case submodules modified sys.path
     if str(_pkg_path) in sys.path:
         sys.path.remove(str(_pkg_path))

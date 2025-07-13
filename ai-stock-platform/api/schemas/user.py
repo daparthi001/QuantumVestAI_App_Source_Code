@@ -1,5 +1,7 @@
 from typing import Optional
+
 from pydantic import BaseModel, EmailStr
+
 
 class UserBase(BaseModel):
     """Base user fields shared across schemas."""

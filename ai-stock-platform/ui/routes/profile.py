@@ -3,17 +3,19 @@ QuantumVestAI Profile Routes
 Last Updated: 2025-07-07 21:42:27
 Author: hemanth9398
 """
-from fastapi import APIRouter, Request, Form, UploadFile, File, HTTPException, Depends
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
-from typing import Optional
-from services.api_client import APIClient
-from config.settings import settings
+import logging
 import os
 import shutil
-import logging
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+from typing import Optional
+
+from config.settings import settings
+from fastapi import (APIRouter, Depends, File, Form, HTTPException, Request,
+                     UploadFile)
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
+from services.api_client import APIClient
 
 # Setup logging
 logger = logging.getLogger(__name__)

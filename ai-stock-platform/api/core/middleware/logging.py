@@ -5,10 +5,11 @@ Author: daparthi001
 """
 import time
 from typing import Callable
+
+from core.logging_setup import logger
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from core.logging_setup import logger
 
 class LoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(

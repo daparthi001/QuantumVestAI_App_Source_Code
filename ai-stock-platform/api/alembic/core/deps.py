@@ -1,14 +1,14 @@
-from fastapi import Depends, HTTPException, status, Query
-from typing import Optional, List, Dict, Any, Generator, Annotated
+from typing import Annotated, Any, Dict, Generator, List, Optional
+
+from core.exceptions import PermissionDeniedError, ResourceNotFoundError
+from core.security import (get_current_active_user, get_current_admin_user,
+                           get_current_user, oauth2_scheme)
+from db.models.user import User
+from db.session import get_db
+from fastapi import Depends, HTTPException, Query, status
+from services.stock_service import StockService
 from sqlalchemy.orm import Session
 
-from db.session import get_db
-from core.security import (
-    get_current_user, get_current_active_user, get_current_admin_user, oauth2_scheme
-)
-from db.models.user import User
-from services.stock_service import StockService
-from core.exceptions import ResourceNotFoundError, PermissionDeniedError
 
 def get_stock_service(db: Session = Depends(get_db)) -> StockService:
     """Dependency for StockService."""

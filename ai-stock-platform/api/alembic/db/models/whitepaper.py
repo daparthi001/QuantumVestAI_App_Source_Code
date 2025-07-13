@@ -1,9 +1,11 @@
-from sqlalchemy import Column, String, Integer, ForeignKey, DateTime, JSON, Text
-from sqlalchemy.dialects.postgresql import ARRAY  # If using PostgreSQL
-from sqlalchemy.orm import relationship
 from uuid import uuid4
 
 from db.base_class import Base
+from sqlalchemy import (JSON, Column, DateTime, ForeignKey, Integer, String,
+                        Text)
+from sqlalchemy.dialects.postgresql import ARRAY  # If using PostgreSQL
+from sqlalchemy.orm import relationship
+
 
 class Whitepaper(Base):
     """Whitepaper model for storing uploaded documents."""

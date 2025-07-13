@@ -6,14 +6,12 @@ New code should import directly from middleware.error_handlers.
 """
 
 # Import directly from the module to avoid circular imports
-from middleware.error_handlers import (
-    register_exception_handlers,
-    setup_error_handlers,
-    handle_http_exception,
-    handle_validation_exception,
-    handle_not_found_exception,
-    handle_internal_server_error
-)
+from middleware.error_handlers import (handle_http_exception,
+                                       handle_internal_server_error,
+                                       handle_not_found_exception,
+                                       handle_validation_exception,
+                                       register_exception_handlers,
+                                       setup_error_handlers)
 
 __all__ = [
     'register_exception_handlers',

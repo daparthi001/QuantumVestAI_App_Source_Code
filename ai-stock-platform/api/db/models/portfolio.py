@@ -3,16 +3,18 @@ Portfolio Models Module
 Created: 2025-05-21 17:23:43
 Author: daparthi001
 """
-from datetime import datetime
-from typing import Optional, List
-from decimal import Decimal
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum, Numeric
-from sqlalchemy.orm import relationship, Mapped
-from sqlalchemy.sql import func
 import enum
+from datetime import datetime
+from decimal import Decimal
+from typing import List, Optional
 
 from db.base import Base, TimestampMixin
 from db.models.associations import user_portfolio
+from sqlalchemy import (Column, DateTime, Enum, Float, ForeignKey, Integer,
+                        Numeric, String)
+from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy.sql import func
+
 
 class TransactionType(str, enum.Enum):
     """Transaction type enumeration"""

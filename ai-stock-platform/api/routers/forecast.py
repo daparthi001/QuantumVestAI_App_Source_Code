@@ -3,25 +3,21 @@ Forecast Router
 Created: 2025-05-20 04:42:45
 Author: daparthi001
 """
-from fastapi import APIRouter, Depends, Path, Query, status
-from sqlalchemy.orm import Session
-from typing import Optional, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, Optional
 
-from core.security import get_optional_current_user, get_current_user
 from core.config import settings
-from core.exceptions import ResourceNotFoundError, PermissionDeniedError
-from db.session import get_db
+from core.exceptions import PermissionDeniedError, ResourceNotFoundError
+from core.security import get_current_user, get_optional_current_user
 from db.models.user import User
+from db.session import get_db
+from fastapi import APIRouter, Depends, Path, Query, status
+from schemas.forecast import (BacktestResponse, ForecastResponse,
+                              ModelComparisonResponse, PredictabilityResponse,
+                              RecommendationResponse)
 from services.forecast_service import ForecastService
 from services.stock_service import StockService
-from schemas.forecast import (
-    ForecastResponse,
-    ModelComparisonResponse,
-    PredictabilityResponse,
-    BacktestResponse,
-    RecommendationResponse
-)
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/forecast",

@@ -3,24 +3,21 @@ Notification Router
 Created: 2025-05-20 04:50:55
 Author: daparthi001
 """
-from fastapi import APIRouter, Depends, Query, Path, status, WebSocket
-from sqlalchemy.orm import Session
-from typing import List, Optional
 from datetime import datetime
+from typing import List, Optional
 
-from core.security import get_current_user
 from core.exceptions import ResourceNotFoundError
-from db.session import get_db
+from core.security import get_current_user
 from db.models.user import User
+from db.session import get_db
+from fastapi import APIRouter, Depends, Path, Query, WebSocket, status
+from schemas.notification import (AlertConfigCreate, AlertConfigResponse,
+                                  NotificationResponse,
+                                  NotificationSettingsResponse,
+                                  NotificationSettingsUpdate,
+                                  NotificationStatsResponse)
 from services.notification_service import NotificationService
-from schemas.notification import (
-    NotificationResponse,
-    NotificationSettingsUpdate,
-    NotificationSettingsResponse,
-    AlertConfigCreate,
-    AlertConfigResponse,
-    NotificationStatsResponse
-)
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/notifications",

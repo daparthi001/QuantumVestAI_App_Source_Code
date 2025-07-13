@@ -3,9 +3,11 @@ Base schema models.
 Created: 2025-05-17 14:29:46 UTC
 Author: daparthi001
 """
-from pydantic import BaseModel, validator
 from datetime import datetime
 from typing import Optional
+
+from pydantic import BaseModel, validator
+
 
 class TimestampModel(BaseModel):
     """Base model with timestamp fields."""

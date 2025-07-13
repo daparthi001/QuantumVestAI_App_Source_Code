@@ -3,15 +3,16 @@ User management router.
 Created: 2025-05-17 14:29:46 UTC
 Author: daparthi001
 """
-from fastapi import APIRouter, Depends, File, UploadFile
-from sqlalchemy.orm import Session
 from typing import Any
 
-from core.dependencies import get_db, get_current_user
-from schemas.user import UserUpdate, UserProfile
-from models.user import User
-from services.storage import upload_file
+from core.dependencies import get_current_user, get_db
 from core.exceptions import NotFoundError
+from fastapi import APIRouter, Depends, File, UploadFile
+from schemas.user import UserProfile, UserUpdate
+from services.storage import upload_file
+from sqlalchemy.orm import Session
+
+from models.user import User
 
 router = APIRouter(prefix="/users", tags=["Users"])
 

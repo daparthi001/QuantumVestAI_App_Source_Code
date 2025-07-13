@@ -4,22 +4,18 @@ Created: 2025-05-20 04:43:53
 Author: daparthi001
 Updated: 2025-01-09 (AI Assistant) - Added Warren Buffett analysis endpoint
 """
-from fastapi import APIRouter, Depends, Query, Path, HTTPException
-from sqlalchemy.orm import Session
 from typing import List, Optional
 
-from core.security import get_current_user
 from core.exceptions import ResourceNotFoundError
-from db.session import get_db
+from core.security import get_current_user
 from db.models.user import User
+from db.session import get_db
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from schemas.stock import (BuffettAnalysisResponse, StockDetailResponse,
+                           StockPriceResponse, StockResponse,
+                           StockSearchResponse)
 from services.stock_service import StockService
-from schemas.stock import (
-    StockResponse,
-    StockDetailResponse,
-    StockPriceResponse,
-    StockSearchResponse,
-    BuffettAnalysisResponse
-)
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/stocks",

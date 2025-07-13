@@ -4,9 +4,11 @@ OpenAPI Specification Validator for QuantumVestAI API
 """
 
 import json
-import yaml
 import sys
 from pathlib import Path
+
+import yaml
+
 
 def validate_openapi_spec():
     """Validate the OpenAPI specification file."""

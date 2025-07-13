@@ -5,17 +5,18 @@ This module handles database verification and initialization
 during application startup.
 """
 
+import argparse
 import logging
 import os
-from sqlalchemy import create_engine, text, inspect
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session
-import argparse
 import sys
 from pathlib import Path
-from db.session import get_db, engine
+
 from core.config import settings
 from db.models.user import User
+from db.session import engine, get_db
+from sqlalchemy import create_engine, inspect, text
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 

@@ -5,6 +5,7 @@ import os
 import sys
 from pathlib import Path
 
+
 def init_alembic():
     """Initialize Alembic migration environment"""
     try:

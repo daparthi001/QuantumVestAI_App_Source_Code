@@ -1,5 +1,7 @@
-from fastapi import HTTPException, status
 from typing import Optional
+
+from fastapi import HTTPException, status
+
 
 class APIException(HTTPException):
     """Base exception for API errors with error code."""
