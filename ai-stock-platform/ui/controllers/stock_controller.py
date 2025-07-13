@@ -9,6 +9,7 @@ from pathlib import Path
 
 import aiohttp
 from fastapi import APIRouter, Form, HTTPException, Query, Request
+
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
@@ -166,14 +167,16 @@ async def stock_detail(
     request: Request,
     ticker: str,
     timeframe: str = Query("1d", regex="^(1d|1w|1m|3m|6m|1y|5y)$"),
-    forecast_days: int = Query(7, ge=1, le=30)
+    forecast_days: int = Query(7, ge=1, le=30),
+    model: str = Query(MODEL_ENSEMBLE)
 ):
     """Display stock detail page (demo mode)"""
     try:
         stock_data = {
             "ticker": ticker.upper(),
             "timeframe": timeframe,
-            "forecast_days": forecast_days
+            "forecast_days": forecast_days,
+            "model": model
         }
         
         # Demo mode - no authentication headers
@@ -201,7 +204,7 @@ async def stock_detail(
             
             # Get stock forecast
             async with session.get(
-                f"{API_V1_URL}/forecast/{ticker}?days={forecast_days}",
+                f"{API_V1_URL}/forecast/{ticker}?days={forecast_days}&model={model}",
                 timeout=5
             ) as response:
                 if response.status == 200:
@@ -216,10 +219,11 @@ async def stock_detail(
         return get_templates(request).TemplateResponse(
             "stocks/detail.html",
             {
-                "request": request, 
+                "request": request,
                 "stock": stock_data,
                 "user": None,
-                "demo_mode": True
+                "demo_mode": True,
+                "available_models": AVAILABLE_MODELS
             }
         )
     except HTTPException as e:

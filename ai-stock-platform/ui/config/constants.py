@@ -27,6 +27,15 @@ MODEL_ARIMA = "arima"
 MODEL_GARCH = "garch"
 MODEL_TRANSFORMER = "transformer"
 
+# List of models available for demo forecasting
+AVAILABLE_MODELS = [
+    MODEL_ENSEMBLE,
+    MODEL_PROPHET,
+    MODEL_LSTM,
+    MODEL_XGBOOST,
+    MODEL_ARIMA,
+]
+
 # Default forecast periods
 DEFAULT_FORECAST_DAYS = 7
 MAX_FORECAST_DAYS = 90

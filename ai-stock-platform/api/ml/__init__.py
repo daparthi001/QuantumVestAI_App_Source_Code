@@ -23,4 +23,5 @@ __all__ = [
     "linear_regression_predict",
     "AIAgent",
     "AgentManager",
+    "start_model_training_scheduler",
 ]

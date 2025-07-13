@@ -1668,26 +1668,32 @@ class WhitepaperAnalyzer:
         return confidence
     
     # Methods for generating simulated whitepaper text
+    # Methods for generating simulated whitepaper text
     def _generate_blockchain_whitepaper_text(self) -> str:
         """Generate simulated blockchain whitepaper text."""
-        return """
-        # Blockchain Technology: Transforming Financial Markets
-        
-        ## Abstract
-        
-        This whitepaper explores the transformative potential of blockchain technology in financial markets. We present a novel approach to decentralized finance (DeFi) that addresses existing limitations in liquidity, scalability, and security. Our proposed solution leverages a hybrid consensus mechanism and layer-2 scaling to enable high-throughput transaction processing while maintaining decentralization.
-        
-        ## Introduction
-        
-        Blockchain technology has emerged as a disruptive force in financial services, enabling peer-to-peer transactions without intermediaries. Despite significant progress, challenges remain in areas of scalability, interoperability, and regulatory compliance. This paper introduces a new blockchain architecture designed specifically for financial applications.
-        
-        ## Technology Overview
-        
-        Our solution combines the security of Proof-of-Stake with the efficiency of a Directed Acyclic Graph (DAG) structure. This hybrid approach enables:
-        
-        - Transaction throughput of 10,000+ TPS
-        - Sub-second finality
-        - Cross-chain interoperability
-        - Regulatory compliance mechanisms
-        
-        The system incorporates smart contracts compatible with Ethereum's EVM while extending functionality through native financial primitives. These include automated market makers, lending protocols, and synthetic asset creation.
+        return (
+            "Blockchain Technology: Transforming Financial Markets. "
+            "This paper introduces a scalable architecture leveraging a hybrid "
+            "consensus mechanism to enable high throughput and regulatory compliance."
+        )
+
+    def _generate_ai_whitepaper_text(self) -> str:
+        """Generate simulated AI whitepaper text."""
+        return (
+            "Artificial Intelligence in Finance. "
+            "We describe machine learning methods for market prediction and risk management."
+        )
+
+    def _generate_fintech_whitepaper_text(self) -> str:
+        """Generate simulated fintech whitepaper text."""
+        return (
+            "Fintech innovations are reshaping banking services. "
+            "This whitepaper reviews digital payment trends and regulatory considerations."
+        )
+
+    def _generate_generic_tech_whitepaper_text(self) -> str:
+        """Generate simulated generic technology whitepaper text."""
+        return (
+            "Innovative technology solutions improve efficiency. "
+            "The document outlines best practices for deployment and adoption."
+        )
