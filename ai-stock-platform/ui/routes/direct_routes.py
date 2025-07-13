@@ -33,10 +33,15 @@ async def direct_login_post(
 ):
     """Direct login handler that forwards to API and handles the response"""
     logger.info(f"Direct login route hit for: {username}")
-    
-                continue
-        
-        if api_response and api_response.status_code == 200:
+
+    try:
+        api_response = requests.post(
+            f"{API_V1_URL}/auth/login",
+            data={"username": username, "password": password},
+            timeout=5,
+        )
+
+        if api_response.status_code == 200:
             # Login successful
             token_data = api_response.json()
             logger.info(f"Login successful for {username}")
@@ -58,7 +63,7 @@ async def direct_login_post(
             return redirect_response
         else:
             # Login failed
-                error_message = "Login failed"
+            error_message = "Login failed"
             
             # Fall back to emergency login
             logger.warning(f"API login failed for {username}: {error_message}")

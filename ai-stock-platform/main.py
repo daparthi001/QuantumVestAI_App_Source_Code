@@ -332,8 +332,8 @@ async def direct_login_post(
         
         # Call API login endpoint
         response = requests.post(
-            f"{API_V1_URL}/auth/login", 
-            json=login_data,
+            f"{API_V1_URL}/auth/login",
+            data=login_data,
             timeout=5
         )
         

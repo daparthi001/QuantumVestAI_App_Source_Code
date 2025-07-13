@@ -90,10 +90,12 @@ async def login_post(
     templates = get_templates(request)
     
     try:
-        # TODO: Add main API login logic here
-        # For now, initialize variables to prevent undefined errors
-        access_token = None
-        response = None
+        api = APIClient()
+        api_resp = api.post_form(
+            "/auth/login",
+            data={"username": username, "password": password},
+        )
+        access_token = api_resp.get("data", {}).get("access_token")
         
         # If no format worked or no token received
         if not access_token:
