@@ -24,49 +24,8 @@ def get_templates(request: Request) -> Jinja2Templates:
     """Return app-level templates if available."""
     return getattr(request.app.state, "templates", templates)
 
-# Demo settings data (in-memory for demo)
-DEMO_USER_SETTINGS = {
-    "general": {
-        "email_notifications": True,
-        "push_notifications": False,
-        "sms_notifications": False,
-        "newsletter": True,
-        "market_updates": True,
-        "price_alerts": True,
-        "portfolio_updates": True,
-        "news_digest": True
-    },
-    "preferences": {
-        "theme": "light",  # light, dark, auto
-        "language": "en",
-        "timezone": "America/New_York",
-        "currency": "USD",
-        "date_format": "MM/DD/YYYY",
-        "number_format": "US",
-        "chart_type": "candlestick"  # candlestick, line, area
-    },
-    "privacy": {
-        "profile_visibility": "private",  # public, private, friends
-        "data_sharing": False,
-        "analytics_tracking": True,
-        "marketing_emails": False,
-        "third_party_data": False
-    },
-    "trading": {
-        "default_quantity": 100,
-        "order_confirmation": True,
-        "risk_warnings": True,
-        "auto_diversification": False,
-        "stop_loss_default": 5.0,  # percentage
-        "take_profit_default": 10.0  # percentage
-    },
-    "api": {
-        "api_key": "demo_api_key_12345",
-        "rate_limit": 1000,  # requests per hour
-        "webhook_url": "",
-        "api_enabled": True
-    }
-}
+# Demo settings data removed
+DEMO_USER_SETTINGS = {}
 
 @router.get("/", response_class=HTMLResponse)
 async def settings_page(request: Request):

@@ -25,45 +25,8 @@ def get_templates(request: Request) -> Jinja2Templates:
     """Return app-level templates if available."""
     return getattr(request.app.state, "templates", templates)
 
-# Demo user database
-DEMO_USERS = {
-    "demo": {
-        "username": "demo",
-        "email": "demo@quantumvestai.com",
-        "password": "demo",  # In production, this would be hashed
-        "full_name": "Demo User",
-        "role": "user",
-        "created_at": "2025-01-01",
-        "features": ["basic", "advanced", "premium"]
-    },
-    "admin": {
-        "username": "admin", 
-        "email": "admin@quantumvestai.com",
-        "password": "admin",
-        "full_name": "Admin User",
-        "role": "admin",
-        "created_at": "2025-01-01",
-        "features": ["basic", "advanced", "premium", "admin"]
-    },
-    "test": {
-        "username": "test",
-        "email": "test@quantumvestai.com", 
-        "password": "test",
-        "full_name": "Test User",
-        "role": "user",
-        "created_at": "2025-01-01",
-        "features": ["basic"]
-    },
-    "user": {
-        "username": "user",
-        "email": "user@quantumvestai.com",
-        "password": "password",
-        "full_name": "Regular User", 
-        "role": "user",
-        "created_at": "2025-01-01",
-        "features": ["basic", "advanced"]
-    }
-}
+# Demo user database removed
+DEMO_USERS = {}
 
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request, msg: str = None, next: str = None):

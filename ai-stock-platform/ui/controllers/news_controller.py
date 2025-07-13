@@ -26,49 +26,8 @@ logger = logging.getLogger("quantumvestai.news_controller")
 API_URL = os.environ.get("API_URL", "http://quantumvestai-dev-api:8000")
 API_V1_URL = f"{API_URL}/api/v1"
 
-# Demo news data
-DEMO_NEWS = [
-    {
-        "id": 1,
-        "title": "Tech Stocks Rally as AI Optimism Grows",
-        "summary": "Major technology companies see significant gains as artificial intelligence adoption accelerates across industries.",
-        "source": "MarketWatch",
-        "published_at": "2025-07-07T20:30:00Z",
-        "url": "#",
-        "sentiment": "positive",
-        "category": "market"
-    },
-    {
-        "id": 2,
-        "title": "Federal Reserve Maintains Interest Rates",
-        "summary": "The Fed keeps rates steady at 5.25-5.50% as inflation shows signs of cooling while employment remains strong.",
-        "source": "Reuters",
-        "published_at": "2025-07-07T18:15:00Z", 
-        "url": "#",
-        "sentiment": "neutral",
-        "category": "economy"
-    },
-    {
-        "id": 3,
-        "title": "EV Market Shows Strong Q2 Performance",
-        "summary": "Electric vehicle sales surge 45% year-over-year as infrastructure improvements support adoption.",
-        "source": "Bloomberg",
-        "published_at": "2025-07-07T16:45:00Z",
-        "url": "#",
-        "sentiment": "positive",
-        "category": "stocks"
-    },
-    {
-        "id": 4,
-        "title": "Cryptocurrency Market Volatility Continues",
-        "summary": "Bitcoin and major altcoins experience significant price swings amid regulatory uncertainty.",
-        "source": "CoinDesk",
-        "published_at": "2025-07-07T14:20:00Z",
-        "url": "#",
-        "sentiment": "neutral",
-        "category": "crypto"
-    }
-]
+# Demo news data removed
+DEMO_NEWS = []
 
 @router.get("/news", response_class=HTMLResponse)
 async def news_page(
