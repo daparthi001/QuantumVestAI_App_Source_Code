@@ -29,7 +29,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     TZ=UTC \
     API_ENV="development" \
     PROJECT_NAME="QuantumVestAI API" \
-    VERSION="1.0.1"
+    VERSION="1.0.1" \
+    POSTGRES_SERVER=localhost \
+    POSTGRES_USER=postgres \
+    POSTGRES_PASSWORD=postgres \
+    POSTGRES_DB=quantumvestai \
+    POSTGRES_PORT=5432
+
+# Provide default connection string so database_migrator.py can run
+ENV DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_SERVER}:${POSTGRES_PORT}/${POSTGRES_DB}"
 
 # Healthcheck - Test the /api/v1/health endpoint specifically
 # Set up a non-root user
