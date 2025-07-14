@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     )
     
     # CORS settings
-    CORS_ORIGINS: List[str] = Field(
+    CORS_ORIGINS: List[str] | str = Field(
         default=["http://localhost:3000", "https://app.quantumvestai.com"],
         env='CORS_ORIGINS'
     )
@@ -36,12 +36,18 @@ class Settings(BaseSettings):
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def parse_cors_origins(cls, v):
-        """Allow comma separated or JSON list and handle empty values."""
+        """Allow comma-separated or JSON list and handle empty values."""
         if isinstance(v, str):
             if not v:
                 return []
-            if not v.startswith("["):
-                return [orig.strip() for orig in v.split(",") if orig.strip()]
+            if v.startswith("["):
+                try:
+                    import json
+                    parsed = json.loads(v)
+                    return [orig.strip() for orig in parsed if orig.strip()]
+                except Exception:
+                    return [orig.strip() for orig in v.strip("[]").split(",") if orig.strip()]
+            return [orig.strip() for orig in v.split(",") if orig.strip()]
         return v
 
     CORS_ALLOW_CREDENTIALS: bool = Field(default=True, env='CORS_ALLOW_CREDENTIALS')
