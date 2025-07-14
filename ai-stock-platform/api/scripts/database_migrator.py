@@ -23,7 +23,10 @@ class DatabaseMigrator:
         default_url = (
             "postgresql://postgres:postgres@localhost:5432/quantumvestai"
         )
-        self.db_url = db_url or os.getenv("DATABASE_URL", default_url)
+        # Prefer DATABASE_URL, then fall back to ASYNC_DATABASE_URL to keep
+        # behaviour consistent with the main application configuration.
+        env_url = os.getenv("DATABASE_URL") or os.getenv("ASYNC_DATABASE_URL")
+        self.db_url = db_url or env_url or default_url
         self.connection = None
 
     async def connect(self):
