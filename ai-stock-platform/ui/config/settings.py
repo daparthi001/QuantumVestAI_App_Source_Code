@@ -32,6 +32,17 @@ class Settings(BaseSettings):
         default=["http://localhost:3000", "https://app.quantumvestai.com"],
         env='CORS_ORIGINS'
     )
+
+    @validator("CORS_ORIGINS", pre=True)
+    def parse_cors_origins(cls, v):
+        """Allow comma separated or JSON list and handle empty values."""
+        if isinstance(v, str):
+            if not v:
+                return []
+            if not v.startswith("["):
+                return [orig.strip() for orig in v.split(",") if orig.strip()]
+        return v
+
     CORS_ALLOW_CREDENTIALS: bool = Field(default=True, env='CORS_ALLOW_CREDENTIALS')
     CORS_ALLOW_METHODS: List[str] = Field(
         default=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],

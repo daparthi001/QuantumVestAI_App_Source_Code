@@ -9,6 +9,7 @@ import sys
 ROOT = os.path.join(os.path.dirname(__file__), "..", "ai-stock-platform")
 sys.path.append(ROOT)
 sys.path.append(os.path.join(ROOT, "api"))
+sys.path.append(os.path.join(ROOT, "ui"))
 import pytest
 from api.core.config import Settings, validate_settings
 
@@ -67,3 +68,11 @@ def test_environment_validation():
     # Test production environment
     settings = Settings(ENVIRONMENT="production")
     assert settings.DEBUG is False
+
+
+def test_ui_cors_origins_empty_string():
+    """Ensure UI settings handle empty CORS_ORIGINS"""
+    from ui.config.settings import Settings as UISettings
+
+    settings = UISettings(CORS_ORIGINS="")
+    assert settings.CORS_ORIGINS == []
