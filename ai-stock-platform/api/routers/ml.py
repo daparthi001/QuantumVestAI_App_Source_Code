@@ -10,7 +10,7 @@ from core.exceptions import PermissionDeniedError, ResourceNotFoundError
 from core.security import get_current_user
 from db.models.user import User
 from db.session import get_db
-from fastapi import APIRouter, BackgroundTasks, Depends, Path, Query, status
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, Path, Query, status
 from schemas.ml import (DatasetResponse, FeatureImportanceResponse,
                         HyperparameterResponse, ModelComparisonResponse,
                         ModelEvaluationResponse, ModelPredictionResponse,
@@ -64,7 +64,7 @@ async def train_model(
         ...,
         regex="^(price|sentiment|portfolio|risk)$"
     ),
-    model_config: Dict[str, Any],
+    model_config: Dict[str, Any] = Body(...),
     dataset_id: Optional[int] = None,
     background_tasks: BackgroundTasks = None,
     db: Session = Depends(get_db),

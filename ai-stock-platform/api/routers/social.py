@@ -254,4 +254,5 @@ async def get_trending_tickers(limit: int = 10):
     return await social_api.get_trending_stocks(limit)
 
 def get_twitter_health():
-    """Get Twitter API health status"""    return social_api.check_twitter_health()
+    """Get Twitter API health status"""
+    return social_api.check_twitter_health()

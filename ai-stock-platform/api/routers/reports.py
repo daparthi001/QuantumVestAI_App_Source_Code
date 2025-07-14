@@ -10,7 +10,7 @@ from core.exceptions import PermissionDeniedError, ResourceNotFoundError
 from core.security import get_current_user
 from db.models.user import User
 from db.session import get_db
-from fastapi import APIRouter, BackgroundTasks, Depends, Path, Query, status
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, Path, Query, status
 from schemas.reports import (CustomReportResponse, ReportCreate,
                              ReportDeliveryResponse, ReportGenerationResponse,
                              ReportResponse, ReportScheduleResponse,
@@ -169,7 +169,7 @@ async def deliver_report(
         ...,
         regex="^(email|api|sftp|webhook)$"
     ),
-    delivery_config: Dict[str, Any],
+    delivery_config: Dict[str, Any] = Body(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> ReportDeliveryResponse:
