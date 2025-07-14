@@ -13,7 +13,17 @@ logger = logging.getLogger(__name__)
 
 class DatabaseMigrator:
     def __init__(self, db_url=None):
-        self.db_url = db_url or os.getenv('DATABASE_URL', 'postgresql://user:pass@localhost/quantumvestai')
+        """Initialize the migrator with a database URL.
+
+        Falls back to a local PostgreSQL instance if ``DATABASE_URL`` is not
+        provided. The default connection string matches the development
+        settings used throughout the project.
+        """
+
+        default_url = (
+            "postgresql://postgres:postgres@localhost:5432/quantumvestai"
+        )
+        self.db_url = db_url or os.getenv("DATABASE_URL", default_url)
         self.connection = None
 
     async def connect(self):
