@@ -47,6 +47,13 @@ python -c "import api; print(f'API module found and app imported. Routes: {len(a
     exit 1
 }
 
+# Run database migration to ensure schema is up to date
+echo "Running startup database migrations..."
+python /app/scripts/database_migrator.py || {
+    echo "Database migration failed" >&2
+    exit 1
+}
+
 # Start the application
 echo "Starting API service with command: $@"
 exec "$@"
