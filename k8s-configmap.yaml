@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quantumvestai-config
+  namespace: dev
+data:
+  MODEL_ENSEMBLE: "ADVANCED"

@@ -5,6 +5,11 @@ Author: daparthi001
 """
 import logging
 import os
+
+# Default model to use for forecasts. Can be overridden via the
+# MODEL_ENSEMBLE environment variable which is mounted through the
+# application's ConfigMap in Kubernetes.
+MODEL_ENSEMBLE = os.getenv("MODEL_ENSEMBLE", "ADVANCED")
 from pathlib import Path
 
 import aiohttp
