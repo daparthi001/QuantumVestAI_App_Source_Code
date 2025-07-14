@@ -8,9 +8,9 @@ import logging
 from typing import List, Optional, Union
 from urllib.parse import quote
 
-from pydantic import AnyHttpUrl, Field, SecretStr, validator
+from pydantic import AnyHttpUrl, Field, SecretStr, field_validator
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -33,7 +33,8 @@ class Settings(BaseSettings):
         env='CORS_ORIGINS'
     )
 
-    @validator("CORS_ORIGINS", pre=True)
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
     def parse_cors_origins(cls, v):
         """Allow comma separated or JSON list and handle empty values."""
         if isinstance(v, str):
@@ -76,7 +77,8 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = Field(default="HS256", env='JWT_ALGORITHM')
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=30, env='ACCESS_TOKEN_EXPIRE_MINUTES')
 
-    @validator("LOG_LEVEL")
+    @field_validator("LOG_LEVEL")
+    @classmethod
     def validate_log_level(cls, v):
         valid_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
         v = v.upper()
@@ -95,9 +97,10 @@ class Settings(BaseSettings):
         encoded_password = quote(password)
         return f"postgresql://{user}:{encoded_password}@{host}:{port}/{name}"
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+    )
 
 # Instantiate settings
 settings = Settings()
