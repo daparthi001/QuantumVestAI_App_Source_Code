@@ -11,7 +11,7 @@ from core.exceptions import (ComplianceViolationError, PermissionDeniedError,
 from core.security import get_current_user
 from db.models.user import User
 from db.session import get_db
-from fastapi import APIRouter, BackgroundTasks, Depends, Path, Query, status
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, Path, Query, status
 from schemas.compliance import (ComplianceAuditResponse,
                                 ComplianceCheckResponse,
                                 ComplianceConfigResponse,
@@ -70,7 +70,7 @@ async def check_compliance(
         ...,
         regex="^(trade|portfolio_change|risk_limit|user_action)$"
     ),
-    action_data: Dict[str, Any],
+    action_data: Dict[str, Any] = Body(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> ComplianceCheckResponse:
@@ -179,8 +179,8 @@ async def run_compliance_audit(
         ...,
         regex="^(full|portfolio|trading|risk)$"
     ),
-    parameters: Dict[str, Any],
-    background_tasks: BackgroundTasks,
+    parameters: Dict[str, Any] = Body(...),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> ComplianceAuditResponse:
@@ -215,7 +215,7 @@ async def submit_regulatory_filing(
         ...,
         regex="^(form_pf|form_adr|form_13f|form_13h)$"
     ),
-    filing_data: Dict[str, Any],
+    filing_data: Dict[str, Any] = Body(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> RegulatoryFilingResponse:

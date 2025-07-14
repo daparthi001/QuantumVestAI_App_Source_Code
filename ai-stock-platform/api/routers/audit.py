@@ -147,7 +147,7 @@ async def export_audit_data(
         "csv",
         regex="^(csv|json|pdf)$"
     ),
-    background_tasks: BackgroundTasks,
+    background_tasks: BackgroundTasks = BackgroundTasks(),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> AuditExportResponse:
