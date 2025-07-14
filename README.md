@@ -122,6 +122,12 @@ export RUN_DB_MIGRATIONS=true
 not set the server falls back to a local SQLite file (`test.db`). `RUN_DB_MIGRATIONS`
 controls whether the application automatically creates tables on startup.
 
+Alternatively you can supply individual connection parameters using the
+environment variables `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` and
+`DB_PASSWORD`. The API assembles the connection URL from these values when
+`DATABASE_URL` or `ASYNC_DATABASE_URL` is not defined. A variable named
+`DB_URL` is **not** used.
+
 For local development you can initialize a PostgreSQL database by running:
 
 ```bash
