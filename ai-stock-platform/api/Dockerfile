@@ -42,7 +42,7 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
 EXPOSE ${PORT}
 
 # Copy entrypoint script
-COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+COPY --chown=appuser:appuser docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh
 
 # Use entrypoint to run migrations before starting
