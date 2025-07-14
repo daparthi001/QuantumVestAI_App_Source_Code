@@ -15,18 +15,29 @@ class DatabaseMigrator:
     def __init__(self, db_url=None):
         """Initialize the migrator with a database URL.
 
-        Falls back to a local PostgreSQL instance if ``DATABASE_URL`` is not
-        provided. The default connection string matches the development
-        settings used throughout the project.
+        The migrator mirrors the application's database configuration logic.
+        ``DATABASE_URL`` takes precedence, followed by ``ASYNC_DATABASE_URL``.
+        If neither are set, individual ``DB_*`` variables are used to build the
+        connection string. Finally a sensible local default is used.
         """
 
-        default_url = (
-            "postgresql://postgres:postgres@localhost:5432/quantumvestai"
-        )
-        # Prefer DATABASE_URL, then fall back to ASYNC_DATABASE_URL to keep
-        # behaviour consistent with the main application configuration.
-        env_url = os.getenv("DATABASE_URL") or os.getenv("ASYNC_DATABASE_URL")
-        self.db_url = db_url or env_url or default_url
+        default_url = "postgresql://postgres:postgres@localhost:5432/quantumvestai"
+
+        env_url = db_url or os.getenv("DATABASE_URL") or os.getenv("ASYNC_DATABASE_URL")
+
+        if not env_url:
+            db_user = os.getenv("DB_USER", "postgres")
+            db_password = os.getenv("DB_PASSWORD", "postgres")
+            db_host = os.getenv("DB_HOST", "localhost")
+            db_port = os.getenv("DB_PORT", "5432")
+            db_name = os.getenv("DB_NAME", "quantumvestai")
+            env_url = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+
+        # async SQLAlchemy URLs may contain the ``+asyncpg`` driver indicator
+        if env_url.startswith("postgresql+asyncpg://"):
+            env_url = env_url.replace("postgresql+asyncpg://", "postgresql://")
+
+        self.db_url = env_url or default_url
         self.connection = None
 
     async def connect(self):
