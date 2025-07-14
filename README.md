@@ -130,6 +130,13 @@ For local development you can initialize a PostgreSQL database by running:
 
 If the tables are missing at startup, the API will attempt to create them
 automatically.
+## Deployment Fix Script
+A utility script for troubleshooting Kubernetes deployments is available at
+`ci-cd/scripts/deployment-fix.sh`.
+Run it to apply database migrations and update ConfigMaps:
 
+```bash
+ci-cd/scripts/deployment-fix.sh -n dev
+```
 
-\n
+Use `-h` to view all available options.
