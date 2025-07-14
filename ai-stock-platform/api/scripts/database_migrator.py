@@ -129,7 +129,23 @@ class DatabaseMigrator:
         await self.connection.execute(create_table_query)
         logger.info("Migration log table created")
 
-    async def log_migration(self, migration_name: str, success: bool = True, error_message: str | None = None):
+    async def log_migration(
+        self,
+        migration_name: str,
+        success: bool = True,
+        error_message: str | None = None,
+    ) -> None:
+        """Record the result of a migration run.
+
+        If no database connection is available, the log entry is skipped to
+        avoid further errors when the connection attempt itself fails.
+        """
+        if not self.connection:
+            logger.warning(
+                "Skipping migration log because no database connection is available"
+            )
+            return
+
         query = """
         INSERT INTO migration_log (migration_name, success, error_message)
         VALUES ($1, $2, $3);
