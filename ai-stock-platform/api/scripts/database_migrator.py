@@ -31,7 +31,7 @@ class DatabaseMigrator:
             db_host = os.getenv("DB_HOST", "localhost")
             db_port = os.getenv("DB_PORT", "5432")
             db_name = os.getenv("DB_NAME", "quantumvestai")
-            env_url = os.getenv("DB_URL", "postgresql://${db_user}:${db_password}@${db_host}:5432/${db_name}")
+            env_url = f"postgresql://${db_user}:${db_password}@${db_host}:${db_port}/${db_name}"
 
         # async SQLAlchemy URLs may contain the ``+asyncpg`` driver indicator
         if env_url.startswith("postgresql+asyncpg://"):
