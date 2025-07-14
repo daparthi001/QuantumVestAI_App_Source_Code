@@ -41,5 +41,10 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
 
 EXPOSE ${PORT}
 
-# Start the application directly with Python to avoid import issues
+# Copy entrypoint script
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
+# Use entrypoint to run migrations before starting
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
