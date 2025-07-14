@@ -119,8 +119,10 @@ export RUN_DB_MIGRATIONS=true
 ```
 
 `ASYNC_DATABASE_URL` provides the connection string for the async engine. If it is
-not set the server falls back to a local SQLite file (`test.db`). `RUN_DB_MIGRATIONS`
-controls whether the application automatically creates tables on startup.
+not set, the API looks for `DATABASE_URL` instead and falls back to a local SQLite
+file (`test.db`). `RUN_DB_MIGRATIONS` controls whether the application automatically
+creates tables on startup. The migration script now also checks both variables, so
+either can be used when deploying to environments such as Amazon RDS.
 
 For local development you can initialize a PostgreSQL database by running:
 
