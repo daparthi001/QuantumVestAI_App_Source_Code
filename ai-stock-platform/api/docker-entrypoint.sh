@@ -11,6 +11,25 @@ echo "Environment: $API_ENV"
 echo "User: $(whoami)"
 echo "Python: $(python --version)"
 
+# Load environment-specific configuration if present
+ENV_FILE="/app/.env.${API_ENV}"
+if [ -f "$ENV_FILE" ]; then
+    echo "Loading environment variables from $ENV_FILE"
+    cp "$ENV_FILE" /app/.env
+    set -a
+    source /app/.env
+    set +a
+
+# If SECRET_KEY_FILE is specified, load secret key from that file
+if [ -n "$SECRET_KEY_FILE" ] && [ -f "$SECRET_KEY_FILE" ]; then
+    echo "Loading SECRET_KEY from $SECRET_KEY_FILE"
+    export SECRET_KEY="$(cat "$SECRET_KEY_FILE")"
+fi
+
+else
+    echo "No environment file found for $API_ENV"
+fi
+
 # Create required directories
 mkdir -p /app/api /app/logs
 

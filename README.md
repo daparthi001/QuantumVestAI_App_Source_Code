@@ -139,5 +139,17 @@ For local development you can initialize a PostgreSQL database by running:
 If the tables are missing at startup, the API will attempt to create them
 automatically.
 
+### Docker Environment Files
+Both the API and UI containers load environment variables from files matching
+their runtime environment. When the container starts it looks for a file named
+`.env.<environment>` inside the respective directory and applies those values.
+Set `API_ENV` for the API image or `ENV` for the UI image to select which file
+should be used (for example `API_ENV=production`).
+
+Sensitive values like `SECRET_KEY` should not be stored in these files for
+production deployments. Instead, create a Kubernetes `Secret` and mount it as an
+environment variable or file. Both the API and UI startup scripts will read a
+`SECRET_KEY_FILE` path if provided to load the key securely.
+
 
 \n

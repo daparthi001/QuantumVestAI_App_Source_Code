@@ -7,12 +7,27 @@ set -e
 
 echo "Starting QuantumVestAI UI application..."
 
+# Determine environment and load matching .env file
+ENV=${ENV:-production}
+ENV_FILE=".env.${ENV}"
+if [ -f "$ENV_FILE" ]; then
+    echo "Using environment file $ENV_FILE"
+    cp "$ENV_FILE" .env
+fi
+
 # Load environment variables if .env file exists
 if [ -f .env ]; then
     echo "Loading environment variables from .env file"
     set -a
     source .env
+
     set +a
+fi
+
+# Load SECRET_KEY from mounted file if provided
+if [ -n "$SECRET_KEY_FILE" ] && [ -f "$SECRET_KEY_FILE" ]; then
+    echo "Loading SECRET_KEY from $SECRET_KEY_FILE"
+    export SECRET_KEY="$(cat "$SECRET_KEY_FILE")"
 fi
 
 # Set default values with proper validation
