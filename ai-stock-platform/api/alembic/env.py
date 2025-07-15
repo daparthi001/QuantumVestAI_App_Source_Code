@@ -10,8 +10,13 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-# Add the parent directory to Python path
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+# Add the project root containing the ``core`` package to ``sys.path``.
+from pathlib import Path
+
+project_root = Path(__file__).resolve().parents[2]
+if not (project_root / "core").exists():
+    project_root = project_root.parent
+sys.path.append(str(project_root))
 
 from core.config import settings
 # Import the SQLAlchemy metadata
