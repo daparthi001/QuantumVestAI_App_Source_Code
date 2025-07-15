@@ -86,7 +86,7 @@ This is a complete, production-ready web UI for the QuantumVestAI platform featu
    ```
 
 4. **Access the Application**:
-   - Open your browser to: http://localhost:3000
+   - Open your browser to: http://ui-service
    - Use demo accounts to login (see Demo Accounts section below)
 
 ## 👤 Demo Accounts

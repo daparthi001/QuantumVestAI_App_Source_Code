@@ -16,7 +16,7 @@ The QuantumVestAI API provides comprehensive access to AI-powered stock market a
 
 - **Development**: `https://dev.quantumvestai.com`
 - **Production**: `https://api.quantumvestai.com`
-- **Local Development**: `http://localhost:5000`
+- **Internal Service**: `http://quantumvestai-dev-api:8000`
 
 ### Authentication
 
@@ -190,12 +190,12 @@ For additional support:
 
 ## Development
 
-### Local Testing
-To test the API locally:
+### Cluster Testing
+To test the API inside the Kubernetes cluster:
 
-1. Start the QuantumVestAI API server
-2. Use the local base URL: `http://localhost:5000`
-3. Access the interactive docs at: `http://localhost:5000/docs`
+1. Ensure the `quantumvestai-dev-api` service is running
+2. Use the service base URL: `http://quantumvestai-dev-api:8000`
+3. Access the interactive docs at: `http://quantumvestai-dev-api:8000/docs`
 
 ### Validation
 The OpenAPI specification has been validated for:
