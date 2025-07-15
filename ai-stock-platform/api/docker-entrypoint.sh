@@ -10,7 +10,7 @@ echo "Date: $(date -u)"
 echo "Environment: $API_ENV"
 echo "User: $(whoami)"
 echo "Python: $(python --version)"
-export DATABASE_URL = "postgresql://${DB_USER}:${DB_PASSWORD}@quantumvestai-dev.cwbsqsiywwaa.us-east-1.rds.amazonaws.com:5432/quantumvestai"
+export DB_URL = "postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:5432/quantumvestai"
 
 # Load environment-specific configuration if present
 ENV_FILE="/app/.env.${API_ENV}"
