@@ -8,7 +8,6 @@ import sys
 # Import the API configuration modules we rely on. Avoid importing optional
 # subpackages that would trigger database connections or other heavy side
 # effects during test collection.
-from api.core import config
 from api.core import database as api_database
 from api.core import exceptions as api_exceptions
 from api.core import logger
@@ -16,14 +15,23 @@ from api.core import models as api_models
 from api.core import responses as api_responses
 from api.core import security as api_security
 from api.core import validation as api_validation
-from api.core.config.settings import Settings, get_settings, settings
+
+# Load the settings module explicitly so that ``api.core.config`` is treated as
+# a package rather than the legacy ``config.py`` module. This avoids import
+# errors when ``core`` is imported before ``api`` initialises.
+settings_pkg = importlib.import_module("api.core.config.settings")
+Settings = settings_pkg.Settings
+get_settings = settings_pkg.get_settings
+settings = settings_pkg.settings
+
+config_pkg = importlib.import_module("api.core.config")
 
 # Lightweight HTTP client utilities are provided by the UI core package.
 from ui.core import http_client as ui_http_client
 
 from . import http_client
 
-sys.modules.setdefault(__name__ + ".config", config)
+sys.modules.setdefault(__name__ + ".config", config_pkg)
 sys.modules.setdefault(__name__ + ".logger", logger)
 sys.modules.setdefault(__name__ + ".exceptions", api_exceptions)
 sys.modules.setdefault(__name__ + ".responses", api_responses)
