@@ -21,9 +21,9 @@ class DatabaseMigrator:
         connection string. Finally a sensible local default is used.
         """
 
-        # default_url = "postgresql://postgres:postgres@localhost:5432/quantumvestai"
+        default_url = "postgresql://postgres:postgres@localhost:5432/quantumvestai"
 
-        # env_url = db_url or os.getenv("DATABASE_URL") or os.getenv("ASYNC_DATABASE_URL")
+        env_url = db_url or os.getenv("DATABASE_URL") or os.getenv("ASYNC_DATABASE_URL")
 
         if not env_url:
             db_user = os.getenv("DB_USER", "postgres")
@@ -31,7 +31,7 @@ class DatabaseMigrator:
             db_host = os.getenv("DB_HOST", "localhost")
             db_port = os.getenv("DB_PORT", "5432")
             db_name = os.getenv("DB_NAME", "quantumvestai")
-            env_url = f"postgresql://${db_user}:${db_password}@${db_host}:${db_port}/${db_name}"
+            env_url = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
         # async SQLAlchemy URLs may contain the ``+asyncpg`` driver indicator
         if env_url.startswith("postgresql+asyncpg://"):
