@@ -14,8 +14,16 @@ from sqlalchemy import engine_from_config, pool
 from pathlib import Path
 
 project_root = Path(__file__).resolve().parents[2]
+# Handle cases where only the ``api`` directory is packaged separately and the
+# project root one level up does not contain the ``core`` package. In Docker
+# containers ``env.py`` may live at ``/app/api/alembic`` where ``/app/api``
+# holds the actual source tree.
 if not (project_root / "core").exists():
-    project_root = project_root.parent
+    alt_root = Path(__file__).resolve().parents[1]
+    if (alt_root / "core").exists():
+        project_root = alt_root
+    else:
+        project_root = project_root.parent
 sys.path.append(str(project_root))
 
 from core.config import settings
