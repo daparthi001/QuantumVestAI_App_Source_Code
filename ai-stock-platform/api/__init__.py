@@ -35,6 +35,13 @@ for name in ("exceptions", "responses", "validation", "database", "security", "m
     except Exception:
         pass
 
+# Expose the ``db`` package as a top level module. Several modules import
+# ``db.session`` or ``db.models`` assuming ``db`` is available on ``sys.path``.
+# When the application is executed from outside of ``api`` this alias ensures
+# those imports resolve to ``api.db``.
+db_pkg = importlib.import_module('api.db')
+sys.modules.setdefault('db', db_pkg)
+
 # Remove local ``multipart`` stub if present so the real ``python-multipart``
 # package can be used by FastAPI/Starlette.
 sys.modules.pop('multipart', None)
