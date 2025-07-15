@@ -28,11 +28,11 @@ data:
     echo "User: daparthi001"
 
     # Database connection parameters with proper fallbacks
-    host="${DB_HOST:-${POSTGRES_HOST:-quantumvestai-dev.cwbsqsiywwaa.us-east-1.rds.amazonaws.com}}"
-    port="${DB_PORT:-${POSTGRES_PORT:-5432}}"
-    user="${DB_USER:-${POSTGRES_USER:-dbadmin}}"
-    password="${DB_PASSWORD:-${POSTGRES_PASSWORD}}"
-    db="${DB_NAME:-${POSTGRES_DB:-quantumvestaidb}}"
+    host="${DB_HOST:-quantumvestai-dev.cwbsqsiywwaa.us-east-1.rds.amazonaws.com}"
+    port="${DB_PORT:-5432}"
+    user="${DB_USER:-dbadmin}"
+    password="${DB_PASSWORD}"
+    db="${DB_NAME:-quantumvestaidb}"
 
     # Print connection details (without password)
     echo "Connection Details:"
@@ -45,7 +45,7 @@ data:
     # Check if password is set
     if [ -z "$password" ]; then
         echo "❌ Error: Database password not set"
-        echo "Please set DB_PASSWORD or POSTGRES_PASSWORD environment variable"
+        echo "Please set DB_PASSWORD environment variable"
         exit 1
     fi
 

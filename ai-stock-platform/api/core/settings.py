@@ -4,6 +4,7 @@ Created: 2025-05-20 19:13:15
 Author: daparthi001
 """
 from typing import List
+import os
 
 from pydantic import AnyHttpUrl, Field, field_validator
 
@@ -17,11 +18,21 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: List[str] = ["*"]
     
     # Database settings
-    POSTGRES_SERVER: str = "localhost"
-    POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = ""
-    POSTGRES_DB: str = "quantumvestai"
-    POSTGRES_PORT: str = "5432"
+    DB_HOST: str = Field(
+        default_factory=lambda: os.getenv("DB_HOST", os.getenv("POSTGRES_SERVER", "localhost"))
+    )
+    DB_USER: str = Field(
+        default_factory=lambda: os.getenv("DB_USER", os.getenv("POSTGRES_USER", "postgres"))
+    )
+    DB_PASSWORD: str = Field(
+        default_factory=lambda: os.getenv("DB_PASSWORD", os.getenv("POSTGRES_PASSWORD", ""))
+    )
+    DB_NAME: str = Field(
+        default_factory=lambda: os.getenv("DB_NAME", os.getenv("POSTGRES_DB", "quantumvestai"))
+    )
+    DB_PORT: str = Field(
+        default_factory=lambda: os.getenv("DB_PORT", os.getenv("POSTGRES_PORT", "5432"))
+    )
     
     # Database pool settings
     DB_POOL_SIZE: int = 5
@@ -33,8 +44,8 @@ class Settings(BaseSettings):
     def SQLALCHEMY_DATABASE_URI(self) -> str:
         """Generate database URI from components"""
         return (
-            f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
-            f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+            f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}"
+            f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         )
     
     model_config = SettingsConfigDict(

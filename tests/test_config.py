@@ -17,11 +17,11 @@ from api.core.config import Settings, validate_settings
 def test_settings_validation():
     """Test settings validation."""
     settings = Settings(
-        POSTGRES_SERVER="localhost",
-        POSTGRES_USER="test_user",
-        POSTGRES_PASSWORD="test_password",
-        POSTGRES_DB="test_db",
-        POSTGRES_PORT="5432",
+        DB_HOST="localhost",
+        DB_USER="test_user",
+        DB_PASSWORD="test_password",
+        DB_NAME="test_db",
+        DB_PORT="5432",
         JWT_SECRET="test_secret",
         ALPHA_VANTAGE_API_KEY="test_key",
         ADMIN_EMAIL="admin@test.com",

@@ -10,7 +10,7 @@ if ! pg_isready &>/dev/null; then
   exit 1
 fi
 
-# Map POSTGRES_* variables to DB_* if set
+# Support legacy POSTGRES_* variables for backward compatibility
 DB_HOST="${DB_HOST:-${POSTGRES_SERVER:-${POSTGRES_HOST:-localhost}}}"
 DB_PORT="${DB_PORT:-${POSTGRES_PORT:-5432}}"
 DB_USER="${DB_USER:-${POSTGRES_USER:-quantumvest}}"

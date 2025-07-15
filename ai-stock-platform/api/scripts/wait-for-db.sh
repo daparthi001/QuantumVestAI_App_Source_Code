@@ -11,7 +11,7 @@ log() {
 }
 
 # Set default values if not provided
-# Map K8s secret names to generic variables with sensible fallbacks
+# Support legacy POSTGRES_* variables for backward compatibility
 DB_HOST="${DB_HOST:-${POSTGRES_SERVER:-${POSTGRES_HOST:-localhost}}}"
 DB_PORT="${DB_PORT:-${POSTGRES_PORT:-5432}}"
 DB_NAME="${DB_NAME:-${POSTGRES_DB:-quantumvestaidb}}"

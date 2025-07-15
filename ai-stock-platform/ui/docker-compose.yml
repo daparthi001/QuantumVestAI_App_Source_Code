@@ -42,9 +42,9 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_DB=quantumvestai
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - DB_NAME=quantumvestai
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
