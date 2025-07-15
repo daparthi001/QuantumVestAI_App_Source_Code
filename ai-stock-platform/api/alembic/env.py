@@ -24,7 +24,9 @@ if not (project_root / "core").exists():
         project_root = alt_root
     else:
         project_root = project_root.parent
-sys.path.append(str(project_root))
+# Prepend the project root to ``sys.path`` so the top-level ``core`` package
+# is resolved before the local ``core`` directory inside the Alembic folder.
+sys.path.insert(0, str(project_root))
 
 from core.config import settings
 # Import the SQLAlchemy metadata
