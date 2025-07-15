@@ -12,7 +12,11 @@ echo "[$(date -u '+%Y-%m-%d %H:%M:%S')] Starting database initialization..."
 
 # Run migrations
 echo "Running database migrations..."
+# Temporarily remove PYTHONPATH so the real Alembic package is used
+PYTHONPATH_BACKUP="$PYTHONPATH"
+unset PYTHONPATH
 alembic upgrade head
+export PYTHONPATH="$PYTHONPATH_BACKUP"
 
 # Run seed script if specified
 if [ "${RUN_SEED:-false}" = "true" ]; then
