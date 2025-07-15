@@ -317,12 +317,7 @@ class AuthUtils:
                 }
 
         # Fallback to demo user if cookie format unexpected
-        return {
-            "username": "demo",
-            "email": "demo@quantumvestai.com",
-            "role": "user",
-            "is_authenticated": True,
-        }
+        return {"is_authenticated": False}
 
 # Enhanced route handlers
 @app.get("/", response_class=HTMLResponse)
@@ -334,80 +329,16 @@ async def index(request: Request):
         
         # Check if user is authenticated
         user = AuthUtils.get_user_info(request)
-        
+
+        # Redirect unauthenticated users to the login page
+        if not user.get("is_authenticated"):
+            return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
+
         # If authenticated, redirect to dashboard
-        if user.get("is_authenticated"):
-            return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
-        
-        # Demo portfolio data for index page
-        demo_portfolio = {
-            "total_value": 125750.45,
-            "daily_change": 1234.56,
-            "daily_change_pct": 0.99,
-            "total_gain": 8750.45,
-            "total_gain_percent": 7.48,
-            "status": "available",
-            "holdings": [
-                {"symbol": "AAPL", "shares": 50, "price": 198.45, "value": 9922.50, "change": 2.34},
-                {"symbol": "MSFT", "shares": 25, "price": 425.63, "value": 10640.75, "change": 1.87},
-                {"symbol": "GOOGL", "shares": 15, "price": 2847.92, "value": 42718.80, "change": -0.56},
-                {"symbol": "TSLA", "shares": 30, "price": 264.78, "value": 7943.40, "change": 3.21}
-            ]
-        }
-        
-        # Demo market data and news for index page
-        demo_market = {
-            "status": "open",
-            "indices": [
-                {"name": "S&P 500", "value": 4592.83, "change": 0.47},
-                {"name": "Dow Jones", "value": 35421.12, "change": -0.23},
-                {"name": "NASDAQ", "value": 14893.75, "change": 0.85}
-            ]
-        }
-        
-        # Demo news with proper dates for humanize_date filter
-        demo_news = [
-            {
-                "title": "Tech Stocks Rally as AI Optimism Grows",
-                "summary": "Major technology companies see significant gains as artificial intelligence adoption accelerates.",
-                "source": "MarketWatch",
-                "published": datetime.utcnow() - timedelta(hours=2),
-                "url": "#"
-            },
-            {
-                "title": "Federal Reserve Maintains Interest Rates",
-                "summary": "The Fed keeps rates steady as inflation shows signs of cooling.",
-                "source": "Reuters", 
-                "published": datetime.utcnow() - timedelta(hours=6),
-                "url": "#"
-            },
-            {
-                "title": "EV Market Shows Strong Q2 Performance", 
-                "summary": "Electric vehicle sales surge 45% year-over-year.",
-                "source": "Bloomberg",
-                "published": datetime.utcnow() - timedelta(days=1),
-                "url": "#"
-            }
-        ]
-        
-        return get_templates(request).TemplateResponse(
-            "index.html", 
-            {
-                "request": request,
-                "user": user,
-                "api_url": API_URL,
-                "request_id": request_id,
-                "demo_mode": False,
-                "portfolio": demo_portfolio,
-                "data": {
-                    "user": user,
-                    "portfolio": demo_portfolio,
-                    "market": demo_market,
-                    "news": demo_news,
-                    "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
-                }
-            }
-        )
+        return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
+        # This route previously rendered a demo dashboard. It now simply
+        # redirects authenticated users to the main dashboard and unauthenticated
+        # users to the login page.
     except Exception as e:
         logger.error(f"Error rendering index page: {str(e)}")
         return HTMLResponse(
