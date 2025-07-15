@@ -6,7 +6,11 @@ Author: daparthi001
 from logging.config import fileConfig
 
 from alembic import context
-from core.config import settings
+# Import settings directly from the API package to avoid the
+# ``core.config`` module shadowing the package when installed
+# without the full repository. This ensures the Alembic environment
+# can always access the correct configuration.
+from api.core.config.settings import settings
 from db.base import Base
 from sqlalchemy import engine_from_config, pool
 
