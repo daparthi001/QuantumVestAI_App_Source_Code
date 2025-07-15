@@ -12,7 +12,10 @@ import aiohttp
 # Import settings explicitly from the configuration module to avoid
 # accidentally importing the module itself when the `core.config`
 # package is present in the Python path.
-from core.config.settings import settings
+# Import settings directly from the API package.  Importing via the
+# ``core`` compatibility package may resolve to the ``core.config.settings``
+# module instead of the ``settings`` instance which causes attribute errors.
+from api.core.config.settings import settings
 from sqlalchemy.orm import Session
 
 from models.stock import Stock, WatchList

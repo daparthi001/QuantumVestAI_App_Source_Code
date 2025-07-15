@@ -9,7 +9,10 @@ from typing import Any, Dict, Optional, Union
 from urllib.parse import urljoin
 
 import requests
-from core.config.settings import settings
+# Import settings directly from the API package instead of the ``core``
+# compatibility layer to ensure we get the Settings instance rather than
+# the module object when both packages are on ``PYTHONPATH``.
+from api.core.config.settings import settings
 from requests.exceptions import ConnectionError, RequestException, Timeout
 
 

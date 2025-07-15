@@ -15,7 +15,10 @@ pytest.importorskip("requests")
 import json
 
 import requests
-from core.config.settings import settings
+# Import settings from the API package to ensure we obtain the actual
+# Settings instance rather than the module when both UI and API paths
+# are on ``sys.path`` during tests.
+from api.core.config.settings import settings
 
 from ui.services.api_client import APIClient
 

@@ -15,7 +15,11 @@ from typing import Any, Dict, List, Optional
 
 # Explicitly import the settings instance to avoid ambiguity with the
 # `core.config` package which also contains a `settings` submodule.
-from core.config.settings import settings
+# Import settings directly from the API package to avoid the compatibility
+# module in ``core`` which exposes a submodule with the same name.  Importing
+# via ``core.config.settings`` can result in the module object being returned
+# instead of the ``settings`` instance, leading to missing attribute errors.
+from api.core.config.settings import settings
 
 # Try to import aiohttp, fallback to None if not available
 try:
