@@ -3,9 +3,16 @@ set -e
 
 echo "Starting database initialization..."
 
+# Map K8s secret names to generic variables with sensible fallbacks
+DB_HOST="${DB_HOST:-${POSTGRES_SERVER:-${POSTGRES_HOST:-localhost}}}"
+DB_PORT="${DB_PORT:-${POSTGRES_PORT:-5432}}"
+DB_NAME="${DB_NAME:-${POSTGRES_DB:-quantumvestaidb}}"
+DB_USER="${DB_USER:-${POSTGRES_USER:-dbadmin}}"
+DB_PASSWORD="${DB_PASSWORD:-${POSTGRES_PASSWORD}}"
+
 # Wait for database to be ready
 echo "Waiting for database to be ready..."
-until PGPASSWORD=$POSTGRES_PASSWORD psql -h "$POSTGRES_SERVER" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT 1" > /dev/null 2>&1; do
+until PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -c "SELECT 1" > /dev/null 2>&1; do
   echo "Database is unavailable - sleeping"
   sleep 2
 done
@@ -21,7 +28,7 @@ alembic upgrade head
 
 # Step 2: Apply reference data
 echo "Initializing reference data..."
-PGPASSWORD=$POSTGRES_PASSWORD psql -h "$POSTGRES_SERVER" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /db-init/02_reference_data.sql
+PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -f /db-init/02_reference_data.sql
 
 # Step 3: Create admin user if requested
 if [ -n "$ADMIN_USERNAME" ] && [ -n "$ADMIN_PASSWORD" ]; then

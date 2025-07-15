@@ -11,10 +11,12 @@ log() {
 }
 
 # Set default values if not provided
-: "${POSTGRES_HOST:=localhost}"
-: "${POSTGRES_PORT:=5432}"
-: "${POSTGRES_DB:=quantumvestaidb}"
-: "${POSTGRES_USER:=dbadmin}"
+# Map K8s secret names to generic variables with sensible fallbacks
+DB_HOST="${DB_HOST:-${POSTGRES_SERVER:-${POSTGRES_HOST:-localhost}}}"
+DB_PORT="${DB_PORT:-${POSTGRES_PORT:-5432}}"
+DB_NAME="${DB_NAME:-${POSTGRES_DB:-quantumvestaidb}}"
+DB_USER="${DB_USER:-${POSTGRES_USER:-dbadmin}}"
+DB_PASSWORD="${DB_PASSWORD:-${POSTGRES_PASSWORD}}"
 # Password should be set via secret
 
 # Maximum number of attempts
@@ -22,21 +24,21 @@ MAX_ATTEMPTS=30
 # Delay between attempts in seconds
 DELAY=10
 
-log "Waiting for RDS PostgreSQL to be available at ${POSTGRES_HOST}:${POSTGRES_PORT}..."
+log "Waiting for RDS PostgreSQL to be available at ${DB_HOST}:${DB_PORT}..."
 
 # Loop to check database availability
 for i in $(seq 1 $MAX_ATTEMPTS); do
   log "Attempt $i of $MAX_ATTEMPTS"
   
   # Use PGPASSWORD environment variable for authentication
-  export PGPASSWORD=$POSTGRES_PASSWORD
+  export PGPASSWORD="$DB_PASSWORD"
   
   # Try connecting to the database using TCP/IP (-h flag)
-  if pg_isready -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t 5; then
+  if pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -t 5; then
     log "Database is available!"
     
     # Try a simple query to verify credentials and database access
-    if psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT 1" >/dev/null 2>&1; then
+    if psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "SELECT 1" >/dev/null 2>&1; then
       log "Database connection successful!"
       exit 0
     else

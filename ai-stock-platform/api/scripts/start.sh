@@ -5,9 +5,13 @@
 
 set -e
 
+# Map K8s secret names to generic variables with sensible fallbacks
+DB_HOST="${DB_HOST:-${POSTGRES_SERVER:-${POSTGRES_HOST:-localhost}}}"
+DB_PORT="${DB_PORT:-${POSTGRES_PORT:-5432}}"
+
 # Wait for database
 echo "Waiting for database..."
-timeout 30 bash -c "until curl -s http://${POSTGRES_SERVER}:${POSTGRES_PORT}; do sleep 1; done"
+timeout 30 bash -c "until curl -s http://${DB_HOST}:${DB_PORT}; do sleep 1; done"
 
 # Run migrations if needed
 if [ "${AUTO_MIGRATE}" = "true" ]; then
