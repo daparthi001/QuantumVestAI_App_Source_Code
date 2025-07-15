@@ -49,7 +49,7 @@ def describe_rds_instance():
     """
     try:
         # Extract the instance identifier from the host name
-        db_instance_identifier = settings.POSTGRES_SERVER.split('.')[0]
+        db_instance_identifier = settings.DB_HOST.split('.')[0]
         
         # Create RDS client
         rds_client = boto3.client('rds', region_name=settings.AWS_REGION)

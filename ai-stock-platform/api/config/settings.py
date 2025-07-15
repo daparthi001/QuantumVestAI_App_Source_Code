@@ -5,6 +5,7 @@ Author: daparthi001
 """
 from functools import cached_property
 from typing import List, Union
+import os
 
 from pydantic import AnyHttpUrl, Field, field_validator
 
@@ -30,11 +31,21 @@ class Settings(BaseSettings):
     LOG_DATE_FORMAT: str = Field(default="%Y-%m-%d %H:%M:%S")
     
     # Database Settings
-    POSTGRES_SERVER: str = Field(default="localhost")
-    POSTGRES_USER: str = Field(default="postgres")
-    POSTGRES_PASSWORD: str = Field(default="")
-    POSTGRES_DB: str = Field(default="quantumvestai")
-    POSTGRES_PORT: str = Field(default="5432")
+    DB_HOST: str = Field(
+        default_factory=lambda: os.getenv("DB_HOST", os.getenv("POSTGRES_SERVER", "localhost"))
+    )
+    DB_USER: str = Field(
+        default_factory=lambda: os.getenv("DB_USER", os.getenv("POSTGRES_USER", "postgres"))
+    )
+    DB_PASSWORD: str = Field(
+        default_factory=lambda: os.getenv("DB_PASSWORD", os.getenv("POSTGRES_PASSWORD", ""))
+    )
+    DB_NAME: str = Field(
+        default_factory=lambda: os.getenv("DB_NAME", os.getenv("POSTGRES_DB", "quantumvestai"))
+    )
+    DB_PORT: str = Field(
+        default_factory=lambda: os.getenv("DB_PORT", os.getenv("POSTGRES_PORT", "5432"))
+    )
     
     # Database Pool Settings
     DB_POOL_SIZE: int = Field(default=5, ge=1)
@@ -56,8 +67,8 @@ class Settings(BaseSettings):
             str: PostgreSQL connection URI
         """
         return (
-            f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
-            f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+            f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}"
+            f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         )
     
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")

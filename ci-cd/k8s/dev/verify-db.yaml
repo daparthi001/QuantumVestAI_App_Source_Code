@@ -25,31 +25,31 @@ spec:
         - -c
         - |
           echo "Verifying RDS credentials..."
-          export PGPASSWORD=$POSTGRES_PASSWORD
-          psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER -d $POSTGRES_DB -c '\l' && \
+          export PGPASSWORD=$DB_PASSWORD
+          psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -c '\l' && \
           echo "Successfully connected to database!"
         env:
-          - name: POSTGRES_HOST
+          - name: DB_HOST
             valueFrom:
               secretKeyRef:
                 name: quantumvestai-cluster-rds-credentials
                 key: POSTGRES_HOST
-          - name: POSTGRES_PORT
+          - name: DB_PORT
             valueFrom:
               secretKeyRef:
                 name: quantumvestai-cluster-rds-credentials
                 key: POSTGRES_PORT
-          - name: POSTGRES_USER
+          - name: DB_USER
             valueFrom:
               secretKeyRef:
                 name: quantumvestai-cluster-rds-credentials
                 key: POSTGRES_USER
-          - name: POSTGRES_PASSWORD
+          - name: DB_PASSWORD
             valueFrom:
               secretKeyRef:
                 name: quantumvestai-cluster-rds-credentials
                 key: POSTGRES_PASSWORD
-          - name: POSTGRES_DB
+          - name: DB_NAME
             valueFrom:
               secretKeyRef:
                 name: quantumvestai-cluster-rds-credentials

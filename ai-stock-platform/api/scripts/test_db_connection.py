@@ -42,7 +42,7 @@ def test_database_connection():
         return False
 
 if __name__ == "__main__":
-    host = os.getenv("DB_HOST", settings.POSTGRES_SERVER)
+    host = os.getenv("DB_HOST", settings.DB_HOST)
     logger.info(f"Testing connection to: {host}")
     test_database_connection()
 

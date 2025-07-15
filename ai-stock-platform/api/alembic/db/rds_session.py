@@ -19,14 +19,14 @@ def get_connection_url():
             # Generate an authentication token for RDS
             rds_client = boto3.client('rds', region_name=settings.AWS_REGION)
             auth_token = rds_client.generate_db_auth_token(
-                DBHostname=settings.POSTGRES_SERVER,
-                Port=settings.POSTGRES_PORT,
-                DBUsername=settings.POSTGRES_USER,
+                DBHostname=settings.DB_HOST,
+                Port=settings.DB_PORT,
+                DBUsername=settings.DB_USER,
                 Region=settings.AWS_REGION
             )
             
             # Build connection string with token
-            connection_url = f"postgresql://{settings.POSTGRES_USER}:{auth_token}@{settings.POSTGRES_SERVER}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
+            connection_url = f"postgresql://{settings.DB_USER}:{auth_token}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
             return connection_url
             
         except Exception as e:
