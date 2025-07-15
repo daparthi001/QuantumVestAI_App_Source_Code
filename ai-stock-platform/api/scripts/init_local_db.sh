@@ -10,17 +10,24 @@ if ! pg_isready &>/dev/null; then
   exit 1
 fi
 
+# Map POSTGRES_* variables to DB_* if set
+DB_HOST="${DB_HOST:-${POSTGRES_SERVER:-${POSTGRES_HOST:-localhost}}}"
+DB_PORT="${DB_PORT:-${POSTGRES_PORT:-5432}}"
+DB_USER="${DB_USER:-${POSTGRES_USER:-quantumvest}}"
+DB_PASSWORD="${DB_PASSWORD:-${POSTGRES_PASSWORD:-localdev}}"
+DB_NAME="${DB_NAME:-${POSTGRES_DB:-quantumvestai}}"
+
 # Load environment variables
 if [ -f .env ]; then
   echo "Loading environment variables from .env file..."
   export $(grep -v '^#' .env | xargs)
 else
   echo "No .env file found, using default values..."
-  export POSTGRES_SERVER=localhost
-  export POSTGRES_PORT=5432
-  export POSTGRES_USER=quantumvest
-  export POSTGRES_PASSWORD=localdev
-  export POSTGRES_DB=quantumvestai
+  export DB_HOST=localhost
+  export DB_PORT=5432
+  export DB_USER=quantumvest
+  export DB_PASSWORD=localdev
+  export DB_NAME=quantumvestai
   export ADMIN_USERNAME=admin
   export ADMIN_EMAIL=admin@example.com
   export ADMIN_PASSWORD=admin123
@@ -37,7 +44,7 @@ alembic upgrade head
 
 # Initialize reference data
 echo "Initializing reference data..."
-psql "postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_SERVER:$POSTGRES_PORT/$POSTGRES_DB" -f db_init/02_reference_data.sql
+psql "postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME" -f db_init/02_reference_data.sql
 
 # Create admin user
 echo "Creating admin user..."

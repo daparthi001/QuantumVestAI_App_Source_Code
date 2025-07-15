@@ -4,11 +4,14 @@
 # Author: daparthi001
 
 # Configuration
-NAMESPACE="dev"
-RDS_HOST="quantumvestai-dev.cwbsqsiywwaa.us-east-1.rds.amazonaws.com"
-RDS_PORT="5432"
-DB_USER="dbadmin"
-DB_NAME="quantumvestaidb"
+# Namespace to pull secret from
+NAMESPACE="${NAMESPACE:-dev}"
+
+# Map environment variables for database connection
+DB_HOST="${DB_HOST:-${RDS_HOST:-quantumvestai-dev.cwbsqsiywwaa.us-east-1.rds.amazonaws.com}}"
+DB_PORT="${DB_PORT:-${RDS_PORT:-5432}}"
+DB_USER="${DB_USER:-dbadmin}"
+DB_NAME="${DB_NAME:-quantumvestaidb}"
 
 # Get the password from the secret
 DB_PASSWORD=$(kubectl get secret -n $NAMESPACE quantumvestai-cluster-rds-credentials -o jsonpath='{.data.password}' | base64 -d)
@@ -19,7 +22,7 @@ echo "Timestamp: $(date -u '+%Y-%m-%d %H:%M:%S')"
 echo "User: daparthi001"
 
 connection_info=$(PGPASSWORD="$DB_PASSWORD" psql \
-  "postgresql://$DB_USER@$RDS_HOST:$RDS_PORT/$DB_NAME?sslmode=require" \
+  "postgresql://$DB_USER@$DB_HOST:$DB_PORT/$DB_NAME?sslmode=require" \
   -c '\conninfo' 2>&1)
 
 if [ $? -eq 0 ]; then
