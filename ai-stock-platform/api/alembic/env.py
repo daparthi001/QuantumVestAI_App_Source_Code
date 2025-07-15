@@ -28,7 +28,12 @@ if not (project_root / "core").exists():
 # is resolved before the local ``core`` directory inside the Alembic folder.
 sys.path.insert(0, str(project_root))
 
-from core.config import settings
+# Import settings directly from the API package to avoid
+# the ``core.config`` module shadowing the package when the
+# project is installed. Using the explicit path ensures the
+# ``settings`` instance is imported reliably across different
+# deployment scenarios.
+from api.core.config.settings import settings
 # Import the SQLAlchemy metadata
 from db.base import Base
 
