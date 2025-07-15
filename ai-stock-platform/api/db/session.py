@@ -30,14 +30,16 @@ logger = logging.getLogger(__name__)
 
 # Defensive import strategy
 try:
-    # Try the correct import path first
-    from core.config.settings import settings
-    logger.info("Successfully imported settings from core.config.settings")
+    # Try the API package first to avoid the ``core`` compatibility
+    # module which can return the settings module instead of the
+    # ``settings`` instance when imported from "core.config.settings".
+    from api.core.config.settings import settings
+    logger.info("Successfully imported settings from api.core.config.settings")
 except ImportError:
     try:
         # Try alternate import path
-        from core.config import settings
-        logger.info("Successfully imported settings from core.config")
+        from core.config.settings import settings
+        logger.info("Successfully imported settings from core.config.settings")
     except ImportError:
         # Create fallback settings if all imports fail
         logger.error("Failed to import settings, using environment variables directly")

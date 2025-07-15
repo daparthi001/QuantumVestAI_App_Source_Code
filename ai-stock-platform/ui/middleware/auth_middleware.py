@@ -18,7 +18,10 @@ from jose import JWTError, jwt
 logger = logging.getLogger(__name__)
 
 try:
-    from core.config.settings import settings
+    # Import from the API package to ensure we get the actual Settings
+    # instance.  Using the ``core`` compatibility layer can return the
+    # module object when both packages are present on ``PYTHONPATH``.
+    from api.core.config.settings import settings
 except Exception:  # pragma: no cover - fallback for demo mode
     class Settings:
         SECRET_KEY = "supersecretkey123456789abcdef"
