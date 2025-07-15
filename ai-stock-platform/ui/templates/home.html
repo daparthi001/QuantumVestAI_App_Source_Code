@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 
+{% block head_extra %}
+<style>
+    .hero-image { max-width: 100%; height: auto; }
+</style>
+{% endblock %}
+
 {% block title %}QuantumVestAI - Stock Market Forecasting and Analytics{% endblock %}
 
 {% block content %}
@@ -14,7 +20,8 @@
             </div>
         </div>
         <div class="col-lg-6">
-            <div class="hero-chart">
+            <div class="hero-chart text-center">
+                <img src="{{ get_asset_url('img/hero-investment.svg') }}" alt="Confident investing" class="hero-image mb-3">
                 <canvas id="heroChart"></canvas>
             </div>
         </div>

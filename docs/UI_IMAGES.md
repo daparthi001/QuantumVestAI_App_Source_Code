@@ -26,3 +26,9 @@ web using publicly available image services.
 
 ![Stock Placeholder](https://via.placeholder.com/300x200.png?text=Stock)
 ![News Placeholder](https://via.placeholder.com/300x200.png?text=News)
+
+## Hero Illustration
+
+The home page features a simple vector image representing market growth. This SVG is stored in the repository to avoid large binary assets.
+
+![Hero Illustration](../ai-stock-platform/ui/static/img/hero-investment.svg)
