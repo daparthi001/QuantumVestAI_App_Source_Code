@@ -36,19 +36,8 @@ async def dashboard_page(request: Request):
     try:
         logger.info("Loading dashboard page in demo mode")
         
-        # Get user info from request (demo mode)
-        user = {
-            "username": "demo",
-            "email": "demo@quantumvestai.com", 
-            "is_authenticated": True,
-            "account_type": "Premium Demo",
-            "features_enabled": {
-                "advanced_analytics": True,
-                "real_time_data": True,
-                "portfolio_management": True,
-                "ai_predictions": True
-            }
-        }
+        # Do not assume a logged-in demo user
+        user = None
         
         # Demo watchlist removed
         watchlist_items = []
