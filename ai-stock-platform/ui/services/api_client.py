@@ -6,6 +6,7 @@ Author: daparthi001
 import json
 import logging
 from typing import Any, Dict, Optional, Union
+from urllib.parse import urljoin
 
 import requests
 from core.config.settings import settings
@@ -53,11 +54,10 @@ class APIClient:
         return f"/api/v1/{endpoint}"
     
     def build_url(self, endpoint: str) -> str:
-        """Build full URL for an endpoint"""
-        # Ensure endpoint starts with /
-        if not endpoint.startswith("/"):
-            endpoint = f"/{endpoint}"
-        return f"{self.base_url}{endpoint}"
+        """Build full URL for an endpoint, handling base paths gracefully."""
+        normalized = self._normalize_endpoint(endpoint)
+        base = self.base_url.rstrip("/")
+        return urljoin(base, normalized)
         
     def _handle_response(self, response: requests.Response) -> Dict[str, Any]:
         """Handle API response and errors"""
@@ -87,7 +87,7 @@ class APIClient:
     def get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Make a GET request to the API"""
         normalized_endpoint = self._normalize_endpoint(endpoint)
-        url = f"{self.base_url}{normalized_endpoint}"
+        url = self.build_url(endpoint)
         
         self.logger.debug(f"Making GET request to {url}")
         try:
@@ -106,8 +106,8 @@ class APIClient:
     def post(self, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Make a POST request to the API"""
         normalized_endpoint = self._normalize_endpoint(endpoint)
-        url = f"{self.base_url}{normalized_endpoint}"
-        
+        url = self.build_url(endpoint)
+
         self.logger.debug(f"Making POST request to {url}")
         try:
             response = requests.post(
@@ -130,7 +130,7 @@ class APIClient:
     def post_form(self, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Make a POST request with form-encoded data."""
         normalized_endpoint = self._normalize_endpoint(endpoint)
-        url = f"{self.base_url}{normalized_endpoint}"
+        url = self.build_url(endpoint)
 
         headers = self._get_headers()
         headers["Content-Type"] = "application/x-www-form-urlencoded"
@@ -157,7 +157,7 @@ class APIClient:
     def put(self, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Make a PUT request to the API"""
         normalized_endpoint = self._normalize_endpoint(endpoint)
-        url = f"{self.base_url}{normalized_endpoint}"
+        url = self.build_url(endpoint)
         
         self.logger.debug(f"Making PUT request to {url}")
         try:
@@ -176,7 +176,7 @@ class APIClient:
     def delete(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Make a DELETE request to the API"""
         normalized_endpoint = self._normalize_endpoint(endpoint)
-        url = f"{self.base_url}{normalized_endpoint}"
+        url = self.build_url(endpoint)
         
         self.logger.debug(f"Making DELETE request to {url}")
         try:

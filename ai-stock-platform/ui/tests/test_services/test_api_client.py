@@ -46,7 +46,7 @@ def test_api_client_get(mock_get):
     
     # Check request was made correctly
     mock_get.assert_called_once_with(
-        f"{settings.API_BASE_URL}/test-endpoint",
+        f"{settings.API_BASE_URL.rstrip('/')}/api/v1/test-endpoint",
         headers=client.headers,
         params=None,
         timeout=10
@@ -69,7 +69,7 @@ def test_api_client_get_with_params(mock_get):
     
     # Check params were passed correctly
     mock_get.assert_called_once_with(
-        f"{settings.API_BASE_URL}/test-endpoint",
+        f"{settings.API_BASE_URL.rstrip('/')}/api/v1/test-endpoint",
         headers=client.headers,
         params={"key": "value"},
         timeout=10
@@ -117,7 +117,7 @@ def test_api_client_post(mock_post):
     
     # Check request was made correctly
     mock_post.assert_called_once_with(
-        f"{settings.API_BASE_URL}/test-endpoint",
+        f"{settings.API_BASE_URL.rstrip('/')}/api/v1/test-endpoint",
         headers=client.headers,
         data=json.dumps(data),
         timeout=10
@@ -141,7 +141,7 @@ def test_api_client_put(mock_put):
     
     # Check request was made correctly
     mock_put.assert_called_once_with(
-        f"{settings.API_BASE_URL}/test-endpoint/123",
+        f"{settings.API_BASE_URL.rstrip('/')}/api/v1/test-endpoint/123",
         headers=client.headers,
         data=json.dumps(data),
         timeout=10
@@ -163,7 +163,7 @@ def test_api_client_delete(mock_delete):
     
     # Check request was made correctly
     mock_delete.assert_called_once_with(
-        f"{settings.API_BASE_URL}/test-endpoint/123",
+        f"{settings.API_BASE_URL.rstrip('/')}/api/v1/test-endpoint/123",
         headers=client.headers,
         timeout=10
     )
@@ -177,15 +177,15 @@ def test_api_client_build_url():
     
     # Test with leading slash
     url = client.build_url("/endpoint")
-    assert url == f"{settings.API_BASE_URL}/endpoint"
+    assert url == f"{settings.API_BASE_URL.rstrip('/')}/api/v1/endpoint"
     
     # Test without leading slash
     url = client.build_url("endpoint")
-    assert url == f"{settings.API_BASE_URL}/endpoint"
+    assert url == f"{settings.API_BASE_URL.rstrip('/')}/api/v1/endpoint"
     
     # Test with query parameters already in path
     url = client.build_url("/endpoint?param=value")
-    assert url == f"{settings.API_BASE_URL}/endpoint?param=value"
+    assert url == f"{settings.API_BASE_URL.rstrip('/')}/api/v1/endpoint?param=value"
 
 @patch("requests.post")
 def test_api_client_authenticate(mock_post):
@@ -204,10 +204,10 @@ def test_api_client_authenticate(mock_post):
     
     # Check auth request was made correctly
     mock_post.assert_called_once_with(
-        f"{settings.API_BASE_URL}/auth/login",
+        f"{settings.API_BASE_URL.rstrip('/')}/api/v1/auth/login",
         headers=client.headers,
         data=json.dumps({
-            "username": "testuser", 
+            "username": "testuser",
             "password": "password"
         }),
         timeout=10
