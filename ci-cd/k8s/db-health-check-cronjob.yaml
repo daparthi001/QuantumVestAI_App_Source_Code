@@ -24,31 +24,31 @@ spec:
               python -c "from api.core.db_init import verify_database_connection; exit(0 if verify_database_connection() else 1)"
             env:
             # Database credentials from Terraform-created secret
-            - name: POSTGRES_USER
-              valueFrom:
-                secretKeyRef:
-                  name: quantumvestai-cluster-rds-credentials
-                  key: username
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: quantumvestai-cluster-rds-credentials
-                  key: password
-            - name: POSTGRES_SERVER
-              valueFrom:
-                secretKeyRef:
-                  name: quantumvestai-cluster-rds-credentials
-                  key: host
-            - name: POSTGRES_PORT
-              valueFrom:
-                secretKeyRef:
-                  name: quantumvestai-cluster-rds-credentials
-                  key: port
-            - name: POSTGRES_DB
-              valueFrom:
-                secretKeyRef:
-                  name: quantumvestai-cluster-rds-credentials
-                  key: dbname
+          - name: DB_HOST
+            valueFrom:
+              secretKeyRef:
+                name: quantumvestai-cluster-rds-credentials
+                key: host
+          - name: DB_PORT
+            valueFrom:
+              secretKeyRef:
+                name: quantumvestai-cluster-rds-credentials
+                key: port
+          - name: DB_NAME
+            valueFrom:
+              secretKeyRef:
+                name: quantumvestai-cluster-rds-credentials
+                key: database
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: quantumvestai-cluster-rds-credentials
+                key: username
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: quantumvestai-cluster-rds-credentials
+                key: password
             envFrom:
             - configMapRef:
                 name: api-configmap

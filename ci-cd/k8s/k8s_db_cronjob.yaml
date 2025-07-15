@@ -60,26 +60,31 @@ spec:
                 memory: "512Mi"
                 cpu: "500m"
             env:
-            - name: DB_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: quantumvestai-cluster-rds-credentials
-                  key: endpoint  # Changed from host to endpoint
-            - name: DB_USER
-              valueFrom:
-                secretKeyRef:
-                  name: quantumvestai-cluster-rds-credentials
-                  key: username
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: quantumvestai-cluster-rds-credentials
-                  key: password
-            - name: DB_NAME
-              valueFrom:
-                secretKeyRef:
-                  name: quantumvestai-cluster-rds-credentials
-                  key: database  # Changed from dbname to database
+          - name: DB_HOST
+            valueFrom:
+              secretKeyRef:
+                name: quantumvestai-cluster-rds-credentials
+                key: host
+          - name: DB_PORT
+            valueFrom:
+              secretKeyRef:
+                name: quantumvestai-cluster-rds-credentials
+                key: port
+          - name: DB_NAME
+            valueFrom:
+              secretKeyRef:
+                name: quantumvestai-cluster-rds-credentials
+                key: database
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: quantumvestai-cluster-rds-credentials
+                key: username
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: quantumvestai-cluster-rds-credentials
+                key: password
             - name: AWS_REGION
               value: "us-east-1"
             volumeMounts:

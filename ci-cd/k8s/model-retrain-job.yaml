@@ -37,31 +37,31 @@ spec:
                 memory: "8Gi"
             env:
               # Database credentials from Terraform-created secret
-              - name: POSTGRES_USER
-                valueFrom:
-                  secretKeyRef:
-                    name: quantumvestai-cluster-rds-credentials
-                    key: username
-              - name: POSTGRES_PASSWORD
-                valueFrom:
-                  secretKeyRef:
-                    name: quantumvestai-cluster-rds-credentials
-                    key: password
-              - name: POSTGRES_SERVER
+              - name: DB_HOST
                 valueFrom:
                   secretKeyRef:
                     name: quantumvestai-cluster-rds-credentials
                     key: host
-              - name: POSTGRES_PORT
+              - name: DB_PORT
                 valueFrom:
                   secretKeyRef:
                     name: quantumvestai-cluster-rds-credentials
                     key: port
-              - name: POSTGRES_DB
+              - name: DB_NAME
                 valueFrom:
                   secretKeyRef:
                     name: quantumvestai-cluster-rds-credentials
-                    key: dbname
+                    key: database
+              - name: DB_USER
+                valueFrom:
+                  secretKeyRef:
+                    name: quantumvestai-cluster-rds-credentials
+                    key: username
+              - name: DB_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: quantumvestai-cluster-rds-credentials
+                    key: password
               # Environment variables
               - name: ENVIRONMENT
                 valueFrom:
