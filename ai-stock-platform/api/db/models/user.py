@@ -51,7 +51,51 @@ class User(Base, TimestampMixin):
 
     hashed_password = Column(_pwd_column_name, String, nullable=False)
     password_hash = synonym("hashed_password")
-    full_name = Column(String)
+
+    # Support both legacy ``first_name``/``last_name`` columns and new
+    # consolidated ``full_name`` column.  Introspect the database to
+    # determine which fields are available.  When only ``first_name`` and
+    # ``last_name`` exist, expose a synthetic ``full_name`` property that
+    # reads/writes those columns transparently.
+    _full_name_column = "full_name"
+    _using_split_name = False
+    try:
+        from core.config import get_settings
+        from sqlalchemy import create_engine, inspect
+
+        settings = get_settings()
+        engine = create_engine(settings.SQLALCHEMY_DATABASE_URI)
+        insp = inspect(engine)
+        cols = [c["name"] for c in insp.get_columns("users")]
+        engine.dispose()
+        if "full_name" not in cols and "first_name" in cols and "last_name" in cols:
+            _using_split_name = True
+    except Exception:
+        # If inspection fails (e.g., during tests with no DB) assume ``full_name``
+        # exists to avoid creating additional columns that may conflict.
+        pass
+
+    if _using_split_name:
+        first_name = Column(String)
+        last_name = Column(String)
+
+        @property
+        def full_name(self) -> Optional[str]:
+            if self.first_name and self.last_name:
+                return f"{self.first_name} {self.last_name}"
+            return self.first_name or self.last_name
+
+        @full_name.setter
+        def full_name(self, value: Optional[str]) -> None:  # type: ignore[misc]
+            if value is None:
+                self.first_name = None
+                self.last_name = None
+            else:
+                parts = value.split(" ", 1)
+                self.first_name = parts[0]
+                self.last_name = parts[1] if len(parts) > 1 else None
+    else:
+        full_name = Column(_full_name_column, String)
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
     role = Column(String, default="free", nullable=False)
