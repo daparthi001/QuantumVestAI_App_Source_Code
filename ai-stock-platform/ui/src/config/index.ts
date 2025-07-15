@@ -9,7 +9,7 @@ export * from './constants';
 // Export a default configuration object
 export default {
     api: {
-        baseUrl: process.env.REACT_APP_API_URL || 'http://localhost:8000',
+        baseUrl: process.env.REACT_APP_API_URL || 'http://quantumvestai-dev-api:8000',
         timeout: 30000
     },
     cache: {

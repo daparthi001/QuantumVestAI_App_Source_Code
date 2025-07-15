@@ -15,7 +15,7 @@ class WebSocketService {
   private readonly baseUrl: string;
 
   constructor() {
-    this.baseUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:8000/ws';
+    this.baseUrl = process.env.REACT_APP_WS_URL || 'ws://quantumvestai-dev-api:8000/ws';
     const token = localStorage.getItem('qvai_token') || '';
     if (token) {
       this.connect(token);

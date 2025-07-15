@@ -47,5 +47,5 @@ def verify_system_metrics(metrics: Dict[str, Any]) -> None:
         print(f"Warning: High disk usage ({disk_usage}%)")
 
 if __name__ == "__main__":
-    base_url = os.getenv("API_URL", "http://localhost:8000")
+    base_url = os.getenv("API_URL", "http://quantumvestai-dev-api:8000")
     verify_deployment(base_url)

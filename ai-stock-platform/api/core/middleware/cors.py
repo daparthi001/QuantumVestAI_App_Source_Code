@@ -13,9 +13,9 @@ from fastapi.middleware.cors import CORSMiddleware
 # Try to import settings safely
 try:
     from core.config import settings
-    FRONTEND_URL = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+    FRONTEND_URL = getattr(settings, 'FRONTEND_URL', 'http://ui-service:3000')
 except ImportError:
-    FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+    FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://ui-service:3000')
 
 
 def get_cors_origins() -> List[str]:
@@ -29,10 +29,8 @@ def get_cors_origins() -> List[str]:
     default_origins = [
         FRONTEND_URL,
         # Local development
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://localhost:8000",
-        "http://localhost:8001",
+        "http://ui-service:3000",
+        "http://quantumvestai-dev-api:8000",
         # Development and production domains
         "https://dev.quantumvestai.com",
         "https://quantumvestai.com",

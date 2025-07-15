@@ -29,8 +29,8 @@ class Settings(BaseSettings):
     
     # CORS Settings
     BACKEND_CORS_ORIGINS: List[str] = [
-        "http://localhost:8000",
-        "http://localhost:3000"
+        "http://quantumvestai-dev-api:8000",
+        "http://ui-service:3000"
     ]
     
     model_config = SettingsConfigDict(

@@ -34,7 +34,7 @@ class Settings:
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production")
     
     # CORS settings
-    CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:3000,https://dev.quantumvestai.com").split(",")
+    CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://ui-service:3000,https://dev.quantumvestai.com").split(",")
     
     # Base URL for API requests (without trailing slash)
     API_BASE_URL = os.environ.get("API_BASE_URL", "http://quantumvestai-dev-api:8000")

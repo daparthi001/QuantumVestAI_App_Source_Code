@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     DEBUG: bool = Field(default=True)
     
     # CORS Settings
-    BACKEND_CORS_ORIGINS: List[str] = Field(default=["http://localhost:8000"])
+    BACKEND_CORS_ORIGINS: List[str] = Field(default=["http://quantumvestai-dev-api:8000"])
     
     # Logging Settings
     LOG_LEVEL: str = Field(default="INFO")

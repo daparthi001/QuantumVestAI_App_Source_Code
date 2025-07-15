@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     
     # CORS settings
     CORS_ORIGINS: List[str] | str = Field(
-        default=["http://localhost:3000", "https://app.quantumvestai.com"],
+        default=["http://ui-service:3000", "https://app.quantumvestai.com"],
         env='CORS_ORIGINS'
     )
 
