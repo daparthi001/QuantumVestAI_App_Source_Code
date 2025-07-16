@@ -13,17 +13,12 @@ from sqlalchemy import engine_from_config, pool
 # Add the project root containing the ``core`` package to ``sys.path``.
 from pathlib import Path
 
-# Determine the directory containing the ``app`` package regardless of how
-# this module is installed. Walk up from this file until we find a parent that
-# exposes ``app`` and ensure it is on ``sys.path``. This guards against
-# execution from packaged locations such as ``/app/app/alembic`` where the
-# repository root might not be two levels up.
-project_root = Path(__file__).resolve()
-for parent in project_root.parents:
-    if (parent / "app").exists():
-        project_root = parent
-        break
-
+# The Alembic environment may be executed from different working directories
+# depending on how the application is packaged. ``__file__`` points inside the
+# ``alembic`` directory so we need to add the API package root (one directory
+# up from ``alembic``) to ``sys.path`` so imports like ``api.core`` resolve
+# correctly.
+project_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(project_root))
 
 # Import settings directly from the app package to avoid
@@ -31,7 +26,7 @@ sys.path.insert(0, str(project_root))
 # project is installed. Using the explicit path ensures the
 # ``settings`` instance is imported reliably across different
 # deployment scenarios.
-from app.core.config.settings import settings
+from api.core.config.settings import settings
 # Import the SQLAlchemy metadata
 from db.base import Base
 
