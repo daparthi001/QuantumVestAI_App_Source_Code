@@ -13,18 +13,19 @@ from sqlalchemy import engine_from_config, pool
 # Add the project root containing the ``core`` package to ``sys.path``.
 from pathlib import Path
 
-# Determine the directory containing the ``api`` package regardless of how
-# this module is installed. Walk up from this file until we find a parent that
-# exposes ``api`` and ensure it is on ``sys.path``. This guards against
-# execution from packaged locations such as ``/app/api/alembic`` where the
-# repository root might not be two levels up.
-project_root = Path(__file__).resolve()
-for parent in project_root.parents:
-    if (parent / "api").exists():
-        project_root = parent
-        break
+# Ensure the ``api`` package is importable. When running migrations from a
+# packaged installation the ``alembic`` directory may live outside the source
+# tree.  If ``api`` can't be imported, walk up the directory tree from this
+# file until a parent containing an ``api`` directory is found and add that
+# parent to ``sys.path``.
+import importlib.util
 
-sys.path.insert(0, str(project_root))
+if importlib.util.find_spec("api") is None:
+    current = Path(__file__).resolve()
+    for parent in current.parents:
+        if (parent / "api").exists():
+            sys.path.insert(0, str(parent))
+            break
 
 # Import settings directly from the API package to avoid
 # the ``core.config`` module shadowing the package when the
