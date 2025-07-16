@@ -19,20 +19,17 @@ class Settings(BaseSettings):
     
     # Database settings
     DB_HOST: str = Field(
-        default_factory=lambda: os.getenv("DB_HOST", os.getenv("POSTGRES_SERVER", "db"))
-    )
+        default_factory=lambda: os.getenv("DB_HOST", "db"))
     DB_USER: str = Field(
-        default_factory=lambda: os.getenv("DB_USER", os.getenv("POSTGRES_USER", "postgres"))
-    )
+        default_factory=lambda: os.getenv("DB_USER", "postgres"))
+
     DB_PASSWORD: str = Field(
-        default_factory=lambda: os.getenv("DB_PASSWORD", os.getenv("POSTGRES_PASSWORD", ""))
-    )
+        default_factory=lambda: os.getenv("DB_PASSWORD", ""))
     DB_NAME: str = Field(
-        default_factory=lambda: os.getenv("DB_NAME", os.getenv("POSTGRES_DB", "quantumvestai"))
-    )
+        default_factory=lambda: os.getenv("DB_NAME", "quantumvestai"))
+
     DB_PORT: str = Field(
-        default_factory=lambda: os.getenv("DB_PORT", os.getenv("POSTGRES_PORT", "5432"))
-    )
+        default_factory=lambda: os.getenv("DB_PORT", "5432"))
     
     # Database pool settings
     DB_POOL_SIZE: int = 5

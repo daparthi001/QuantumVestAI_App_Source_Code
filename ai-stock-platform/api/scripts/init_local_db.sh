@@ -11,11 +11,11 @@ if ! pg_isready &>/dev/null; then
 fi
 
 # Support legacy POSTGRES_* variables for backward compatibility
-DB_HOST="${DB_HOST:-${POSTGRES_SERVER:-${POSTGRES_HOST:-localhost}}}"
-DB_PORT="${DB_PORT:-${POSTGRES_PORT:-5432}}"
-DB_USER="${DB_USER:-${POSTGRES_USER:-quantumvest}}"
-DB_PASSWORD="${DB_PASSWORD:-${POSTGRES_PASSWORD:-localdev}}"
-DB_NAME="${DB_NAME:-${POSTGRES_DB:-quantumvestai}}"
+DB_HOST="${DB_HOST:-localhost}}}"
+DB_PORT="${DB_PORT:-5432}}"
+DB_USER="${DB_USER:-quantumvest}}"
+DB_PASSWORD="${DB_PASSWORD:-localdev}}"
+DB_NAME="${DB_NAME:-quantumvestai}}"
 
 # Load environment variables
 if [ -f .env ]; then

@@ -7,9 +7,11 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_USER=quantumvest
-      - POSTGRES_PASSWORD=localdev
-      - POSTGRES_DB=quantumvestai
+      - DB_HOST=db
+      - DB_USER=quantumvest
+      - DB_PASSWORD=${DB_PASSWORD:-localdev}
+      - DB_NAME=quantumvestai
+      - DB_PORT=5432
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data/pgdata
@@ -57,7 +59,7 @@ services:
     environment:
       - DB_HOST=db
       - DB_USER=quantumvest
-      - DB_PASSWORD=localdev
+      - DB_PASSWORD=${DB_PASSWORD:-localdev}
       - DB_NAME=quantumvestai
       - DB_PORT=5432
       - USE_IAM_AUTH=false
