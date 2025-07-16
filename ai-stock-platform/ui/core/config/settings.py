@@ -51,7 +51,7 @@ class Settings:
     REDIS_DB = int(os.environ.get("REDIS_DB", "0"))
     
     # Database settings
-    DB_HOST = os.environ.get("DB_HOST", "localhost")
+    DB_HOST = os.environ.get("DB_HOST", "db")
     DB_PORT = int(os.environ.get("DB_PORT", "5432"))
     DB_NAME = os.environ.get("DB_NAME", "quantumvestai")
     DB_USER = os.environ.get("DB_USER", "postgres")

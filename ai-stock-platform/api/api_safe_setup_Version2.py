@@ -147,7 +147,7 @@ class Settings(BaseSettings):
     # Database
     SQLALCHEMY_DATABASE_URI: str = os.getenv(
         "DATABASE_URL",
-        "postgresql://user:password@localhost:5432/dbname"
+        "postgresql://user:password@db:5432/dbname"
     )
     
     # Security
