@@ -22,7 +22,7 @@ pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 def create_admin_user():
     """Create admin user in the database."""
     # Get credentials from environment variables
-    db_host = os.environ.get('DB_HOST', os.environ.get('POSTGRES_SERVER', 'db'))
+    db_host = os.environ.get('DB_HOST',  'db')
     db_name = os.environ.get('DB_NAME', os.environ.get('POSTGRES_DB'))
     db_user = os.environ.get('DB_USER', os.environ.get('POSTGRES_USER'))
     db_password = os.environ.get('DB_PASSWORD', os.environ.get('POSTGRES_PASSWORD'))
