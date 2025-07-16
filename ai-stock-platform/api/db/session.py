@@ -46,7 +46,7 @@ except ImportError:
         
         class FallbackSettings:
             def __init__(self):
-                self.DB_HOST = os.environ.get("DB_HOST", "localhost")
+                self.DB_HOST = os.environ.get("DB_HOST", "db")
                 self.DB_PORT = os.environ.get("DB_PORT", "5432")
                 self.DB_NAME = os.environ.get("DB_NAME", "quantumvestaidb")
                 self.DB_USER = os.environ.get("DB_USER", "dbadmin")
@@ -63,7 +63,7 @@ def create_db_engine(retries: int = 3, delay: int = 5):
     for attempt in range(retries):
         try:
             # Get database connection parameters
-            db_host = getattr(settings, 'DB_HOST', os.environ.get('DB_HOST', 'localhost'))
+            db_host = getattr(settings, 'DB_HOST', os.environ.get('DB_HOST', 'db'))
             db_port = getattr(settings, 'DB_PORT', os.environ.get('DB_PORT', '5432'))
             db_name = getattr(settings, 'DB_NAME', os.environ.get('DB_NAME', 'quantumvestaidb'))
             db_user = getattr(settings, 'DB_USER', os.environ.get('DB_USER', 'dbadmin'))

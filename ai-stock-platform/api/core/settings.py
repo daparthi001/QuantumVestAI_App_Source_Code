@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     
     # Database settings
     DB_HOST: str = Field(
-        default_factory=lambda: os.getenv("DB_HOST", os.getenv("POSTGRES_SERVER", "localhost"))
+        default_factory=lambda: os.getenv("DB_HOST", os.getenv("POSTGRES_SERVER", "db"))
     )
     DB_USER: str = Field(
         default_factory=lambda: os.getenv("DB_USER", os.getenv("POSTGRES_USER", "postgres"))

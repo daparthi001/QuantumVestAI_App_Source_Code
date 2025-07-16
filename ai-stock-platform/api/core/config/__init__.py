@@ -18,7 +18,7 @@ from urllib.parse import quote
 
 class Settings(BaseSettings):
     # Database connection details
-    DB_HOST: str = os.getenv("DB_HOST", "localhost")
+    DB_HOST: str = os.getenv("DB_HOST", "db")
     DB_PORT: str = os.getenv("DB_PORT", "5432")
     DB_NAME: str = os.getenv("DB_NAME", "dbname")
     DB_USER: str = os.getenv("DB_USER", "user")

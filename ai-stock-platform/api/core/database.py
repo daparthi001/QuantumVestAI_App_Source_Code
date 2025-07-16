@@ -28,7 +28,7 @@ class DatabaseConnectionManager:
             # This is a placeholder - in a real implementation you would
             # initialize your actual database connection here
             # For now, just simulate connection status
-            db_host = os.environ.get("DB_HOST", "localhost")
+            db_host = os.environ.get("DB_HOST", "db")
             db_port = os.environ.get("DB_PORT", "5432")
             db_name = os.environ.get("DB_NAME", "quantumvestai")
             
@@ -97,7 +97,7 @@ class DatabaseConnectionManager:
         return {
             "connected": self.is_connected,
             "last_error": self.last_error,
-            "host": os.environ.get("DB_HOST", "localhost"),
+            "host": os.environ.get("DB_HOST", "db"),
             "port": os.environ.get("DB_PORT", "5432"),
             "database": os.environ.get("DB_NAME", "quantumvestai")
         }
@@ -142,7 +142,7 @@ def _convert_to_async(db_url: str) -> str:
 # Build database URL from environment variables
 db_user = os.environ.get("DB_USER", "dbadmin")
 db_password = os.environ.get("DB_PASSWORD", "")
-db_host = os.environ.get("DB_HOST", "localhost")
+db_host = os.environ.get("DB_HOST", "db")
 db_port = os.environ.get("DB_PORT", "5432")
 db_name = os.environ.get("DB_NAME", "quantumvestai")
 

@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     LOG_FILE_BACKUP_COUNT: int = Field(default=5, env='LOG_FILE_BACKUP_COUNT')
     
     # Database settings
-    DB_HOST: str = Field(default="localhost", env='DB_HOST')
+    DB_HOST: str = Field(default="db", env='DB_HOST')
     DB_PORT: str = Field(default="5432", env='DB_PORT')
     DB_NAME: str = Field(default="quantumvestaidb", env='DB_NAME')
     DB_USER: str = Field(default="dbadmin", env='DB_USER')
