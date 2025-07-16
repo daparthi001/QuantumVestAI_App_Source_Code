@@ -6,6 +6,22 @@ Author: daparthi001
 from logging.config import fileConfig
 
 from alembic import context
+
+# Ensure the ``api`` package can be imported when this file is executed from
+# outside the source tree. If ``api`` is not importable, walk up the directory
+# hierarchy until we locate a parent containing an ``api`` folder and add that
+# parent to ``sys.path``.
+import sys
+from pathlib import Path
+import importlib.util
+
+if importlib.util.find_spec("api") is None:
+    current = Path(__file__).resolve()
+    for parent in current.parents:
+        if (parent / "api").exists():
+            sys.path.insert(0, str(parent))
+            break
+
 # Import settings directly from the API package to avoid the
 # ``core.config`` module shadowing the package when installed
 # without the full repository. This ensures the Alembic environment

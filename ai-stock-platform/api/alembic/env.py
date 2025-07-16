@@ -25,6 +25,7 @@ for parent in [project_root] + list(project_root.parents):
         break
 sys.path.insert(0, str(project_root))
 
+
 # Import settings directly from the app package to avoid
 # the ``core.config`` module shadowing the package when the
 # project is installed. Using the explicit path ensures the
