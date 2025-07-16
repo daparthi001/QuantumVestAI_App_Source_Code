@@ -4,11 +4,11 @@ set -e
 echo "Starting database initialization..."
 
 # Support legacy POSTGRES_* variables for backward compatibility
-DB_HOST="${DB_HOST:-localhost}}}"
-DB_PORT="${DB_PORT:-5432}}"
-DB_NAME="${DB_NAME:-quantumvestaidb}}"
-DB_USER="${DB_USER:-dbadmin}}"
-DB_PASSWORD="${DB_PASSWORD:-${}}"
+DB_HOST="${DB_HOST}"
+DB_PORT="${DB_PORT}"
+DB_NAME="${DB_NAME}"
+DB_USER="${DB_USER}"
+DB_PASSWORD="${DB_PASSWORD }"
 
 # Wait for database to be ready
 echo "Waiting for database to be ready..."

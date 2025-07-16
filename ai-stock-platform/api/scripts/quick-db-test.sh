@@ -10,10 +10,10 @@ if [ -z "$DB_PASSWORD" ]; then
 fi
 
 # Map host and port
-DB_HOST="${DB_HOST:-quantumvestai-dev.cwbsqsiywwaa.us-east-1.rds.amazonaws.com}"
-DB_PORT="${DB_PORT:-5432}"
-DB_USER="${DB_USER:-dbadmin}"
-DB_NAME="${DB_NAME:-quantumvestaidb}"
+DB_HOST="${DB_HOST}"
+DB_PORT="${DB_PORT}"
+DB_USER="${DB_USER}"
+DB_NAME="${DB_NAME}"
 
 # Test RDS connection
 echo "=== Testing RDS Connection ==="

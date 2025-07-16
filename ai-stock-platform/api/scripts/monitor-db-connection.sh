@@ -8,10 +8,10 @@
 NAMESPACE="${NAMESPACE:-dev}"
 
 # Map environment variables for database connection
-DB_HOST="${DB_HOST:-${RDS_HOST:-quantumvestai-dev.cwbsqsiywwaa.us-east-1.rds.amazonaws.com}}"
-DB_PORT="${DB_PORT:-${RDS_PORT:-5432}}"
-DB_USER="${DB_USER:-dbadmin}"
-DB_NAME="${DB_NAME:-quantumvestaidb}"
+DB_HOST="${DB_HOST}"
+DB_PORT="${DB_PORT}"
+DB_USER="${DB_USER}"
+DB_NAME="${DB_NAME}"
 
 # Get the password from the secret
 DB_PASSWORD=$(kubectl get secret -n $NAMESPACE quantumvestai-cluster-rds-credentials -o jsonpath='{.data.password}' | base64 -d)
