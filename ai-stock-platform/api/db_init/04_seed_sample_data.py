@@ -24,10 +24,10 @@ def get_db_connection():
     """Get database connection from environment variables."""
     return psycopg2.connect(
         host=os.environ.get('DB_HOST', 'db'),
-        database=os.environ.get('DB_NAME', os.environ.get('POSTGRES_DB')),
-        user=os.environ.get('DB_USER', os.environ.get('POSTGRES_USER')),
-        password=os.environ.get('DB_PASSWORD', os.environ.get('POSTGRES_PASSWORD')),
-        port=os.environ.get('DB_PORT', os.environ.get('POSTGRES_PORT', '5432'))
+        database=os.environ.get('DB_NAME'),
+        user=os.environ.get('DB_USER'),
+        password=os.environ.get('DB_PASSWORD'),
+        port=os.environ.get('DB_PORT','5432')
     )
 
 def seed_stocks():

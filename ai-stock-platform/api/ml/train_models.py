@@ -33,11 +33,11 @@ class ModelTrainer:
         self.s3_bucket = s3_bucket
         
         # Database connection
-        self.db_user = os.environ.get('DB_USER', os.environ.get('POSTGRES_USER'))
-        self.db_password = os.environ.get('DB_PASSWORD', os.environ.get('POSTGRES_PASSWORD'))
-        self.db_host = os.environ.get('DB_HOST', os.environ.get('DB_HOST', 'db'))
-        self.db_port = os.environ.get('DB_PORT', os.environ.get('POSTGRES_PORT', '5432'))
-        self.db_name = os.environ.get('DB_NAME', os.environ.get('POSTGRES_DB'))
+        self.db_user = os.environ.get('DB_USER')
+        self.db_password = os.environ.get('DB_PASSWORD')
+        self.db_host = os.environ.get('DB_HOST')
+        self.db_port = os.environ.get('DB_PORT')
+        self.db_name = os.environ.get('DB_NAME')
         
         # Connect to database
         self.db_url = f"postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"

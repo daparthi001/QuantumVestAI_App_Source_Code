@@ -12,11 +12,11 @@ log() {
 
 # Set default values if not provided
 # Support legacy POSTGRES_* variables for backward compatibility
-DB_HOST="${DB_HOST:-${POSTGRES_SERVER:-${POSTGRES_HOST:-localhost}}}"
-DB_PORT="${DB_PORT:-${POSTGRES_PORT:-5432}}"
-DB_NAME="${DB_NAME:-${POSTGRES_DB:-quantumvestaidb}}"
-DB_USER="${DB_USER:-${POSTGRES_USER:-dbadmin}}"
-DB_PASSWORD="${DB_PASSWORD:-${POSTGRES_PASSWORD}}"
+DB_HOST="${DB_HOST}"
+DB_PORT="${DB_PORT}}"
+DB_NAME="${DB_NAME}"
+DB_USER="${DB_USER}"
+DB_PASSWORD="${DB_PASSWORD}"
 # Password should be set via secret
 
 # Maximum number of attempts

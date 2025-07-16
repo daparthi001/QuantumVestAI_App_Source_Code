@@ -33,25 +33,25 @@ spec:
             valueFrom:
               secretKeyRef:
                 name: quantumvestai-cluster-rds-credentials
-                key: POSTGRES_HOST
+                key: DB_HOST
           - name: DB_PORT
             valueFrom:
               secretKeyRef:
                 name: quantumvestai-cluster-rds-credentials
-                key: POSTGRES_PORT
+                key: DB_PORT
           - name: DB_USER
             valueFrom:
               secretKeyRef:
                 name: quantumvestai-cluster-rds-credentials
-                key: POSTGRES_USER
+                key: DB_USER
           - name: DB_PASSWORD
             valueFrom:
               secretKeyRef:
                 name: quantumvestai-cluster-rds-credentials
-                key: POSTGRES_PASSWORD
+                key: DB_PASSWORD
           - name: DB_NAME
             valueFrom:
               secretKeyRef:
                 name: quantumvestai-cluster-rds-credentials
-                key: POSTGRES_DB
+                key: DB_NAME
       restartPolicy: Never
