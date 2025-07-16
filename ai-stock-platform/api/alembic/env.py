@@ -13,25 +13,25 @@ from sqlalchemy import engine_from_config, pool
 # Add the project root containing the ``core`` package to ``sys.path``.
 from pathlib import Path
 
-# Determine the directory containing the ``api`` package regardless of how
+# Determine the directory containing the ``app`` package regardless of how
 # this module is installed. Walk up from this file until we find a parent that
-# exposes ``api`` and ensure it is on ``sys.path``. This guards against
-# execution from packaged locations such as ``/app/api/alembic`` where the
+# exposes ``app`` and ensure it is on ``sys.path``. This guards against
+# execution from packaged locations such as ``/app/app/alembic`` where the
 # repository root might not be two levels up.
 project_root = Path(__file__).resolve()
 for parent in project_root.parents:
-    if (parent / "api").exists():
+    if (parent / "app").exists():
         project_root = parent
         break
 
 sys.path.insert(0, str(project_root))
 
-# Import settings directly from the API package to avoid
+# Import settings directly from the app package to avoid
 # the ``core.config`` module shadowing the package when the
 # project is installed. Using the explicit path ensures the
 # ``settings`` instance is imported reliably across different
 # deployment scenarios.
-from api.core.config.settings import settings
+from app.core.config.settings import settings
 # Import the SQLAlchemy metadata
 from db.base import Base
 
