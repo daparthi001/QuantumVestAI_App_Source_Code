@@ -13,19 +13,19 @@ from sqlalchemy import engine_from_config, pool
 # Add the project root containing the ``core`` package to ``sys.path``.
 from pathlib import Path
 
+# Determine the project root containing the ``api`` package and ensure it is on
+# ``sys.path``. ``env.py`` may reside in a packaged application at
+# ``/app/api/alembic`` or inside the repository at ``ai-stock-platform/api``.
 project_root = Path(__file__).resolve().parents[2]
-# Handle cases where only the ``api`` directory is packaged separately and the
-# project root one level up does not contain the ``core`` package. In Docker
-# containers ``env.py`` may live at ``/app/api/alembic`` where ``/app/api``
-# holds the actual source tree.
-if not (project_root / "core").exists():
-    alt_root = Path(__file__).resolve().parents[1]
-    if (alt_root / "core").exists():
-        project_root = alt_root
-    else:
-        project_root = project_root.parent
-# Prepend the project root to ``sys.path`` so the top-level ``core`` package
-# is resolved before the local ``core`` directory inside the Alembic folder.
+
+# If the resolved path doesn't expose the ``api`` package, adjust to the parent
+# directory so imports like ``api.core`` succeed regardless of where Alembic is
+# executed from.
+if not (project_root / "api").exists():
+    candidate = Path(__file__).resolve().parents[1].parent
+    if (candidate / "api").exists():
+        project_root = candidate
+
 sys.path.insert(0, str(project_root))
 
 # Import settings directly from the API package to avoid
