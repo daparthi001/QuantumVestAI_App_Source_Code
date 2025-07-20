@@ -141,7 +141,9 @@ def initialize_database():
             from alembic import command
             from alembic.config import Config
             
-            alembic_cfg = Config(str(Path(__file__).parent.parent.parent / "alembic.ini"))
+            # Alembic configuration is located in the api package root
+            api_root = Path(__file__).resolve().parents[2]
+            alembic_cfg = Config(str(api_root / "alembic.ini"))
             command.upgrade(alembic_cfg, "head")
         
         # Create admin user if none exists
@@ -160,7 +162,8 @@ def initialize_database():
             logger.info("Initializing essential reference data")
             # Execute reference data script
             with engine.begin() as conn:
-                with open(str(Path(__file__).parent.parent.parent / "db_init" / "02_reference_data.sql")) as f:
+                ref_sql = api_root / "db_init" / "02_reference_data.sql"
+                with open(ref_sql) as f:
                     conn.execute(text(f.read()))
         
         logger.info("Database initialization completed")
