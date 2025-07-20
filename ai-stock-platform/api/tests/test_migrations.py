@@ -7,6 +7,8 @@ import pytest
 
 pytest.importorskip("alembic")
 pytest.importorskip("sqlalchemy")
+from pathlib import Path
+
 from alembic.config import Config
 from alembic.runtime.environment import EnvironmentContext
 from alembic.script import ScriptDirectory
@@ -22,7 +24,8 @@ def test_migrations_can_run():
     
     # Create alembic config
     config = Config()
-    config.set_main_option("script_location", "alembic")
+    script_dir = Path(__file__).resolve().parents[1] / "alembic"
+    config.set_main_option("script_location", str(script_dir))
     
     # Get migration script directory
     script = ScriptDirectory.from_config(config)
