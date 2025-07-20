@@ -7,8 +7,15 @@ set -e
 
 echo "[$(date -u '+%Y-%m-%d %H:%M:%S')] Starting QuantumVestAI API..."
 
-# Wait for database
-/app/scripts/wait-for-db.sh
+# Wait for database. Support both old and new script locations
+if [ -x /app/scripts/wait-for-db.sh ]; then
+    /app/scripts/wait-for-db.sh
+elif [ -x /app/api/scripts/wait-for-db.sh ]; then
+    /app/api/scripts/wait-for-db.sh
+else
+    echo "wait-for-db.sh script not found!" >&2
+    exit 1
+fi
 
 # Start the application
 if [ "$ENVIRONMENT" = "development" ]; then
