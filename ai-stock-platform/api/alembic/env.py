@@ -13,17 +13,20 @@ from sqlalchemy import engine_from_config, pool
 # Add the project root containing the ``core`` package to ``sys.path``.
 from pathlib import Path
 
-# The Alembic environment may be executed from various working directories
-# depending on how the application is packaged. ``__file__`` points inside the
-# ``alembic`` directory so we need to ensure the parent directory containing the
-# ``api`` package is present on ``sys.path``.  Walk upwards from this file until
-# we locate a parent that exposes an ``api`` folder.
-project_root = Path(__file__).resolve()
-for parent in [project_root] + list(project_root.parents):
-    if (parent / "api").exists():
-        project_root = parent
-        break
-sys.path.insert(0, str(project_root))
+# Ensure the ``api`` package is importable. When running migrations from a
+# packaged installation the ``alembic`` directory may live outside the source
+# tree.  If ``api`` can't be imported, walk up the directory tree from this
+# file until a parent containing an ``api`` directory is found and add that
+# parent to ``sys.path``.
+import importlib.util
+
+if importlib.util.find_spec("api") is None:
+    current = Path(__file__).resolve()
+    for parent in current.parents:
+        if (parent / "api").exists():
+            sys.path.insert(0, str(parent))
+            break
+
 
 
 # Import settings directly from the app package to avoid
