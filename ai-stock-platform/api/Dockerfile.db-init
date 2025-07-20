@@ -38,7 +38,7 @@ COPY models/ /app/api/models/
 COPY core/ /app/api/core/
 COPY db/ /app/api/
 COPY alembic/ /app/api/
-COPY scripts/ /app/api/
+COPY scripts/ /app/api/scripts/
 COPY __init__.py /app/api/__init__.py
 
 # Make scripts executable
