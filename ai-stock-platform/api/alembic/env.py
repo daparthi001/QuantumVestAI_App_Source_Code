@@ -27,7 +27,9 @@ if importlib.util.find_spec("api") is None:
             sys.path.insert(0, str(parent))
             break
 
-# Import settings directly from the API package to avoid
+
+
+# Import settings directly from the app package to avoid
 # the ``core.config`` module shadowing the package when the
 # project is installed. Using the explicit path ensures the
 # ``settings`` instance is imported reliably across different
