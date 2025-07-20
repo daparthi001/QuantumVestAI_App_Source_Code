@@ -9,17 +9,18 @@ from pathlib import Path
 def init_alembic():
     """Initialize Alembic migration environment"""
     try:
-        # Ensure we're in the project root
-        project_root = Path(__file__).parent.parent.parent
-        os.chdir(project_root)
+        # Ensure we're in the api directory where alembic.ini resides
+        project_root = Path(__file__).resolve().parents[2]
+        api_dir = project_root / "api"
+        os.chdir(api_dir)
         
         # Create migrations directory if it doesn't exist
-        migrations_dir = project_root / "api" / "alembic" / "versions"
+        migrations_dir = api_dir / "alembic" / "versions"
         migrations_dir.mkdir(parents=True, exist_ok=True)
         
         # Initialize alembic if not already initialized
-        if not (project_root / "alembic.ini").exists():
-            os.system("alembic init api/alembic")
+        if not (api_dir / "alembic.ini").exists():
+            os.system("alembic init alembic")
             print("✅ Initialized Alembic")
         
         # Create initial migration
