@@ -20,11 +20,11 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Create necessary directories
-RUN mkdir -p /app/models \
-    /app/core \
-    /app/db \
-    /app/scripts \
-    /app/alembic
+RUN mkdir -p /app/api/models \
+    /app/api/core \
+    /app/api/db \
+    /app/api/scripts \
+    /app/api/alembic
 
 # Copy requirements and configuration files first (for better layer caching)
 COPY requirements.txt .
@@ -34,17 +34,17 @@ COPY alembic.ini .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY models/ /app/models/
-COPY core/ /app/core/
-COPY db/ /app/db/
-COPY alembic/ /app/alembic/
-COPY scripts/ /app/scripts/
-COPY __init__.py /app/__init__.py
+COPY models/ /app/api/models/
+COPY core/ /app/api/core/
+COPY db/ /app/api/db/
+COPY alembic/ /app/api/alembic/
+COPY scripts/ /app/api/scripts/
+COPY __init__.py /app/api/__init__.py
 
 # Make scripts executable
-RUN chmod +x /app/scripts/*.sh && \
-    chmod -R 644 /app/models /app/core /app/db /app/alembic && \
-    chmod 755 /app/models /app/core /app/db /app/alembic /app/scripts
+RUN chmod +x /app/api/scripts/*.sh && \
+    chmod -R 644 /app/api/models /app/api/core /app/api/db /app/api/alembic && \
+    chmod 755 /app/api/models /app/api/core /app/api/db /app/api/alembic /app/api/scripts
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -63,4 +63,4 @@ USER dbuser
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
     CMD pg_isready -h $DB_HOST -U $DB_USER -d $DB_NAME || exit 1
 
-ENTRYPOINT ["/app/scripts/db-init-entrypoint.sh"]
+ENTRYPOINT ["/app/api/scripts/db-init-entrypoint.sh"]
