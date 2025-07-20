@@ -36,9 +36,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY models/ /app/api/models/
 COPY core/ /app/api/core/
-COPY db/ /app/api/db/
-COPY alembic/ /app/api/alembic/
-COPY scripts/ /app/api/scripts/
+COPY db/ /app/api/
+COPY alembic/ /app/api/
+COPY scripts/ /app/api/
 COPY __init__.py /app/api/__init__.py
 
 # Make scripts executable
