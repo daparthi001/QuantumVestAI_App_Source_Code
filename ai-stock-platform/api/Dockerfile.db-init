@@ -24,7 +24,7 @@ RUN mkdir -p /app/api/models \
     /app/api/core \
     /app/api/db \
     /app/api/scripts \
-    /app/api/alembic
+    /app/alembic
 
 # Copy requirements and configuration files first (for better layer caching)
 COPY requirements.txt .
@@ -37,14 +37,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY models/ /app/api/models/
 COPY core/ /app/api/core/
 COPY db/ /app/api/
-COPY alembic/ /app/api/
+COPY alembic/ /app/
 COPY scripts/ /app/api/scripts/
 COPY __init__.py /app/api/__init__.py
 
 # Make scripts executable
 RUN chmod +x /app/api/scripts/*.sh && \
-    chmod -R 644 /app/api/models /app/api/core /app/api/db /app/api/alembic && \
-    chmod 755 /app/api/models /app/api/core /app/api/db /app/api/alembic /app/api/scripts
+    chmod -R 644 /app/api/models /app/api/core /app/api/db /app/alembic && \
+    chmod 755 /app/api/models /app/api/core /app/api/db /app/alembic /app/api/scripts
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
