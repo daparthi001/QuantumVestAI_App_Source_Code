@@ -866,19 +866,19 @@ def include_router_safely(router_module, router_name):
 
 # Include routers
 routers_to_include = [
-    ("routes.auth", "auth"),
-    ("routes.dashboard", "dashboard"),
-    ("routes.forecast", "forecast"),
-    ("routes.market", "market"),
-    ("routes.watchlist", "watchlist"),
-    ("routes.predictability", "predictability"),
-    ("routes.settings", "settings"),
-    ("routes.ai_api", "ai_api"),
-    ("routes.api_proxy", "api_proxy"),
-    ("routes.content_api", "content_api"),
-    ("routes.utils", "utils"),
-    ("controllers.news_controller", "news_controller"),
-    ("controllers.stock_controller", "stock_controller"),
+    ("ui.routes.auth", "auth"),
+    ("ui.routes.dashboard", "dashboard"),
+    ("ui.routes.forecast", "forecast"),
+    ("ui.routes.market", "market"),
+    ("ui.routes.watchlist", "watchlist"),
+    ("ui.routes.predictability", "predictability"),
+    ("ui.routes.settings", "settings"),
+    ("ui.routes.ai_api", "ai_api"),
+    ("ui.routes.api_proxy", "api_proxy"),
+    ("ui.routes.content_api", "content_api"),
+    ("ui.routes.utils", "utils"),
+    ("ui.controllers.news_controller", "news_controller"),
+    ("ui.controllers.stock_controller", "stock_controller"),
 ]
 
 for module_name, router_name in routers_to_include:
