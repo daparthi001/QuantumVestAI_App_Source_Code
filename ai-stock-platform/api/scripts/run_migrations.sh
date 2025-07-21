@@ -18,7 +18,8 @@ echo "Running database migrations..."
 
 # Determine the directory of this script and the API root
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-API_DIR="${SCRIPT_DIR}/.."
+API_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
 ROOT_DIR="$(dirname "$API_DIR")"
 
 # Run Alembic using the configuration inside the api directory or project root

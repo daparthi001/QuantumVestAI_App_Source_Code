@@ -18,7 +18,8 @@ if [ "${AUTO_MIGRATE}" = "true" ]; then
     echo "Running database migrations..."
     if command -v alembic >/dev/null 2>&1; then
         SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-        API_DIR="${SCRIPT_DIR}/.."
+        API_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
         ROOT_DIR="$(dirname "$API_DIR")"
 
         if [ -f "${API_DIR}/alembic.ini" ]; then

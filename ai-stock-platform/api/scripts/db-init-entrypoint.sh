@@ -20,7 +20,8 @@ fi
 # Run migrations
 echo "Running database migrations..."
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-API_DIR="${SCRIPT_DIR}/.."
+API_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
 ROOT_DIR="$(dirname "$API_DIR")"
 
 # Prefer alembic.ini next to the API directory, fall back to project root

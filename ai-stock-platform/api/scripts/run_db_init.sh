@@ -8,7 +8,7 @@ DB_HOST="${DB_HOST}"
 DB_PORT="${DB_PORT}"
 DB_NAME="${DB_NAME}"
 DB_USER="${DB_USER}"
-DB_PASSWORD="${DB_PASSWORD }"
+DB_PASSWORD="${DB_PASSWORD}"
 
 # Wait for database to be ready
 echo "Waiting for database to be ready..."
@@ -25,7 +25,8 @@ export PYTHONPATH=/db-init
 # Step 1: Run database migrations
 echo "Running database migrations..."
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-API_DIR="${SCRIPT_DIR}/.."
+API_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
 ROOT_DIR="$(dirname "$API_DIR")"
 
 if [ -f "${API_DIR}/alembic.ini" ]; then
