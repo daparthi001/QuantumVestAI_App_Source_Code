@@ -40,7 +40,9 @@ sudo -u postgres psql -f db_init/01_create_database.sql
 
 # Apply migrations
 echo "Applying database migrations..."
-alembic upgrade head
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+API_DIR="${SCRIPT_DIR}/.."
+alembic -c "${API_DIR}/alembic.ini" upgrade head
 
 # Initialize reference data
 echo "Initializing reference data..."

@@ -19,7 +19,9 @@ fi
 
 # Run migrations
 echo "Running database migrations..."
-alembic upgrade head
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+API_DIR="${SCRIPT_DIR}/.."
+alembic -c "${API_DIR}/alembic.ini" upgrade head
 
 # Run seed script if specified
 if [ "${RUN_SEED:-false}" = "true" ]; then

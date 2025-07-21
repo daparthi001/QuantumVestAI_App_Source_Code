@@ -17,7 +17,9 @@ timeout 30 bash -c "until curl -s http://${DB_HOST}:${DB_PORT}; do sleep 1; done
 if [ "${AUTO_MIGRATE}" = "true" ]; then
     echo "Running database migrations..."
     if command -v alembic >/dev/null 2>&1; then
-        alembic upgrade head
+        SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+        API_DIR="${SCRIPT_DIR}/.."
+        alembic -c "${API_DIR}/alembic.ini" upgrade head
     else
         echo "Alembic not installed; skipping migrations" >&2
     fi
