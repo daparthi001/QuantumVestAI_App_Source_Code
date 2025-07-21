@@ -19,6 +19,7 @@ if [ "${AUTO_MIGRATE}" = "true" ]; then
     if command -v alembic >/dev/null 2>&1; then
         SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
         API_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
         ROOT_DIR="$(dirname "$API_DIR")"
 
         if [ -f "${API_DIR}/alembic.ini" ]; then

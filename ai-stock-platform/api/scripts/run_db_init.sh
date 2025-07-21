@@ -26,6 +26,7 @@ export PYTHONPATH=/db-init
 echo "Running database migrations..."
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 API_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
 ROOT_DIR="$(dirname "$API_DIR")"
 
 if [ -f "${API_DIR}/alembic.ini" ]; then
