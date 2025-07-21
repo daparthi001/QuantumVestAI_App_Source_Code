@@ -29,12 +29,22 @@ if importlib.util.find_spec("api") is None:
 
 
 
-# Import settings directly from the app package to avoid
-# the ``core.config`` module shadowing the package when the
-# project is installed. Using the explicit path ensures the
-# ``settings`` instance is imported reliably across different
-# deployment scenarios.
-from api.core.config.settings import settings
+# Import the settings module directly from its file path. The
+# ``core`` package contains both a legacy ``config.py`` module and a
+# ``config`` package.  Python will prefer the module when resolving
+# ``api.core.config.settings`` which results in ``ModuleNotFoundError``
+# for the nested ``settings`` module.  Loading the module via its file
+# path avoids that conflict and ensures the correct configuration is
+# used during migrations.
+settings_path = (
+    Path(__file__).resolve().parents[1] / "core" / "config" / "settings.py"
+)
+spec = importlib.util.spec_from_file_location(
+    "api.core.config.settings", settings_path
+)
+settings_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(settings_module)
+settings = settings_module.settings
 # Import the SQLAlchemy metadata
 from db.base import Base
 
