@@ -23,18 +23,16 @@ logger = setup_logger(__name__)
 
 def get_test_db_url() -> str:
     """Get test database URL from environment or default to SQLite."""
-    return os.getenv(
-        "TEST_DATABASE_URL",
-        "sqlite:///./test.db"
-    )
+    return os.getenv("TEST_DATABASE_URL", "sqlite:///./test.db")
 
 def create_test_engine():
     """Create SQLAlchemy engine for tests."""
-    return create_engine(
-        get_test_db_url(),
-        pool_pre_ping=True,
-        echo=False
-    )
+    url = get_test_db_url()
+    if url.startswith("sqlite:///"):
+        db_path = url.replace("sqlite:///", "")
+        if db_path != ":memory:" and os.path.exists(db_path):
+            os.remove(db_path)
+    return create_engine(url, pool_pre_ping=True, echo=False)
 
 def get_test_session() -> Generator[Session, None, None]:
     """Get test database session."""
