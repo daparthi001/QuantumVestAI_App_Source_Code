@@ -36,9 +36,16 @@ if importlib.util.find_spec("api") is None:
 # for the nested ``settings`` module.  Loading the module via its file
 # path avoids that conflict and ensures the correct configuration is
 # used during migrations.
-settings_path = (
-    Path(__file__).resolve().parents[1] / "core" / "config" / "settings.py"
-)
+
+# Locate the installed ``api`` package and build the path to
+# ``core/config/settings.py`` relative to it.  This works even when
+# the Alembic environment is executed from a different directory (for
+# example when the package is installed in a Docker image and the
+# ``env.py`` file lives in ``/app``).
+import api
+
+api_root = Path(api.__file__).resolve().parent
+settings_path = api_root / "core" / "config" / "settings.py"
 spec = importlib.util.spec_from_file_location(
     "api.core.config.settings", settings_path
 )
