@@ -38,13 +38,17 @@ if importlib.util.find_spec("api") is None:
 # used during migrations.
 
 # Locate the installed ``api`` package and build the path to
-# ``core/config/settings.py`` relative to it.  This works even when
-# the Alembic environment is executed from a different directory (for
-# example when the package is installed in a Docker image and the
-# ``env.py`` file lives in ``/app``).
-import api
+# ``core/config/settings.py`` relative to it. To avoid importing the
+# entire package (which triggers database connections via ``api.__init__``),
+# derive the package location using ``importlib.util.find_spec``. This works
+# even when the Alembic environment is executed from a different directory
+# such as a Docker container where ``env.py`` lives in ``/app``.
 
-api_root = Path(api.__file__).resolve().parent
+spec = importlib.util.find_spec("api")
+if spec is None or not spec.submodule_search_locations:
+    raise ImportError("Unable to locate installed 'api' package")
+
+api_root = Path(next(iter(spec.submodule_search_locations)))
 settings_path = api_root / "core" / "config" / "settings.py"
 spec = importlib.util.spec_from_file_location(
     "api.core.config.settings", settings_path
