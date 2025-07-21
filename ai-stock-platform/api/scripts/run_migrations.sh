@@ -18,9 +18,19 @@ echo "Running database migrations..."
 
 # Determine the directory of this script and the API root
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-API_DIR="${SCRIPT_DIR}/.."
+API_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+ROOT_DIR="$(dirname "$API_DIR")"
 
-# Run Alembic using the configuration inside the api directory
-alembic -c "${API_DIR}/alembic.ini" upgrade head
+# Run Alembic using the configuration inside the api directory or project root
+if [ -f "${API_DIR}/alembic.ini" ]; then
+    ALEMBIC_CFG="${API_DIR}/alembic.ini"
+elif [ -f "${ROOT_DIR}/alembic.ini" ]; then
+    ALEMBIC_CFG="${ROOT_DIR}/alembic.ini"
+else
+    echo "alembic.ini not found" >&2
+    exit 1
+fi
+
+alembic -c "$ALEMBIC_CFG" upgrade head
 
 echo "[$(date -u '+%Y-%m-%d %H:%M:%S')] Migrations completed successfully!"

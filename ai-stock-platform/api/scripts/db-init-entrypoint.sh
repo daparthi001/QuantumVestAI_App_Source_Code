@@ -20,8 +20,20 @@ fi
 # Run migrations
 echo "Running database migrations..."
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-API_DIR="${SCRIPT_DIR}/.."
-alembic -c "${API_DIR}/alembic.ini" upgrade head
+API_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+ROOT_DIR="$(dirname "$API_DIR")"
+
+# Prefer alembic.ini next to the API directory, fall back to project root
+if [ -f "${API_DIR}/alembic.ini" ]; then
+    ALEMBIC_CFG="${API_DIR}/alembic.ini"
+elif [ -f "${ROOT_DIR}/alembic.ini" ]; then
+    ALEMBIC_CFG="${ROOT_DIR}/alembic.ini"
+else
+    echo "alembic.ini not found" >&2
+    exit 1
+fi
+
+alembic -c "$ALEMBIC_CFG" upgrade head
 
 # Run seed script if specified
 if [ "${RUN_SEED:-false}" = "true" ]; then
