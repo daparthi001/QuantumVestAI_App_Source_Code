@@ -49,3 +49,6 @@ Thumbs.db
 # Cache
 cache/__pycache__/
 *.pyc
+
+fallback.db
+test.db
