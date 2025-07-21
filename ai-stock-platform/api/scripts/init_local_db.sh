@@ -41,8 +41,12 @@ sudo -u postgres psql -f db_init/01_create_database.sql
 # Apply migrations
 echo "Applying database migrations..."
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-API_DIR="${SCRIPT_DIR}/.."
-alembic -c "${API_DIR}/alembic.ini" upgrade head
+API_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Run migrations from the API directory so Alembic can locate env.py
+pushd "$API_DIR" >/dev/null
+alembic upgrade head
+popd >/dev/null
 
 # Initialize reference data
 echo "Initializing reference data..."

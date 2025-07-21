@@ -38,7 +38,9 @@ else
     exit 1
 fi
 
+pushd "$API_DIR" >/dev/null
 alembic -c "$ALEMBIC_CFG" upgrade head
+popd >/dev/null
 
 # Step 2: Apply reference data
 echo "Initializing reference data..."
