@@ -88,31 +88,36 @@ class TrendingStocksService:
     
     async def _fetch_trending_stocks(self) -> List[Dict[str, Any]]:
         """Fetch trending stocks data from external API."""
+        if not settings.ENABLE_REAL_DATA:
+            logger.info("Real data disabled - using sample trending stocks")
+            return self._load_sample_data()
+
         if not AIOHTTP_AVAILABLE:
             raise RuntimeError("aiohttp is required for real-time data access")
-        
+
         stocks_data = []
-        
+
         async with aiohttp.ClientSession() as session:
-            # Fetch data for each trending symbol
             tasks = [
-                self._fetch_stock_quote(session, symbol) 
+                self._fetch_stock_quote(session, symbol)
                 for symbol in self.trending_symbols
             ]
-            
+
             results = await asyncio.gather(*tasks, return_exceptions=True)
-            
+
             for symbol, result in zip(self.trending_symbols, results):
                 if isinstance(result, Exception):
                     logger.warning(f"Failed to fetch data for {symbol}: {result}")
                     continue
-                    
+
                 if result:
                     stocks_data.append(result)
-        
-        # Sort by change percentage (descending) for trending effect
+
+        if not stocks_data:
+            logger.warning("Falling back to sample trending stocks data")
+            return self._load_sample_data()
+
         stocks_data.sort(key=lambda x: x.get("change_percent", 0), reverse=True)
-        
         return stocks_data
     
     async def _fetch_stock_quote(self, session, symbol: str) -> Optional[Dict[str, Any]]:
@@ -208,7 +213,7 @@ class TrendingStocksService:
         start_idx = (page - 1) * limit
         end_idx = start_idx + limit
         paginated_stocks = stocks_data[start_idx:end_idx]
-        
+
         return {
             "stocks": paginated_stocks,
             "pagination": {
@@ -216,14 +221,25 @@ class TrendingStocksService:
                 "limit": limit,
                 "total": len(stocks_data),
                 "has_next": end_idx < len(stocks_data),
-                "has_prev": page > 1
+                "has_prev": page > 1,
             },
             "metadata": {
                 "last_updated": self._cache.get("timestamp") if self._cache else datetime.now().isoformat(),
                 "cache_ttl_seconds": self.cache_ttl,
-                "data_source": "real"
-            }
+                "data_source": "real",
+            },
         }
+
+    def _load_sample_data(self) -> List[Dict[str, Any]]:
+        """Load bundled sample data for offline testing."""
+        try:
+            file_path = os.path.join(os.path.dirname(__file__), "sample_trending_stocks.json")
+            with open(file_path) as f:
+                data = json.load(f)
+                return data.get("stocks", [])
+        except Exception as e:  # pragma: no cover - log at runtime
+            logger.error("Failed to load sample trending stocks: %s", e)
+            return []
     
     
     def invalidate_cache(self) -> None:

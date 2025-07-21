@@ -8,6 +8,10 @@ import pytest
 pytest.importorskip("sqlalchemy")
 import logging
 import os
+
+# Use SQLite database for tests
+os.environ.setdefault("TEST_DATABASE_URL", "sqlite:///./test.db")
+os.environ.setdefault("API_ENV", "test")
 from datetime import datetime
 from typing import Generator, Optional
 

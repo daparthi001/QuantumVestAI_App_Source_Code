@@ -146,14 +146,17 @@ db_host = os.environ.get("DB_HOST", "db")
 db_port = os.environ.get("DB_PORT", "5432")
 db_name = os.environ.get("DB_NAME", "quantumvestai")
 
-default_sync_url = os.environ.get(
-    "DATABASE_URL",
-    f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}",
-)
-
-DATABASE_URL = _convert_to_async(
-    os.environ.get("ASYNC_DATABASE_URL", default_sync_url)
-)
+test_db_url = os.environ.get("TEST_DATABASE_URL")
+if test_db_url:
+    DATABASE_URL = _convert_to_async(test_db_url)
+else:
+    default_sync_url = os.environ.get(
+        "DATABASE_URL",
+        f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}",
+    )
+    DATABASE_URL = _convert_to_async(
+        os.environ.get("ASYNC_DATABASE_URL", default_sync_url)
+    )
 async_engine = create_async_engine(DATABASE_URL, future=True)
 AsyncSessionLocal = sessionmaker(
     async_engine, class_=AsyncSession, expire_on_commit=False

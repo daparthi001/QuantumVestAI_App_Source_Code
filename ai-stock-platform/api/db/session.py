@@ -60,6 +60,15 @@ except ImportError:
 
 def create_db_engine(retries: int = 3, delay: int = 5):
     """Create database engine with retry logic"""
+    test_db_url = os.environ.get("TEST_DATABASE_URL")
+    if test_db_url:
+        logger.info("Using TEST_DATABASE_URL=%s", test_db_url)
+        return create_engine(
+            test_db_url,
+            poolclass=QueuePool,
+            pool_pre_ping=True,
+        )
+
     for attempt in range(retries):
         try:
             # Get database connection parameters

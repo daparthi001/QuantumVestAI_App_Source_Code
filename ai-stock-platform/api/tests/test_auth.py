@@ -6,6 +6,10 @@ Author: daparthi001
 import os
 import sys
 
+# Ensure tests use local SQLite database
+os.environ.setdefault("TEST_DATABASE_URL", "sqlite:///./test.db")
+os.environ.setdefault("API_ENV", "test")
+
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 sys.path.append(ROOT)
 sys.path.append(os.path.join(ROOT, "api"))

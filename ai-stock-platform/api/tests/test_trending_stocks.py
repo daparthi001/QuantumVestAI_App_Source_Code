@@ -14,6 +14,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 # Ensure API key is set for tests
 os.environ.setdefault("ALPHA_VANTAGE_API_KEY", "test")
+os.environ.setdefault("ENABLE_REAL_DATA", "false")
 
 # Import the service directly
 import importlib.util
