@@ -15,6 +15,12 @@ fi
 
 # Run migrations
 echo "Running database migrations..."
-alembic upgrade head
+
+# Determine the directory of this script and the API root
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+API_DIR="${SCRIPT_DIR}/.."
+
+# Run Alembic using the configuration inside the api directory
+alembic -c "${API_DIR}/alembic.ini" upgrade head
 
 echo "[$(date -u '+%Y-%m-%d %H:%M:%S')] Migrations completed successfully!"

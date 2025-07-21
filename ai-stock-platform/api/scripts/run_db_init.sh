@@ -24,7 +24,9 @@ export PYTHONPATH=/db-init
 
 # Step 1: Run database migrations
 echo "Running database migrations..."
-alembic upgrade head
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+API_DIR="${SCRIPT_DIR}/.."
+alembic -c "${API_DIR}/alembic.ini" upgrade head
 
 # Step 2: Apply reference data
 echo "Initializing reference data..."
