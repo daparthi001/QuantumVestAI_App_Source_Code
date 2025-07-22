@@ -104,7 +104,7 @@ spec:
           value: "true"
         # Ensure PYTHONPATH is set for robust import resolution
         - name: PYTHONPATH
-          value: "/ai-stock-platform/core:/app/ai-stock-platform/ui:/app/ui:/app/api:/app"
+          value: "/app/core:/app/ai-stock-platform:/app/ai-stock-platform/ui:/app/ui:/app/api:/app"
         # Use startup script from container
         command: ["/bin/bash", "-c"]
         args:

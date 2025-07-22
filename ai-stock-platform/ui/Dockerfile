@@ -95,7 +95,7 @@ ENV PORT=3000 \
     APP_VERSION=1.5.2 \
     LAST_UPDATED="2025-06-20 03:25:47" \
     UPDATED_BY="daparthi001" \
-    PYTHONPATH=/app/core:/app/ai-stock-platform:/app/ai-stock-platform/ui:/app/ui:/app/api:/app
+    PYTHONPATH=/app/core:/app/ai-stock-platform:/app/ai-stock-platform/ui:/app/ui:/app/api:/app:$PYTHONPATH
 
 # Expose port
 EXPOSE 3000
