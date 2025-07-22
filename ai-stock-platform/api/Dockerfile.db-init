@@ -34,8 +34,8 @@ COPY alembic.ini .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY api/ /app/api/
-COPY alembic/ /app/
+COPY . /app
+COPY alembic/ /app/alembic/
 COPY scripts/ /app/api/scripts/
 # Copy the shared core package for settings and utilities
 COPY core /app/core
