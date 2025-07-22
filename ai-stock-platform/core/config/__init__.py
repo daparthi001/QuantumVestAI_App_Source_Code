@@ -1,4 +1,4 @@
-"""Configuration compatibility layer."""
+"""Configuration compatibility layer ."""
 
 from .settings import Settings, get_settings, settings
 
