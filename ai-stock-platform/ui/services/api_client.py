@@ -11,21 +11,36 @@ from urllib.parse import urljoin
 import requests
 # Attempt to load settings from the shared core package first.  In some
 # testing environments the ``ui`` package inserts its own ``core`` package
-# ahead of the shared one which lacks ``get_settings``.  Fall back to the
-# API package if importing from ``core.config`` fails for any reason.
+# ahead of the shared one which lacks ``get_settings``.  If that happens,
+# explicitly prepend the project root so the correct package is found.
 try:
     from core.config import get_settings  # type: ignore[attr-defined]
-    # Ensure we actually imported the desired function
     if not callable(get_settings):
         raise ImportError
 except (ModuleNotFoundError, ImportError):
+    import sys
+    from pathlib import Path
+
+    # Remove any previously imported ``core.config`` module that may have
+    # originated from ``ui.core`` so we can re-import it from the project root.
+    sys.modules.pop("core.config", None)
+
+    project_root = Path(__file__).resolve().parents[2]
+    if str(project_root) not in sys.path:
+        sys.path.insert(0, str(project_root))
+
     try:
-        from api.core.config.settings import get_settings
-    except ModuleNotFoundError as e:
-        raise ImportError(
-            "Could not import settings from either 'core.config' or 'api.core.config.settings'. "
-            "Make sure PYTHONPATH includes the project directory."
-        ) from e
+        from core.config import get_settings  # type: ignore[attr-defined]
+        if not callable(get_settings):
+            raise ImportError
+    except (ModuleNotFoundError, ImportError) as e:
+        try:
+            from api.core.config.settings import get_settings
+        except ModuleNotFoundError as e2:  # pragma: no cover - environment issue
+            raise ImportError(
+                "Could not import settings from either 'core.config' or 'api.core.config.settings'. "
+                "Make sure PYTHONPATH includes the project directory."
+            ) from e2
 from requests.exceptions import ConnectionError, RequestException, Timeout
 
 
