@@ -64,8 +64,7 @@ spec:
           echo "Port: $DB_PORT"
           echo "User: $DB_USER"
           echo "Database: $DB_NAME"
-          for script in /scripts/00-create-role.sql /scripts/01-create-tables.sql /scripts/02-create-functions.sql /scripts/03-grant-permissions.sql
-          do
+          for script in /scripts/00-create-role.sql /scripts/01-create-tables.sql /scripts/02-create-functions.sql /scripts/03-grant-permissions.sql; do
             echo "Executing $script..."
             export PGPASSWORD="$DB_PASSWORD"
             psql -h "$DB_HOSTNAME" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$script"
