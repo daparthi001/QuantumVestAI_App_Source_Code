@@ -71,12 +71,11 @@ spec.loader.exec_module(settings_module)
 settings = settings_module.settings
 # Import the SQLAlchemy metadata
 try:
-    from db.base import Base
-except ModuleNotFoundError:
-    # When the compatibility ``db`` package isn't available (such as when
-    # the project is installed without the repository root), fall back to the
-    # ``api.db`` package which always ships with the application.
     from api.db.base import Base
+except ModuleNotFoundError as e:
+    raise ImportError(
+        "Could not import Base from 'api.db.base'. Make sure PYTHONPATH includes /app/ai-stock-platform and that the api package is present."
+    ) from e
 
 # this is the Alembic Config object
 config = context.config
