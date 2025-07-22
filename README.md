@@ -96,6 +96,11 @@ To create a virtual environment and install dependencies, run:
 ./setup_env.sh
 ```
 Activate it with `source venv/bin/activate`.
+After activating, add the API package to your `PYTHONPATH` so tools like
+Alembic can locate the `api` module when run from outside the repository root:
+```bash
+export PYTHONPATH="$(pwd)/ai-stock-platform:$PYTHONPATH"
+```
 
 ## External API Key
 To fetch real-time stock market data you must set the `ALPHA_VANTAGE_API_KEY`
