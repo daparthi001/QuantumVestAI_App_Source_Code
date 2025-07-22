@@ -12,6 +12,17 @@ from datetime import datetime, timedelta
 from logging.config import dictConfig
 from pathlib import Path
 
+# Ensure the repository root is first on ``sys.path`` so imports like
+# ``ui.routes`` resolve to the compatibility packages located at the
+# repository root rather than the nested ``ui`` directory that exists
+# alongside this file when running the application directly from this
+# folder.  This prevents "attempted relative import beyond top-level"
+# errors that occur when the namespace package is chosen instead of the
+# intended package with an ``__init__``.
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from fastapi import FastAPI, Form, HTTPException, Query, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
