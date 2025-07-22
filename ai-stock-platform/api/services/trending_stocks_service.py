@@ -21,8 +21,11 @@ from typing import Any, Dict, List, Optional
 # instead of the ``settings`` instance, leading to missing attribute errors.
 try:
     from api.core.config.settings import settings
-except ModuleNotFoundError:  # pragma: no cover - fallback for missing wrapper
-    from ..core.config.settings import settings
+except ModuleNotFoundError as e:
+    raise ImportError(
+        "Could not import 'api.core.config.settings'. "
+        "Make sure PYTHONPATH includes the ai-stock-platform directory."
+    ) from e
 
 # Try to import aiohttp, fallback to None if not available
 try:
