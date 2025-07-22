@@ -20,7 +20,8 @@ import requests
 # are on ``sys.path`` during tests.
 from core.config import settings
 
-from ui.services.api_client import APIClient
+# Import directly from the services package used by the application
+from services.api_client import APIClient
 
 
 def test_api_client_initialization():
