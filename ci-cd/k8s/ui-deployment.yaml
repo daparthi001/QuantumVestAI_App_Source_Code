@@ -102,39 +102,9 @@ spec:
           value: "true"
         - name: ENABLE_CORS
           value: "true"
-        # Health check settings
-        - name: HEALTH_CHECK_PATH
-          value: "/health"
-        - name: HEALTH_CHECK_ENABLED
-          value: "true"
-        - name: PORT
-          value: "3000"
-        - name: HOST
-          value: "0.0.0.0"
-        - name: SECRET_KEY
-          valueFrom:
-            secretKeyRef:
-              name: ui-secrets
-              key: JWT_SECRET_KEY
-        - name: APP_VERSION
-          value: "v1.5.2"
-        - name: API_BASE_URL
-          value: "http://quantumvestai-dev-api.dev.svc.cluster.local:8000/api"
-        - name: ENV
-          value: "production"
-        - name: ENVIRONMENT
-          value: "development"
-        - name: DEBUG
-          value: "false"
-        - name: WORKERS
-          value: "4"
-        - name: LOG_LEVEL
-          value: "info"
-        - name: CORS_ORIGINS
-          value: "*"
-        - name: CORS_ALLOW_CREDENTIALS
-          value: "true"
-        
+        # Ensure PYTHONPATH is set for robust import resolution
+        - name: PYTHONPATH
+          value: "/app/ai-stock-platform:/app/ai-stock-platform/ui"
         # Use startup script from container
         command: ["/bin/bash", "-c"]
         args:

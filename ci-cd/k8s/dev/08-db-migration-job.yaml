@@ -247,6 +247,9 @@ spec:
                 echo "Database migrations failed."
                 exit 1
               fi
+          env:
+            - name: PYTHONPATH
+              value: /app/ai-stock-platform:/app/ai-stock-platform/api
           envFrom:
             - configMapRef:
                 name: quantumvestai-config

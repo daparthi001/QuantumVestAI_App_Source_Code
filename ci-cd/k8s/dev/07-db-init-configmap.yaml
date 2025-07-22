@@ -16,9 +16,12 @@ data:
   alembic.ini: |
     [alembic]
     script_location = api/alembic
-    sqlalchemy.url = postgresql://%(username)s:%(password)s@%(host)s:%(port)s/%(dbname)s
+    # Use RDS environment variables for connectivity
+    sqlalchemy.url = postgresql://$(RDS_USERNAME):$(RDS_PASSWORD)@$(RDS_HOST):$(RDS_PORT)/$(RDS_DBNAME)
     file_template = %%(year)d%%(month).2d%%(day).2d_%%(hour).2d%%(minute).2d%%(second).2d_%%(rev)s_%%(slug)s
     timezone = UTC
+    # Ensure PYTHONPATH is set for Alembic migrations
+    PYTHONPATH = /app/ai-stock-platform:/app/ai-stock-platform/api
 
   wait-for-db.sh: |
     #!/bin/sh
