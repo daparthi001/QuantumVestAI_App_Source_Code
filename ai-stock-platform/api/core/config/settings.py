@@ -24,13 +24,16 @@ class DatabaseSettings(BaseModel):
     def get_db_url(self) -> str:
         """
         Generate database connection URL
-        
+
         Returns:
             str: Fully formed database connection URL
         """
+        test_url = os.getenv("TEST_DATABASE_URL")
+        if test_url:
+            return test_url
         # Retrieve password, with fallback to default
         db_password = (
-            self.password.get_secret_value() if self.password 
+            self.password.get_secret_value() if self.password
             else os.getenv('DB_PASSWORD', '75LerK%0_J<t$H}Z')
         )
         

@@ -15,11 +15,15 @@ import aiohttp
 # Import settings directly from the API package.  Importing via the
 # ``core`` compatibility package may resolve to the ``core.config.settings``
 # module instead of the ``settings`` instance which causes attribute errors.
+# Import the settings object from the API's configuration package. Using the
+# explicit ``api.core.config`` path avoids mistakenly importing the
+# similarly named package in the repository root which does not expose the
+# ``ALPHA_VANTAGE_API_KEY`` attribute.
 try:
-    from core.config import settings
-except ModuleNotFoundError as e:
+    from api.core.config import settings
+except ModuleNotFoundError as e:  # pragma: no cover - explicit error path
     raise ImportError(
-        "Could not import 'core.config.settings'. Make sure PYTHONPATH includes the ai-stock-platform directory."
+        "Could not import API configuration. Ensure PYTHONPATH includes the api package."
     ) from e
 from sqlalchemy.orm import Session
 
