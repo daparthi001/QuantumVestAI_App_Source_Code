@@ -102,6 +102,17 @@ Alembic can locate the `api` module when run from outside the repository root:
 export PYTHONPATH="$(pwd)/ai-stock-platform:$PYTHONPATH"
 ```
 
+> **Important**: Ensure that the top-level `ai-stock-platform` directory is
+> listed **before** the `ai-stock-platform/api` directory in your
+> `PYTHONPATH`. If the API folder appears first, imports such as
+> `from core.config import get_settings` may resolve to the legacy
+> `api/core/config` module which does not expose `get_settings` and results in
+> the `ImportError: cannot import name 'get_settings'` error. A safe ordering is:
+> ```bash
+> export PYTHONPATH="$(pwd)/ai-stock-platform:$(pwd)/ai-stock-platform/api:$PYTHONPATH"
+> ```
+> This guarantees that the shared `core` package is used for configuration.
+
 ## External API Key
 To fetch real-time stock market data you must set the `ALPHA_VANTAGE_API_KEY`
 environment variable. Sign up for a free key at
