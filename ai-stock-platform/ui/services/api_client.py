@@ -15,7 +15,10 @@ import requests
 try:  # pragma: no cover - api package may not be installed
     from api.core.config.settings import settings
 except ModuleNotFoundError:
-    from ui.config import settings
+    try:
+        from ui.config import settings
+    except ModuleNotFoundError:  # pragma: no cover - ui package may be renamed
+        from app.config import settings
 from requests.exceptions import ConnectionError, RequestException, Timeout
 
 
