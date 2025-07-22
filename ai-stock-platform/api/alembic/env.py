@@ -57,7 +57,13 @@ settings_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(settings_module)
 settings = settings_module.settings
 # Import the SQLAlchemy metadata
-from db.base import Base
+try:
+    from db.base import Base
+except ModuleNotFoundError:
+    # When the compatibility ``db`` package isn't available (such as when
+    # the project is installed without the repository root), fall back to the
+    # ``api.db`` package which always ships with the application.
+    from api.db.base import Base
 
 # this is the Alembic Config object
 config = context.config
