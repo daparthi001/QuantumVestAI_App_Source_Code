@@ -12,9 +12,7 @@ from typing import Any, Dict, List, Optional
 
 import pandas as pd
 import tweepy
-# Import settings from the API package to avoid the ``core`` compatibility
-# layer returning the module rather than the settings instance.
-from api.core.config.settings import settings
+from core.config import settings
 from core.exceptions import (ConfigurationError, ExternalAPIError,
                              RateLimitError)
 from textblob import TextBlob

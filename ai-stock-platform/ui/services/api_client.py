@@ -11,7 +11,7 @@ from urllib.parse import urljoin
 import requests
 # Attempt to load settings from the UI package first, then API package if available.
 try:
-    from ui.config.settings import get_settings
+    from core.config import get_settings
 except ModuleNotFoundError:
     try:
         from api.core.config.settings import get_settings

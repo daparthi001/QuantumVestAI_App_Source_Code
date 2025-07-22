@@ -6,7 +6,7 @@ import os
 
 import pytest
 from fastapi import status
-from ui.config import settings
+from core.config import settings
 
 settings.API_BASE_URL = "http://testserver/api"
 

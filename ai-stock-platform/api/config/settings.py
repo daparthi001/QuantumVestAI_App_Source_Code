@@ -3,6 +3,9 @@ Settings Module
 Created: 2025-05-21 15:12:28
 Author: daparthi001
 """
+# DEPRECATED: All config is now in core/config/settings.py
+# This file is no longer used and can be deleted.
+
 from functools import cached_property
 from typing import List, Union
 import os

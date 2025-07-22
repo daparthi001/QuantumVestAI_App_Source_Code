@@ -24,11 +24,14 @@ COPY . .
 # Copy the full api package to ensure all modules (main.py, __init__.py, etc.) are present
 COPY ai-stock-platform/api /app/api
 
+# Copy the shared core package for settings and utilities
+COPY core /app/core
+
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PORT=8000 \
-    PYTHONPATH=/app/ai-stock-platform:/app/ai-stock-platform/api:/app \
+    PYTHONPATH=/app/core:/app/ai-stock-platform:/app/ai-stock-platform/api:/app \
     TZ=UTC \
     API_ENV="development" \
     PROJECT_NAME="QuantumVestAI API" \

@@ -1,3 +1,6 @@
+# DEPRECATED: All config is now in core/config/settings.py
+# This file is no longer used and can be deleted.
+
 """
 Application Configuration Settings
 

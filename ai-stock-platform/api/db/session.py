@@ -38,8 +38,8 @@ try:
 except ImportError:
     try:
         # Try alternate import path
-        from core.config.settings import settings
-        logger.info("Successfully imported settings from core.config.settings")
+        from core.config import settings
+        logger.info("Successfully imported settings from core.config")
     except ImportError:
         # Create fallback settings if all imports fail
         logger.error("Failed to import settings, using environment variables directly")

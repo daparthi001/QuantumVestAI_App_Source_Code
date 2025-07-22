@@ -58,6 +58,9 @@ RUN echo '{\n\
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy the shared core package for settings and utilities
+COPY core /app/core
+
 # Copy the full ui and api packages to ensure all modules are present for imports
 COPY ai-stock-platform/ui /app/ui
 COPY ai-stock-platform/api /app/api
@@ -96,7 +99,7 @@ ENV PORT=3000 \
     APP_VERSION=1.5.2 \
     LAST_UPDATED="2025-06-20 03:25:47" \
     UPDATED_BY="daparthi001" \
-    PYTHONPATH=/app/ai-stock-platform:/app/ai-stock-platform/ui:/app/ui:/app/api:/app
+    PYTHONPATH=/app/core:/app/ai-stock-platform:/app/ai-stock-platform/ui:/app/ui:/app/api:/app
 
 # Expose port
 EXPOSE 3000

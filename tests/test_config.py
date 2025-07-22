@@ -11,7 +11,7 @@ sys.path.append(ROOT)
 sys.path.append(os.path.join(ROOT, "api"))
 sys.path.append(os.path.join(ROOT, "ui"))
 import pytest
-from api.core.config import Settings, validate_settings
+from core.config import Settings, validate_settings
 
 
 def test_settings_validation():
@@ -72,7 +72,7 @@ def test_environment_validation():
 
 def test_ui_cors_origins_empty_string():
     """Ensure UI settings handle empty CORS_ORIGINS"""
-    from ui.config.settings import Settings as UISettings
+    from core.config import Settings as UISettings
 
     settings = UISettings(CORS_ORIGINS="")
     assert settings.CORS_ORIGINS == []

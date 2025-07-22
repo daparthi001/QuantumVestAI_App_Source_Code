@@ -20,11 +20,10 @@ from typing import Any, Dict, List, Optional
 # via ``core.config.settings`` can result in the module object being returned
 # instead of the ``settings`` instance, leading to missing attribute errors.
 try:
-    from api.core.config.settings import settings
+    from core.config import settings
 except ModuleNotFoundError as e:
     raise ImportError(
-        "Could not import 'api.core.config.settings'. "
-        "Make sure PYTHONPATH includes the ai-stock-platform directory."
+        "Could not import 'core.config.settings'. Make sure PYTHONPATH includes the ai-stock-platform directory."
     ) from e
 
 # Try to import aiohttp, fallback to None if not available

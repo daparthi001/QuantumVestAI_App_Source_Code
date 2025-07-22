@@ -194,3 +194,6 @@ def get_settings() -> Settings:
     Using lru_cache decorator ensures we don't create multiple instances.
     """
     return settings
+
+# DEPRECATED: All config is now in core/config/settings.py
+# This file is no longer used and can be deleted.

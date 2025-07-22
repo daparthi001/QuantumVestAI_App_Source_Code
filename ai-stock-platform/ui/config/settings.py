@@ -3,6 +3,9 @@ Configuration Settings Module
 Created: 2025-05-22 05:06:41
 Author: daparthi001
 Updated: 2025-06-15 03:16:55 by daparthi001
+
+(DEPRECATED: All config is now in core/config/settings.py)
+This file is no longer used and can be deleted.
 """
 import logging
 from typing import List, Optional, Union

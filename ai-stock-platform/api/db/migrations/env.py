@@ -29,7 +29,7 @@ for parent in current.parents:
 # ``core.config`` module shadowing the package when installed
 # without the full repository. This ensures the Alembic environment
 # can always access the correct configuration.
-from api.core.config.settings import settings
+from core.config import settings
 try:
     from db.base import Base
 except ModuleNotFoundError:

@@ -21,7 +21,7 @@ try:
     # Import from the API package to ensure we get the actual Settings
     # instance.  Using the ``core`` compatibility layer can return the
     # module object when both packages are present on ``PYTHONPATH``.
-    from api.core.config.settings import settings
+    from core.config import settings
 except Exception:  # pragma: no cover - fallback for demo mode
     class Settings:
         SECRET_KEY = "supersecretkey123456789abcdef"

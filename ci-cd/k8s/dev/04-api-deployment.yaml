@@ -93,7 +93,7 @@ spec:
               name: ui-secrets
               key: ALPHA_VANTAGE_API_KEY
         - name: PYTHONPATH
-          value: /app/ai-stock-platform:/app/ai-stock-platform/api
+          value: /app/ai-stock-platform/core:/app/ai-stock-platform/api
         - name: PYTHONUNBUFFERED
           value: "1"
         - name: API_ENV
