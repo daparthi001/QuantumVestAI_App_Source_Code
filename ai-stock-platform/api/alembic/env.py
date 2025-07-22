@@ -20,16 +20,15 @@ from pathlib import Path
 # parent to ``sys.path``.
 import importlib.util
 
-if importlib.util.find_spec("api") is None:
-    current = Path(__file__).resolve()
-    for parent in current.parents:
-        if (parent / "api").exists():
-            sys.path.insert(0, str(parent))
-            break
-        alt = parent / "ai-stock-platform"
-        if (alt / "api").exists():
-            sys.path.insert(0, str(alt))
-            break
+current = Path(__file__).resolve()
+for parent in current.parents:
+    if (parent / "api").exists():
+        sys.path.insert(0, str(parent))
+        break
+    alt = parent / "ai-stock-platform"
+    if (alt / "api").exists():
+        sys.path.insert(0, str(alt))
+        break
 
 
 
