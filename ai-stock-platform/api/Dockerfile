@@ -22,7 +22,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Copy the full api package to ensure all modules (main.py, __init__.py, etc.) are present
-COPY ../api /app/api
+COPY ai-stock-platform/api /app/api
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \

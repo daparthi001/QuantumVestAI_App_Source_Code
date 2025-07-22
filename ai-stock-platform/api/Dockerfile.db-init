@@ -38,9 +38,6 @@ COPY api/ /app/api/
 COPY alembic/ /app/
 COPY scripts/ /app/api/scripts/
 
-# Copy the entire api package to ensure all modules (main.py, __init__.py, etc.) are present
-COPY api/ /app/api/
-
 # Make scripts executable
 RUN chmod +x /app/api/scripts/*.sh && \
     find /app/api/models /app/api/core /app/api/db /app/alembic -type f -exec chmod 644 {} + && \

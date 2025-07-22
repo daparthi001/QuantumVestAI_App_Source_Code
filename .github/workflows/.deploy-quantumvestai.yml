@@ -86,31 +86,28 @@ jobs:
           
     # Build and push UI image with updated path
     - name: Build, tag, and push UI Docker image
-      working-directory: ai-stock-platform/ui
       run: |
-        docker build -t ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:ui-${IMAGE_TAG} .
+        docker build -f ai-stock-platform/ui/Dockerfile -t ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:ui-${IMAGE_TAG} .
         docker tag ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:ui-${IMAGE_TAG} ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:ui-${ENVIRONMENT}-latest
         docker push ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:ui-${IMAGE_TAG}
         docker push ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:ui-${ENVIRONMENT}-latest
         echo "UI_IMAGE=${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:ui-${IMAGE_TAG}" >> $GITHUB_ENV
-    # Build and push DB init image with updated path
+
     - name: Build, tag, and push DB Init Docker image
       run: |
-        docker build -t ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:db-init-${IMAGE_TAG} -f ./ai-stock-platform/api/Dockerfile.db-init ./ai-stock-platform/api
+        docker build -f ai-stock-platform/api/Dockerfile.db-init -t ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:db-init-${IMAGE_TAG} .
         docker tag ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:db-init-${IMAGE_TAG} ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:db-init-${ENVIRONMENT}-latest
         docker push ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:db-init-${IMAGE_TAG}
         docker push ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:db-init-${ENVIRONMENT}-latest
         echo "DB_INIT_IMAGE=${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:db-init-${IMAGE_TAG}" >> $GITHUB_ENV
 
-    # Build and push API image with updated path
     - name: Build, tag, and push API Docker image
-      working-directory: ai-stock-platform/api
       run: |
-        docker build -t ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:api-${IMAGE_TAG} .
+        docker build -f ai-stock-platform/api/Dockerfile -t ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:api-${IMAGE_TAG} .
         docker tag ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:api-${IMAGE_TAG} ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:api-${ENVIRONMENT}-latest
         docker push ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:api-${IMAGE_TAG}
         docker push ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:api-${ENVIRONMENT}-latest
-        echo "API_IMAGE=${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:api-${IMAGE_TAG}" >> $GITHUB_ENV
+    echo "API_IMAGE=${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:api-${IMAGE_TAG}" >> $GITHUB_ENV
 
     - name: Update kubeconfig
       run: |

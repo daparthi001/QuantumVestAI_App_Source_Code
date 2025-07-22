@@ -59,8 +59,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the full ui and api packages to ensure all modules are present for imports
-COPY ../ui /app/ui
-COPY ../api /app/api
+COPY ai-stock-platform/ui /app/ui
+COPY ai-stock-platform/api /app/api
 
 # Copy application code (which may include an actual package.json that will overwrite our placeholder)
 COPY . .
