@@ -25,7 +25,13 @@ except (ModuleNotFoundError, ImportError):
     # originated from ``ui.core`` so we can re-import it from the project root.
     sys.modules.pop("core.config", None)
 
-    project_root = Path(__file__).resolve().parents[2]
+    candidate = Path(__file__).resolve()
+    project_root = candidate
+    # Walk upwards until we find a 'core/config' directory to use as project root
+    for parent in candidate.parents:
+        if (parent / "core" / "config").exists():
+            project_root = parent
+            break
     if str(project_root) not in sys.path:
         sys.path.insert(0, str(project_root))
 
