@@ -3,8 +3,8 @@ Centralized Application Configuration Settings
 This module provides the canonical settings and configuration for all QuantumVestAI services.
 """
 from typing import Optional
-from pydantic import BaseModel, Field, PostgresDsn, SecretStr
-from pydantic_settings import BaseSettings
+from pydantic import BaseModel, Field, PostgresDsn, SecretStr, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class DatabaseSettings(BaseModel):
     host: str = Field(default="quantumvestai-dev.cwbsqsiywwaa.us-east-1.rds.amazonaws.com", env='DB_HOST')
@@ -23,6 +23,30 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     DEBUG: bool = Field(default=True, env="DEBUG")
     database: DatabaseSettings = DatabaseSettings()
+    ENVIRONMENT: str = Field(default="development", env="ENVIRONMENT")
+
+    # Allow arbitrary extra fields for backwards compatibility
+    model_config = SettingsConfigDict(extra="ignore")
+
+    # API base URL used by the UI when calling the backend
+    API_BASE_URL: str = Field(default="http://quantumvestai-dev-api:8000", env="API_BASE_URL")
+
+    # Security Settings
+    SECRET_KEY: str = Field(default="your-secret-key", env="SECRET_KEY")
+    ALGORITHM: str = Field(default="HS256", env="ALGORITHM")
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
+
+    # Logging
+    LOG_LEVEL: str = Field(default="INFO", env="LOG_LEVEL")
+
+    BACKEND_CORS_ORIGINS: list[str] | str | None = None
+
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v):
+        if isinstance(v, str) and v:
+            return [i.strip() for i in v.split(",")]
+        return v or []
 
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
