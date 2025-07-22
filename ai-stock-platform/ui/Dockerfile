@@ -61,11 +61,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the shared core package for settings and utilities
 COPY core /app/core
 
-# Copy the full ui and api packages to ensure all modules are present for imports
-COPY ai-stock-platform/ui /app/ui
-COPY ai-stock-platform/api /app/api
-
-# Copy application code (which may include an actual package.json that will overwrite our placeholder)
+# Only copy the UI package (do not copy the full api or ui monorepo folders)
 COPY . .
 
 # Ensure the startup script is executable after copying

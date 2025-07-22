@@ -21,9 +21,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the application
 COPY . .
 
-# Copy the full api package to ensure all modules (main.py, __init__.py, etc.) are present
-COPY ai-stock-platform/api /app/api
-
 # Copy the shared core package for settings and utilities
 COPY core /app/core
 
