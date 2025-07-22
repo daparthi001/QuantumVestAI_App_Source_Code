@@ -5,8 +5,14 @@
 
 set -e
 
-# Ensure PYTHONPATH is set for all migration commands
-export PYTHONPATH="/app/api:/app:$PYTHONPATH"
+# Resolve the project structure so PYTHONPATH includes both the
+# project root and the API package. When running inside containers the
+# repository is typically located under */ai-stock-platform*.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+API_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+PROJECT_ROOT="$(dirname "$API_DIR")"
+
+export PYTHONPATH="${PROJECT_ROOT}:${API_DIR}:$PYTHONPATH"
 echo "PYTHONPATH set to: $PYTHONPATH"
 
 echo "[$(date -u '+%Y-%m-%d %H:%M:%S')] Starting database initialization..."
