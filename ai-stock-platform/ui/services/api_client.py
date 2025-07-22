@@ -21,9 +21,13 @@ except (ModuleNotFoundError, ImportError):
     import sys
     from pathlib import Path
 
-    # Remove any previously imported ``core.config`` module that may have
-    # originated from ``ui.core`` so we can re-import it from the project root.
+    # Remove any previously imported ``core`` package or ``core.config`` module
+    # that may have originated from ``ui.core`` so we can re-import them from
+    # the project root.  If only ``core.config`` is removed, Python will reuse
+    # the already-imported ``core`` package and still resolve ``core.config`` to
+    # the wrong location.
     sys.modules.pop("core.config", None)
+    sys.modules.pop("core", None)
 
     candidate = Path(__file__).resolve()
     project_root = None
