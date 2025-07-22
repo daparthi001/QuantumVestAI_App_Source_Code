@@ -20,6 +20,19 @@ from fastapi.templating import Jinja2Templates
 
 from ui.services.api_client import APIClient
 
+import sentry_sdk
+import os
+
+SENTRY_DSN = os.getenv("SENTRY_DSN", "")
+if SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        traces_sample_rate=1.0,
+        environment=os.getenv("API_ENV", "production"),
+    )
+
+from fastapi.middleware.gzip import GZipMiddleware
+
 # Define BASE_DIR first
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -891,6 +904,9 @@ for module_name, router_name in routers_to_include:
         logger.error(f"Error including {router_name}: {str(e)}")
 
 logger.info("QuantumVestAI UI application initialized successfully")
+
+# GZip compression middleware
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 if __name__ == "__main__":
     import uvicorn

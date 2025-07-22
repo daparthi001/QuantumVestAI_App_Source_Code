@@ -25,11 +25,26 @@ from core.validation import (validate_pagination_params,
                              validate_stock_symbol_param, validate_user_login)
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from routers.auth import router as auth_router
 from routers.websocket import manager as websocket_manager
 from routers.websocket import router as websocket_router
+import sentry_sdk
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from fastapi import Response as FastAPIResponse
+
+REQUEST_COUNT = Counter(
+    'api_requests_total',
+    'Total number of API requests',
+    ['method', 'endpoint', 'http_status']
+)
+REQUEST_LATENCY = Histogram(
+    'api_request_latency_seconds',
+    'Latency of API requests in seconds',
+    ['method', 'endpoint']
+)
 
 # Configure logging
 logging.basicConfig(
@@ -68,6 +83,7 @@ app = configure_cors(app)
 # Add enhanced middleware
 app.add_middleware(ErrorHandlerMiddleware)
 app.add_middleware(RateLimitMiddleware)
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # Include WebSocket and authentication routes
 app.include_router(websocket_router)
@@ -88,8 +104,8 @@ async def log_requests(request: Request, call_next):
     logger.info(f"[{request_id}] Request: {method} {path}")
     
     try:
-        # Process the request
-        response = await call_next(request)
+        with REQUEST_LATENCY.labels(method=method, endpoint=path).time():
+            response = await call_next(request)
         
         # Calculate duration
         duration = (datetime.now() - start_time).total_seconds()
@@ -101,10 +117,22 @@ async def log_requests(request: Request, call_next):
         response.headers["X-Process-Time"] = str(duration)
         response.headers["X-Request-ID"] = request_id
         
+        # Add custom security and performance headers
+        response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "no-referrer-when-downgrade"
+        response.headers["Cache-Control"] = "public, max-age=60"
+        response.headers["Content-Encoding"] = "gzip"
+        
+        REQUEST_COUNT.labels(method=method, endpoint=path, http_status=response.status_code).inc()
+        
         return response
         
     except Exception as e:
         duration = (datetime.now() - start_time).total_seconds()
+        REQUEST_COUNT.labels(method=method, endpoint=path, http_status=500).inc()
         logger.error(f"[{request_id}] Error processing request {method} {path}: {e}")
         # Re-raise to let ErrorHandlerMiddleware handle it
         raise
@@ -527,6 +555,22 @@ async def startup_event():
     
     logger.info(f"Registered {route_count} API endpoints")
     logger.info("Enhanced QuantumVestAI API startup complete")
+
+
+# Initialize Sentry error tracking
+SENTRY_DSN = os.getenv("SENTRY_DSN", "")
+if SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        traces_sample_rate=1.0,
+        environment=os.getenv("API_ENV", "production"),
+    )
+
+
+@app.get("/metrics")
+def metrics():
+    """Prometheus metrics endpoint."""
+    return FastAPIResponse(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 # Check if this script is executed directly

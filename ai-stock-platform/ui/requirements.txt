@@ -60,3 +60,7 @@ redis>=4.6.0
 psycopg2-binary==2.9.9
 sqlalchemy==2.0.23
 PyJWT==2.7.0
+
+# Monitoring & Observability
+sentry-sdk
+prometheus_client

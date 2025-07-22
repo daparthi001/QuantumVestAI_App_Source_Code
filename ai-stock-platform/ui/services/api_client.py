@@ -11,10 +11,10 @@ from urllib.parse import urljoin
 import requests
 # Attempt to load settings from the UI package first, then API package if available.
 try:
-    from ui.config import settings
+    from ui.config.settings import get_settings
 except ModuleNotFoundError:
     try:
-        from api.core.config.settings import settings
+        from api.core.config.settings import get_settings
     except ModuleNotFoundError as e:
         raise ImportError(
             "Could not import settings from either 'ui.config' or 'api.core.config.settings'. "
@@ -28,7 +28,7 @@ class APIClient:
     
     def __init__(self, token: Optional[str] = None):
         """Initialize the API client with optional authentication token"""
-        self.base_url = settings.API_BASE_URL
+        self.base_url = get_settings().API_BASE_URL
         self.token = token
         self.timeout = 10  # Default timeout in seconds
         self.logger = logging.getLogger(__name__)

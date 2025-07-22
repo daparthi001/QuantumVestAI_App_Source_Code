@@ -10,7 +10,83 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   </head>
-  <body>
+  <body style="margin:0; padding:0; font-family: 'Inter', sans-serif; background: linear-gradient(120deg, #0f2027 0%, #2c5364 100%); min-height:100vh;">
+    <!-- HERO SECTION -->
+    <section style="padding: 64px 0 32px 0; background: linear-gradient(120deg, #0f2027 0%, #2c5364 100%); color: #fff;">
+      <div style="max-width:1200px; margin:0 auto; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:32px;">
+        <div style="flex:1 1 350px; min-width:320px;">
+          <h1 style="font-size:2.8rem; font-weight:700; margin-bottom:18px; line-height:1.1;">AI-Powered Investing for Everyone</h1>
+          <p style="font-size:1.25rem; margin-bottom:28px; max-width:500px;">QuantumVestAI brings Wall Street-grade analytics, real-time data, and predictive AI to your fingertips. Build, optimize, and grow your portfolio with confidence.</p>
+          <div style="display:flex; gap:16px; margin-bottom:24px;">
+            <a href="/register" style="background:#3f8efc; color:#fff; font-weight:600; padding:14px 32px; border-radius:8px; text-decoration:none; font-size:1.1rem; box-shadow:0 2px 12px rgba(63,142,252,0.18); transition:background 0.2s;">Get Started Free</a>
+            <a href="/features/advanced" style="border:2px solid #fff; color:#fff; font-weight:600; padding:14px 32px; border-radius:8px; text-decoration:none; font-size:1.1rem; background:transparent; transition:background 0.2s, color 0.2s;">See Features</a>
+          </div>
+          <div style="display:flex; align-items:center; margin-top:12px;">
+            <img src="/static/img/avatars/avatar1.png" style="border-radius:50%; width:40px; height:40px; margin-right:6px;" alt="User">
+            <img src="/static/img/avatars/avatar2.png" style="border-radius:50%; width:40px; height:40px; margin-right:6px;" alt="User">
+            <img src="/static/img/avatars/avatar3.png" style="border-radius:50%; width:40px; height:40px; margin-right:10px;" alt="User">
+            <span style="color:#e0e0e0; font-size:0.98rem;">Trusted by 10,000+ investors</span>
+          </div>
+        </div>
+        <div style="flex:1 1 350px; min-width:320px; text-align:center;">
+          <img src="/static/img/hero-investment.svg" alt="AI Investment Hero" style="max-width:95%; max-height:340px;">
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURE CARDS SECTION -->
+    <section style="background:#f7fafd; padding:48px 0 32px 0;">
+      <div style="max-width:1200px; margin:0 auto;">
+        <h2 style="text-align:center; font-size:2.1rem; font-weight:700; margin-bottom:12px; color:#1a2330;">Why QuantumVestAI?</h2>
+        <p style="text-align:center; color:#4a5a6a; font-size:1.15rem; margin-bottom:36px;">Unlock the most advanced investment platform on earth. Everything you need to succeed, in one place.</p>
+        <div style="display:flex; flex-wrap:wrap; gap:32px; justify-content:center;">
+          <div style="background:#fff; border-radius:16px; box-shadow:0 2px 16px rgba(44,83,100,0.07); padding:32px 24px; flex:1 1 260px; max-width:340px; min-width:260px; text-align:center;">
+            <img src="/static/img/icons/chart-line.svg" alt="AI Predictions" width="48" style="margin-bottom:18px;">
+            <h3 style="font-size:1.2rem; font-weight:600; margin-bottom:10px;">AI Stock Predictions</h3>
+            <p style="color:#4a5a6a;">Get real-time, AI-driven forecasts for stocks, ETFs, and crypto. Make smarter trades with confidence.</p>
+          </div>
+          <div style="background:#fff; border-radius:16px; box-shadow:0 2px 16px rgba(44,83,100,0.07); padding:32px 24px; flex:1 1 260px; max-width:340px; min-width:260px; text-align:center;">
+            <img src="/static/img/icons/dashboard.svg" alt="Portfolio Optimization" width="48" style="margin-bottom:18px;">
+            <h3 style="font-size:1.2rem; font-weight:600; margin-bottom:10px;">Portfolio Optimization</h3>
+            <p style="color:#4a5a6a;">Let our AI optimize your portfolio for risk, return, and diversification. Visualize your growth instantly.</p>
+          </div>
+          <div style="background:#fff; border-radius:16px; box-shadow:0 2px 16px rgba(44,83,100,0.07); padding:32px 24px; flex:1 1 260px; max-width:340px; min-width:260px; text-align:center;">
+            <img src="/static/img/icons/market.svg" alt="Real-Time Data" width="48" style="margin-bottom:18px;">
+            <h3 style="font-size:1.2rem; font-weight:600; margin-bottom:10px;">Live Market Data</h3>
+            <p style="color:#4a5a6a;">Track global indices, news, and sentiment in real time. Never miss a market move again.</p>
+          </div>
+          <div style="background:#fff; border-radius:16px; box-shadow:0 2px 16px rgba(44,83,100,0.07); padding:32px 24px; flex:1 1 260px; max-width:340px; min-width:260px; text-align:center;">
+            <img src="/static/img/icons/predictability.svg" alt="Predictability" width="48" style="margin-bottom:18px;">
+            <h3 style="font-size:1.2rem; font-weight:600; margin-bottom:10px;">Predictability Scores</h3>
+            <p style="color:#4a5a6a;">See which assets are most predictable right now, powered by advanced ML and quantum-inspired models.</p>
+          </div>
+          <div style="background:#fff; border-radius:16px; box-shadow:0 2px 16px rgba(44,83,100,0.07); padding:32px 24px; flex:1 1 260px; max-width:340px; min-width:260px; text-align:center;">
+            <img src="/static/img/icons/news.svg" alt="Market News" width="48" style="margin-bottom:18px;">
+            <h3 style="font-size:1.2rem; font-weight:600; margin-bottom:10px;">Curated Market News</h3>
+            <p style="color:#4a5a6a;">Stay ahead with AI-curated news, sentiment, and actionable insights for every asset you follow.</p>
+          </div>
+          <div style="background:#fff; border-radius:16px; box-shadow:0 2px 16px rgba(44,83,100,0.07); padding:32px 24px; flex:1 1 260px; max-width:340px; min-width:260px; text-align:center;">
+            <img src="/static/img/icons/user.svg" alt="Personalized Experience" width="48" style="margin-bottom:18px;">
+            <h3 style="font-size:1.2rem; font-weight:600; margin-bottom:10px;">Personalized Experience</h3>
+            <p style="color:#4a5a6a;">Custom dashboards, alerts, and recommendations tailored to your goals and risk profile.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRUSTED BY SECTION -->
+    <section style="background:#fff; border-top:1px solid #e6eaf0; border-bottom:1px solid #e6eaf0; padding:24px 0 16px 0;">
+      <div style="max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:18px;">
+        <img src="/static/img/logo.svg" alt="QuantumVestAI Logo" width="48" style="margin-right:8px;">
+        <span style="font-weight:600; color:#7a869a;">Trusted by professionals at:</span>
+        <img src="/static/img/icons/chart-candlestick.svg" alt="Finance" width="36" style="margin:0 8px;">
+        <img src="/static/img/icons/moon.svg" alt="Tech" width="36" style="margin:0 8px;">
+        <img src="/static/img/icons/sun.svg" alt="Growth" width="36" style="margin:0 8px;">
+        <img src="/static/img/icons/admin.svg" alt="Admin" width="36" style="margin:0 8px;">
+      </div>
+    </section>
+
+    <!-- React/SPA Root -->
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

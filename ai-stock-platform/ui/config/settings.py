@@ -109,26 +109,17 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-# Instantiate settings
-settings = Settings()
-
 # Set up logging
+try:
+    log_level = Settings().LOG_LEVEL
+except Exception:
+    log_level = "INFO"
 logging.basicConfig(
-    level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
+    level=getattr(logging, log_level.upper(), logging.INFO),
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-logger.info(
-    "Configuration loaded: Host=%s, Port=%s, Database=%s, User=%s, Environment=%s, Log Level=%s",
-    settings.DB_HOST,
-    settings.DB_PORT,
-    settings.DB_NAME,
-    settings.DB_USER,
-    settings.API_ENV,
-    settings.LOG_LEVEL
-)
-
 def get_settings():
-    """Get settings instance"""
-    return settings
+    """Get a fresh settings instance (for testability)"""
+    return Settings()

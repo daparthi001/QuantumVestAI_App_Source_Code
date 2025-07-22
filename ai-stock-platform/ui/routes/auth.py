@@ -189,7 +189,7 @@ async def register_post(
     confirm_password: str = Form(...),
     full_name: str = Form(...)
 ):
-    """Handle registration form submission (demo mode)"""
+    """Handle registration form submission (production)"""
     try:
         logger.info(f"Registration attempt for username: {username}")
         
@@ -210,11 +210,9 @@ async def register_post(
             raise ValueError("Full name must be at least 2 characters long")
         
         username = username.strip().lower()
-        
-        # Call backend API to create the user
         api = APIClient()
         try:
-            api.post(
+            api_response = api.post(
                 "/auth/register",
                 data={
                     "username": username,
@@ -223,15 +221,18 @@ async def register_post(
                     "full_name": full_name,
                 },
             )
+            # Check for API error
+            if api_response.get("status") != "success":
+                msg = api_response.get("message") or "Registration failed."
+                raise ValueError(msg)
         except Exception as api_exc:
             logger.error(f"API registration failed: {api_exc}")
-            raise ValueError("Registration failed")
-
+            raise ValueError(str(api_exc))
+        # Success: redirect to login with message
         return RedirectResponse(
             url="/auth/login?msg=Registration+successful!+Please+log+in.",
             status_code=status.HTTP_302_FOUND
         )
-        
     except ValueError as e:
         logger.warning(f"Registration validation failed: {str(e)}")
         return get_templates(request).TemplateResponse(
@@ -248,7 +249,6 @@ async def register_post(
             },
             status_code=400
         )
-    
     except Exception as e:
         logger.error(f"Registration error: {str(e)}")
         return get_templates(request).TemplateResponse(
