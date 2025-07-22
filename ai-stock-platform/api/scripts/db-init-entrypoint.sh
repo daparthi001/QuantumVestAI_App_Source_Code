@@ -5,6 +5,10 @@
 
 set -e
 
+# Ensure PYTHONPATH is set for all migration commands
+export PYTHONPATH="/app/api:/app:$PYTHONPATH"
+echo "PYTHONPATH set to: $PYTHONPATH"
+
 echo "[$(date -u '+%Y-%m-%d %H:%M:%S')] Starting database initialization..."
 
 # Wait for database. Support both old and new script locations

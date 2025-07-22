@@ -18,6 +18,10 @@ if [ ! -f "Dockerfile.db-init" ]; then
   exit 1
 fi
 
+# Set Python path for Alembic and all migration commands
+export PYTHONPATH="$(pwd)/ai-stock-platform:$(pwd)/ai-stock-platform/api:$PYTHONPATH"
+echo "PYTHONPATH set to: $PYTHONPATH"
+
 # Show current directory contents
 echo "Current directory contents:"
 ls -la
