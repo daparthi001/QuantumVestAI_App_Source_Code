@@ -31,6 +31,27 @@ else:  # pragma: no cover - handles shallow directory structures
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+# ---------------------------------------------------------------------------
+# Fallback namespace packages
+# ---------------------------------------------------------------------------
+# When the UI is built in isolation (e.g. the Docker image uses this folder as
+# the build context) the compatibility packages located at the monorepo root are
+# not copied into the image.  Imports such as ``ui.routes`` then fail because the
+# ``ui`` package defined at the repository root is missing.  To avoid "attempted
+# relative import beyond top-level package" errors we create a lightweight
+# namespace package for ``ui`` pointing to this directory if it does not already
+# exist.  This mirrors the behaviour of the compatibility package shipped in the
+# monorepo.
+if 'ui' not in sys.modules:  # pragma: no cover - executed only in containers
+    import types
+
+    ui_pkg = types.ModuleType('ui')
+    ui_pkg.__path__ = [str(file_path.parent)]
+    sys.modules['ui'] = ui_pkg
+
+    if str(file_path.parent) not in sys.path:
+        sys.path.insert(0, str(file_path.parent))
+
 from fastapi import FastAPI, Form, HTTPException, Query, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
