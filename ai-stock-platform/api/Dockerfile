@@ -21,11 +21,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the application
 COPY . .
 
+# Copy the full api package to ensure all modules (main.py, __init__.py, etc.) are present
+COPY ../api /app/api
+
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PORT=8000 \
-    PYTHONPATH=/app/ai-stock-platform:/app/ai-stock-platform/api \
+    PYTHONPATH=/app/ai-stock-platform:/app/ai-stock-platform/api:/app \
     TZ=UTC \
     API_ENV="development" \
     PROJECT_NAME="QuantumVestAI API" \

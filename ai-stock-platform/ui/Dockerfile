@@ -58,6 +58,10 @@ RUN echo '{\n\
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy the full ui and api packages to ensure all modules are present for imports
+COPY ../ui /app/ui
+COPY ../api /app/api
+
 # Copy application code (which may include an actual package.json that will overwrite our placeholder)
 COPY . .
 
@@ -92,7 +96,7 @@ ENV PORT=3000 \
     APP_VERSION=1.5.2 \
     LAST_UPDATED="2025-06-20 03:25:47" \
     UPDATED_BY="daparthi001" \
-    PYTHONPATH=/app/ai-stock-platform:/app/ai-stock-platform/ui
+    PYTHONPATH=/app/ai-stock-platform:/app/ai-stock-platform/ui:/app/ui:/app/api:/app
 
 # Expose port
 EXPOSE 3000
