@@ -31,7 +31,13 @@ script_dir = str(current.parent)
 if script_dir in sys.path:
     sys.path.remove(script_dir)
 
-for parent in current.parents:
+# Build a list of candidate directories to search for the API package.  Include
+# paths from PYTHONPATH so deployments that set it explicitly are handled as
+# well as any parent directories of this file.
+candidates = [Path(p) for p in os.environ.get("PYTHONPATH", "").split(os.pathsep) if p]
+candidates += list(current.parents)
+
+for parent in candidates:
     api_dir = parent / "api"
     alt_dir = parent / "ai-stock-platform" / "api"
     # Prefer an api package that contains the db module to avoid picking up
