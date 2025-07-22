@@ -12,19 +12,24 @@ class DatabaseSettings(BaseModel):
     name: str = Field(default="quantumvestaidb", env='DB_NAME')
     user: str = Field(default="dbadmin", env='DB_USER')
     password: Optional[SecretStr] = Field(default=None, env='DB_PASSWORD')
-    dsn: Optional[PostgresDsn] = None
 
-    def build_dsn(self):
-        if not self.dsn:
-            self.dsn = f"postgresql://{self.user}:{self.password.get_secret_value() if self.password else ''}@{self.host}:{self.port}/{self.name}"
-        return self.dsn
+    def get_db_url(self) -> str:
+        db_password = self.password.get_secret_value() if self.password else ''
+        return f"postgresql://{self.user}:{db_password}@{self.host}:{self.port}/{self.name}"
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "QuantumVestAI"
-    VERSION: str = "0.1.0"
+    PROJECT_NAME: str = Field(default="QuantumVestAI", env="PROJECT_NAME")
+    VERSION: str = Field(default="0.1.0", env="APP_VERSION")
     API_V1_STR: str = "/api/v1"
-    DEBUG: bool = Field(default=True)
-    DB: DatabaseSettings = DatabaseSettings()
+    DEBUG: bool = Field(default=True, env="DEBUG")
+    database: DatabaseSettings = DatabaseSettings()
+
+    @property
+    def SQLALCHEMY_DATABASE_URI(self) -> str:
+        return self.database.get_db_url()
+
+    def get_db_url(self) -> str:
+        return self.database.get_db_url()
 
 settings = Settings()
 
