@@ -26,13 +26,19 @@ except (ModuleNotFoundError, ImportError):
     sys.modules.pop("core.config", None)
 
     candidate = Path(__file__).resolve()
-    project_root = candidate
-    # Walk upwards until we find a 'core/config' directory to use as project root
+    project_root = None
+    # Walk upwards until we find a directory containing the real project
+    # packages.  In Docker or testing environments ``core.config`` may resolve
+    # to ``ui.core.config`` which lacks ``get_settings``.  Look for the
+    # "ai-stock-platform" package (which houses ``api`` and ``core``) first and
+    # fall back to any parent with a ``core/config`` directory.
     for parent in candidate.parents:
-        if (parent / "core" / "config").exists():
-            project_root = parent
+        if (parent / "ai-stock-platform" / "core" / "config").exists():
+            project_root = parent / "ai-stock-platform"
             break
-    if str(project_root) not in sys.path:
+        if (parent / "core" / "config").exists() and project_root is None:
+            project_root = parent
+    if project_root and str(project_root) not in sys.path:
         sys.path.insert(0, str(project_root))
 
     try:
