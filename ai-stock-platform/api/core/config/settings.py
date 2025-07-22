@@ -59,7 +59,12 @@ class Settings(BaseSettings):
     
     # Security Settings
     SECRET_KEY: str = Field(default="your-secret-key", env='SECRET_KEY')
+    ALGORITHM: str = Field(default="HS256", env="ALGORITHM")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    JWT_SECRET: SecretStr = Field(
+        default_factory=lambda: os.getenv("JWT_SECRET", os.getenv("SECRET_KEY", "your-secret-key"))
+    )
+    JWT_ALGORITHM: str = Field(default="HS256", env="JWT_ALGORITHM")
     
     # External Services
     TWITTER_BEARER_TOKEN: Optional[str] = Field(default=None, env='TWITTER_BEARER_TOKEN')
