@@ -50,7 +50,7 @@ RUN chmod +x /app/api/scripts/*.sh && \
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app \
+    PYTHONPATH=/app/api:/app \
     TZ=UTC \
     CREATED_BY="daparthi001" \
     CREATED_DATE="2025-05-20 06:39:14"

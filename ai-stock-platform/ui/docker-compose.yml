@@ -13,6 +13,7 @@ services:
       - DEBUG=true
       - API_BASE_URL=http://quantumvestai-dev-api:8000
       - ENVIRONMENT=development
+      - PYTHONPATH=/app/ai-stock-platform:/app/ai-stock-platform/ui
     volumes:
       - ./ui:/app/ui
       - ./templates:/app/templates
@@ -29,11 +30,12 @@ services:
       - PORT=8000
       - DEBUG=true
       - ENVIRONMENT=development
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_NAME=quantumvestai
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
+      - DB_HOST=${RDS_HOST}
+      - DB_PORT=${RDS_PORT}
+      - DB_NAME=${RDS_DBNAME}
+      - DB_USER=${RDS_USERNAME}
+      - DB_PASSWORD=${RDS_PASSWORD}
+      - PYTHONPATH=/app/ai-stock-platform:/app/ai-stock-platform/api
     depends_on:
       - db
       

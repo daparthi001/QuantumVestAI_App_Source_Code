@@ -35,8 +35,8 @@ fi
 # Create required directories
 mkdir -p /app/api /app/logs
 
-# Set Python path to include current directory
-export PYTHONPATH=/app:$PYTHONPATH
+# Set Python path to include both /app/ai-stock-platform and /app/ai-stock-platform/api for robust import resolution
+export PYTHONPATH=/app/ai-stock-platform:/app/ai-stock-platform/api:$PYTHONPATH
 echo "PYTHONPATH: $PYTHONPATH"
 
 # Check for __init__.py and create if missing
