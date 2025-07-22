@@ -21,6 +21,10 @@ if importlib.util.find_spec("api") is None:
         if (parent / "api").exists():
             sys.path.insert(0, str(parent))
             break
+        alt = parent / "ai-stock-platform"
+        if (alt / "api").exists():
+            sys.path.insert(0, str(alt))
+            break
 
 # Import settings directly from the API package to avoid the
 # ``core.config`` module shadowing the package when installed
