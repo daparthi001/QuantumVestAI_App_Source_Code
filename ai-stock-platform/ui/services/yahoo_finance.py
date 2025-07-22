@@ -6,9 +6,15 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 import yfinance as yf
-from config.constants import (DATE_FORMAT, DEFAULT_TICKERS, MARKET_INDICES,
-                              TIMEFRAME_1D, TIMEFRAME_1Y, TIMEFRAME_MAX)
-from config.settings import settings
+from ui.config.constants import (
+    DATE_FORMAT,
+    DEFAULT_TICKERS,
+    MARKET_INDICES,
+    TIMEFRAME_1D,
+    TIMEFRAME_1Y,
+    TIMEFRAME_MAX,
+)
+from ui.config.settings import settings
 
 
 class YahooFinanceService:
