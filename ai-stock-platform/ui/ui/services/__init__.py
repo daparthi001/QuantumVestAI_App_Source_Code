@@ -5,8 +5,7 @@ This module provides backward compatibility for code importing from ui.services.
 New code should import directly from services.
 """
 
-# Import all services directly to make them available through ui.services
-from services.api_client import *
-from services.yahoo_finance import *
+# Deprecated compatibility layer. This file is no longer needed and is kept only for legacy import compatibility.
+# Please import services from 'ui.services' instead.
 
-__all__ = []
+raise ImportError("'ui/ui/services/__init__.py' is deprecated. Import from 'ui.services' instead.")

@@ -5,7 +5,7 @@ This module provides backward compatibility for code importing from ui.services.
 New code should import directly from services.api_client.
 """
 
-# Import directly from the module to avoid circular imports
-from services.api_client import APIClient
+# Deprecated compatibility layer. This file is no longer needed and is kept only for legacy import compatibility.
+# Please import APIClient from 'ui.services.api_client' instead.
 
-__all__ = ['APIClient']
+raise ImportError("'ui/ui/services/api_client.py' is deprecated. Import APIClient from 'ui.services.api_client' instead.")
