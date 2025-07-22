@@ -19,7 +19,10 @@ from typing import Any, Dict, List, Optional
 # module in ``core`` which exposes a submodule with the same name.  Importing
 # via ``core.config.settings`` can result in the module object being returned
 # instead of the ``settings`` instance, leading to missing attribute errors.
-from api.core.config.settings import settings
+try:
+    from api.core.config.settings import settings
+except ModuleNotFoundError:  # pragma: no cover - fallback for missing wrapper
+    from ..core.config.settings import settings
 
 # Try to import aiohttp, fallback to None if not available
 try:
