@@ -21,6 +21,16 @@ from pathlib import Path
 import importlib.util
 
 current = Path(__file__).resolve()
+
+# When executed directly, Python places this file's directory at the start of
+# ``sys.path``.  The Alembic directory contains a lightweight ``db`` package
+# used only for offline operations which can inadvertently shadow the real
+# application package.  Remove this directory so imports resolve to the actual
+# modules bundled with the API.
+script_dir = str(current.parent)
+if script_dir in sys.path:
+    sys.path.remove(script_dir)
+
 for parent in current.parents:
     if (parent / "api").exists():
         sys.path.insert(0, str(parent))
