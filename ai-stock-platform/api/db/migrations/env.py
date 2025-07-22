@@ -27,7 +27,10 @@ if importlib.util.find_spec("api") is None:
 # without the full repository. This ensures the Alembic environment
 # can always access the correct configuration.
 from api.core.config.settings import settings
-from db.base import Base
+try:
+    from db.base import Base
+except ModuleNotFoundError:
+    from api.db.base import Base
 from sqlalchemy import engine_from_config, pool
 
 config = context.config
