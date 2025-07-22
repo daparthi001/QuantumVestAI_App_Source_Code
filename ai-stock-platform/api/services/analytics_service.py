@@ -12,21 +12,21 @@ from core.exceptions import ResourceNotFoundError, ValidationError
 from scipy import stats
 from sklearn.preprocessing import StandardScaler
 from sqlalchemy.orm import Session
+from api.utils.market_data import ALPHA_VANTAGE_API_KEY
 from utils.market_data import MarketDataClient
-from utils.ml_models import PredictiveModels
-from utils.sentiment import SentimentAnalyzer
-from utils.statistical import StatisticalAnalyzer
-from utils.time_series import TimeSeriesAnalyzer
+# from utils.ml_models import PredictiveModels
+# from utils.sentiment import SentimentAnalyzer
+# from utils.time_series import TimeSeriesAnalyzer
 
 
 class AnalyticsService:
     def __init__(self, db: Session):
         self.db = db
         self.market_data = MarketDataClient()
-        self.time_series = TimeSeriesAnalyzer()
-        self.stats = StatisticalAnalyzer()
-        self.ml_models = PredictiveModels()
-        self.sentiment = SentimentAnalyzer()
+        # self.time_series = TimeSeriesAnalyzer()
+        # self.stats = StatisticalAnalyzer()
+        # self.ml_models = PredictiveModels()
+        # self.sentiment = SentimentAnalyzer()
 
     async def get_portfolio_analytics(
         self,

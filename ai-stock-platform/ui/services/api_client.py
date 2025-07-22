@@ -9,17 +9,15 @@ from typing import Any, Dict, Optional, Union
 from urllib.parse import urljoin
 
 import requests
-# Attempt to load settings from the API package if available. When the UI is
-# deployed standalone (without the backend code present) fall back to its own
-# configuration module.
-try:  # pragma: no cover - api package may not be installed
-    from api.core.config.settings import settings
+# Attempt to load settings from the UI package first, then API package if available.
+try:
+    from ui.config import settings
 except ModuleNotFoundError:
     try:
-        from ui.config import settings
+        from api.core.config.settings import settings
     except ModuleNotFoundError as e:
         raise ImportError(
-            "Could not import settings from either 'api.core.config.settings' or 'ui.config'. "
+            "Could not import settings from either 'ui.config' or 'api.core.config.settings'. "
             "Make sure PYTHONPATH includes /app/ai-stock-platform."
         ) from e
 from requests.exceptions import ConnectionError, RequestException, Timeout
