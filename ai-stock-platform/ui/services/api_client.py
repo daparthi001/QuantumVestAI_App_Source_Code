@@ -17,8 +17,11 @@ try:  # pragma: no cover - api package may not be installed
 except ModuleNotFoundError:
     try:
         from ui.config import settings
-    except ModuleNotFoundError:  # pragma: no cover - ui package may be renamed
-        from app.config import settings
+    except ModuleNotFoundError as e:
+        raise ImportError(
+            "Could not import settings from either 'api.core.config.settings' or 'ui.config'. "
+            "Make sure PYTHONPATH includes /app/ai-stock-platform."
+        ) from e
 from requests.exceptions import ConnectionError, RequestException, Timeout
 
 
