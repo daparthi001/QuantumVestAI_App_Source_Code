@@ -91,7 +91,8 @@ ENV PORT=3000 \
     TZ=UTC \
     APP_VERSION=1.5.2 \
     LAST_UPDATED="2025-06-20 03:25:47" \
-    UPDATED_BY="daparthi001"
+    UPDATED_BY="daparthi001" \
+    PYTHONPATH=/app/ai-stock-platform
 
 # Expose port
 EXPOSE 3000
