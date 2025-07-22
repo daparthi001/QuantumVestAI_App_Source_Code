@@ -29,7 +29,7 @@ spec:
           containers:
             - name: db-update
               image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:db-init-dev-latest
-              command: ['python', 'scripts/update_market_data.py']
+              command: ['python', 'api/scripts/update_market_data.py']
               envFrom:
                 - configMapRef:
                     name: quantumvestai-config
