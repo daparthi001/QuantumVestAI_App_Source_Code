@@ -19,50 +19,6 @@ spec:
       containers:
       - name: db-init
         image: postgres:14
-        command:
-        - /bin/bash
-        - -c
-        - |
-          echo "Running database initialization scripts..."
-          
-          # Extract hostname from the endpoint if it contains port
-          if [[ "$DB_HOST" == *":"* ]]; then
-            DB_HOSTNAME=$(echo $DB_HOST | cut -d':' -f1)
-            echo "Extracted hostname: $DB_HOSTNAME from $DB_HOST"
-          else
-            DB_HOSTNAME=$DB_HOST
-            echo "Using hostname as-is: $DB_HOSTNAME"
-          fi
-          
-          echo "Connection details:"
-          echo "Host: $DB_HOSTNAME"
-          echo "Port: $DB_PORT"
-          echo "User: $DB_USER"
-          echo "Database: $DB_NAME"
-          
-          # Run SQL scripts in order
-          for script in /scripts/00-create-role.sql /scripts/01-create-tables.sql /scripts/02-create-functions.sql /scripts/03-grant-permissions.sql
-          do
-            echo "Executing $script..."
-            
-            # Use separate command arguments (avoids connection string issues)
-            export PGPASSWORD="$DB_PASSWORD"
-            psql -h "$DB_HOSTNAME" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$script"
-            
-            if [ $? -ne 0 ]; then
-              echo "Error executing $script"
-              exit 1
-            fi
-          done
-          
-          echo "Database initialization completed successfully"
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "200m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
         env:
         - name: DB_HOST
           valueFrom:
@@ -89,6 +45,43 @@ spec:
             secretKeyRef:
               name: quantumvestai-cluster-rds-credentials
               key: database
+        command:
+        - /bin/bash
+        - -c
+        - |
+          set -e
+          echo "Running database initialization scripts..."
+          # Extract hostname from the endpoint if it contains port
+          if [[ "$DB_HOST" == *":"* ]]; then
+            DB_HOSTNAME=$(echo $DB_HOST | cut -d':' -f1)
+            echo "Extracted hostname: $DB_HOSTNAME from $DB_HOST"
+          else
+            DB_HOSTNAME=$DB_HOST
+            echo "Using hostname as-is: $DB_HOSTNAME"
+          fi
+          echo "Connection details:"
+          echo "Host: $DB_HOSTNAME"
+          echo "Port: $DB_PORT"
+          echo "User: $DB_USER"
+          echo "Database: $DB_NAME"
+          for script in /scripts/00-create-role.sql /scripts/01-create-tables.sql /scripts/02-create-functions.sql /scripts/03-grant-permissions.sql
+          do
+            echo "Executing $script..."
+            export PGPASSWORD="$DB_PASSWORD"
+            psql -h "$DB_HOSTNAME" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$script"
+            if [ $? -ne 0 ]; then
+              echo "Error executing $script"
+              exit 1
+            fi
+          done
+          echo "Database initialization completed successfully"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
         volumeMounts:
         - name: scripts-volume
           mountPath: /scripts
