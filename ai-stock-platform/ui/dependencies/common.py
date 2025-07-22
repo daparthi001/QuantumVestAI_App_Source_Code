@@ -4,7 +4,12 @@ from typing import Any, Dict, Optional, Tuple
 from core.config.constants import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
 from fastapi import Query, Request
 
-from ui.services.api_client import APIClient
+# Prefer the standalone ``services`` package but fall back to the
+# old ``ui.services`` path when running tests from the monorepo.
+try:
+    from services.api_client import APIClient
+except ModuleNotFoundError:  # pragma: no cover - fallback for tests
+    from ui.services.api_client import APIClient
 
 API_URL = "http://quantumvestai-dev-api:8000"
 

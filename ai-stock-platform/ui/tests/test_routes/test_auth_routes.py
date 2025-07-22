@@ -22,13 +22,13 @@ def test_login_page_get(client):
 def test_login_post_success(client, test_user, monkeypatch):
     monkeypatch.setenv("API_BASE_URL", "http://testserver/api")
     # Mock the APIClient.post_form method
-    with patch('ui.services.api_client.APIClient.post_form') as mock_post_form:
+    with patch('services.api_client.APIClient.post_form') as mock_post_form:
         mock_post_form.return_value = {
             "data": {"access_token": "test_token"},
             "message": "Login successful"
         }
         # Simulate user info fetch
-        with patch('ui.services.api_client.APIClient.get') as mock_get:
+        with patch('services.api_client.APIClient.get') as mock_get:
             mock_get.return_value = {"data": test_user}
             response = client.post(
                 "/login",
@@ -46,7 +46,7 @@ def test_login_post_success(client, test_user, monkeypatch):
 def test_login_post_failure(client, monkeypatch):
     monkeypatch.setenv("API_BASE_URL", "http://testserver/api")
     # Mock the APIClient.post_form method to return no token (invalid credentials)
-    with patch('ui.services.api_client.APIClient.post_form') as mock_post_form:
+    with patch('services.api_client.APIClient.post_form') as mock_post_form:
         mock_post_form.return_value = {"data": {}, "message": "Invalid username or password"}
         response = client.post(
             "/login",
@@ -60,12 +60,12 @@ def test_login_post_failure(client, monkeypatch):
 def test_login_with_next_parameter(client, test_user, monkeypatch):
     monkeypatch.setenv("API_BASE_URL", "http://testserver/api")
     # Mock the APIClient.post_form method
-    with patch('ui.services.api_client.APIClient.post_form') as mock_post_form:
+    with patch('services.api_client.APIClient.post_form') as mock_post_form:
         mock_post_form.return_value = {
             "data": {"access_token": "test_token"},
             "message": "Login successful"
         }
-        with patch('ui.services.api_client.APIClient.get') as mock_get:
+        with patch('services.api_client.APIClient.get') as mock_get:
             mock_get.return_value = {"data": test_user}
             response = client.post(
                 "/login?next=/forecast",
@@ -104,7 +104,7 @@ def test_register_page_get(client):
 def test_register_post_success(client, monkeypatch):
     monkeypatch.setenv("API_BASE_URL", "http://testserver/api")
     # Mock the APIClient.post method
-    with patch('ui.services.api_client.APIClient.post') as mock_post:
+    with patch('services.api_client.APIClient.post') as mock_post:
         mock_post.return_value = {"data": {"user_id": 123}, "message": "Registration successful"}
         response = client.post(
             "/register",
@@ -133,7 +133,7 @@ def test_register_post_success(client, monkeypatch):
 def test_register_post_username_taken(client, monkeypatch):
     monkeypatch.setenv("API_BASE_URL", "http://testserver/api")
     # Mock the APIClient.post method to raise an exception
-    with patch('ui.services.api_client.APIClient.post') as mock_post:
+    with patch('services.api_client.APIClient.post') as mock_post:
         mock_post.side_effect = Exception("Username already taken")
         response = client.post(
             "/register",

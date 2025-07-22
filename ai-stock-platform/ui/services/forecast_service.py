@@ -1,7 +1,10 @@
 # ui/services/forecast_service.py
 from typing import Any, Dict, List, Optional
 
-from ui.services.api_client import APIClient
+# Import APIClient from the sibling ``services`` package. This keeps the
+# module working when the code is deployed without the legacy ``ui``
+# package at the repository root.
+from .api_client import APIClient
 
 
 def get_stock_info(ticker: str, token: Optional[str] = None) -> Optional[Dict[str, Any]]:

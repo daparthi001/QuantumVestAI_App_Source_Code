@@ -18,7 +18,19 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from ui.services.api_client import APIClient
+# Import the API client from the local services package. The project
+# originally referenced ``ui.services`` but the UI Docker image only
+# includes the ``services`` package at the application root, so using
+# the explicit local import avoids missing-module errors when running
+# inside that container.
+# Import the API client. Prefer the ``services`` package which is included when
+# running the UI in isolation, but fall back to ``ui.services`` when running the
+# application from the monorepo where the compatibility package may not be on
+# ``PYTHONPATH`` yet.
+try:
+    from services.api_client import APIClient
+except ModuleNotFoundError:  # pragma: no cover - fallback for tests
+    from ui.services.api_client import APIClient
 
 import sentry_sdk
 import os

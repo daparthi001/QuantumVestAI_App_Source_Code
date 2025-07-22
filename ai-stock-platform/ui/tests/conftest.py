@@ -7,9 +7,11 @@ import sys
 import pytest
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-# Ensure ai-stock-platform packages are discoverable
+# Ensure project packages are discoverable
+sys.path.append(ROOT)
 sys.path.append(os.path.join(ROOT, "ai-stock-platform"))
 sys.path.append(os.path.join(ROOT, "ai-stock-platform", "api"))
+# Add the UI package path so tests can import from ``services`` directly
 
 pytest.importorskip("httpx")
 from unittest.mock import MagicMock, patch
@@ -22,7 +24,9 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from ui.main import app as ui_app
-from ui.services.api_client import APIClient
+# Use the services package directly; the ``ui.services`` alias may not be
+# available when running the UI container in isolation.
+from services.api_client import APIClient
 
 
 @pytest.fixture
@@ -56,7 +60,7 @@ def mock_api_client():
     Returns:
         MagicMock: Mocked API client
     """
-    with patch('ui.services.api_client.APIClient') as mock:
+    with patch('services.api_client.APIClient') as mock:
         mock_client = MagicMock(spec=APIClient)
         yield mock_client
 

@@ -9,16 +9,22 @@ from typing import Any, Dict, Optional, Union
 from urllib.parse import urljoin
 
 import requests
-# Attempt to load settings from the UI package first, then API package if available.
+# Attempt to load settings from the shared core package first.  In some
+# testing environments the ``ui`` package inserts its own ``core`` package
+# ahead of the shared one which lacks ``get_settings``.  Fall back to the
+# API package if importing from ``core.config`` fails for any reason.
 try:
-    from core.config import get_settings
-except ModuleNotFoundError:
+    from core.config import get_settings  # type: ignore[attr-defined]
+    # Ensure we actually imported the desired function
+    if not callable(get_settings):
+        raise ImportError
+except (ModuleNotFoundError, ImportError):
     try:
         from api.core.config.settings import get_settings
     except ModuleNotFoundError as e:
         raise ImportError(
-            "Could not import settings from either 'ui.config' or 'api.core.config.settings'. "
-            "Make sure PYTHONPATH includes /app/ai-stock-platform."
+            "Could not import settings from either 'core.config' or 'api.core.config.settings'. "
+            "Make sure PYTHONPATH includes the project directory."
         ) from e
 from requests.exceptions import ConnectionError, RequestException, Timeout
 
