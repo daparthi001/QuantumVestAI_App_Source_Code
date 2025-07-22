@@ -42,33 +42,14 @@ for parent in current.parents:
 
 
 
-# Import the settings module directly from its file path. The
-# ``core`` package contains both a legacy ``config.py`` module and a
-# ``config`` package.  Python will prefer the module when resolving
-# ``api.core.config.settings`` which results in ``ModuleNotFoundError``
-# for the nested ``settings`` module.  Loading the module via its file
-# path avoids that conflict and ensures the correct configuration is
-# used during migrations.
+# Import the settings from the new shared core config package
+try:
+    from core.config import settings
+except ImportError as e:
+    raise ImportError(
+        "Could not import settings from 'core.config'. Make sure PYTHONPATH includes the ai-stock-platform directory."
+    ) from e
 
-# Locate the installed ``api`` package and build the path to
-# ``core/config/settings.py`` relative to it. To avoid importing the
-# entire package (which triggers database connections via ``api.__init__``),
-# derive the package location using ``importlib.util.find_spec``. This works
-# even when the Alembic environment is executed from a different directory
-# such as a Docker container where ``env.py`` lives in ``/app``.
-
-spec = importlib.util.find_spec("api")
-if spec is None or not spec.submodule_search_locations:
-    raise ImportError("Unable to locate installed 'api' package")
-
-api_root = Path(next(iter(spec.submodule_search_locations)))
-settings_path = api_root / "core" / "config" / "settings.py"
-spec = importlib.util.spec_from_file_location(
-    "api.core.config.settings", settings_path
-)
-settings_module = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(settings_module)
-settings = settings_module.settings
 # Import the SQLAlchemy metadata
 try:
     from api.db.base import Base
@@ -88,7 +69,12 @@ target_metadata = Base.metadata
 
 def get_url():
     """Get database URL from settings."""
-    return str(settings.SQLALCHEMY_DATABASE_URI)
+    # Use the new settings structure
+    if hasattr(settings, 'SQLALCHEMY_DATABASE_URI'):
+        return str(settings.SQLALCHEMY_DATABASE_URI)
+    elif hasattr(settings, 'DB') and hasattr(settings.DB, 'build_dsn'):
+        return settings.DB.build_dsn()
+    raise RuntimeError("No valid database URL found in settings")
 
 def run_migrations_offline():
     """Run migrations in 'offline' mode."""

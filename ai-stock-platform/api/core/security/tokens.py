@@ -7,7 +7,7 @@ from typing import Optional
 from jose import jwt
 from pydantic import BaseModel
 
-from ..config import get_settings
+from core.config import get_settings
 
 config = get_settings()
 
