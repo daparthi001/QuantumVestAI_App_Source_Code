@@ -9,10 +9,13 @@ from typing import Any, Dict, Optional, Union
 from urllib.parse import urljoin
 
 import requests
-# Import settings directly from the API package instead of the ``core``
-# compatibility layer to ensure we get the Settings instance rather than
-# the module object when both packages are on ``PYTHONPATH``.
-from api.core.config.settings import settings
+# Attempt to load settings from the API package if available. When the UI is
+# deployed standalone (without the backend code present) fall back to its own
+# configuration module.
+try:  # pragma: no cover - api package may not be installed
+    from api.core.config.settings import settings
+except ModuleNotFoundError:
+    from ui.config import settings
 from requests.exceptions import ConnectionError, RequestException, Timeout
 
 
