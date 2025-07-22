@@ -15,7 +15,10 @@ import aiohttp
 # Import settings directly from the API package.  Importing via the
 # ``core`` compatibility package may resolve to the ``core.config.settings``
 # module instead of the ``settings`` instance which causes attribute errors.
-from api.core.config.settings import settings
+try:
+    from api.core.config.settings import settings
+except ModuleNotFoundError:  # pragma: no cover - fallback when wrapper absent
+    from ..core.config.settings import settings
 from sqlalchemy.orm import Session
 
 from models.stock import Stock, WatchList
