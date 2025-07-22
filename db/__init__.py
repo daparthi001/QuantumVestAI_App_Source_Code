@@ -3,9 +3,10 @@ import importlib
 import sys
 from pathlib import Path
 
-# Ensure api package path is on sys.path
+# Ensure api package path is on sys.path. ``db`` lives at the repository root
+# so ``api`` is located one level up under ``ai-stock-platform/api``.
 repo_root = Path(__file__).resolve().parent
-api_path = repo_root / "ai-stock-platform" / "api"
+api_path = repo_root.parent / "ai-stock-platform" / "api"
 if api_path.exists() and str(api_path) not in sys.path:
     sys.path.insert(0, str(api_path))
 
