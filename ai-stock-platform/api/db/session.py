@@ -30,33 +30,25 @@ logger = logging.getLogger(__name__)
 
 # Defensive import strategy
 try:
-    # Try the API package first to avoid the ``core`` compatibility
-    # module which can return the settings module instead of the
-    # ``settings`` instance when imported from "core.config.settings".
-    from api.core.config.settings import settings
-    logger.info("Successfully imported settings from api.core.config.settings")
+    from core.config import settings
+    logger.info("Successfully imported settings from core.config")
 except ImportError:
-    try:
-        # Try alternate import path
-        from core.config import settings
-        logger.info("Successfully imported settings from core.config")
-    except ImportError:
-        # Create fallback settings if all imports fail
-        logger.error("Failed to import settings, using environment variables directly")
+    # Create fallback settings if all imports fail
+    logger.error("Failed to import settings, using environment variables directly")
+    
+    class FallbackSettings:
+        def __init__(self):
+            self.DB_HOST = os.environ.get("DB_HOST", "db")
+            self.DB_PORT = os.environ.get("DB_PORT", "5432")
+            self.DB_NAME = os.environ.get("DB_NAME", "quantumvestaidb")
+            self.DB_USER = os.environ.get("DB_USER", "dbadmin")
+            self._DB_PASSWORD = os.environ.get("DB_PASSWORD", "75LerK%0_J<t$H}Z")
+            self.API_ENV = os.environ.get("API_ENV", "development")
         
-        class FallbackSettings:
-            def __init__(self):
-                self.DB_HOST = os.environ.get("DB_HOST", "db")
-                self.DB_PORT = os.environ.get("DB_PORT", "5432")
-                self.DB_NAME = os.environ.get("DB_NAME", "quantumvestaidb")
-                self.DB_USER = os.environ.get("DB_USER", "dbadmin")
-                self._DB_PASSWORD = os.environ.get("DB_PASSWORD", "75LerK%0_J<t$H}Z")
-                self.API_ENV = os.environ.get("API_ENV", "development")
-            
-            def get_db_url(self):
-                return f"postgresql://{self.DB_USER}:{self._DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
-        
-        settings = FallbackSettings()
+        def get_db_url(self):
+            return f"postgresql://{self.DB_USER}:{self._DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+    
+    settings = FallbackSettings()
 
 def create_db_engine(retries: int = 3, delay: int = 5):
     """Create database engine with retry logic"""
