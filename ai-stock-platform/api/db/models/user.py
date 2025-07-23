@@ -165,7 +165,13 @@ class User(Base):
 
 
     # Relationships
-    user_roles = relationship("UserRole", back_populates="user", cascade="all, delete-orphan", lazy="select")
+    user_roles = relationship(
+        "UserRole",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="select",
+        foreign_keys="UserRole.user_id",
+    )
     portfolios = relationship("Portfolio", back_populates="user", cascade="all, delete-orphan", lazy="select")
     user_settings = relationship("UserSetting", back_populates="user", cascade="all, delete-orphan", lazy="select")
     audit_logs = relationship("AuditLog", back_populates="user", lazy="select")
