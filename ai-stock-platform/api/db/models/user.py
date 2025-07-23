@@ -80,6 +80,7 @@ class User(Base, TimestampMixin):
                 self.last_name = None
     else:
         full_name = Column("full_name", String)
+
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
     role = Column(String, default="free", nullable=False)
