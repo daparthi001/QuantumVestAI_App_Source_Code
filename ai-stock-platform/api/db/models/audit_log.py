@@ -36,6 +36,9 @@ class AuditLog(Base):
             action.in_(['INSERT', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'ACCESS']),
             name='valid_action'
         ),
+        {
+            "extend_existing": True
+        }
     )
 
     def __repr__(self):

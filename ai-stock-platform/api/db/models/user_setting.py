@@ -14,6 +14,10 @@ from db.base import Base
 class UserSetting(Base):
     """User-specific settings model"""
     __tablename__ = "user_settings"
+    __table_args__ = (
+        UniqueConstraint('user_id', 'category', 'key', name='uq_user_category_key'),
+        {"extend_existing": True}
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
@@ -25,11 +29,6 @@ class UserSetting(Base):
 
     # Relationships
     user = relationship("User", back_populates="user_settings")
-
-    # Unique constraint
-    __table_args__ = (
-        UniqueConstraint('user_id', 'category', 'key', name='uq_user_category_key'),
-    )
 
     def __repr__(self):
         return f"<UserSetting(user_id={self.user_id}, key='{self.category}.{self.key}')>"

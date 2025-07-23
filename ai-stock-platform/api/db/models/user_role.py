@@ -14,6 +14,7 @@ from db.base import Base
 class UserRole(Base):
     """Association model between User and Role"""
     __tablename__ = "user_roles"
+    __table_args__ = {"extend_existing": True}
 
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
     role_id = Column(Integer, ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True)
