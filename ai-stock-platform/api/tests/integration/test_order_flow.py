@@ -13,6 +13,7 @@ import asyncio
 from datetime import datetime
 
 import pytest
+import pytest_asyncio
 from models.orders import Order, OrderStatus, OrderType, TimeInForce
 from services.market_data_service import MarketDataService
 from services.order_management import OrderManagementService
@@ -26,7 +27,7 @@ def event_loop():
     yield loop
     loop.close()
 
-@pytest.fixture(scope="module")
+@pytest_asyncio.fixture(scope="module")
 async def services():
     db = None
     market_data = MarketDataService()

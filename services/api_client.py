@@ -1,14 +1,20 @@
-"""Lightweight APIClient wrapper used for tests."""
+"""Lightweight API client used in tests."""
 from __future__ import annotations
 
-from pathlib import Path
+import os
 import json
 import requests
 
-from core.config import settings
+class _Settings:
+    """Minimal settings object for tests."""
+    API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost")
+
+settings = _Settings()
+
 
 class APIClient:
-    """Simplified API client for unit tests."""
+    """Simplified HTTP client for unit tests."""
+
     def __init__(self, token: str | None = None):
         self.base_url = settings.API_BASE_URL
         self.token = token
@@ -33,7 +39,9 @@ class APIClient:
 
     def get(self, endpoint: str, params: dict | None = None) -> dict | None:
         try:
-            resp = requests.get(self.build_url(endpoint), headers=self.headers, params=params, timeout=self.timeout)
+            resp = requests.get(
+                self.build_url(endpoint), headers=self.headers, params=params, timeout=self.timeout
+            )
             resp.raise_for_status()
             return resp.json()
         except Exception:
@@ -41,7 +49,12 @@ class APIClient:
 
     def post(self, endpoint: str, data: dict | None = None) -> dict | None:
         try:
-            resp = requests.post(self.build_url(endpoint), headers=self.headers, data=json.dumps(data or {}), timeout=self.timeout)
+            resp = requests.post(
+                self.build_url(endpoint),
+                headers=self.headers,
+                data=json.dumps(data or {}),
+                timeout=self.timeout,
+            )
             resp.raise_for_status()
             return resp.json()
         except Exception:
@@ -49,7 +62,12 @@ class APIClient:
 
     def put(self, endpoint: str, data: dict | None = None) -> dict | None:
         try:
-            resp = requests.put(self.build_url(endpoint), headers=self.headers, data=json.dumps(data or {}), timeout=self.timeout)
+            resp = requests.put(
+                self.build_url(endpoint),
+                headers=self.headers,
+                data=json.dumps(data or {}),
+                timeout=self.timeout,
+            )
             resp.raise_for_status()
             return resp.json()
         except Exception:
@@ -57,7 +75,9 @@ class APIClient:
 
     def delete(self, endpoint: str) -> dict | None:
         try:
-            resp = requests.delete(self.build_url(endpoint), headers=self.headers, timeout=self.timeout)
+            resp = requests.delete(
+                self.build_url(endpoint), headers=self.headers, timeout=self.timeout
+            )
             resp.raise_for_status()
             return resp.json()
         except Exception:
@@ -65,7 +85,9 @@ class APIClient:
 
     def post_form(self, endpoint: str, data: dict | None = None) -> dict | None:
         try:
-            resp = requests.post(self.build_url(endpoint), headers=self.headers, data=data, timeout=self.timeout)
+            resp = requests.post(
+                self.build_url(endpoint), headers=self.headers, data=data, timeout=self.timeout
+            )
             resp.raise_for_status()
             return resp.json()
         except Exception:
