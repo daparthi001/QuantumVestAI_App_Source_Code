@@ -24,12 +24,19 @@ from typing import Any, Dict, List, Optional
 # This avoids accidentally importing the similarly named package located in
 # the repository root which lacks several attributes such as
 # ``ALPHA_VANTAGE_API_KEY``.
+# Attempt to import the settings object. When running inside the Docker
+# container the ``api`` package may not be available because the working
+# directory is already the package itself. In that case fall back to the
+# ``core`` compatibility package which exposes the same settings instance.
 try:
     from api.core.config import settings
-except ModuleNotFoundError as e:  # pragma: no cover - explicit error path
-    raise ImportError(
-        "Could not import API configuration. Ensure PYTHONPATH includes the api package."
-    ) from e
+except ModuleNotFoundError:
+    try:
+        from core.config import settings  # type: ignore[attr-defined]
+    except ModuleNotFoundError as e:  # pragma: no cover - explicit error path
+        raise ImportError(
+            "Could not import API configuration. Ensure PYTHONPATH includes the api package."
+        ) from e
 
 # Try to import aiohttp, fallback to None if not available
 try:
