@@ -1,0 +1,132 @@
+@import url('./quantum-design-system.css');
+
+/* Landing Page Styles */
+body.quantum-landing {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(120deg, #0f2027 0%, #2c5364 100%);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.quantum-hero {
+  padding: 64px 0 32px;
+  background: linear-gradient(135deg, var(--quantum-primary) 0%, var(--quantum-secondary) 100%);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.quantum-hero .hero-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+}
+
+.quantum-hero h1 {
+  font-size: 2.8rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+  line-height: 1.1;
+  animation: fadeInUp 0.8s both;
+}
+
+.quantum-hero p {
+  font-size: 1.25rem;
+  margin-bottom: 28px;
+  max-width: 500px;
+  animation: fadeInUp 1s both;
+}
+
+.quantum-hero .hero-buttons {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  animation: fadeInUp 1.2s both;
+}
+
+.quantum-hero .hero-trusted {
+  display: flex;
+  align-items: center;
+  margin-top: 12px;
+  animation: fadeInUp 1.4s both;
+}
+
+.quantum-hero .hero-trusted img {
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  margin-right: 6px;
+}
+
+.feature-section {
+  background: #f7fafd;
+  padding: 48px 0 32px;
+}
+
+.feature-section h2 {
+  text-align: center;
+  font-size: 2.1rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #1a2330;
+}
+
+.feature-section p.section-intro {
+  text-align: center;
+  color: #4a5a6a;
+  font-size: 1.15rem;
+  margin-bottom: 36px;
+}
+
+.feature-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  justify-content: center;
+}
+
+.feature-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(44, 83, 100, 0.07);
+  padding: 32px 24px;
+  flex: 1 1 260px;
+  max-width: 340px;
+  min-width: 260px;
+  text-align: center;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(44, 83, 100, 0.12);
+}
+
+.trusted-section {
+  background: #fff;
+  border-top: 1px solid #e6eaf0;
+  border-bottom: 1px solid #e6eaf0;
+  padding: 24px 0 16px;
+}
+
+.trusted-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 18px;
+  color: #7a869a;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
