@@ -8,7 +8,8 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-from from db.base import Base
+from db.base import Base
+
 
 
 class Role(Base):

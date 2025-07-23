@@ -18,6 +18,19 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.orm import relationship, Session
 from sqlalchemy.sql import func, select, exists, case
+try:
+    from werkzeug.security import generate_password_hash, check_password_hash
+except ImportError:  # pragma: no cover - optional dependency may be missing
+    import hashlib
+
+    def generate_password_hash(password: str) -> str:
+        """Minimal fallback password hashing using SHA256."""
+        return hashlib.sha256(password.encode()).hexdigest()
+
+    def check_password_hash(pw_hash: str, password: str) -> bool:
+        """Verify a password against the SHA256 fallback hash."""
+        return pw_hash == hashlib.sha256(password.encode()).hexdigest()
+
 
 from db.base import Base
 
