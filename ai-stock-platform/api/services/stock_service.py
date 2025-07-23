@@ -19,12 +19,20 @@ import aiohttp
 # explicit ``api.core.config`` path avoids mistakenly importing the
 # similarly named package in the repository root which does not expose the
 # ``ALPHA_VANTAGE_API_KEY`` attribute.
+# Attempt to import settings from ``api.core.config``. When the service is
+# executed inside the Docker image the working directory already contains the
+# package contents, so the ``api`` package name may not be importable.  In that
+# case fall back to the ``core`` compatibility package which exposes the same
+# settings object.
 try:
     from api.core.config import settings
-except ModuleNotFoundError as e:  # pragma: no cover - explicit error path
-    raise ImportError(
-        "Could not import API configuration. Ensure PYTHONPATH includes the api package."
-    ) from e
+except ModuleNotFoundError:
+    try:
+        from core.config import settings  # type: ignore[attr-defined]
+    except ModuleNotFoundError as e:  # pragma: no cover - explicit error path
+        raise ImportError(
+            "Could not import API configuration. Ensure PYTHONPATH includes the api package."
+        ) from e
 from sqlalchemy.orm import Session
 
 from models.stock import Stock, WatchList
