@@ -32,6 +32,12 @@ else
     exit 1
 fi
 
-alembic -c "$ALEMBIC_CFG" upgrade heads
+
+# Attempt upgrade, handle missing revisions by stamping baseline
+if ! alembic -c "$ALEMBIC_CFG" upgrade heads; then
+    echo "Alembic upgrade failed. Stamping database to initial revision and retrying..." >&2
+    alembic -c "$ALEMBIC_CFG" stamp 0001
+    alembic -c "$ALEMBIC_CFG" upgrade heads
+fi
 
 echo "[$(date -u '+%Y-%m-%d %H:%M:%S')] Migrations completed successfully!"

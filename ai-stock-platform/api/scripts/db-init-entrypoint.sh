@@ -44,7 +44,13 @@ else
     exit 1
 fi
 
-alembic -c "$ALEMBIC_CFG" upgrade heads
+
+# Attempt upgrade, handle missing revisions by stamping baseline
+if ! alembic -c "$ALEMBIC_CFG" upgrade heads; then
+    echo "Alembic upgrade failed. Stamping database to initial revision and retrying..." >&2
+    alembic -c "$ALEMBIC_CFG" stamp 0001
+    alembic -c "$ALEMBIC_CFG" upgrade heads
+fi
 
 # Run seed script if specified
 if [ "${RUN_SEED:-false}" = "true" ]; then
