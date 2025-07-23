@@ -8,7 +8,7 @@ To create a new migration:
     alembic revision --autogenerate -m "description of changes"
 
 To upgrade to the latest version:
-    alembic upgrade head
+    alembic upgrade heads
 
 To downgrade to a previous version:
     alembic downgrade <revision>

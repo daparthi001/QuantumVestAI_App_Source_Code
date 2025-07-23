@@ -39,7 +39,7 @@ else
 fi
 
 pushd "$API_DIR" >/dev/null
-alembic -c "$ALEMBIC_CFG" upgrade head
+alembic -c "$ALEMBIC_CFG" upgrade heads
 popd >/dev/null
 
 # Step 2: Apply reference data

@@ -32,6 +32,6 @@ else
     exit 1
 fi
 
-alembic -c "$ALEMBIC_CFG" upgrade head
+alembic -c "$ALEMBIC_CFG" upgrade heads
 
 echo "[$(date -u '+%Y-%m-%d %H:%M:%S')] Migrations completed successfully!"

@@ -31,7 +31,7 @@ if [ "${AUTO_MIGRATE}" = "true" ]; then
             exit 1
         fi
 
-        alembic -c "$ALEMBIC_CFG" upgrade head
+        alembic -c "$ALEMBIC_CFG" upgrade heads
     else
         echo "Alembic not installed; skipping migrations" >&2
     fi
