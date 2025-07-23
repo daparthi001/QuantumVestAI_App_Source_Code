@@ -11,6 +11,15 @@ from .user_role import UserRole
 from .user_setting import UserSetting
 from .audit_log import AuditLog
 from .user_session import UserSession
+from .stock import Stock, WatchList
+from .portfolio import (
+    Position,
+    Transaction,
+    PortfolioSummary,
+    TransactionType,
+)
+from .watchlist import Watchlist
+from .watchlist_stock import WatchlistStock
 
 # Import utility functions
 from .user import (
@@ -37,6 +46,8 @@ __all__ = [
     "create_user",
     "Stock",
     "WatchList",
+    "Watchlist",
+    "WatchlistStock",
     "Position",
     "Transaction",
     "PortfolioSummary",
