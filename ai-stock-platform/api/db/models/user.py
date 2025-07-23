@@ -118,6 +118,17 @@ class User(Base):
     else:
         full_name = Column("full_name", String)
 
+    def __init__(self, **kwargs):
+        """Allow ``full_name`` for split-name schemas."""
+        if "full_name" in kwargs and type(self)._use_split_names:
+            value = kwargs.pop("full_name")
+            if value:
+                parts = value.split(" ", 1)
+                kwargs.setdefault("first_name", parts[0])
+                if len(parts) > 1:
+                    kwargs.setdefault("last_name", parts[1])
+        super().__init__(**kwargs)
+
     is_active = Column(Boolean, default=True)
     if _has_is_superuser:
         is_superuser = Column(Boolean, default=False)
