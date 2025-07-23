@@ -91,33 +91,54 @@ class User(Base, TimestampMixin):
     if _has_is_superuser:
         is_superuser = Column(Boolean, default=False)
     else:
-        @hybrid_property
-        def is_superuser(self) -> bool:
-            """Compatibility shim when ``is_superuser`` column is absent."""
-            return getattr(self, "role", "") == "admin"
+        if _has_role:
+            @hybrid_property
+            def is_superuser(self) -> bool:
+                """Compatibility shim when ``is_superuser`` column is absent."""
+                return getattr(self, "role", "") == "admin"
 
-        @is_superuser.setter
-        def is_superuser(self, value: bool) -> None:
-            if value:
-                self.role = "admin"
-            elif getattr(self, "role", None) == "admin":
-                self.role = "free"
+            @is_superuser.setter
+            def is_superuser(self, value: bool) -> None:
+                if value:
+                    self.role = "admin"
+                elif getattr(self, "role", None) == "admin":
+                    self.role = "free"
+        else:
+            # When both ``is_superuser`` and ``role`` columns are missing,
+            # store the flag on the instance to avoid recursive lookups.
+            @hybrid_property
+            def is_superuser(self) -> bool:  # type: ignore[override]
+                return getattr(self, "_is_superuser", False)
+
+            @is_superuser.setter
+            def is_superuser(self, value: bool) -> None:
+                setattr(self, "_is_superuser", bool(value))
 
     if _has_role:
         role = Column(String, default="free", nullable=False)
     else:
-        @hybrid_property
-        def role(self) -> str:
-            return "admin" if getattr(self, "is_superuser", False) else "free"
+        if _has_is_superuser:
+            @hybrid_property
+            def role(self) -> str:  # type: ignore[override]
+                return "admin" if getattr(self, "is_superuser", False) else "free"
 
-        @role.setter
-        def role(self, value: str) -> None:
-            if value == "admin":
-                if hasattr(self, "is_superuser"):
+            @role.setter
+            def role(self, value: str) -> None:
+                if value == "admin":
                     self.is_superuser = True
-            else:
-                if hasattr(self, "is_superuser"):
+                else:
                     self.is_superuser = False
+        else:
+            # Neither ``role`` nor ``is_superuser`` columns exist.  Use an
+            # instance attribute to avoid recursion between the two hybrid
+            # properties.
+            @hybrid_property
+            def role(self) -> str:  # type: ignore[override]
+                return getattr(self, "_role", "free")
+
+            @role.setter
+            def role(self, value: str) -> None:
+                setattr(self, "_role", value)
 
     # Relationships
     positions = relationship(
