@@ -17,6 +17,23 @@ class QuantumVestAIException(Exception):
         super().__init__(self.message)
 
 
+class APIException(HTTPException):
+    """Base API exception class - for middleware compatibility"""
+
+    def __init__(
+        self,
+        status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail: str = "Internal server error",
+        error_code: Optional[str] = None,
+        headers: Optional[Dict[str, str]] = None
+    ):
+        headers = headers or {}
+        if error_code:
+            headers["X-Error-Code"] = error_code
+        super().__init__(status_code=status_code, detail=detail, headers=headers)
+        self.error_code = error_code
+
+
 class ValidationError(QuantumVestAIException):
     """Raised when validation fails"""
     pass
