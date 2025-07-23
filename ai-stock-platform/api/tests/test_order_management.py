@@ -13,8 +13,8 @@ from datetime import datetime
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from api.models.orders import Order, OrderStatus, OrderType, TimeInForce
-from api.services.order_management import OrderManagementService
+from models.orders import Order, OrderStatus, OrderType, TimeInForce
+from services.order_management import OrderManagementService
 
 
 @pytest.fixture

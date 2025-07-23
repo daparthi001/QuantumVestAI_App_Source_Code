@@ -1,6 +1,6 @@
 import uuid
 
-from api.models.orders import Order, OrderStatus, OrderType, TimeInForce
+from models.orders import Order, OrderStatus, OrderType, TimeInForce
 
 
 class OrderManagementService:

@@ -19,7 +19,7 @@ from textblob import TextBlob
 
 # Import the sentiment record from the API models package explicitly to avoid
 # confusion with the top-level ``models`` package.
-from api.models.sentiment import SentimentRecord
+from models.sentiment import SentimentRecord
 
 logger = logging.getLogger("api.social")
 

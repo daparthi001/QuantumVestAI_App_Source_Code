@@ -13,11 +13,11 @@ import asyncio
 from datetime import datetime
 
 import pytest
-from api.models.orders import Order, OrderStatus, OrderType, TimeInForce
-from api.services.market_data_service import MarketDataService
-from api.services.order_management import OrderManagementService
-from api.services.risk_management import RiskManagementService
-from api.services.trading_execution import TradingExecutionService
+from models.orders import Order, OrderStatus, OrderType, TimeInForce
+from services.market_data_service import MarketDataService
+from services.order_management import OrderManagementService
+from services.risk_management import RiskManagementService
+from services.trading_execution import TradingExecutionService
 
 
 @pytest.fixture(scope="module")
