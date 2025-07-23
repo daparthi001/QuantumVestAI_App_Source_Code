@@ -34,6 +34,7 @@ except ImportError:  # pragma: no cover - optional dependency may be missing
 
 
 from db.base import Base
+from db.models.associations import user_watchlist
 
 
 class User(Base):
@@ -190,6 +191,26 @@ class User(Base):
     user_settings = relationship("UserSetting", back_populates="user", cascade="all, delete-orphan", lazy="select")
     audit_logs = relationship("AuditLog", back_populates="user", lazy="select")
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan", lazy="select")
+
+    # Watchlist relationships
+    watchlist = relationship(
+        "Stock",
+        secondary=user_watchlist,
+        back_populates="watched_by",
+        lazy="select",
+    )
+    watchlist_entries = relationship(
+        "WatchList",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="select",
+    )
+    watchlists = relationship(
+        "Watchlist",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="select",
+    )
 
     # ==========================================
     # COMPUTED PROPERTIES (Full Name Support)
