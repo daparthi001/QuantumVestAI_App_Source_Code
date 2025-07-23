@@ -249,7 +249,7 @@ spec:
               fi
           env:
             - name: PYTHONPATH
-              value: /app/ai-stock-platform:/app/ai-stock-platform/api
+              value: /app/ai-stock-platform:/app/core
           envFrom:
             - configMapRef:
                 name: quantumvestai-config

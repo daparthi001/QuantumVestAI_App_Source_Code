@@ -21,7 +21,7 @@ data:
     file_template = %%(year)d%%(month).2d%%(day).2d_%%(hour).2d%%(minute).2d%%(second).2d_%%(rev)s_%%(slug)s
     timezone = UTC
     # Ensure PYTHONPATH is set for Alembic migrations
-    PYTHONPATH = /app/ai-stock-platform:/app/ai-stock-platform/api
+    PYTHONPATH = /app/ai-stock-platform:/app/core
 
   wait-for-db.sh: |
     #!/bin/sh

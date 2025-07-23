@@ -65,7 +65,7 @@ services:
       - USE_IAM_AUTH=false
       - ENVIRONMENT=development
       - DEBUG=true
-      - PYTHONPATH=/app/ai-stock-platform:/app/ai-stock-platform/api
+      - PYTHONPATH=/app/ai-stock-platform:/app/core
     volumes:
       - ./api:/app/api
       - api_logs:/app/logs

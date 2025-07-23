@@ -109,7 +109,7 @@ export PYTHONPATH="$(pwd)/ai-stock-platform:$PYTHONPATH"
 > `api/core/config` module which does not expose `get_settings` and results in
 > the `ImportError: cannot import name 'get_settings'` error. A safe ordering is:
 > ```bash
-> export PYTHONPATH="$(pwd)/ai-stock-platform:$(pwd)/ai-stock-platform/api:$PYTHONPATH"
+> export PYTHONPATH="$(pwd)/ai-stock-platform:$(pwd)/app/core:$PYTHONPATH"
 > ```
 > This guarantees that the shared `core` package is used for configuration.
 
@@ -149,7 +149,7 @@ environment variables `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` and
 For local development you can initialize a PostgreSQL database by running:
 
 ```bash
-./ai-stock-platform/api/scripts/init_local_db.sh
+./app/core/scripts/init_local_db.sh
 ```
 
 If the tables are missing at startup, the API will attempt to create them

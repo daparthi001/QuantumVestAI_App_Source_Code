@@ -28,7 +28,7 @@ COPY core /app/core
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PORT=8000 \
-    PYTHONPATH=/app/core:/app/ai-stock-platform:/app/ai-stock-platform/api:/app \
+    PYTHONPATH=/app/core:/app/ai-stock-platform:/app/core:/app \
     TZ=UTC \
     API_ENV="development" \
     PROJECT_NAME="QuantumVestAI API" \

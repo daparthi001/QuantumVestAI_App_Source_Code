@@ -35,7 +35,7 @@ services:
       - DB_NAME=${RDS_DBNAME}
       - DB_USER=${RDS_USERNAME}
       - DB_PASSWORD=${RDS_PASSWORD}
-      - PYTHONPATH=/app/ai-stock-platform:/app/ai-stock-platform/api
+      - PYTHONPATH=/app/ai-stock-platform:/app/core
     depends_on:
       - db
       
