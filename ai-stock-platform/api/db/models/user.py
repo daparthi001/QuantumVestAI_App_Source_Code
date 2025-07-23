@@ -44,27 +44,121 @@ class User(Base):
 
     # Primary identification
     id = Column(Integer, primary_key=True, index=True)
-    uuid = Column(UUID(as_uuid=True), default=uuid.uuid4, unique=True, nullable=False, index=True)
-    username = Column(String(50), unique=True, index=True, nullable=False)
-    email = Column(String(100), unique=True, index=True, nullable=False)
-    
-    # Authentication
-    password_hash = Column(String(255), nullable=False)
-    
-    # Personal information with full name support
-    first_name = Column(String(100), nullable=True)
-    last_name = Column(String(100), nullable=True)
-    display_name = Column(String(100), nullable=True)
-    avatar_url = Column(String(500), nullable=True)
-    
-    # Status and verification
-    is_active = Column(Boolean, default=True, nullable=False, index=True)
-    is_verified = Column(Boolean, default=False, nullable=False)
-    
-    # Timestamps
-    last_login = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    username = Column(String, unique=True, index=True, nullable=False)
+    # Historically this field has been named either ``hashed_password`` or
+    # ``password_hash`` depending on the migration path used when the database
+    # was created.  To transparently support both schemas we detect which column
+    # is present at import time and map the ``hashed_password`` attribute to that
+    # column.  ``password_hash`` is kept as a backward compatible synonym.
+
+    _pwd_column_name = "hashed_password"
+    _use_split_names = False
+    _has_is_superuser = True
+    _has_role = True
+    try:  # Introspect the DB to determine which columns actually exist
+        from core.config import get_settings
+        from sqlalchemy import create_engine, inspect
+
+        settings = get_settings()
+        engine = create_engine(settings.SQLALCHEMY_DATABASE_URI)
+        insp = inspect(engine)
+        cols = [c["name"] for c in insp.get_columns("users")]
+        engine.dispose()
+        if "password_hash" in cols and "hashed_password" not in cols:
+            _pwd_column_name = "password_hash"
+        if "full_name" not in cols and "first_name" in cols and "last_name" in cols:
+            _use_split_names = True
+        _has_is_superuser = "is_superuser" in cols
+        _has_role = "role" in cols
+    except Exception:
+        # If inspection fails (e.g., during tests with no DB) default to the
+        # original column names.
+        _has_is_superuser = True
+        _has_role = True
+        pass
+
+    hashed_password = Column(_pwd_column_name, String, nullable=False)
+    password_hash = synonym("hashed_password")
+
+    if _use_split_names:
+        first_name = Column("first_name", String)
+        last_name = Column("last_name", String)
+
+        @hybrid_property
+        def full_name(self) -> Optional[str]:
+            parts = []
+            if self.first_name:
+                parts.append(self.first_name)
+            if self.last_name:
+                parts.append(self.last_name)
+            return " ".join(parts) if parts else None
+
+        @full_name.setter
+        def full_name(self, value: Optional[str]) -> None:
+            if value:
+                names = value.split(" ", 1)
+                self.first_name = names[0]
+                self.last_name = names[1] if len(names) > 1 else None
+            else:
+                self.first_name = None
+                self.last_name = None
+    else:
+        full_name = Column("full_name", String)
+
+    is_active = Column(Boolean, default=True)
+    if _has_is_superuser:
+        is_superuser = Column(Boolean, default=False)
+    else:
+        if _has_role:
+            @hybrid_property
+            def is_superuser(self) -> bool:
+                """Compatibility shim when ``is_superuser`` column is absent."""
+                return getattr(self, "role", "") == "admin"
+
+            @is_superuser.setter
+            def is_superuser(self, value: bool) -> None:
+                if value:
+                    self.role = "admin"
+                elif getattr(self, "role", None) == "admin":
+                    self.role = "free"
+        else:
+            # When both ``is_superuser`` and ``role`` columns are missing,
+            # store the flag on the instance to avoid recursive lookups.
+            @hybrid_property
+            def is_superuser(self) -> bool:  # type: ignore[override]
+                return getattr(self, "_is_superuser", False)
+
+            @is_superuser.setter
+            def is_superuser(self, value: bool) -> None:
+                setattr(self, "_is_superuser", bool(value))
+
+    if _has_role:
+        role = Column(String, default="free", nullable=False)
+    else:
+        if _has_is_superuser:
+            @hybrid_property
+            def role(self) -> str:  # type: ignore[override]
+                return "admin" if getattr(self, "is_superuser", False) else "free"
+
+            @role.setter
+            def role(self, value: str) -> None:
+                if value == "admin":
+                    self.is_superuser = True
+                else:
+                    self.is_superuser = False
+        else:
+            # Neither ``role`` nor ``is_superuser`` columns exist.  Use an
+            # instance attribute to avoid recursion between the two hybrid
+            # properties.
+            @hybrid_property
+            def role(self) -> str:  # type: ignore[override]
+                return getattr(self, "_role", "free")
+
+            @role.setter
+            def role(self, value: str) -> None:
+                setattr(self, "_role", value)
+
 
     # Relationships
     user_roles = relationship("UserRole", back_populates="user", cascade="all, delete-orphan", lazy="select")
