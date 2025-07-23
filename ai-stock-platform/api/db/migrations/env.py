@@ -33,7 +33,10 @@ from core.config import settings
 try:
     from db.base import Base
 except ModuleNotFoundError:
-    from api.db.base import Base
+    try:
+        from api.db.base import Base
+    except ModuleNotFoundError:
+        from api.db.base.base_class import Base
 from sqlalchemy import engine_from_config, pool
 
 config = context.config

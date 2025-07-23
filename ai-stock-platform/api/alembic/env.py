@@ -64,8 +64,12 @@ try:
     # Try importing Base from the new location first (api.db.base.base_class)
     from api.db.base.base_class import Base
 except ImportError:
-    # Fallback to legacy location (api.db.base)
-    from api.db.base import Base
+    try:
+        # Fallback to legacy location (api.db.base)
+        from api.db.base import Base
+    except ImportError:
+        # Final fallback when "api" isn't importable
+        from db.base import Base
 # this is the Alembic Config object
 config = context.config
 
