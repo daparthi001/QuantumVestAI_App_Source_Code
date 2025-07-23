@@ -76,6 +76,7 @@ app = FastAPI(
 trending_stocks_service = None
 ws_manager = websocket_manager
 broadcast_task = None
+data_fetch_scheduler = None
 
 # Configure CORS
 app = configure_cors(app)
@@ -499,7 +500,7 @@ async def trending_stock_broadcaster() -> None:
 @app.on_event("startup")
 async def startup_event():
     """Enhanced startup event with database initialization"""
-    global trending_stocks_service, broadcast_task
+    global trending_stocks_service, broadcast_task, data_fetch_scheduler
     
     logger.info(f"Starting QuantumVestAI API v{API_VERSION}")
     logger.info(f"Environment: {API_ENV}")
@@ -525,7 +526,11 @@ async def startup_event():
         # Set to None to ensure consistent state
         trending_stocks_service = None
 
+    from services.data_fetch_scheduler import start_data_fetch_scheduler
+
     broadcast_task = asyncio.create_task(trending_stock_broadcaster())
+    data_fetch_scheduler = start_data_fetch_scheduler()
+    logger.info("Data fetch scheduler started")
     
     # Initialize database
     if initialize_database():
@@ -571,6 +576,20 @@ if SENTRY_DSN:
 def metrics():
     """Prometheus metrics endpoint."""
     return FastAPIResponse(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
+@app.on_event("shutdown")
+async def shutdown_event() -> None:
+    """Cleanup background tasks on shutdown."""
+    global broadcast_task, data_fetch_scheduler
+    if broadcast_task:
+        broadcast_task.cancel()
+        try:
+            await broadcast_task
+        except Exception:
+            pass
+    if data_fetch_scheduler:
+        data_fetch_scheduler.shutdown()
 
 
 # Check if this script is executed directly
