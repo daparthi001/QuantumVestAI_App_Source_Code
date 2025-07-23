@@ -3,16 +3,15 @@
 **Version**: 2.0.0  
 **Author**: hemanth9398  
 **Updated**: 2025-07-07 21:54:42  
-**Status**: Production Ready with Demo Mode
+**Status**: Production Ready (Demo Mode configurable)
 
 ## 🎯 Overview
 
-This is a complete, production-ready web UI for the QuantumVestAI platform featuring AI-driven stock market predictions and comprehensive portfolio management. The application is fully functional in demo mode with realistic data and can be deployed immediately.
+This is a complete, production-ready web UI for the QuantumVestAI platform featuring AI-driven stock market predictions and comprehensive portfolio management. The UI supports a demo mode for quick evaluations, but it can also operate with live data for subscribed users by disabling demo mode.
 
 ## ✨ Features
 
 ### 🔐 Authentication System
-- **Demo Accounts**: Pre-configured demo users for testing
 - **Secure Login**: Session-based authentication with cookie management
 - **User Registration**: Complete registration flow with validation
 - **Profile Management**: User profile and preferences
@@ -87,19 +86,8 @@ This is a complete, production-ready web UI for the QuantumVestAI platform featu
 
 4. **Access the Application**:
    - Open your browser to: http://ui-service
-   - Use demo accounts to login (see Demo Accounts section below)
-
-## 👤 Demo Accounts
-
-The application includes pre-configured demo accounts for testing:
-
-| Username | Password | Role  | Features |
-|----------|----------|-------|----------|
-| `demo`   | `demo`   | User  | Full feature access |
-| `admin`  | `admin`  | Admin | All permissions + admin features |
-| `test`   | `test`   | User  | Basic features |
-| `user`   | `password` | User  | Standard features |
+   - Login with your registered account
 
 ## 🎉 Ready for Production Deployment!
 
-This application is fully functional and ready for immediate deployment. All features work in demo mode with realistic data, providing a complete user experience without requiring external API connections.
+This application is fully functional and ready for immediate deployment. By default it runs in demo mode using sample data. Set `DEMO_MODE=false` and configure the database variables (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`) to enable live data for subscribed users. When live mode is enabled, market data is persisted to the configured PostgreSQL database and AI price predictions are displayed on the dashboard.

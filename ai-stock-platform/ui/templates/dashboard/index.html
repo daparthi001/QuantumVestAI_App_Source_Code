@@ -58,114 +58,27 @@
     </div>
     <!-- Market Overview Cards -->
     <div class="row mb-4">
+        {% for symbol, idx in market_summary.indices.items()|dictsort %}
         <div class="col-md-3">
             <div class="card quantum-card micro-interaction">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <div>
-                            <h6 class="text-muted mb-1">S&P 500</h6>
-                            <h4 class="mb-0">SPY</h4>
+                            <h6 class="text-muted mb-1">{{ idx.name }}</h6>
+                            <h4 class="mb-0">{{ symbol }}</h4>
                         </div>
-                        <span class="badge quantum-badge">📈</span>
+                        <span class="badge quantum-badge">{% if idx.change >= 0 %}📈{% else %}📉{% endif %}</span>
                     </div>
                     <div class="mb-2">
-                        <div class="h3 mb-1 price-display">$459.32</div>
-                        <div class="fw-bold text-success">+$2.15 (+0.47%)</div>
-                    </div>
-                    <div class="row text-muted small">
-                        <div class="col-6">
-                            <div>High: $460.12</div>
-                            <div>Low: $456.78</div>
-                        </div>
-                        <div class="col-6">
-                            <div>Vol: 45.2M</div>
-                            <div>Cap: $4.2T</div>
+                        <div class="h3 mb-1 price-display">{{ format_currency(idx.price) }}</div>
+                        <div class="fw-bold {% if idx.change >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ format_change_value(idx.change) }} ({{ format_percentage(idx.change_percent/100) }})
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card quantum-card micro-interaction">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <div>
-                            <h6 class="text-muted mb-1">NASDAQ 100</h6>
-                            <h4 class="mb-0">QQQ</h4>
-                        </div>
-                        <span class="badge quantum-badge">📉</span>
-                    </div>
-                    <div class="mb-2">
-                        <div class="h3 mb-1 price-display">$398.45</div>
-                        <div class="fw-bold text-danger">-$1.23 (-0.31%)</div>
-                    </div>
-                    <div class="row text-muted small">
-                        <div class="col-6">
-                            <div>High: $401.23</div>
-                            <div>Low: $397.45</div>
-                        </div>
-                        <div class="col-6">
-                            <div>Vol: 32.1M</div>
-                            <div>Cap: $2.8T</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card quantum-card micro-interaction">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <div>
-                            <h6 class="text-muted mb-1">Dow Jones</h6>
-                            <h4 class="mb-0">DIA</h4>
-                        </div>
-                        <span class="badge quantum-badge">📈</span>
-                    </div>
-                    <div class="mb-2">
-                        <div class="h3 mb-1 price-display">$342.67</div>
-                        <div class="fw-bold text-success">+$0.89 (+0.26%)</div>
-                    </div>
-                    <div class="row text-muted small">
-                        <div class="col-6">
-                            <div>High: $343.12</div>
-                            <div>Low: $340.23</div>
-                        </div>
-                        <div class="col-6">
-                            <div>Vol: 12.3M</div>
-                            <div>Cap: $1.5T</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card quantum-card micro-interaction">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <div>
-                            <h6 class="text-muted mb-1">Volatility Index</h6>
-                            <h4 class="mb-0">VIX</h4>
-                        </div>
-                        <span class="badge quantum-badge">📉</span>
-                    </div>
-                    <div class="mb-2">
-                        <div class="h3 mb-1 price-display">$18.45</div>
-                        <div class="fw-bold text-success">-$0.67 (-3.51%)</div>
-                    </div>
-                    <div class="row text-muted small">
-                        <div class="col-6">
-                            <div>High: $19.23</div>
-                            <div>Low: $17.89</div>
-                        </div>
-                        <div class="col-6">
-                            <div>Vol: 8.8M</div>
-                            <div>Fear: Low</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {% endfor %}
     </div>
 
     <!-- Portfolio Overview -->
@@ -233,26 +146,18 @@
                 </div>
                 <div class="card-body">
                     <div class="top-movers-list">
+                        {% for stock in popular_stocks %}
                         <div class="top-mover-item d-flex justify-content-between align-items-center mb-2">
                             <div>
-                                <div class="fw-bold">NVDA</div>
-                                <div class="text-muted small">$789.23</div>
+                                <div class="fw-bold">{{ stock.ticker }}</div>
+                                <div class="text-muted small">{{ format_currency(stock.price) }}</div>
                             </div>
-                            <div class="text-end text-success">
-                                <div class="fw-bold">+6.14%</div>
-                                <div class="small">+$45.67</div>
-                            </div>
-                        </div>
-                        <div class="top-mover-item d-flex justify-content-between align-items-center mb-2">
-                            <div>
-                                <div class="fw-bold">TSLA</div>
-                                <div class="text-muted small">$245.67</div>
-                            </div>
-                            <div class="text-end text-danger">
-                                <div class="fw-bold">-4.78%</div>
-                                <div class="small">-$12.34</div>
+                            <div class="text-end {% if stock.change >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                <div class="fw-bold">{{ format_percentage(stock.change_percent/100) }}</div>
+                                <div class="small">{{ format_change_value(stock.change) }}</div>
                             </div>
                         </div>
+                        {% endfor %}
                     </div>
                     <div class="mt-3">
                         <a href="/stocks" class="btn btn-outline-primary w-100">
