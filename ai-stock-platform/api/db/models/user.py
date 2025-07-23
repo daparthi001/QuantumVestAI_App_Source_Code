@@ -11,6 +11,7 @@ from db.models.associations import user_watchlist
 from sqlalchemy import Boolean, Column, Integer, String, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import relationship, synonym
+from sqlalchemy.ext.hybrid import hybrid_property
 
 
 class User(Base, TimestampMixin):
@@ -33,6 +34,7 @@ class User(Base, TimestampMixin):
     # column.  ``password_hash`` is kept as a backward compatible synonym.
 
     _pwd_column_name = "hashed_password"
+    _use_split_names = False
     try:  # Introspect the DB to determine which column actually exists
         from core.config import get_settings
         from sqlalchemy import create_engine, inspect
@@ -44,6 +46,8 @@ class User(Base, TimestampMixin):
         engine.dispose()
         if "password_hash" in cols and "hashed_password" not in cols:
             _pwd_column_name = "password_hash"
+        if "full_name" not in cols and "first_name" in cols and "last_name" in cols:
+            _use_split_names = True
     except Exception:
         # If inspection fails (e.g., during tests with no DB) default to the
         # original ``hashed_password`` column name.
@@ -52,38 +56,31 @@ class User(Base, TimestampMixin):
     hashed_password = Column(_pwd_column_name, String, nullable=False)
     password_hash = synonym("hashed_password")
 
-    # Determine if the optional ``full_name`` column exists. Older databases
-    # may not have it, which would cause queries to fail if we always include
-    # the column.  Detect its presence at import time and gracefully fall back
-    # to a simple property if the column is missing.
-    _has_full_name = True
-    try:
-        from core.config import get_settings
-        from sqlalchemy import create_engine, inspect
+    if _use_split_names:
+        first_name = Column("first_name", String)
+        last_name = Column("last_name", String)
 
-        settings = get_settings()
-        engine = create_engine(settings.SQLALCHEMY_DATABASE_URI)
-        insp = inspect(engine)
-        cols = [c["name"] for c in insp.get_columns("users")]
-        engine.dispose()
-        if "full_name" not in cols:
-            _has_full_name = False
-    except Exception:
-        # If inspection fails assume the column exists (e.g., during tests) so
-        # that new databases still include it.
-        pass
+        @hybrid_property
+        def full_name(self) -> Optional[str]:
+            parts = []
+            if self.first_name:
+                parts.append(self.first_name)
+            if self.last_name:
+                parts.append(self.last_name)
+            return " ".join(parts) if parts else None
 
-    if _has_full_name:
-        full_name = Column(String)
+        @full_name.setter
+        def full_name(self, value: Optional[str]) -> None:
+            if value:
+                names = value.split(" ", 1)
+                self.first_name = names[0]
+                self.last_name = names[1] if len(names) > 1 else None
+            else:
+                self.first_name = None
+                self.last_name = None
     else:
-        def _get_full_name(self) -> str:
-            return self.username
+        full_name = Column("full_name", String)
 
-        def _set_full_name(self, value: str) -> None:  # noqa: D401 - simple setter
-            """Ignore assignment when column is missing."""
-            return None
-
-        full_name = property(_get_full_name, _set_full_name)
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
     role = Column(String, default="free", nullable=False)
