@@ -64,3 +64,4 @@ PyJWT==2.7.0
 # Monitoring & Observability
 sentry-sdk
 prometheus_client
+openai==1.14.3

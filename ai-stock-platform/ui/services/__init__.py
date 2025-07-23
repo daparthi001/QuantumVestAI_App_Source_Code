@@ -12,6 +12,7 @@ from .api_client import APIClient
 # Then import other services
 from .auth_service import AuthService
 from .cache_service import CacheService
+from .chatgpt_service import ChatGPTService
 
 
 # Only import these if they exist
@@ -30,5 +31,6 @@ __all__ = [
     'AuthService', 
     'CacheService',
     'ForecastService',
-    'YahooFinanceService'
+    'YahooFinanceService',
+    'ChatGPTService'
 ]
