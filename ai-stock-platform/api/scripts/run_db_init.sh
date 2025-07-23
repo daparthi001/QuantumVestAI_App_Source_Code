@@ -20,7 +20,7 @@ done
 echo "Database is available"
 
 # Set environment variables for Alembic
-export PYTHONPATH=/db-init
+export PYTHONPATH="/db-init:${PYTHONPATH}"
 
 # Step 1: Run database migrations
 echo "Running database migrations..."

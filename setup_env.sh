@@ -17,4 +17,4 @@ pip install --upgrade pip
 pip install -r requirements.txt
 
 echo "Environment setup complete. Activate with 'source venv/bin/activate'"
-echo "Add the API package to PYTHONPATH: export PYTHONPATH=\"$(pwd)/ai-stock-platform:$PYTHONPATH\""
+echo "Add the API package to PYTHONPATH: export PYTHONPATH=\"$(pwd)/ai-stock-platform:$(pwd)/ai-stock-platform/api:$PYTHONPATH\""

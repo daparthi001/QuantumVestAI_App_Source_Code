@@ -99,7 +99,7 @@ Activate it with `source venv/bin/activate`.
 After activating, add the API package to your `PYTHONPATH` so tools like
 Alembic can locate the `api` module when run from outside the repository root:
 ```bash
-export PYTHONPATH="$(pwd)/ai-stock-platform:$PYTHONPATH"
+export PYTHONPATH="$(pwd)/ai-stock-platform:$(pwd)/ai-stock-platform/api:$PYTHONPATH"
 ```
 
 > **Important**: Ensure that the top-level `ai-stock-platform` directory is
