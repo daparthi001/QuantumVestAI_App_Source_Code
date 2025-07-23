@@ -28,7 +28,7 @@ def init_alembic():
         print("✅ Created initial migration")
         
         # Apply migrations
-        os.system("alembic upgrade head")
+        os.system("alembic upgrade heads")
         print("✅ Applied migrations")
         
     except Exception as e:

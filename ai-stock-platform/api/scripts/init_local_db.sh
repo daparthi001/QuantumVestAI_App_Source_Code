@@ -45,7 +45,7 @@ API_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 # Run migrations from the API directory so Alembic can locate env.py
 pushd "$API_DIR" >/dev/null
-alembic upgrade head
+alembic upgrade heads
 popd >/dev/null
 
 # Initialize reference data

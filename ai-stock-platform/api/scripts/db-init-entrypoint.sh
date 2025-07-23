@@ -44,7 +44,7 @@ else
     exit 1
 fi
 
-alembic -c "$ALEMBIC_CFG" upgrade head
+alembic -c "$ALEMBIC_CFG" upgrade heads
 
 # Run seed script if specified
 if [ "${RUN_SEED:-false}" = "true" ]; then
