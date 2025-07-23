@@ -17,7 +17,7 @@ from core.security.tokens import create_access_token
 from db.models.user import User
 from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, validator
 from schemas.auth import TokenResponse, UserBase
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -29,10 +29,27 @@ logger = logging.getLogger("quantumvestai_api.auth")
 
 # Registration request model
 class RegisterRequest(BaseModel):
+    """Registration request payload with basic validation."""
+
     username: str = Field(..., min_length=3, max_length=50)
     email: EmailStr
     password: str = Field(..., min_length=8)
+    confirm_password: str = Field(..., min_length=8)
     full_name: Optional[str] = None
+    terms_accepted: bool = Field(...)
+
+    @validator("confirm_password")
+    def passwords_match(cls, v, values):  # noqa: D417
+        password = values.get("password")
+        if password and v != password:
+            raise ValueError("Passwords do not match")
+        return v
+
+    @validator("terms_accepted")
+    def terms_required(cls, v):  # noqa: D417
+        if not v:
+            raise ValueError("Terms must be accepted")
+        return v
 
 
 # Registration response model

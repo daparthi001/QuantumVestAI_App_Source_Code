@@ -113,7 +113,8 @@ def test_register_post_success(client, monkeypatch):
                 "email": "new@example.com",
                 "password": "Password123!",
                 "confirm_password": "Password123!",
-                "full_name": "Test User"
+                "full_name": "Test User",
+                "terms": "on"
             },
             follow_redirects=False
         )
@@ -126,8 +127,10 @@ def test_register_post_success(client, monkeypatch):
                 "username": "newuser",
                 "email": "new@example.com",
                 "password": "Password123!",
-                "full_name": "Test User"
-            }
+                "confirm_password": "Password123!",
+                "full_name": "Test User",
+                "terms_accepted": True,
+            },
         )
 
 def test_register_post_username_taken(client, monkeypatch):
@@ -142,13 +145,25 @@ def test_register_post_username_taken(client, monkeypatch):
                 "email": "new@example.com",
                 "password": "Password123!",
                 "confirm_password": "Password123!",
-                "full_name": "Test User"
+                "full_name": "Test User",
+                "terms": "on"
             },
             follow_redirects=False
         )
         # Should return 400 and render register page again
         assert response.status_code == 400
         assert "Username already taken" in response.text
+        mock_post.assert_called_once_with(
+            "/auth/register",
+            data={
+                "username": "existinguser",
+                "email": "new@example.com",
+                "password": "Password123!",
+                "confirm_password": "Password123!",
+                "full_name": "Test User",
+                "terms_accepted": True,
+            },
+        )
 
 def test_register_post_password_mismatch(client, monkeypatch):
     monkeypatch.setenv("API_BASE_URL", "http://testserver/api")
@@ -159,7 +174,8 @@ def test_register_post_password_mismatch(client, monkeypatch):
             "email": "new@example.com",
             "password": "Password123!",
             "confirm_password": "DifferentPassword123!",
-            "full_name": "Test User"
+            "full_name": "Test User",
+            "terms": "on"
         },
         follow_redirects=False
     )

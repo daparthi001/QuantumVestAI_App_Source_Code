@@ -187,7 +187,8 @@ async def register_post(
     email: str = Form(...),
     password: str = Form(...),
     confirm_password: str = Form(...),
-    full_name: str = Form(...)
+    full_name: str = Form(...),
+    terms: bool = Form(False)
 ):
     """Handle registration form submission (production)"""
     try:
@@ -208,6 +209,9 @@ async def register_post(
         
         if not full_name or len(full_name.strip()) < 2:
             raise ValueError("Full name must be at least 2 characters long")
+
+        if not terms:
+            raise ValueError("You must accept the Terms of Service")
         
         username = username.strip().lower()
         api = APIClient()
@@ -218,7 +222,9 @@ async def register_post(
                     "username": username,
                     "email": email,
                     "password": password,
+                    "confirm_password": confirm_password,
                     "full_name": full_name,
+                    "terms_accepted": terms,
                 },
             )
             # Check for API error
@@ -244,10 +250,11 @@ async def register_post(
                 "username": username,
                 "email": email,
                 "full_name": full_name,
+                "terms": terms,
                 "demo_mode": False,
-                "page_title": "Register - QuantumVestAI"
+                "page_title": "Register - QuantumVestAI",
             },
-            status_code=400
+            status_code=400,
         )
     except Exception as e:
         logger.error(f"Registration error: {str(e)}")
@@ -257,6 +264,7 @@ async def register_post(
                 "request": request,
                 "msg": "Registration failed due to a technical error. Please try again.",
                 "msg_type": "danger",
+                "terms": terms,
                 "demo_mode": False,
                 "page_title": "Register - QuantumVestAI"
             },
