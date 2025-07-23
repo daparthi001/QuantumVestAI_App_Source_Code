@@ -1,5 +1,5 @@
 """
-Complete User Model for QuantumVestAI (No Werkzeug dependency)
+Complete User Model for QuantumVestAI (Simplified - No SQL Expression Conflicts)
 Created: 2025-05-17 14:29:46 UTC
 Updated: 2025-07-23 - Complete rewrite with full name support and fixed circular references
 Author: daparthi001
@@ -79,21 +79,6 @@ class User(Base):
         else:
             return self.username
 
-    @full_name.expression
-    def full_name(cls):
-        """SQL expression for full_name generation"""
-        return case(
-            [
-                (
-                    (cls.first_name.isnot(None)) & (cls.last_name.isnot(None)),
-                    func.trim(func.concat(cls.first_name, ' ', cls.last_name))
-                ),
-                (cls.first_name.isnot(None), func.trim(cls.first_name)),
-                (cls.last_name.isnot(None), func.trim(cls.last_name))
-            ],
-            else_=cls.username
-        )
-
     @hybrid_property
     def effective_display_name(self) -> str:
         """
@@ -107,16 +92,6 @@ class User(Base):
             self.username
         )
 
-    @effective_display_name.expression
-    def effective_display_name(cls):
-        """SQL expression for effective_display_name"""
-        return func.coalesce(
-            cls.display_name,
-            cls.full_name,
-            cls.first_name,
-            cls.username
-        )
-
     # ==========================================
     # ROLE AND PERMISSION MANAGEMENT (FIXED)
     # ==========================================
@@ -124,17 +99,18 @@ class User(Base):
     @hybrid_property
     def roles(self) -> List[str]:
         """Get all role names for the user"""
-        if self.user_roles:
+        if hasattr(self, 'user_roles') and self.user_roles:
             return [ur.role.name for ur in self.user_roles if ur.role]
         return []
 
     @hybrid_property
     def primary_role(self) -> str:
         """Get the user's primary role (first assigned role or 'user' default)"""
-        if self.user_roles and len(self.user_roles) > 0:
-            primary_user_role = self.user_roles[0]
-            if primary_user_role.role:
-                return primary_user_role.role.name
+        if hasattr(self, 'user_roles') and self.user_roles:
+            if len(self.user_roles) > 0:
+                primary_user_role = self.user_roles[0]
+                if primary_user_role.role:
+                    return primary_user_role.role.name
         return "user"
 
     @hybrid_property
@@ -171,7 +147,7 @@ class User(Base):
     def permissions(self) -> Dict[str, Any]:
         """Get aggregated permissions from all user roles"""
         all_permissions = {}
-        if self.user_roles:
+        if hasattr(self, 'user_roles') and self.user_roles:
             for user_role in self.user_roles:
                 if user_role.role and user_role.role.permissions:
                     role_permissions = user_role.role.permissions
@@ -329,12 +305,16 @@ class User(Base):
         if existing:
             return False
             
-        from db.models.user_role import UserRole
-        user_role = UserRole(user_id=self.id, role_id=role.id)
-        self.user_roles.append(user_role)
-        
-        if session:
-            session.add(user_role)
+        try:
+            from db.models.user_role import UserRole
+            user_role = UserRole(user_id=self.id, role_id=role.id)
+            self.user_roles.append(user_role)
+            
+            if session:
+                session.add(user_role)
+        except ImportError:
+            # Handle case where UserRole model isn't available yet
+            pass
             
         return True
 
@@ -401,7 +381,7 @@ class User(Base):
         Returns:
             Setting value or default
         """
-        if self.user_settings:
+        if hasattr(self, 'user_settings') and self.user_settings:
             setting = next(
                 (us for us in self.user_settings 
                  if us.category == category and us.key == key), 
@@ -432,17 +412,21 @@ class User(Base):
             existing.value = str(value) if value is not None else None
             existing.updated_at = datetime.utcnow()
         else:
-            from db.models.user_setting import UserSetting
-            new_setting = UserSetting(
-                user_id=self.id,
-                category=category,
-                key=key,
-                value=str(value) if value is not None else None
-            )
-            self.user_settings.append(new_setting)
-            
-            if session:
-                session.add(new_setting)
+            try:
+                from db.models.user_setting import UserSetting
+                new_setting = UserSetting(
+                    user_id=self.id,
+                    category=category,
+                    key=key,
+                    value=str(value) if value is not None else None
+                )
+                self.user_settings.append(new_setting)
+                
+                if session:
+                    session.add(new_setting)
+            except ImportError:
+                # Handle case where UserSetting model isn't available yet
+                pass
 
     # ==========================================
     # VALIDATION METHODS
@@ -570,63 +554,6 @@ def validate_user_before_insert(mapper, connection, target):
         target.last_name = target.last_name.strip()
     if target.display_name:
         target.display_name = target.display_name.strip()
-
-
-# ==========================================
-# SQL EXPRESSIONS (Simplified to avoid import issues)
-# ==========================================
-
-# Only add SQL expressions if the related models are available
-try:
-    # These expressions will be added only if the imports work
-    @User.primary_role.expression
-    def primary_role(cls):
-        """SQL expression for primary_role"""
-        try:
-            from db.models.role import Role
-            from db.models.user_role import UserRole
-            
-            # Subquery to get the first role for the user
-            first_role = (
-                select(Role.name)
-                .select_from(UserRole.join(Role))
-                .where(UserRole.user_id == cls.id)
-                .order_by(UserRole.id)
-                .limit(1)
-            ).scalar_subquery()
-            
-            return func.coalesce(first_role, 'user')
-        except ImportError:
-            return func.literal('user')
-
-    @User.is_admin.expression
-    def is_admin(cls):
-        """SQL expression for is_admin"""
-        try:
-            from db.models.role import Role
-            from db.models.user_role import UserRole
-            
-            return exists().where(
-                (UserRole.user_id == cls.id) &
-                (UserRole.role_id == Role.id) &
-                (Role.name == "admin")
-            )
-        except ImportError:
-            return func.literal(False)
-
-    @User.is_superuser.expression
-    def is_superuser(cls):
-        """SQL expression for is_superuser"""
-        return cls.is_admin
-
-    @User.role.expression
-    def role(cls):
-        """SQL expression for legacy role property"""
-        return case([(cls.is_admin, "admin")], else_="free")
-
-except ImportError:
-    # If imports fail, skip SQL expressions
-    pass
 
 
 # ==========================================
