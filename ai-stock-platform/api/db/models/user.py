@@ -19,7 +19,7 @@ from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.orm import relationship, Session
 from sqlalchemy.sql import func, select, exists, case
 
-from db.database import Base
+from db.base import Base
 
 
 class User(Base):
