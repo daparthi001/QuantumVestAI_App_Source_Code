@@ -41,6 +41,9 @@ class User(Base):
     and comprehensive user management features.
     """
     __tablename__ = "users"
+    # Allow redefining the table in test environments where models may
+    # be imported multiple times.
+    __table_args__ = {"extend_existing": True}
 
     # Primary identification
     id = Column(Integer, primary_key=True, index=True)

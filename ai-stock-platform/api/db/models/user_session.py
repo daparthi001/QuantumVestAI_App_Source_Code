@@ -16,6 +16,7 @@ from db.base import Base
 class UserSession(Base):
     """User session model for session management"""
     __tablename__ = "user_sessions"
+    __table_args__ = {"extend_existing": True}
 
     id = Column(Integer, primary_key=True, index=True)
     session_id = Column(String(255), unique=True, nullable=False, index=True)

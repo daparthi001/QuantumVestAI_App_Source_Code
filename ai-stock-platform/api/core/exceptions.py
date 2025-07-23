@@ -119,6 +119,20 @@ class ServiceUnavailableError(HTTPException):
         )
 
 
+class ConfigurationError(QuantumVestAIException):
+    """Raised when application configuration is invalid."""
+
+    def __init__(self, message: str = "Invalid configuration"):
+        super().__init__(message, error_code="CONFIGURATION_ERROR")
+
+
+class ExternalAPIError(QuantumVestAIException):
+    """Raised when an external API request fails."""
+
+    def __init__(self, message: str = "External API error"):
+        super().__init__(message, error_code="EXTERNAL_API_ERROR")
+
+
 # User-specific exceptions
 class UserNotFoundError(NotFoundError):
     """Raised when user is not found"""

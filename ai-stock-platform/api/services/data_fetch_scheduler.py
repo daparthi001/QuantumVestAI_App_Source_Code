@@ -3,7 +3,9 @@ import logging
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
-from services.trending_stocks_service import TrendingStocksService
+# Import from the current package to avoid conflicts with the top-level
+# ``services`` package used for API clients.
+from .trending_stocks_service import TrendingStocksService
 from social.multi_source_sentiment import MultiSourceSentimentAnalyzer
 
 logger = logging.getLogger(__name__)
