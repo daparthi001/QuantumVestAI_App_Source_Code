@@ -217,7 +217,7 @@ spec:
                       
                       -- Insert current version
                       INSERT INTO alembic_version (version_num)
-                      VALUES ('20250615_initial')
+                      VALUES ('0001')
                       ON CONFLICT (version_num) DO NOTHING;
                       
                       -- Record that this migration has been applied
