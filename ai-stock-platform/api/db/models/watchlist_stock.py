@@ -16,4 +16,4 @@ class WatchlistStock(Base):
 
     # Relationships
     watchlist = relationship("Watchlist", back_populates="stocks")
-    stock = relationship("Stock", back_populates="watchlists")
+    stock = relationship("Stock", back_populates="watchlist_stocks")
