@@ -35,7 +35,8 @@ class User(Base, TimestampMixin):
 
     _pwd_column_name = "hashed_password"
     _use_split_names = False
-    try:  # Introspect the DB to determine which column actually exists
+    _has_is_superuser = True
+    try:  # Introspect the DB to determine which columns actually exist
         from core.config import get_settings
         from sqlalchemy import create_engine, inspect
 
@@ -48,9 +49,11 @@ class User(Base, TimestampMixin):
             _pwd_column_name = "password_hash"
         if "full_name" not in cols and "first_name" in cols and "last_name" in cols:
             _use_split_names = True
+        _has_is_superuser = "is_superuser" in cols
     except Exception:
         # If inspection fails (e.g., during tests with no DB) default to the
-        # original ``hashed_password`` column name.
+        # original column names.
+        _has_is_superuser = True
         pass
 
     hashed_password = Column(_pwd_column_name, String, nullable=False)
@@ -82,7 +85,21 @@ class User(Base, TimestampMixin):
         full_name = Column("full_name", String)
 
     is_active = Column(Boolean, default=True)
-    is_superuser = Column(Boolean, default=False)
+    if _has_is_superuser:
+        is_superuser = Column(Boolean, default=False)
+    else:
+        @hybrid_property
+        def is_superuser(self) -> bool:
+            """Compatibility shim when ``is_superuser`` column is absent."""
+            return getattr(self, "role", "") == "admin"
+
+        @is_superuser.setter
+        def is_superuser(self, value: bool) -> None:
+            if value:
+                self.role = "admin"
+            elif getattr(self, "role", None) == "admin":
+                self.role = "free"
+
     role = Column(String, default="free", nullable=False)
 
     # Relationships
