@@ -96,29 +96,111 @@ spec:
               CREATE TABLE IF NOT EXISTS schema_migrations (
                   version VARCHAR(50) PRIMARY KEY,
                   applied_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                  description TEXT,
-                  checksum VARCHAR(64)
+                  description TEXT
               );
+              
+              -- Add checksum column to schema_migrations if it doesn't exist
+              DO $schema_migrations_update$
+              BEGIN
+                  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'schema_migrations' AND column_name = 'checksum') THEN
+                      ALTER TABLE schema_migrations ADD COLUMN checksum VARCHAR(64);
+                      RAISE NOTICE 'Added checksum column to schema_migrations table';
+                  END IF;
+              END $schema_migrations_update$;
               
               \echo 'Schema migrations table ready.'
               
-              -- Migration: Initial Schema with Full Name Support
+              -- Migration: Add Full Name Support to Existing Users Table
               DO $migration$
               BEGIN
                   -- Check if this migration has been applied
                   IF NOT EXISTS (SELECT 1 FROM schema_migrations WHERE version = '0001_initial_with_fullname') THEN
                       RAISE NOTICE 'Applying migration: 0001_initial_with_fullname';
                       
-                      -- Create users table with full name support
+                      -- Create users table if it doesn't exist (for fresh installs)
                       CREATE TABLE IF NOT EXISTS users (
                           id SERIAL PRIMARY KEY,
-                          uuid UUID NOT NULL DEFAULT uuid_generate_v4() UNIQUE,
                           username VARCHAR(50) UNIQUE NOT NULL,
                           email VARCHAR(100) UNIQUE NOT NULL,
                           password_hash VARCHAR(255) NOT NULL,
-                          first_name VARCHAR(100),
-                          last_name VARCHAR(100),
-                          full_name VARCHAR(200) GENERATED ALWAYS AS (
+                          is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                          created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+                      );
+                      
+                      -- Add new columns if they don't exist (for existing installs)
+                      -- Add UUID column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'uuid') THEN
+                          ALTER TABLE users ADD COLUMN uuid UUID DEFAULT uuid_generate_v4();
+                          -- Update existing rows to have UUIDs
+                          UPDATE users SET uuid = uuid_generate_v4() WHERE uuid IS NULL;
+                          -- Now make it NOT NULL and UNIQUE
+                          ALTER TABLE users ALTER COLUMN uuid SET NOT NULL;
+                          ALTER TABLE users ADD CONSTRAINT users_uuid_unique UNIQUE (uuid);
+                          RAISE NOTICE 'Added uuid column to users table';
+                      END IF;
+                      
+                      -- Add first_name column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'first_name') THEN
+                          ALTER TABLE users ADD COLUMN first_name VARCHAR(100);
+                          RAISE NOTICE 'Added first_name column to users table';
+                      END IF;
+                      
+                      -- Add last_name column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'last_name') THEN
+                          ALTER TABLE users ADD COLUMN last_name VARCHAR(100);
+                          RAISE NOTICE 'Added last_name column to users table';
+                      END IF;
+                      
+                      -- Add display_name column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'display_name') THEN
+                          ALTER TABLE users ADD COLUMN display_name VARCHAR(100);
+                          RAISE NOTICE 'Added display_name column to users table';
+                      END IF;
+                      
+                      -- Add is_verified column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'is_verified') THEN
+                          ALTER TABLE users ADD COLUMN is_verified BOOLEAN NOT NULL DEFAULT FALSE;
+                          RAISE NOTICE 'Added is_verified column to users table';
+                      END IF;
+                      
+                      -- Add last_login column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'last_login') THEN
+                          ALTER TABLE users ADD COLUMN last_login TIMESTAMP WITH TIME ZONE;
+                          RAISE NOTICE 'Added last_login column to users table';
+                      END IF;
+                      
+                      -- Add updated_at column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'updated_at') THEN
+                          ALTER TABLE users ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
+                          RAISE NOTICE 'Added updated_at column to users table';
+                      END IF;
+                      
+                      -- Extend password_hash column if it's too short
+                      DO $extend_password$
+                      BEGIN
+                          -- Check current length of password_hash column
+                          IF EXISTS (
+                              SELECT 1 FROM information_schema.columns 
+                              WHERE table_name = 'users' 
+                              AND column_name = 'password_hash' 
+                              AND character_maximum_length < 255
+                          ) THEN
+                              ALTER TABLE users ALTER COLUMN password_hash TYPE VARCHAR(255);
+                              RAISE NOTICE 'Extended password_hash column to 255 characters';
+                          END IF;
+                      END $extend_password$;
+                      
+                      -- Add full_name generated column (drop and recreate if exists with different definition)
+                      DO $full_name$
+                      BEGIN
+                          -- Drop the column if it exists (in case it was created differently)
+                          IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'full_name') THEN
+                              ALTER TABLE users DROP COLUMN full_name;
+                              RAISE NOTICE 'Dropped existing full_name column for recreation';
+                          END IF;
+                          
+                          -- Create the generated column
+                          ALTER TABLE users ADD COLUMN full_name VARCHAR(200) GENERATED ALWAYS AS (
                               CASE 
                                   WHEN first_name IS NOT NULL AND last_name IS NOT NULL 
                                   THEN TRIM(first_name || ' ' || last_name)
@@ -128,40 +210,57 @@ spec:
                                   THEN last_name
                                   ELSE username
                               END
-                          ) STORED,
-                          display_name VARCHAR(100),
-                          is_active BOOLEAN NOT NULL DEFAULT TRUE,
-                          is_verified BOOLEAN NOT NULL DEFAULT FALSE,
-                          last_login TIMESTAMP WITH TIME ZONE,
-                          created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                          updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
-                      );
+                          ) STORED;
+                          RAISE NOTICE 'Added full_name generated column to users table';
+                      END $full_name$;
                       
-                      -- Create index on commonly queried fields
+                      -- Create indexes on commonly queried fields (only if they don't exist)
                       CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
                       CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
                       CREATE INDEX IF NOT EXISTS idx_users_uuid ON users(uuid);
                       CREATE INDEX IF NOT EXISTS idx_users_active ON users(is_active);
                       
-                      -- Create roles table
+                      -- Create roles table if it doesn't exist
                       CREATE TABLE IF NOT EXISTS roles (
                           id SERIAL PRIMARY KEY,
                           name VARCHAR(50) UNIQUE NOT NULL,
-                          description TEXT,
-                          permissions JSONB DEFAULT '{}',
-                          created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+                          description TEXT
                       );
                       
-                      -- Create user_roles table
+                      -- Add new columns to roles table if they don't exist
+                      -- Add permissions column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'roles' AND column_name = 'permissions') THEN
+                          ALTER TABLE roles ADD COLUMN permissions JSONB DEFAULT '{}';
+                          RAISE NOTICE 'Added permissions column to roles table';
+                      END IF;
+                      
+                      -- Add created_at column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'roles' AND column_name = 'created_at') THEN
+                          ALTER TABLE roles ADD COLUMN created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
+                          RAISE NOTICE 'Added created_at column to roles table';
+                      END IF;
+                      
+                      -- Create user_roles table if it doesn't exist
                       CREATE TABLE IF NOT EXISTS user_roles (
                           user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
                           role_id INTEGER REFERENCES roles(id) ON DELETE CASCADE,
-                          assigned_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                          assigned_by INTEGER REFERENCES users(id),
                           PRIMARY KEY (user_id, role_id)
                       );
                       
-                      -- Insert initial roles with proper permissions
+                      -- Add new columns to user_roles table if they don't exist
+                      -- Add assigned_at column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'user_roles' AND column_name = 'assigned_at') THEN
+                          ALTER TABLE user_roles ADD COLUMN assigned_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
+                          RAISE NOTICE 'Added assigned_at column to user_roles table';
+                      END IF;
+                      
+                      -- Add assigned_by column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'user_roles' AND column_name = 'assigned_by') THEN
+                          ALTER TABLE user_roles ADD COLUMN assigned_by INTEGER REFERENCES users(id);
+                          RAISE NOTICE 'Added assigned_by column to user_roles table';
+                      END IF;
+                      
+                      -- Insert/Update initial roles with proper permissions (now safe to reference permissions column)
                       INSERT INTO roles (name, description, permissions) 
                       VALUES 
                           ('admin', 'Administrator with full system access', '{"all": true}'),
@@ -174,12 +273,12 @@ spec:
                       
                       -- Create trigger function for updated_at
                       CREATE OR REPLACE FUNCTION update_updated_at_column()
-                      RETURNS TRIGGER AS $$
+                      RETURNS TRIGGER AS $func$
                       BEGIN
                           NEW.updated_at = CURRENT_TIMESTAMP;
                           RETURN NEW;
                       END;
-                      $$ language 'plpgsql';
+                      $func$ language 'plpgsql';
                       
                       -- Create trigger for users table
                       DROP TRIGGER IF EXISTS update_users_updated_at ON users;
@@ -206,55 +305,227 @@ spec:
                   IF NOT EXISTS (SELECT 1 FROM schema_migrations WHERE version = '20250722_enhanced_portfolios') THEN
                       RAISE NOTICE 'Applying migration: 20250722_enhanced_portfolios';
                       
-                      -- Create portfolios table with enhanced features
+                      -- Create portfolios table if it doesn't exist (basic structure)
                       CREATE TABLE IF NOT EXISTS portfolios (
                           id SERIAL PRIMARY KEY,
-                          uuid UUID NOT NULL DEFAULT uuid_generate_v4() UNIQUE,
                           user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
                           name VARCHAR(100) NOT NULL,
                           description TEXT,
-                          portfolio_type VARCHAR(50) NOT NULL DEFAULT 'standard',
-                          risk_level VARCHAR(20) DEFAULT 'moderate',
-                          target_allocation JSONB DEFAULT '{}',
-                          is_active BOOLEAN NOT NULL DEFAULT TRUE,
-                          is_public BOOLEAN NOT NULL DEFAULT FALSE,
-                          created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                          updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                          CONSTRAINT valid_portfolio_type CHECK (portfolio_type IN ('standard', 'retirement', 'growth', 'income', 'balanced')),
-                          CONSTRAINT valid_risk_level CHECK (risk_level IN ('conservative', 'moderate', 'aggressive', 'speculative'))
+                          created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
                       );
                       
-                      -- Create assets table with enhanced metadata
+                      -- Add new columns to portfolios table if they don't exist
+                      -- Add UUID column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'portfolios' AND column_name = 'uuid') THEN
+                          ALTER TABLE portfolios ADD COLUMN uuid UUID DEFAULT uuid_generate_v4();
+                          -- Update existing rows to have UUIDs
+                          UPDATE portfolios SET uuid = uuid_generate_v4() WHERE uuid IS NULL;
+                          -- Now make it NOT NULL and UNIQUE
+                          ALTER TABLE portfolios ALTER COLUMN uuid SET NOT NULL;
+                          ALTER TABLE portfolios ADD CONSTRAINT portfolios_uuid_unique UNIQUE (uuid);
+                          RAISE NOTICE 'Added uuid column to portfolios table';
+                      END IF;
+                      
+                      -- Add portfolio_type column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'portfolios' AND column_name = 'portfolio_type') THEN
+                          ALTER TABLE portfolios ADD COLUMN portfolio_type VARCHAR(50) NOT NULL DEFAULT 'standard';
+                          RAISE NOTICE 'Added portfolio_type column to portfolios table';
+                      END IF;
+                      
+                      -- Add risk_level column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'portfolios' AND column_name = 'risk_level') THEN
+                          ALTER TABLE portfolios ADD COLUMN risk_level VARCHAR(20) DEFAULT 'moderate';
+                          RAISE NOTICE 'Added risk_level column to portfolios table';
+                      END IF;
+                      
+                      -- Add target_allocation column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'portfolios' AND column_name = 'target_allocation') THEN
+                          ALTER TABLE portfolios ADD COLUMN target_allocation JSONB DEFAULT '{}';
+                          RAISE NOTICE 'Added target_allocation column to portfolios table';
+                      END IF;
+                      
+                      -- Add is_active column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'portfolios' AND column_name = 'is_active') THEN
+                          ALTER TABLE portfolios ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE;
+                          RAISE NOTICE 'Added is_active column to portfolios table';
+                      END IF;
+                      
+                      -- Add is_public column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'portfolios' AND column_name = 'is_public') THEN
+                          ALTER TABLE portfolios ADD COLUMN is_public BOOLEAN NOT NULL DEFAULT FALSE;
+                          RAISE NOTICE 'Added is_public column to portfolios table';
+                      END IF;
+                      
+                      -- Add updated_at column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'portfolios' AND column_name = 'updated_at') THEN
+                          ALTER TABLE portfolios ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
+                          RAISE NOTICE 'Added updated_at column to portfolios table';
+                      END IF;
+                      
+                      -- Add constraints after columns exist and data is cleaned
+                      DO $portfolio_constraints$
+                      DECLARE
+                          portfolio_update_count INTEGER;
+                      BEGIN
+                          -- First, ensure all portfolio_type values are valid
+                          UPDATE portfolios 
+                          SET portfolio_type = 'standard' 
+                          WHERE portfolio_type IS NULL 
+                             OR portfolio_type NOT IN ('standard', 'retirement', 'growth', 'income', 'balanced');
+                          
+                          -- Then, ensure all risk_level values are valid  
+                          UPDATE portfolios 
+                          SET risk_level = 'moderate' 
+                          WHERE risk_level IS NULL 
+                             OR risk_level NOT IN ('conservative', 'moderate', 'aggressive', 'speculative');
+                          
+                          GET DIAGNOSTICS portfolio_update_count = ROW_COUNT;
+                          IF portfolio_update_count > 0 THEN
+                              RAISE NOTICE 'Fixed % portfolios with invalid risk_level values', portfolio_update_count;
+                          END IF;
+                          
+                          -- Add portfolio_type constraint if it doesn't exist
+                          IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints 
+                                       WHERE constraint_name = 'valid_portfolio_type' AND table_name = 'portfolios') THEN
+                              ALTER TABLE portfolios ADD CONSTRAINT valid_portfolio_type 
+                              CHECK (portfolio_type IN ('standard', 'retirement', 'growth', 'income', 'balanced'));
+                              RAISE NOTICE 'Added portfolio_type constraint';
+                          END IF;
+                          
+                          -- Add risk_level constraint if it doesn't exist (now safe)
+                          IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints 
+                                       WHERE constraint_name = 'valid_risk_level' AND table_name = 'portfolios') THEN
+                              ALTER TABLE portfolios ADD CONSTRAINT valid_risk_level 
+                              CHECK (risk_level IN ('conservative', 'moderate', 'aggressive', 'speculative'));
+                              RAISE NOTICE 'Added risk_level constraint';
+                          END IF;
+                      END $portfolio_constraints$;
+                      
+                      -- Create assets table if it doesn't exist (basic structure)
                       CREATE TABLE IF NOT EXISTS assets (
                           id SERIAL PRIMARY KEY,
                           symbol VARCHAR(20) UNIQUE NOT NULL,
                           name VARCHAR(100) NOT NULL,
                           asset_type VARCHAR(50) NOT NULL,
-                          asset_class VARCHAR(50),
-                          sector VARCHAR(50),
-                          exchange VARCHAR(50),
-                          currency VARCHAR(10) DEFAULT 'USD',
                           description TEXT,
-                          metadata JSONB DEFAULT '{}',
-                          is_active BOOLEAN NOT NULL DEFAULT TRUE,
-                          created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                          updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                          CONSTRAINT valid_asset_type CHECK (asset_type IN ('stock', 'bond', 'etf', 'mutual_fund', 'crypto', 'commodity', 'option', 'future'))
+                          created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
                       );
                       
-                      -- Create portfolio_assets table with transaction history
+                      -- Add new columns to assets table if they don't exist
+                      -- Add asset_class column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'assets' AND column_name = 'asset_class') THEN
+                          ALTER TABLE assets ADD COLUMN asset_class VARCHAR(50);
+                          RAISE NOTICE 'Added asset_class column to assets table';
+                      END IF;
+                      
+                      -- Add sector column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'assets' AND column_name = 'sector') THEN
+                          ALTER TABLE assets ADD COLUMN sector VARCHAR(50);
+                          RAISE NOTICE 'Added sector column to assets table';
+                      END IF;
+                      
+                      -- Add exchange column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'assets' AND column_name = 'exchange') THEN
+                          ALTER TABLE assets ADD COLUMN exchange VARCHAR(50);
+                          RAISE NOTICE 'Added exchange column to assets table';
+                      END IF;
+                      
+                      -- Add currency column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'assets' AND column_name = 'currency') THEN
+                          ALTER TABLE assets ADD COLUMN currency VARCHAR(10) DEFAULT 'USD';
+                          RAISE NOTICE 'Added currency column to assets table';
+                      END IF;
+                      
+                      -- Add metadata column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'assets' AND column_name = 'metadata') THEN
+                          ALTER TABLE assets ADD COLUMN metadata JSONB DEFAULT '{}';
+                          RAISE NOTICE 'Added metadata column to assets table';
+                      END IF;
+                      
+                      -- Add is_active column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'assets' AND column_name = 'is_active') THEN
+                          ALTER TABLE assets ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE;
+                          RAISE NOTICE 'Added is_active column to assets table';
+                      END IF;
+                      
+                      -- Add updated_at column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'assets' AND column_name = 'updated_at') THEN
+                          ALTER TABLE assets ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
+                          RAISE NOTICE 'Added updated_at column to assets table';
+                      END IF;
+                      
+                      -- Add asset_type constraint after column exists
+                      DO $asset_constraints$
+                      BEGIN
+                          IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints 
+                                       WHERE constraint_name = 'valid_asset_type' AND table_name = 'assets') THEN
+                              ALTER TABLE assets ADD CONSTRAINT valid_asset_type 
+                              CHECK (asset_type IN ('stock', 'bond', 'etf', 'mutual_fund', 'crypto', 'commodity', 'option', 'future'));
+                              RAISE NOTICE 'Added asset_type constraint';
+                          END IF;
+                      END $asset_constraints$;
+                      
+                      -- Create portfolio_assets table if it doesn't exist (basic structure)
                       CREATE TABLE IF NOT EXISTS portfolio_assets (
-                          id SERIAL PRIMARY KEY,
                           portfolio_id INTEGER REFERENCES portfolios(id) ON DELETE CASCADE,
                           asset_id INTEGER REFERENCES assets(id) ON DELETE CASCADE,
                           quantity DECIMAL(20, 8) NOT NULL,
-                          average_cost DECIMAL(20, 8) NOT NULL,
-                          total_cost DECIMAL(20, 8) NOT NULL,
-                          current_value DECIMAL(20, 8),
-                          last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                          created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                          UNIQUE(portfolio_id, asset_id)
+                          purchase_price DECIMAL(20, 8) NOT NULL,
+                          purchase_date TIMESTAMP WITH TIME ZONE NOT NULL,
+                          PRIMARY KEY (portfolio_id, asset_id, purchase_date)
                       );
+                      
+                      -- Add new columns to portfolio_assets table if they don't exist
+                      -- Add id column (convert to proper table structure)
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'portfolio_assets' AND column_name = 'id') THEN
+                          -- First drop the old primary key
+                          ALTER TABLE portfolio_assets DROP CONSTRAINT IF EXISTS portfolio_assets_pkey;
+                          -- Add id column
+                          ALTER TABLE portfolio_assets ADD COLUMN id SERIAL PRIMARY KEY;
+                          -- Create new unique constraint
+                          ALTER TABLE portfolio_assets ADD CONSTRAINT portfolio_assets_unique UNIQUE(portfolio_id, asset_id);
+                          RAISE NOTICE 'Added id column and restructured portfolio_assets table';
+                      END IF;
+                      
+                      -- Add average_cost column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'portfolio_assets' AND column_name = 'average_cost') THEN
+                          ALTER TABLE portfolio_assets ADD COLUMN average_cost DECIMAL(20, 8);
+                          -- Populate with purchase_price for existing data
+                          UPDATE portfolio_assets SET average_cost = purchase_price WHERE average_cost IS NULL;
+                          ALTER TABLE portfolio_assets ALTER COLUMN average_cost SET NOT NULL;
+                          RAISE NOTICE 'Added average_cost column to portfolio_assets table';
+                      END IF;
+                      
+                      -- Add total_cost column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'portfolio_assets' AND column_name = 'total_cost') THEN
+                          ALTER TABLE portfolio_assets ADD COLUMN total_cost DECIMAL(20, 8);
+                          -- Populate with quantity * purchase_price for existing data
+                          UPDATE portfolio_assets SET total_cost = quantity * purchase_price WHERE total_cost IS NULL;
+                          ALTER TABLE portfolio_assets ALTER COLUMN total_cost SET NOT NULL;
+                          RAISE NOTICE 'Added total_cost column to portfolio_assets table';
+                      END IF;
+                      
+                      -- Add current_value column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'portfolio_assets' AND column_name = 'current_value') THEN
+                          ALTER TABLE portfolio_assets ADD COLUMN current_value DECIMAL(20, 8);
+                          RAISE NOTICE 'Added current_value column to portfolio_assets table';
+                      END IF;
+                      
+                      -- Add last_updated column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'portfolio_assets' AND column_name = 'last_updated') THEN
+                          ALTER TABLE portfolio_assets ADD COLUMN last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+                          RAISE NOTICE 'Added last_updated column to portfolio_assets table';
+                      END IF;
+                      
+                      -- Add created_at column (renamed from purchase_date for consistency)
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'portfolio_assets' AND column_name = 'created_at') THEN
+                          ALTER TABLE portfolio_assets ADD COLUMN created_at TIMESTAMP WITH TIME ZONE;
+                          -- Populate with purchase_date for existing data
+                          UPDATE portfolio_assets SET created_at = purchase_date WHERE created_at IS NULL;
+                          ALTER TABLE portfolio_assets ALTER COLUMN created_at SET NOT NULL;
+                          ALTER TABLE portfolio_assets ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP;
+                          RAISE NOTICE 'Added created_at column to portfolio_assets table';
+                      END IF;
                       
                       -- Create transactions table for detailed history
                       CREATE TABLE IF NOT EXISTS transactions (
@@ -273,7 +544,7 @@ spec:
                           CONSTRAINT valid_transaction_type CHECK (transaction_type IN ('buy', 'sell', 'dividend', 'split', 'merger', 'spinoff'))
                       );
                       
-                      -- Create indexes for better performance
+                      -- Create indexes for better performance (only after ensuring columns exist)
                       CREATE INDEX IF NOT EXISTS idx_portfolios_user_id ON portfolios(user_id);
                       CREATE INDEX IF NOT EXISTS idx_portfolios_uuid ON portfolios(uuid);
                       CREATE INDEX IF NOT EXISTS idx_assets_symbol ON assets(symbol);
@@ -295,22 +566,8 @@ spec:
                           FOR EACH ROW
                           EXECUTE FUNCTION update_updated_at_column();
                       
-                      -- Insert some sample assets
-                      INSERT INTO assets (symbol, name, asset_type, asset_class, sector, exchange) VALUES
-                          ('AAPL', 'Apple Inc.', 'stock', 'equity', 'Technology', 'NASDAQ'),
-                          ('GOOGL', 'Alphabet Inc.', 'stock', 'equity', 'Technology', 'NASDAQ'),
-                          ('MSFT', 'Microsoft Corporation', 'stock', 'equity', 'Technology', 'NASDAQ'),
-                          ('TSLA', 'Tesla Inc.', 'stock', 'equity', 'Automotive', 'NASDAQ'),
-                          ('SPY', 'SPDR S&P 500 ETF Trust', 'etf', 'equity', 'Diversified', 'NYSE'),
-                          ('QQQ', 'Invesco QQQ Trust', 'etf', 'equity', 'Technology', 'NASDAQ'),
-                          ('BTC-USD', 'Bitcoin', 'crypto', 'cryptocurrency', 'Digital Asset', 'CRYPTO'),
-                          ('ETH-USD', 'Ethereum', 'crypto', 'cryptocurrency', 'Digital Asset', 'CRYPTO')
-                      ON CONFLICT (symbol) DO UPDATE SET
-                          name = EXCLUDED.name,
-                          asset_type = EXCLUDED.asset_type,
-                          asset_class = EXCLUDED.asset_class,
-                          sector = EXCLUDED.sector,
-                          exchange = EXCLUDED.exchange;
+                      -- Sample assets will be added through the application API, not in migrations
+                      -- This keeps the database clean for production deployment
                       
                       -- Record that this migration has been applied
                       INSERT INTO schema_migrations (version, description, checksum)
@@ -330,22 +587,100 @@ spec:
                   IF NOT EXISTS (SELECT 1 FROM schema_migrations WHERE version = '20250722_enhanced_settings') THEN
                       RAISE NOTICE 'Applying migration: 20250722_enhanced_settings';
                       
-                      -- Create settings table with categories and validation
+                      -- Create settings table if it doesn't exist (basic structure)
                       CREATE TABLE IF NOT EXISTS settings (
                           id SERIAL PRIMARY KEY,
-                          category VARCHAR(50) NOT NULL DEFAULT 'general',
                           key VARCHAR(100) NOT NULL,
                           value TEXT,
-                          value_type VARCHAR(20) NOT NULL DEFAULT 'string',
                           description TEXT,
-                          validation_rule JSONB,
-                          is_public BOOLEAN NOT NULL DEFAULT FALSE,
-                          is_required BOOLEAN NOT NULL DEFAULT FALSE,
-                          created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                          updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                          UNIQUE(category, key),
-                          CONSTRAINT valid_value_type CHECK (value_type IN ('string', 'integer', 'decimal', 'boolean', 'json', 'array'))
+                          created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
                       );
+                      
+                      -- Add new columns to settings table if they don't exist
+                      -- Add category column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'settings' AND column_name = 'category') THEN
+                          ALTER TABLE settings ADD COLUMN category VARCHAR(50) NOT NULL DEFAULT 'general';
+                          RAISE NOTICE 'Added category column to settings table';
+                      END IF;
+                      
+                      -- Add value_type column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'settings' AND column_name = 'value_type') THEN
+                          ALTER TABLE settings ADD COLUMN value_type VARCHAR(20) NOT NULL DEFAULT 'string';
+                          RAISE NOTICE 'Added value_type column to settings table';
+                      END IF;
+                      
+                      -- Add validation_rule column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'settings' AND column_name = 'validation_rule') THEN
+                          ALTER TABLE settings ADD COLUMN validation_rule JSONB;
+                          RAISE NOTICE 'Added validation_rule column to settings table';
+                      END IF;
+                      
+                      -- Add is_public column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'settings' AND column_name = 'is_public') THEN
+                          ALTER TABLE settings ADD COLUMN is_public BOOLEAN NOT NULL DEFAULT FALSE;
+                          RAISE NOTICE 'Added is_public column to settings table';
+                      END IF;
+                      
+                      -- Add is_required column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'settings' AND column_name = 'is_required') THEN
+                          ALTER TABLE settings ADD COLUMN is_required BOOLEAN NOT NULL DEFAULT FALSE;
+                          RAISE NOTICE 'Added is_required column to settings table';
+                      END IF;
+                      
+                      -- Add updated_at column
+                      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'settings' AND column_name = 'updated_at') THEN
+                          ALTER TABLE settings ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
+                          RAISE NOTICE 'Added updated_at column to settings table';
+                      END IF;
+                      
+                      -- Update key column length if needed (was VARCHAR(50), now needs VARCHAR(100))
+                      DO $key_length$
+                      BEGIN
+                          IF EXISTS (
+                              SELECT 1 FROM information_schema.columns 
+                              WHERE table_name = 'settings' 
+                              AND column_name = 'key' 
+                              AND character_maximum_length < 100
+                          ) THEN
+                              ALTER TABLE settings ALTER COLUMN key TYPE VARCHAR(100);
+                              RAISE NOTICE 'Extended settings.key column to 100 characters';
+                          END IF;
+                      END $key_length$;
+                      
+                      -- Drop old unique constraint on just 'key' and create new one on 'category, key'
+                      DO $unique_constraints$
+                      BEGIN
+                          -- Drop old unique constraint if it exists
+                          IF EXISTS (
+                              SELECT 1 FROM information_schema.table_constraints 
+                              WHERE table_name = 'settings' 
+                              AND constraint_name = 'settings_key_key'
+                          ) THEN
+                              ALTER TABLE settings DROP CONSTRAINT settings_key_key;
+                              RAISE NOTICE 'Dropped old settings_key_key constraint';
+                          END IF;
+                          
+                          -- Add new unique constraint on category, key
+                          IF NOT EXISTS (
+                              SELECT 1 FROM information_schema.table_constraints 
+                              WHERE table_name = 'settings' 
+                              AND constraint_name = 'settings_category_key_unique'
+                          ) THEN
+                              ALTER TABLE settings ADD CONSTRAINT settings_category_key_unique UNIQUE(category, key);
+                              RAISE NOTICE 'Added settings_category_key_unique constraint';
+                          END IF;
+                      END $unique_constraints$;
+                      
+                      -- Add value_type constraint after column exists
+                      DO $value_type_constraint$
+                      BEGIN
+                          IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints 
+                                       WHERE constraint_name = 'valid_value_type' AND table_name = 'settings') THEN
+                              ALTER TABLE settings ADD CONSTRAINT valid_value_type 
+                              CHECK (value_type IN ('string', 'integer', 'decimal', 'boolean', 'json', 'array'));
+                              RAISE NOTICE 'Added value_type constraint';
+                          END IF;
+                      END $value_type_constraint$;
                       
                       -- Create user_settings table for user-specific configurations
                       CREATE TABLE IF NOT EXISTS user_settings (
@@ -359,7 +694,7 @@ spec:
                           UNIQUE(user_id, category, key)
                       );
                       
-                      -- Insert comprehensive default settings
+                      -- Insert comprehensive default settings (now safe to use all columns)
                       INSERT INTO settings (category, key, value, value_type, description, validation_rule, is_public, is_required) VALUES
                           -- Portfolio settings
                           ('portfolio', 'max_portfolio_size', '100', 'integer', 'Maximum number of assets in a portfolio', '{"min": 1, "max": 1000}', true, true),
@@ -513,7 +848,7 @@ spec:
               
               -- Create function to get user's full display name
               CREATE OR REPLACE FUNCTION get_user_display_name(user_record users)
-              RETURNS TEXT AS $$
+              RETURNS TEXT AS $func$
               BEGIN
                   RETURN COALESCE(
                       user_record.display_name,
@@ -522,7 +857,7 @@ spec:
                       user_record.username
                   );
               END;
-              $$ LANGUAGE plpgsql IMMUTABLE;
+              $func$ LANGUAGE plpgsql IMMUTABLE;
               
               -- Final migration summary
               \echo ''
