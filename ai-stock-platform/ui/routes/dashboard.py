@@ -11,6 +11,10 @@ from typing import List, Optional
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from core.config import settings
+from services.yahoo_finance import YahooFinanceService
+from services.trending_stocks_service import TrendingStocksService
+from services.api_client import APIClient
 
 # Setup router
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -25,41 +29,67 @@ def get_templates(request: Request) -> Jinja2Templates:
     """Return app-level templates if available."""
     return getattr(request.app.state, "templates", templates)
 
-# Demo data removed
+
+# Demo placeholder data
 DEMO_MARKET_DATA = {}
 DEMO_STOCKS = []
 DEMO_NEWS = []
 
+
 @router.get("/", response_class=HTMLResponse)
 async def dashboard_page(request: Request):
-    """Render main dashboard page (demo mode)"""
+    """Render main dashboard page"""
     try:
-        logger.info("Loading dashboard page in demo mode")
-        
-        # Do not assume a logged-in demo user
-        user = None
-        
-        # Demo watchlist removed
-        watchlist_items = []
+        demo_mode = settings.DEMO_MODE
 
-        # Demo portfolio performance removed
-        portfolio_data = {}
-        
+        token = request.cookies.get("access_token")
+        api = APIClient(token=token) if token else None
+        user = api.get("/users/me") if api else None
+        subscribed = bool(user and user.get("role") != "free")
+        watchlist_items: List[str] = []
+        portfolio_data: dict = {}
+
+        market_summary = DEMO_MARKET_DATA
+        popular_stocks = DEMO_STOCKS
+        news = DEMO_NEWS
+
+        if not demo_mode and subscribed:
+            market_summary = YahooFinanceService.get_market_summary()
+            try:
+                trending = await TrendingStocksService().get_trending_stocks(limit=5)
+                popular_stocks = trending.get("stocks", [])
+                for stock in popular_stocks:
+                    try:
+                        symbol = stock.get("symbol") or stock.get("ticker")
+                        if symbol and api:
+                            pred = api.get(f"/predictions/{symbol}")
+                            price = (
+                                pred.get("data", {})
+                                .get("predictions", [{}])[0]
+                                .get("predicted_price")
+                            )
+                            if price is not None:
+                                stock["prediction"] = price
+                    except Exception as exc:  # pragma: no cover
+                        logger.warning(f"Prediction fetch failed for {symbol}: {exc}")
+            except Exception as ex:  # pragma: no cover - network errors
+                logger.warning(f"Trending stocks fetch failed: {ex}")
+
         return get_templates(request).TemplateResponse(
             "dashboard/index.html",
             {
                 "request": request,
                 "user": user,
-                "demo_mode": True,
-                "market_summary": DEMO_MARKET_DATA,
-                "popular_stocks": DEMO_STOCKS,
-                "news": DEMO_NEWS,
+                "demo_mode": demo_mode,
+                "market_summary": market_summary,
+                "popular_stocks": popular_stocks,
+                "news": news,
                 "watchlist": watchlist_items,
                 "portfolio": portfolio_data,
-                "page_title": "Dashboard - QuantumVestAI"
-            }
+                "page_title": "Dashboard - QuantumVestAI",
+            },
         )
-        
+
     except Exception as e:
         logger.error(f"Error loading dashboard: {str(e)}")
         return get_templates(request).TemplateResponse(
@@ -67,17 +97,18 @@ async def dashboard_page(request: Request):
             {
                 "request": request,
                 "user": None,
-                "demo_mode": True,
+                "demo_mode": demo_mode,
                 "market_summary": {"indices": {}, "sectors": {}, "top_movers": {}},
                 "popular_stocks": [],
                 "news": [],
                 "watchlist": [],
                 "portfolio": {},
                 "error": f"Error loading dashboard: {str(e)}",
-                "page_title": "Dashboard Error"
+                "page_title": "Dashboard Error",
             },
-            status_code=500
+            status_code=500,
         )
+
 
 @router.get("/portfolio", response_class=HTMLResponse)
 async def portfolio_page(request: Request):
@@ -85,17 +116,17 @@ async def portfolio_page(request: Request):
     try:
         # Demo portfolio data removed
         portfolio_data = {}
-        
+
         return get_templates(request).TemplateResponse(
             "dashboard/portfolio.html",
             {
                 "request": request,
                 "portfolio": portfolio_data,
-                "demo_mode": True,
-                "page_title": "Portfolio - QuantumVestAI"
-            }
+                "demo_mode": settings.DEMO_MODE,
+                "page_title": "Portfolio - QuantumVestAI",
+            },
         )
-        
+
     except Exception as e:
         logger.error(f"Error loading portfolio page: {str(e)}")
         return get_templates(request).TemplateResponse(
@@ -103,28 +134,29 @@ async def portfolio_page(request: Request):
             {
                 "request": request,
                 "error": "Unable to load portfolio data",
-                "page_title": "Portfolio Error"
+                "page_title": "Portfolio Error",
             },
-            status_code=500
+            status_code=500,
         )
 
-@router.get("/analytics", response_class=HTMLResponse) 
+
+@router.get("/analytics", response_class=HTMLResponse)
 async def analytics_page(request: Request):
     """Advanced analytics page"""
     try:
         # Demo analytics data removed
         analytics_data = {}
-        
+
         return get_templates(request).TemplateResponse(
             "dashboard/analytics.html",
             {
                 "request": request,
                 "analytics": analytics_data,
-                "demo_mode": True,
-                "page_title": "Analytics - QuantumVestAI"
-            }
+                "demo_mode": settings.DEMO_MODE,
+                "page_title": "Analytics - QuantumVestAI",
+            },
         )
-        
+
     except Exception as e:
         logger.error(f"Error loading analytics page: {str(e)}")
         return get_templates(request).TemplateResponse(
@@ -132,24 +164,47 @@ async def analytics_page(request: Request):
             {
                 "request": request,
                 "error": "Unable to load analytics data",
-                "page_title": "Analytics Error"
+                "page_title": "Analytics Error",
             },
-            status_code=500
+            status_code=500,
         )
+
 
 @router.get("/api/summary")
 async def dashboard_api_summary(request: Request):
     """API endpoint for dashboard summary data"""
     try:
+        token = request.cookies.get("access_token")
+        api = APIClient(token=token) if token else None
+        if settings.DEMO_MODE or not api:
+            data = {}
+        else:
+            data = YahooFinanceService.get_market_summary()
+            trending = await TrendingStocksService().get_trending_stocks(limit=5)
+            stocks = trending.get("stocks", [])
+            for stock in stocks:
+                symbol = stock.get("symbol") or stock.get("ticker")
+                if symbol:
+                    pred = api.get(f"/predictions/{symbol}")
+                    price = (
+                        pred.get("data", {})
+                        .get("predictions", [{}])[0]
+                        .get("predicted_price")
+                        if pred
+                        else None
+                    )
+                    if price is not None:
+                        stock["prediction"] = price
+            data["trending"] = stocks
         return {
             "status": "success",
-            "data": {},
-            "timestamp": datetime.utcnow().isoformat()
+            "data": data,
+            "timestamp": datetime.utcnow().isoformat(),
         }
     except Exception as e:
         logger.error(f"Error getting dashboard summary: {str(e)}")
         return {
             "status": "error",
             "message": str(e),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
