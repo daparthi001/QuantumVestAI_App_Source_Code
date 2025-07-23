@@ -76,8 +76,8 @@ spec:
               DO $migration$
               BEGIN
                   -- Check if this migration has been applied
-                  IF NOT EXISTS (SELECT 1 FROM schema_migrations WHERE version = '20250615_initial') THEN
-                      RAISE NOTICE 'Applying migration: 20250615_initial';
+                  IF NOT EXISTS (SELECT 1 FROM schema_migrations WHERE version = '0001_initial') THEN
+                      RAISE NOTICE 'Applying migration: 0001_initial';
                       
                       -- Create users table
                       CREATE TABLE IF NOT EXISTS users (
@@ -112,11 +112,11 @@ spec:
                       
                       -- Record that this migration has been applied
                       INSERT INTO schema_migrations (version, description)
-                      VALUES ('20250615_initial', 'Initial schema with users and roles');
+                      VALUES ('0001_initial', 'Initial schema with users and roles');
                       
-                      RAISE NOTICE 'Migration 20250615_initial completed';
+                      RAISE NOTICE 'Migration 0001_initial completed';
                   ELSE
-                      RAISE NOTICE 'Migration 20250615_initial already applied';
+                      RAISE NOTICE 'Migration 0001_initial already applied';
                   END IF;
               END $migration$;
               
