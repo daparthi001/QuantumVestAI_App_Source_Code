@@ -3,8 +3,7 @@ Role model for QuantumVestAI
 Created: 2025-07-23
 Author: daparthi001
 """
-from sqlalchemy import Column, Integer, String, Text, DateTime
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import Column, Integer, String, Text, DateTime, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -20,7 +19,7 @@ class Role(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), unique=True, nullable=False, index=True)
     description = Column(Text)
-    permissions = Column(JSONB, default={})
+    permissions = Column(JSON, default={})
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     # Relationships

@@ -3,8 +3,17 @@ AuditLog model for QuantumVestAI
 Created: 2025-07-23
 Author: daparthi001
 """
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, CheckConstraint
-from sqlalchemy.dialects.postgresql import JSONB, INET
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Text,
+    DateTime,
+    ForeignKey,
+    CheckConstraint,
+    JSON,
+)
+from sqlalchemy.dialects.postgresql import INET
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -20,8 +29,8 @@ class AuditLog(Base):
     table_name = Column(String(50), nullable=False, index=True)
     record_id = Column(Integer, index=True)
     action = Column(String(20), nullable=False, index=True)
-    old_values = Column(JSONB)
-    new_values = Column(JSONB)
+    old_values = Column(JSON)
+    new_values = Column(JSON)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     ip_address = Column(INET)
     user_agent = Column(Text)
