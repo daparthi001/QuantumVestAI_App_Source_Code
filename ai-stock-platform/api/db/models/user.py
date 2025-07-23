@@ -51,7 +51,39 @@ class User(Base, TimestampMixin):
 
     hashed_password = Column(_pwd_column_name, String, nullable=False)
     password_hash = synonym("hashed_password")
-    full_name = Column(String)
+
+    # Determine if the optional ``full_name`` column exists. Older databases
+    # may not have it, which would cause queries to fail if we always include
+    # the column.  Detect its presence at import time and gracefully fall back
+    # to a simple property if the column is missing.
+    _has_full_name = True
+    try:
+        from core.config import get_settings
+        from sqlalchemy import create_engine, inspect
+
+        settings = get_settings()
+        engine = create_engine(settings.SQLALCHEMY_DATABASE_URI)
+        insp = inspect(engine)
+        cols = [c["name"] for c in insp.get_columns("users")]
+        engine.dispose()
+        if "full_name" not in cols:
+            _has_full_name = False
+    except Exception:
+        # If inspection fails assume the column exists (e.g., during tests) so
+        # that new databases still include it.
+        pass
+
+    if _has_full_name:
+        full_name = Column(String)
+    else:
+        def _get_full_name(self) -> str:
+            return self.username
+
+        def _set_full_name(self, value: str) -> None:  # noqa: D401 - simple setter
+            """Ignore assignment when column is missing."""
+            return None
+
+        full_name = property(_get_full_name, _set_full_name)
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
     role = Column(String, default="free", nullable=False)
