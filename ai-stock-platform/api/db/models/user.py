@@ -41,7 +41,7 @@ from db.models.associations import user_watchlist
 # fail when resolving relationship targets like "Watchlist" or "WatchList".
 from .watchlist import Watchlist  # noqa: F401
 from .watchlist_stock import WatchlistStock  # noqa: F401
-from .stock import WatchList  # noqa: F401
+from .stock import WatchList, Alert  # noqa: F401
 
 
 class User(Base):
@@ -214,6 +214,12 @@ class User(Base):
     )
     watchlists = relationship(
         "Watchlist",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="select",
+    )
+    alerts = relationship(
+        "Alert",
         back_populates="user",
         cascade="all, delete-orphan",
         lazy="select",
