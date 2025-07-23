@@ -1,4 +1,6 @@
-from db.base_class import Base, TimestampMixin
+# Use the common Base so that User relationships resolve correctly during
+# mapper configuration.
+from db.base import Base, TimestampMixin
 from sqlalchemy import JSON, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 

@@ -36,6 +36,13 @@ except ImportError:  # pragma: no cover - optional dependency may be missing
 from db.base import Base
 from db.models.associations import user_watchlist
 
+# Import related models so that SQLAlchemy is aware of them when this module
+# is imported in isolation. Without these imports the mapper configuration can
+# fail when resolving relationship targets like "Watchlist" or "WatchList".
+from .watchlist import Watchlist  # noqa: F401
+from .watchlist_stock import WatchlistStock  # noqa: F401
+from .stock import WatchList  # noqa: F401
+
 
 class User(Base):
     """

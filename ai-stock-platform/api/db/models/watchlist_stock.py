@@ -1,4 +1,6 @@
-from db.base_class import Base
+# Register the watchlist stock model on the main SQLAlchemy Base. Using a
+# separate Base prevents relationship strings from resolving correctly.
+from db.base import Base
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
