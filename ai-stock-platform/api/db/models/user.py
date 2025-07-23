@@ -16,7 +16,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
-from sqlalchemy.orm import relationship, Session
+from sqlalchemy.orm import relationship, Session, synonym
 from sqlalchemy.sql import func, select, exists, case
 try:
     from werkzeug.security import generate_password_hash, check_password_hash
