@@ -7,6 +7,7 @@ import { Container, Row, Col, Card, Button, Spinner, Alert, Badge, Table } from 
 import { Link } from 'react-router-dom';
 import { ROUTES } from '../config/constants';
 import apiService, { MarketOverview, Stock } from '../services/api-service';
+import PredictiveAnalytics from './analysis/PredictiveAnalytics';
 
 const Analytics: React.FC = () => {
   const [marketOverview, setMarketOverview] = useState<MarketOverview | null>(null);
@@ -210,26 +211,29 @@ const Analytics: React.FC = () => {
   );
 
   const renderAnalysisTab = () => (
-    <Card className="mb-4">
-      <Card.Header>
-        <h5 className="mb-0">Market Analysis</h5>
-      </Card.Header>
-      <Card.Body>
-        <Alert variant="info">
-          <Alert.Heading>AI-Powered Market Analysis</Alert.Heading>
-          <p>Advanced market analysis features are coming soon. This will include:</p>
-          <ul>
-            <li>Risk analysis and portfolio optimization</li>
-            <li>Correlation analysis between stocks and sectors</li>
-            <li>Economic indicators and their market impact</li>
-            <li>Predictive analytics and forecasting</li>
-          </ul>
-          <Button variant="primary" as={Link as any} to={ROUTES.AI_ASSISTANT}>
-            Try AI Assistant
-          </Button>
-        </Alert>
-      </Card.Body>
-    </Card>
+    <>
+      <Card className="mb-4">
+        <Card.Header>
+          <h5 className="mb-0">Market Analysis</h5>
+        </Card.Header>
+        <Card.Body>
+          <Alert variant="info">
+            <Alert.Heading>AI-Powered Market Analysis</Alert.Heading>
+            <p>Advanced market analysis features are coming soon. This will include:</p>
+            <ul>
+              <li>Risk analysis and portfolio optimization</li>
+              <li>Correlation analysis between stocks and sectors</li>
+              <li>Economic indicators and their market impact</li>
+              <li>Predictive analytics and forecasting</li>
+            </ul>
+            <Button variant="primary" as={Link as any} to={ROUTES.AI_ASSISTANT}>
+              Try AI Assistant
+            </Button>
+          </Alert>
+        </Card.Body>
+      </Card>
+      <PredictiveAnalytics />
+    </>
   );
 
   return (

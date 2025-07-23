@@ -271,6 +271,22 @@ class ApiService {
     return response.data.data;
   }
 
+  async getPredictiveAnalytics(
+    symbols: string[],
+    horizon = '1w',
+    confidenceLevel = 0.95
+  ): Promise<any> {
+    const params = new URLSearchParams({
+      symbols: symbols.join(','),
+      horizon,
+      confidence_level: confidenceLevel.toString()
+    });
+    const response = await apiClient.get<StandardResponse<any>>(
+      `${API_ENDPOINTS.ANALYTICS.PREDICTIVE}?${params.toString()}`
+    );
+    return response.data.data;
+  }
+
   // Backtest methods
   async runBacktest(backtestRequest: BacktestRequest): Promise<BacktestResult> {
     const response = await apiClient.post<StandardResponse<BacktestResult>>(
