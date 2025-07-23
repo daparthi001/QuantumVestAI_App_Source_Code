@@ -17,6 +17,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.orm import relationship, Session, synonym
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func, select, exists, case
 try:
     from werkzeug.security import generate_password_hash, check_password_hash
@@ -733,5 +734,43 @@ def create_user(
     # Add to session
     session.add(user)
     session.flush()  # Get the ID
-    
+
     return user
+
+
+# ==========================================
+# ASYNC UTILITY METHODS
+# ==========================================
+
+@classmethod
+async def get_by_username(cls, session: AsyncSession, username: str) -> Optional["User"]:
+    """Asynchronously fetch a user by username."""
+    result = await session.execute(
+        select(User).where(User.username == username.lower().strip())
+    )
+    return result.scalars().first()
+
+
+@classmethod
+async def get_by_email(cls, session: AsyncSession, email: str) -> Optional["User"]:
+    """Asynchronously fetch a user by email."""
+    result = await session.execute(
+        select(User).where(User.email == email.lower().strip())
+    )
+    return result.scalars().first()
+
+
+@classmethod
+async def get_by_uuid(cls, session: AsyncSession, user_uuid: uuid.UUID) -> Optional["User"]:
+    """Asynchronously fetch a user by UUID."""
+    result = await session.execute(
+        select(User).where(User.uuid == user_uuid)
+    )
+    return result.scalars().first()
+
+
+async def save(self, session: AsyncSession) -> None:
+    """Persist the user using an async database session."""
+    session.add(self)
+    await session.commit()
+    await session.refresh(self)
