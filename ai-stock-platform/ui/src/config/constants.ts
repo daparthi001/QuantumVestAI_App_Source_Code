@@ -63,6 +63,7 @@ export const API_ENDPOINTS = {
     MARKET_OVERVIEW: '/api/v1/analytics/market-overview',
     SECTORS: '/api/v1/analytics/sectors',
     TOP_MOVERS: '/api/v1/analytics/top-movers',
+    PREDICTIVE: '/api/v1/analytics/predictive',
     MARKET_BREADTH: '/api/v1/analytics/market-breadth',
     ECONOMIC_INDICATORS: '/api/v1/analytics/economic-indicators',
     CORRELATIONS: '/api/v1/analytics/correlations',
