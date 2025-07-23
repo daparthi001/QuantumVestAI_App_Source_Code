@@ -10,6 +10,7 @@ from sqlalchemy.sql import func
 from db.base import Base
 
 
+
 class UserSetting(Base):
     """User-specific settings model"""
     __tablename__ = "user_settings"

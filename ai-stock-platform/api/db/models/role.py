@@ -11,6 +11,7 @@ from sqlalchemy.sql import func
 from db.base import Base
 
 
+
 class Role(Base):
     """Role model for role-based access control"""
     __tablename__ = "roles"

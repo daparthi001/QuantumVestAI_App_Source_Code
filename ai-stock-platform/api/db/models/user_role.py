@@ -10,6 +10,7 @@ from sqlalchemy.sql import func
 from db.base import Base
 
 
+
 class UserRole(Base):
     """Association model between User and Role"""
     __tablename__ = "user_roles"

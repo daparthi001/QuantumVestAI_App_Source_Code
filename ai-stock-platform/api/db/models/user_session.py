@@ -12,6 +12,7 @@ from sqlalchemy.sql import func
 from db.base import Base
 
 
+
 class UserSession(Base):
     """User session model for session management"""
     __tablename__ = "user_sessions"

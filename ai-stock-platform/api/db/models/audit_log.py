@@ -11,6 +11,7 @@ from sqlalchemy.sql import func
 from db.base import Base
 
 
+
 class AuditLog(Base):
     """Audit log model for tracking user actions"""
     __tablename__ = "audit_logs"

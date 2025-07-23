@@ -1,9 +1,11 @@
 """
-Complete User Model for QuantumVestAI
+Complete User Model for QuantumVestAI (Simplified - No SQL Expression Conflicts)
 Created: 2025-05-17 14:29:46 UTC
 Updated: 2025-07-23 - Complete rewrite with full name support and fixed circular references
 Author: daparthi001
 """
+import hashlib
+import secrets
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 import uuid
@@ -28,6 +30,7 @@ except ImportError:  # pragma: no cover - optional dependency may be missing
     def check_password_hash(pw_hash: str, password: str) -> bool:
         """Verify a password against the SHA256 fallback hash."""
         return pw_hash == hashlib.sha256(password.encode()).hexdigest()
+
 
 from db.base import Base
 
@@ -89,21 +92,6 @@ class User(Base):
         else:
             return self.username
 
-    @full_name.expression
-    def full_name(cls):
-        """SQL expression for full_name generation"""
-        return case(
-            [
-                (
-                    (cls.first_name.isnot(None)) & (cls.last_name.isnot(None)),
-                    func.trim(func.concat(cls.first_name, ' ', cls.last_name))
-                ),
-                (cls.first_name.isnot(None), func.trim(cls.first_name)),
-                (cls.last_name.isnot(None), func.trim(cls.last_name))
-            ],
-            else_=cls.username
-        )
-
     @hybrid_property
     def effective_display_name(self) -> str:
         """
@@ -117,98 +105,62 @@ class User(Base):
             self.username
         )
 
-    @effective_display_name.expression
-    def effective_display_name(cls):
-        """SQL expression for effective_display_name"""
-        return func.coalesce(
-            cls.display_name,
-            cls.full_name,
-            cls.first_name,
-            cls.username
-        )
-
     # ==========================================
-    # ROLE AND PERMISSION MANAGEMENT
+    # ROLE AND PERMISSION MANAGEMENT (FIXED)
     # ==========================================
 
     @hybrid_property
     def roles(self) -> List[str]:
         """Get all role names for the user"""
-        if self.user_roles:
+        if hasattr(self, 'user_roles') and self.user_roles:
             return [ur.role.name for ur in self.user_roles if ur.role]
         return []
 
     @hybrid_property
     def primary_role(self) -> str:
         """Get the user's primary role (first assigned role or 'user' default)"""
-        if self.user_roles and len(self.user_roles) > 0:
-            primary_user_role = self.user_roles[0]
-            if primary_user_role.role:
-                return primary_user_role.role.name
+        if hasattr(self, 'user_roles') and self.user_roles:
+            if len(self.user_roles) > 0:
+                primary_user_role = self.user_roles[0]
+                if primary_user_role.role:
+                    return primary_user_role.role.name
         return "user"
-
-    @primary_role.expression
-    def primary_role(cls):
-        """SQL expression for primary_role"""
-        from db.models.role import Role
-        from db.models.user_role import UserRole
-        
-        # Subquery to get the first role for the user
-        first_role = (
-            select(Role.name)
-            .select_from(UserRole.join(Role))
-            .where(UserRole.user_id == cls.id)
-            .order_by(UserRole.id)
-            .limit(1)
-        ).scalar_subquery()
-        
-        return func.coalesce(first_role, 'user')
 
     @hybrid_property
     def is_admin(self) -> bool:
-        """Check if user has admin role"""
-        return "admin" in self.roles
-
-    @is_admin.expression
-    def is_admin(cls):
-        """SQL expression for is_admin"""
-        from db.models.role import Role
-        from db.models.user_role import UserRole
-        
-        return exists().where(
-            (UserRole.user_id == cls.id) &
-            (UserRole.role_id == Role.id) &
-            (Role.name == "admin")
-        )
+        """Check if user has admin role - FIXED to avoid circular reference"""
+        # Direct database lookup instead of calling other properties
+        if hasattr(self, 'user_roles') and self.user_roles:
+            for user_role in self.user_roles:
+                if hasattr(user_role, 'role') and user_role.role and user_role.role.name == "admin":
+                    return True
+        return False
 
     @hybrid_property
     def is_superuser(self) -> bool:
-        """Alias for is_admin (backward compatibility)"""
+        """Alias for is_admin (backward compatibility) - FIXED"""
         return self.is_admin
-
-    @is_superuser.expression
-    def is_superuser(cls):
-        """SQL expression for is_superuser"""
-        return cls.is_admin
 
     @hybrid_property
     def role(self) -> str:
         """
-        Legacy role property for backward compatibility.
+        Legacy role property for backward compatibility - FIXED.
         Returns 'admin' for admin users, 'free' for others.
         """
-        return "admin" if self.is_admin else "free"
-
-    @role.expression
-    def role(cls):
-        """SQL expression for legacy role property"""
-        return case([(cls.is_admin, "admin")], else_="free")
+        # Direct database lookup instead of calling is_admin to avoid circular reference
+        if hasattr(self, 'user_roles') and self.user_roles:
+            for user_role in self.user_roles:
+                if hasattr(user_role, 'role') and user_role.role:
+                    if user_role.role.name == "admin":
+                        return "admin"
+            return "user"  # Has roles but not admin
+        return "free"  # No roles assigned
 
     @hybrid_property
     def permissions(self) -> Dict[str, Any]:
         """Get aggregated permissions from all user roles"""
         all_permissions = {}
-        if self.user_roles:
+        if hasattr(self, 'user_roles') and self.user_roles:
             for user_role in self.user_roles:
                 if user_role.role and user_role.role.permissions:
                     role_permissions = user_role.role.permissions
@@ -217,20 +169,73 @@ class User(Base):
         return all_permissions
 
     # ==========================================
-    # AUTHENTICATION METHODS
+    # AUTHENTICATION METHODS (No Werkzeug)
     # ==========================================
+
+    def _hash_password(self, password: str) -> str:
+        """
+        Hash password using PBKDF2 with SHA-256.
+        
+        Args:
+            password: Plain text password
+            
+        Returns:
+            Hashed password string
+        """
+        # Generate a random salt
+        salt = secrets.token_hex(32)
+        
+        # Hash the password with the salt using PBKDF2
+        password_hash = hashlib.pbkdf2_hmac(
+            'sha256',
+            password.encode('utf-8'),
+            salt.encode('utf-8'),
+            100000  # 100,000 iterations
+        )
+        
+        # Return salt + hash as hex string
+        return f"{salt}${password_hash.hex()}"
+
+    def _verify_password(self, password: str, hashed: str) -> bool:
+        """
+        Verify password against hash.
+        
+        Args:
+            password: Plain text password
+            hashed: Stored password hash
+            
+        Returns:
+            True if password matches
+        """
+        try:
+            # Split salt and hash
+            salt, stored_hash = hashed.split('$', 1)
+            
+            # Hash the provided password with the same salt
+            password_hash = hashlib.pbkdf2_hmac(
+                'sha256',
+                password.encode('utf-8'),
+                salt.encode('utf-8'),
+                100000
+            )
+            
+            # Compare hashes
+            return password_hash.hex() == stored_hash
+        except (ValueError, AttributeError):
+            # Handle malformed hash
+            return False
 
     def set_password(self, password: str) -> None:
         """Set password hash"""
-        self.password_hash = generate_password_hash(password)
+        self.password_hash = self._hash_password(password)
 
     def check_password(self, password: str) -> bool:
         """Check if provided password matches hash"""
-        return check_password_hash(self.password_hash, password)
+        return self._verify_password(password, self.password_hash)
 
     def update_last_login(self) -> None:
         """Update the last login timestamp"""
-        self.last_login = func.now()
+        self.last_login = datetime.utcnow()
 
     # ==========================================
     # PERMISSION CHECKING METHODS
@@ -313,12 +318,16 @@ class User(Base):
         if existing:
             return False
             
-        from db.models.user_role import UserRole
-        user_role = UserRole(user_id=self.id, role_id=role.id)
-        self.user_roles.append(user_role)
-        
-        if session:
-            session.add(user_role)
+        try:
+            from db.models.user_role import UserRole
+            user_role = UserRole(user_id=self.id, role_id=role.id)
+            self.user_roles.append(user_role)
+            
+            if session:
+                session.add(user_role)
+        except ImportError:
+            # Handle case where UserRole model isn't available yet
+            pass
             
         return True
 
@@ -385,7 +394,7 @@ class User(Base):
         Returns:
             Setting value or default
         """
-        if self.user_settings:
+        if hasattr(self, 'user_settings') and self.user_settings:
             setting = next(
                 (us for us in self.user_settings 
                  if us.category == category and us.key == key), 
@@ -414,19 +423,23 @@ class User(Base):
         
         if existing:
             existing.value = str(value) if value is not None else None
-            existing.updated_at = func.now()
+            existing.updated_at = datetime.utcnow()
         else:
-            from db.models.user_setting import UserSetting
-            new_setting = UserSetting(
-                user_id=self.id,
-                category=category,
-                key=key,
-                value=str(value) if value is not None else None
-            )
-            self.user_settings.append(new_setting)
-            
-            if session:
-                session.add(new_setting)
+            try:
+                from db.models.user_setting import UserSetting
+                new_setting = UserSetting(
+                    user_id=self.id,
+                    category=category,
+                    key=key,
+                    value=str(value) if value is not None else None
+                )
+                self.user_settings.append(new_setting)
+                
+                if session:
+                    session.add(new_setting)
+            except ImportError:
+                # Handle case where UserSetting model isn't available yet
+                pass
 
     # ==========================================
     # VALIDATION METHODS
