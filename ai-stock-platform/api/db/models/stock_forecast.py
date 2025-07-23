@@ -1,4 +1,5 @@
-from db.base_class import Base, TimestampMixin
+# Register this model on the shared SQLAlchemy Base used by other models.
+from db.base import Base, TimestampMixin
 from sqlalchemy import (Column, Date, ForeignKey, Integer, Numeric, String,
                         UniqueConstraint)
 from sqlalchemy.orm import relationship

@@ -1,4 +1,8 @@
-from db.base_class import Base, TimestampMixin
+# Use the same Base and mixins as the rest of the models so that SQLAlchemy
+# registers this model on the shared metadata.  Using a different Base causes
+# relationship resolution errors such as the "Watchlist" class not being found
+# when the ``User`` model is imported before this module.
+from db.base import Base, TimestampMixin
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 

@@ -1,6 +1,7 @@
 from uuid import uuid4
 
-from db.base_class import Base
+# Use the main Base registry so relationships to ``User`` are discoverable.
+from db.base import Base
 from sqlalchemy import (JSON, Column, DateTime, ForeignKey, Integer, String,
                         Text)
 from sqlalchemy.dialects.postgresql import ARRAY  # If using PostgreSQL
