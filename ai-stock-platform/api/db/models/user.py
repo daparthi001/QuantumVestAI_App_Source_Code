@@ -172,7 +172,21 @@ class User(Base):
         lazy="select",
         foreign_keys="UserRole.user_id",
     )
-    portfolios = relationship("Portfolio", back_populates="user", cascade="all, delete-orphan", lazy="select")
+    # Individual positions held by the user
+    positions = relationship(
+        "Position",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="select",
+    )
+    # Transactions executed by the user
+    transactions = relationship(
+        "Transaction",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="select",
+    )
+    # Deprecated ``portfolios`` relationship removed as there is no Portfolio model
     user_settings = relationship("UserSetting", back_populates="user", cascade="all, delete-orphan", lazy="select")
     audit_logs = relationship("AuditLog", back_populates="user", lazy="select")
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan", lazy="select")
