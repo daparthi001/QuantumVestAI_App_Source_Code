@@ -61,11 +61,11 @@ except ImportError as e:
 
 # Import the SQLAlchemy metadata
 try:
-    # Try importing Base from the new location first (api.db.base.base_class)
-    from api.db.base.base_class import Base
+    # Try importing Base from the new location first (app.db.base.base_class)
+    from db.base.base_class import Base
 except ImportError:
-    # Fallback to legacy location (api.db.base)
-    from api.db.base import Base
+    # Fallback to legacy location (app.db.base)
+    from db.base import Base
 # this is the Alembic Config object
 config = context.config
 
