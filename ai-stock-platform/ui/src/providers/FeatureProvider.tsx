@@ -48,7 +48,11 @@ export const FeatureProvider: React.FC<FeatureProviderProps> = ({ children }) =>
     const loadFeatureFlags = async () => {
       try {
         // Try to load feature flags from API
-        const endpoint = process.env.REACT_APP_FEATURE_FLAGS_ENDPOINT || '/api/v1/feature-flags';
+        const viteEnv: Record<string, string> = (typeof import.meta !== 'undefined' && import.meta.env) || {};
+        const endpoint =
+          viteEnv.VITE_FEATURE_FLAGS_ENDPOINT ||
+          (typeof process !== 'undefined' ? process.env.REACT_APP_FEATURE_FLAGS_ENDPOINT : undefined) ||
+          '/api/v1/feature-flags';
         const response = await apiClient.get(endpoint);
         
         if (response.data && response.data.data) {

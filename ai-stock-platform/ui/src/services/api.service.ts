@@ -5,15 +5,17 @@
  */
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import authService from './auth.service';
+import { API_BASE_URL } from '../config/constants';
 
 class ApiService {
   private apiClient: AxiosInstance;
   
   constructor() {
     // Get API base URL from environment or derive from window location
-    const apiBaseUrl = process.env.REACT_APP_API_URL || 
-                      window.location.protocol + '//' + window.location.hostname + 
-                      (window.location.hostname === 'localhost' ? ':8000' : '');
+    const apiBaseUrl =
+      API_BASE_URL ||
+      window.location.protocol + '//' + window.location.hostname +
+      (window.location.hostname === 'localhost' ? ':8000' : '');
     
     // Create axios instance
     this.apiClient = axios.create({

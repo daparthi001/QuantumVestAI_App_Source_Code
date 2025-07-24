@@ -29,8 +29,11 @@ export class PerformanceMonitor {
     }
 
     private initializeSentry() {
+        const viteEnv: Record<string, string> = (typeof import.meta !== 'undefined' && import.meta.env) || {};
         Sentry.init({
-            dsn: process.env.REACT_APP_SENTRY_DSN,
+            dsn:
+                viteEnv.VITE_SENTRY_DSN ||
+                (typeof process !== 'undefined' ? process.env.REACT_APP_SENTRY_DSN : undefined),
             integrations: [new BrowserTracing() as any],
             tracesSampleRate: 0.2,
             environment: process.env.NODE_ENV

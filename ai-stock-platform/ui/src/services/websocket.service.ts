@@ -15,7 +15,11 @@ class WebSocketService {
   private readonly baseUrl: string;
 
   constructor() {
-    this.baseUrl = process.env.REACT_APP_WS_URL || 'ws://quantumvestai-dev-api:8000/ws';
+    const viteEnv: Record<string, string> = (typeof import.meta !== 'undefined' && import.meta.env) || {};
+    this.baseUrl =
+      viteEnv.VITE_WS_URL ||
+      (typeof process !== 'undefined' ? process.env.REACT_APP_WS_URL : undefined) ||
+      'ws://quantumvestai-dev-api:8000/ws';
     const token = localStorage.getItem('qvai_token') || '';
     if (token) {
       this.connect(token);

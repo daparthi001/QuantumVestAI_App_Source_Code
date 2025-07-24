@@ -16,7 +16,9 @@ export class OrderAnalytics {
             app: 'order-management-ui',
             plugins: [
                 googleAnalytics({
-                    measurementId: process.env.REACT_APP_GA_MEASUREMENT_ID
+                    measurementId:
+                        (typeof import.meta !== 'undefined' && import.meta.env.VITE_GA_MEASUREMENT_ID) ||
+                        (typeof process !== 'undefined' ? process.env.REACT_APP_GA_MEASUREMENT_ID : undefined)
                 })
             ]
         });
