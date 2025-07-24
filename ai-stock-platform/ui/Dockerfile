@@ -1,6 +1,11 @@
 # Use Python 3.10 as base
 FROM python:3.10-slim
 
+# Define a default PYTHONPATH so linting tools don't complain about
+# the variable being undefined during build. The final ENV instruction
+# will reuse this ARG.
+ARG PYTHONPATH=/app/core:/app/ai-stock-platform:/app/ai-stock-platform/ui:/app/ui:/app/api:/app
+
 # Set metadata
 LABEL maintainer="daparthi001"
 LABEL org.opencontainers.image.created="2025-06-20T03:25:47Z"
@@ -95,7 +100,7 @@ ENV PORT=3000 \
     APP_VERSION=1.5.2 \
     LAST_UPDATED="2025-06-20 03:25:47" \
     UPDATED_BY="daparthi001" \
-    PYTHONPATH=/app/core:/app/ai-stock-platform:/app/ai-stock-platform/ui:/app/ui:/app/api:/app
+    PYTHONPATH=${PYTHONPATH}
 
 # Expose port
 EXPOSE 3000
