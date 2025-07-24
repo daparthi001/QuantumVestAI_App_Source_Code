@@ -5,7 +5,11 @@ from typing import Any, Dict, Optional
 import pandas as pd
 
 from services.stock_service import StockService
-from ml.ensemble_model import EnsemblePredictor, linear_regression_predict
+from ml.ensemble_model import (
+    EnsemblePredictor,
+    linear_regression_predict,
+    random_forest_predict,
+)
 
 class ForecastService:
     """Provide basic forecast functionality for demo purposes."""
@@ -43,6 +47,7 @@ class ForecastService:
 
         predictor = EnsemblePredictor()
         predictor.add_model(linear_regression_predict)
+        predictor.add_model(random_forest_predict)
         preds = predictor.predict(ticker, history[['adjusted_close']], days_ahead=days)
 
         current = float(history['adjusted_close'].iloc[-1])
