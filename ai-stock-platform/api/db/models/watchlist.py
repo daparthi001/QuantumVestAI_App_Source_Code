@@ -18,7 +18,11 @@ class Watchlist(Base, TimestampMixin):
     is_public = Column(Boolean, default=False)
 
     # Relationships
-    user = relationship("User", back_populates="watchlists")
+    user = relationship(
+        "User",
+        back_populates="watchlists",
+        overlaps="watchlist_entries"
+    )
     stocks = relationship(
         "WatchlistStock",
         back_populates="watchlist",
