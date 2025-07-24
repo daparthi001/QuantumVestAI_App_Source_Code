@@ -290,20 +290,21 @@ class User(Base):
         """Alias for is_admin (backward compatibility) - FIXED"""
         return self.is_admin
 
-    @hybrid_property
-    def role(self) -> str:
-        """
-        Legacy role property for backward compatibility - FIXED.
-        Returns 'admin' for admin users, 'free' for others.
-        """
-        # Direct database lookup instead of calling is_admin to avoid circular reference
-        if hasattr(self, 'user_roles') and self.user_roles:
-            for user_role in self.user_roles:
-                if hasattr(user_role, 'role') and user_role.role:
-                    if user_role.role.name == "admin":
-                        return "admin"
-            return "user"  # Has roles but not admin
-        return "free"  # No roles assigned
+    if not _has_role:
+        @property
+        def role(self) -> str:
+            """
+            Legacy role property for backward compatibility - FIXED.
+            Returns 'admin' for admin users, 'free' for others.
+            """
+            # Direct database lookup instead of calling is_admin to avoid circular reference
+            if hasattr(self, 'user_roles') and self.user_roles:
+                for user_role in self.user_roles:
+                    if hasattr(user_role, 'role') and user_role.role:
+                        if user_role.role.name == "admin":
+                            return "admin"
+                return "user"  # Has roles but not admin
+            return "free"  # No roles assigned
 
     @hybrid_property
     def permissions(self) -> Dict[str, Any]:
