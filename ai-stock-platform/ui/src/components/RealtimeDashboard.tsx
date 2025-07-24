@@ -11,6 +11,7 @@ import { formatPrice, formatChange, formatLargeNumber, formatPercentage } from '
 
 // WebSocket service for real-time data
 import wsService from '../services/websocket.service';
+import apiService from '../services/api-service';
 
 interface MarketData {
   symbol: string;
@@ -87,118 +88,80 @@ const RealtimeDashboard: React.FC = () => {
 
   const fetchInitialData = async () => {
     try {
-      // Simulate initial data fetch
-      const mockMarketData: MarketOverview = {
-        spy: {
-          symbol: 'SPY',
-          price: 459.32,
-          change: 2.15,
-          changePercent: 0.47,
-          volume: 45234567,
-          marketCap: 4.2e12,
-          high: 460.12,
-          low: 456.78,
-          timestamp: new Date().toISOString()
-        },
-        qqq: {
-          symbol: 'QQQ',
-          price: 398.45,
-          change: -1.23,
-          changePercent: -0.31,
-          volume: 32145678,
-          marketCap: 2.8e12,
-          high: 401.23,
-          low: 397.45,
-          timestamp: new Date().toISOString()
-        },
-        dia: {
-          symbol: 'DIA',
-          price: 342.67,
-          change: 0.89,
-          changePercent: 0.26,
-          volume: 12345678,
-          marketCap: 1.5e12,
-          high: 343.12,
-          low: 340.23,
-          timestamp: new Date().toISOString()
-        },
+      setLoading(true);
+
+      const overview = await apiService.getMarketOverview();
+
+      const mapIndex = (name: string): MarketData => {
+        const idx = overview.indices.find((i) => i.name === name);
+        return {
+          symbol: name,
+          price: idx?.value || 0,
+          change: 0,
+          changePercent: idx?.change_percent || 0,
+          volume: 0,
+          marketCap: 0,
+          high: 0,
+          low: 0,
+          timestamp: overview.date,
+        };
+      };
+
+      const liveMarketData: MarketOverview = {
+        spy: mapIndex('SPY'),
+        qqq: mapIndex('QQQ'),
+        dia: mapIndex('DIA'),
         vix: {
           symbol: 'VIX',
-          price: 18.45,
-          change: -0.67,
-          changePercent: -3.51,
-          volume: 8765432,
+          price: overview.volatility_index,
+          change: 0,
+          changePercent: 0,
+          volume: 0,
           marketCap: 0,
-          high: 19.23,
-          low: 17.89,
-          timestamp: new Date().toISOString()
-        }
-      };
-
-      const mockPortfolio: PortfolioData = {
-        totalValue: 125420.67,
-        totalGain: 8945.32,
-        totalGainPercent: 7.68,
-        positions: [
-          {
-            symbol: 'AAPL',
-            quantity: 100,
-            currentPrice: 189.45,
-            avgCost: 175.23,
-            unrealizedPL: 1422.00,
-            unrealizedPLPercent: 8.11
-          },
-          {
-            symbol: 'MSFT',
-            quantity: 50,
-            currentPrice: 378.92,
-            avgCost: 365.14,
-            unrealizedPLPercent: 3.78,
-            unrealizedPL: 689.00
-          },
-          {
-            symbol: 'GOOGL',
-            quantity: 25,
-            currentPrice: 142.31,
-            avgCost: 138.67,
-            unrealizedPL: 91.00,
-            unrealizedPLPercent: 2.62
-          }
-        ]
-      };
-
-      const mockTopMovers: MarketData[] = [
-        {
-          symbol: 'NVDA',
-          price: 789.23,
-          change: 45.67,
-          changePercent: 6.14,
-          volume: 78234567,
-          marketCap: 1.9e12,
-          high: 792.45,
-          low: 743.21,
-          timestamp: new Date().toISOString()
+          high: 0,
+          low: 0,
+          timestamp: overview.date,
         },
-        {
-          symbol: 'TSLA',
-          price: 245.67,
-          change: -12.34,
-          changePercent: -4.78,
-          volume: 89345678,
-          marketCap: 780e9,
-          high: 258.90,
-          low: 242.15,
-          timestamp: new Date().toISOString()
-        }
-      ];
+      };
+      setMarketData(liveMarketData);
 
-      setMarketData(mockMarketData);
-      setPortfolio(mockPortfolio);
-      setTopMovers(mockTopMovers);
-      setLoading(false);
+      const portfolios = await apiService.getPortfolios();
+      if (portfolios.length > 0) {
+        const p = portfolios[0];
+        const livePortfolio: PortfolioData = {
+          totalValue: p.total_value,
+          totalGain: p.total_profit_loss,
+          totalGainPercent: p.total_profit_loss_percent,
+          positions: p.positions.map((pos) => ({
+            symbol: pos.symbol,
+            quantity: pos.shares,
+            currentPrice: pos.current_price,
+            avgCost: pos.purchase_price,
+            unrealizedPL: pos.profit_loss,
+            unrealizedPLPercent: pos.change_percent,
+          })),
+        };
+        setPortfolio(livePortfolio);
+      }
+
+      const movers = await apiService.getTopMovers();
+      const liveTopMovers: MarketData[] = movers.map((m) => ({
+        symbol: m.symbol,
+        price: m.price,
+        change: m.change || 0,
+        changePercent: m.change_percent,
+        volume: 0,
+        marketCap: m.market_cap ? parseFloat(m.market_cap) : 0,
+        high: m['52_week_high'] || 0,
+        low: m['52_week_low'] || 0,
+        timestamp: overview.date,
+      }));
+      setTopMovers(liveTopMovers);
+
       setLastUpdate(new Date().toLocaleTimeString());
     } catch (error) {
       console.error('Failed to fetch initial data:', error);
+    } finally {
       setLoading(false);
     }
   };

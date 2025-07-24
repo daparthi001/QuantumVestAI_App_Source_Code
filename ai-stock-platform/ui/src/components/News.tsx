@@ -33,8 +33,6 @@ const News: React.FC = () => {
     } catch (err) {
       console.error('Error fetching news:', err);
       setError('Failed to load news. Please try again.');
-      // Set mock data for demonstration
-      setNews(getMockNews());
     } finally {
       setLoading(false);
     }
@@ -57,68 +55,6 @@ const News: React.FC = () => {
     setFilteredNews(filtered);
   };
 
-  const getMockNews = (): NewsItem[] => [
-    {
-      id: '1',
-      title: 'Federal Reserve Holds Interest Rates Steady at 5.25-5.50%',
-      summary: 'The Federal Reserve decided to maintain the federal funds rate in its current range, citing concerns about inflation and economic growth.',
-      content: '',
-      category: 'market',
-      source: 'Reuters',
-      author: 'Financial Reporter',
-      published_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      url: '#',
-      sentiment: 'neutral'
-    },
-    {
-      id: '2',
-      title: 'Tech Stocks Rally on Strong AI Earnings Reports',
-      summary: 'Major technology companies report better-than-expected earnings driven by artificial intelligence initiatives.',
-      content: '',
-      category: 'technology',
-      source: 'Bloomberg',
-      author: 'Tech Reporter',
-      published_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-      url: '#',
-      sentiment: 'positive'
-    },
-    {
-      id: '3',
-      title: 'Energy Sector Faces Headwinds Amid Oil Price Volatility',
-      summary: 'Energy companies struggle with fluctuating oil prices and geopolitical tensions affecting global supply chains.',
-      content: '',
-      category: 'energy',
-      source: 'WSJ',
-      author: 'Energy Analyst',
-      published_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-      url: '#',
-      sentiment: 'negative'
-    },
-    {
-      id: '4',
-      title: 'Healthcare Innovation Drives Biotech Stock Surge',
-      summary: 'Breakthrough developments in gene therapy and personalized medicine boost biotech sector performance.',
-      content: '',
-      category: 'healthcare',
-      source: 'CNBC',
-      author: 'Healthcare Reporter',
-      published_at: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-      url: '#',
-      sentiment: 'positive'
-    },
-    {
-      id: '5',
-      title: 'Consumer Spending Patterns Shift in Q4 2024',
-      summary: 'Retail data shows changing consumer preferences with increased focus on value and sustainability.',
-      content: '',
-      category: 'consumer',
-      source: 'MarketWatch',
-      author: 'Retail Analyst',
-      published_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-      url: '#',
-      sentiment: 'neutral'
-    }
-  ];
 
   const getCategoryColor = (category: string) => {
     switch (category) {
