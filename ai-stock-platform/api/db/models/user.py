@@ -304,7 +304,12 @@ class User(Base):
                         if user_role.role.name == "admin":
                             return "admin"
                 return "user"  # Has roles but not admin
-            return "free"  # No roles assigned
+            return getattr(self, "_role", "free")  # Fallback if no roles assigned
+
+        @role.setter
+        def role(self, value: str) -> None:
+            """Allow setting a role when no dedicated column exists."""
+            setattr(self, "_role", value)
 
     @hybrid_property
     def permissions(self) -> Dict[str, Any]:
