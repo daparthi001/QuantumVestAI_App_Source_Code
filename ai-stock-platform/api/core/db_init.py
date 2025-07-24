@@ -13,6 +13,8 @@ from pathlib import Path
 
 from core.config import settings
 from db.models.user import User
+from db.models.user_role import UserRole
+from db.models.role import Role
 from db.session import engine, get_db
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.exc import SQLAlchemyError
@@ -60,7 +62,13 @@ def verify_admin_exists():
     """Verify that at least one admin user exists."""
     try:
         db = next(get_db())
-        admin = db.query(User).filter(User.role == "admin").first()
+        admin = (
+            db.query(User)
+            .join(UserRole, UserRole.user_id == User.id)
+            .join(Role, Role.id == UserRole.role_id)
+            .filter(Role.name == "admin")
+            .first()
+        )
         db.close()
         
         if admin:
