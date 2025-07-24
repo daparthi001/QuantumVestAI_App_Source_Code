@@ -119,7 +119,7 @@ class WatchList(Base, TimestampMixin):
     user: Mapped["User"] = relationship(
         "User",
         back_populates="watchlist_entries",
-        overlaps="watchlists"
+        overlaps="watchlists,user"
     )
     stock: Mapped["Stock"] = relationship("Stock", back_populates="watchlist_entries")
     

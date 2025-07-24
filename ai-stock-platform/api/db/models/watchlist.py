@@ -21,7 +21,7 @@ class Watchlist(Base, TimestampMixin):
     user = relationship(
         "User",
         back_populates="watchlists",
-        overlaps="watchlist_entries"
+        overlaps="watchlist_entries,user"
     )
     stocks = relationship(
         "WatchlistStock",
