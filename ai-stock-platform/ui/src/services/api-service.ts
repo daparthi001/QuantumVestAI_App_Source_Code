@@ -416,6 +416,71 @@ class ApiService {
     return response.data.data;
   }
 
+  // Preference methods
+  async getUserPreferences() {
+    const response = await apiClient.get<StandardResponse<any>>(
+      API_ENDPOINTS.PREFERENCES.GET
+    );
+    return response.data.data;
+  }
+
+  async updateUserPreferences(prefs: any) {
+    const response = await apiClient.put<StandardResponse<any>>(
+      API_ENDPOINTS.PREFERENCES.UPDATE,
+      prefs
+    );
+    return response.data.data;
+  }
+
+  async updateTheme(theme: string) {
+    const response = await apiClient.put<StandardResponse<any>>(
+      API_ENDPOINTS.PREFERENCES.THEME,
+      { theme }
+    );
+    return response.data.data;
+  }
+
+  async updateNotificationSettings(settings: any) {
+    const response = await apiClient.put<StandardResponse<any>>(
+      API_ENDPOINTS.PREFERENCES.NOTIFICATIONS,
+      settings
+    );
+    return response.data.data;
+  }
+
+  // AI methods
+  async chatWithAI(message: string) {
+    const response = await apiClient.post<StandardResponse<any>>(
+      API_ENDPOINTS.AI.CHAT,
+      { message }
+    );
+    return response.data.data;
+  }
+
+  async analyzeText(text: string) {
+    const response = await apiClient.post<StandardResponse<any>>(
+      API_ENDPOINTS.AI.ANALYZE,
+      { text }
+    );
+    return response.data.data;
+  }
+
+  async generateStrategy(data: any) {
+    const response = await apiClient.post<StandardResponse<any>>(
+      API_ENDPOINTS.AI.STRATEGY,
+      data
+    );
+    return response.data.data;
+  }
+
+  async getPortfolioSuggestion(data: any) {
+    const response = await apiClient.post<StandardResponse<any>>(
+      API_ENDPOINTS.AI.PORTFOLIO_SUGGESTION,
+      data
+    );
+    return response.data.data;
+  }
+
   // Performance monitoring
   getApiPerformanceMetrics() {
     return {

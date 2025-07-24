@@ -8,7 +8,7 @@
 /* Enhanced CSS Custom Properties for Global Recognition */
 :root {
   /* Enhanced Quantum Color Palette */
-  --quantum-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --quantum-primary: linear-gradient(135deg, #1fd1f9 0%, #b621fe 100%);
   --quantum-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   --quantum-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
   --quantum-success: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
