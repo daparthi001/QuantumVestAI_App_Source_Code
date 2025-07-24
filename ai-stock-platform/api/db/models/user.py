@@ -8,7 +8,7 @@ import hashlib
 import secrets
 from datetime import datetime
 from typing import Optional, List, Dict, Any
-import uuid
+import uuid as uuid_pkg
 
 from sqlalchemy import (
     Column, Integer, String, Boolean, DateTime, Text, 
@@ -33,7 +33,7 @@ except ImportError:  # pragma: no cover - optional dependency may be missing
         return pw_hash == hashlib.sha256(password.encode()).hexdigest()
 
 
-from db.base import Base
+from db.base import Base, TimestampMixin
 from db.models.associations import user_watchlist
 
 # Import related models so that SQLAlchemy is aware of them when this module
@@ -44,7 +44,7 @@ from .watchlist_stock import WatchlistStock  # noqa: F401
 from .stock import WatchList, Alert  # noqa: F401
 
 
-class User(Base):
+class User(Base, TimestampMixin):
     """
     Enhanced User model with full name support, role-based permissions,
     and comprehensive user management features.
@@ -58,6 +58,11 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     username = Column(String, unique=True, index=True, nullable=False)
+    uuid = Column(UUID(as_uuid=True), default=uuid_pkg.uuid4, unique=True, nullable=False)
+    display_name = Column(String, nullable=True)
+    avatar_url = Column(String, nullable=True)
+    is_verified = Column(Boolean, default=False)
+    last_login = Column(DateTime(timezone=True))
     # Historically this field has been named either ``hashed_password`` or
     # ``password_hash`` depending on the migration path used when the database
     # was created.  To transparently support both schemas we detect which column
@@ -724,7 +729,7 @@ class User(Base):
 
     @classmethod
     async def get_by_uuid(
-        cls, db: AsyncSession, user_uuid: uuid.UUID
+        cls, db: AsyncSession, user_uuid: uuid_pkg.UUID
     ) -> Optional["User"]:
         """Asynchronously fetch a user by UUID."""
         result = await db.execute(select(cls).where(cls.uuid == user_uuid))
@@ -779,7 +784,7 @@ def get_user_by_username(session: Session, username: str) -> Optional[User]:
     return session.query(User).filter(User.username == username.lower().strip()).first()
 
 
-def get_user_by_uuid(session: Session, user_uuid: uuid.UUID) -> Optional[User]:
+def get_user_by_uuid(session: Session, user_uuid: uuid_pkg.UUID) -> Optional[User]:
     """Get user by UUID"""
     return session.query(User).filter(User.uuid == user_uuid).first()
 
@@ -859,7 +864,7 @@ async def get_by_email(cls, session: AsyncSession, email: str) -> Optional["User
 
 
 @classmethod
-async def get_by_uuid(cls, session: AsyncSession, user_uuid: uuid.UUID) -> Optional["User"]:
+async def get_by_uuid(cls, session: AsyncSession, user_uuid: uuid_pkg.UUID) -> Optional["User"]:
     """Asynchronously fetch a user by UUID."""
     result = await session.execute(
         select(User).where(User.uuid == user_uuid)
