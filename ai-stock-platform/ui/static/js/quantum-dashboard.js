@@ -512,7 +512,7 @@ class QuantumDashboard {
                     metric.textContent = newValue.toFixed(2);
                 }
                 
-                // Add flash animation
+                // Highlight updated value
                 metric.classList.add('value-updated');
                 setTimeout(() => metric.classList.remove('value-updated'), 1000);
             }
