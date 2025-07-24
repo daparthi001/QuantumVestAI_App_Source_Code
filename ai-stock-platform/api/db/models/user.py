@@ -80,12 +80,20 @@ class User(Base, TimestampMixin):
         settings = get_settings()
         engine = create_engine(settings.SQLALCHEMY_DATABASE_URI)
         insp = inspect(engine)
-        cols = [c["name"] for c in insp.get_columns("users")]
+        cols_info = insp.get_columns("users")
+        cols = [c["name"] for c in cols_info]
         engine.dispose()
+
         if "password_hash" in cols and "hashed_password" not in cols:
             _pwd_column_name = "password_hash"
-        if "full_name" not in cols and "first_name" in cols and "last_name" in cols:
+
+        full_name_info = next((c for c in cols_info if c["name"] == "full_name"), None)
+        if (
+            ("full_name" not in cols and "first_name" in cols and "last_name" in cols)
+            or (full_name_info and full_name_info.get("computed") is not None)
+        ):
             _use_split_names = True
+
         _has_is_superuser = "is_superuser" in cols
         _has_role = "role" in cols
         _has_avatar_url = "avatar_url" in cols
