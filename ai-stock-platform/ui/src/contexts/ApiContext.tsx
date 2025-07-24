@@ -26,6 +26,18 @@ interface ApiContextType {
   
   // Backtest methods
   runBacktest: typeof apiService.runBacktest;
+
+  // Preference methods
+  getUserPreferences: typeof apiService.getUserPreferences;
+  updateUserPreferences: typeof apiService.updateUserPreferences;
+  updateTheme: typeof apiService.updateTheme;
+  updateNotificationSettings: typeof apiService.updateNotificationSettings;
+
+  // AI methods
+  chatWithAI: typeof apiService.chatWithAI;
+  analyzeText: typeof apiService.analyzeText;
+  generateStrategy: typeof apiService.generateStrategy;
+  getPortfolioSuggestion: typeof apiService.getPortfolioSuggestion;
 }
 
 // Create context with default values
@@ -37,6 +49,14 @@ const ApiContext = createContext<ApiContextType>({
   getStockSentiment: apiService.getStockSentiment.bind(apiService),
   getMarketOverview: apiService.getMarketOverview.bind(apiService),
   runBacktest: apiService.runBacktest.bind(apiService),
+  getUserPreferences: apiService.getUserPreferences.bind(apiService),
+  updateUserPreferences: apiService.updateUserPreferences.bind(apiService),
+  updateTheme: apiService.updateTheme.bind(apiService),
+  updateNotificationSettings: apiService.updateNotificationSettings.bind(apiService),
+  chatWithAI: apiService.chatWithAI.bind(apiService),
+  analyzeText: apiService.analyzeText.bind(apiService),
+  generateStrategy: apiService.generateStrategy.bind(apiService),
+  getPortfolioSuggestion: apiService.getPortfolioSuggestion.bind(apiService),
 });
 
 // Props interface for the provider
@@ -55,6 +75,14 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
     getStockSentiment: apiService.getStockSentiment.bind(apiService),
     getMarketOverview: apiService.getMarketOverview.bind(apiService),
     runBacktest: apiService.runBacktest.bind(apiService),
+    getUserPreferences: apiService.getUserPreferences.bind(apiService),
+    updateUserPreferences: apiService.updateUserPreferences.bind(apiService),
+    updateTheme: apiService.updateTheme.bind(apiService),
+    updateNotificationSettings: apiService.updateNotificationSettings.bind(apiService),
+    chatWithAI: apiService.chatWithAI.bind(apiService),
+    analyzeText: apiService.analyzeText.bind(apiService),
+    generateStrategy: apiService.generateStrategy.bind(apiService),
+    getPortfolioSuggestion: apiService.getPortfolioSuggestion.bind(apiService),
   };
 
   return <ApiContext.Provider value={value}>{children}</ApiContext.Provider>;
