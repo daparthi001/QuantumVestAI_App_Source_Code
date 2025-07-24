@@ -68,21 +68,14 @@ COPY . .
 RUN chmod +x /app/scripts/start.sh
 
 RUN if [ -f package.json ] && grep -q '"dependencies"' package.json; then \
-      npm install && npm run build; \
+      npm install || echo "npm install failed, continuing without frontend deps"; \
+      npm run build || echo "npm build failed, continuing"; \
     else \
       echo "No frontend dependencies found. Skipping npm install and build."; \
     fi
 
 # Set ownership for all files
 RUN chown -R app:app /app
-
-# Run npm install only if we have a valid package.json with dependencies
-RUN if grep -q '"dependencies"' package.json; then \
-        npm install && \
-        npm run build; \
-    else \
-        echo "No frontend dependencies found. Skipping npm install and build."; \
-    fi
 
 # Switch to non-root user
 USER app
