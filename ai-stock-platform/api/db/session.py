@@ -146,7 +146,11 @@ except Exception as e:
         Base.metadata.create_all(bind=engine)
         logger.info("Initialized fallback SQLite database")
     except Exception as init_err:
-        logger.error("Failed to initialize fallback database: %s", str(init_err))
+        logger.warning(
+            "Fallback SQLite database initialization failed: %s. "
+            "Continuing without precreated tables.",
+            str(init_err),
+        )
 
 def get_db() -> Generator:
     """Get database session"""

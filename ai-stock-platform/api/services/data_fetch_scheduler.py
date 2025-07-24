@@ -38,7 +38,14 @@ async def fetch_and_analyze() -> None:
 
 def start_data_fetch_scheduler() -> AsyncIOScheduler:
     """Start scheduler to fetch market and sentiment data every 15 minutes."""
-    scheduler = AsyncIOScheduler()
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        # Create a loop if none is running (e.g. during unit tests)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+    scheduler = AsyncIOScheduler(event_loop=loop)
     scheduler.add_job(
         fetch_and_analyze,
         trigger=IntervalTrigger(minutes=15),

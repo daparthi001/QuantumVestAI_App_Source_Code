@@ -3,10 +3,12 @@ from pathlib import Path
 import sys
 
 _here = Path(__file__).resolve().parent
+# Paths to the actual service implementations used by the UI and API
 _ui_services = _here.parent / "ai-stock-platform" / "ui" / "services"
+_api_services = _here.parent / "ai-stock-platform" / "api" / "services"
 
 # Include both this directory (for test stubs) and the real UI services path
-__path__ = [str(_here), str(_ui_services)]
+__path__ = [str(_here), str(_api_services), str(_ui_services)]
 
 for p in __path__:
     if p not in sys.path:
