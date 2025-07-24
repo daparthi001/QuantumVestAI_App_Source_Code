@@ -5,7 +5,11 @@
  */
 
 // API configuration
-export const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://dev.quantumvestai.com';
+const viteEnv: Record<string, string> = (typeof import.meta !== 'undefined' && import.meta.env) || {};
+export const API_BASE_URL =
+  viteEnv.VITE_API_URL ||
+  (typeof process !== 'undefined' ? process.env.REACT_APP_API_URL : undefined) ||
+  'https://dev.quantumvestai.com';
 
 // Authentication
 export const ACCESS_TOKEN_KEY = 'qvai_token';

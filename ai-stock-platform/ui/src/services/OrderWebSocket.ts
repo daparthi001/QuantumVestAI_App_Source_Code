@@ -28,9 +28,12 @@ export class OrderWebSocket {
                 throw new Error('Authentication required');
             }
 
-            this.ws = new WebSocket(
-                `${process.env.REACT_APP_WS_URL}/orders/${userId}?token=${token}`
-            );
+            const viteEnv: Record<string, string> = (typeof import.meta !== 'undefined' && import.meta.env) || {};
+            const wsBase =
+                viteEnv.VITE_WS_URL ||
+                (typeof process !== 'undefined' ? process.env.REACT_APP_WS_URL : undefined) ||
+                'ws://quantumvestai-dev-api:8000/ws';
+            this.ws = new WebSocket(`${wsBase}/orders/${userId}?token=${token}`);
 
             this.ws.onopen = this.handleOpen.bind(this);
             this.ws.onmessage = this.handleMessage;
