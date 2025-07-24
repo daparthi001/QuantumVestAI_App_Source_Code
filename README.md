@@ -168,5 +168,11 @@ production deployments. Instead, create a Kubernetes `Secret` and mount it as an
 environment variable or file. Both the API and UI startup scripts will read a
 `SECRET_KEY_FILE` path if provided to load the key securely.
 
+### Offline UI Docker Builds
+The UI Dockerfile installs Node.js dependencies at build time. In environments
+without internet access this step may fail. The build now logs a warning and
+continues if `npm install` or `npm run build` cannot run. The resulting image
+will still start, but any missing frontend assets will need to be supplied later.
+
 
 \n
