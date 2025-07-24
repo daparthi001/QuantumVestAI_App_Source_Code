@@ -16,7 +16,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
-from sqlalchemy.orm import relationship, Session, synonym
+from sqlalchemy.orm import relationship, Session, synonym, selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func, select, exists, case
 try:
@@ -42,6 +42,7 @@ from db.models.associations import user_watchlist
 from .watchlist import Watchlist  # noqa: F401
 from .watchlist_stock import WatchlistStock  # noqa: F401
 from .stock import WatchList, Alert  # noqa: F401
+from .user_role import UserRole  # noqa: F401
 
 
 class User(Base, TimestampMixin):
@@ -870,7 +871,9 @@ def create_user(
 async def get_by_username(cls, session: AsyncSession, username: str) -> Optional["User"]:
     """Asynchronously fetch a user by username."""
     result = await session.execute(
-        select(User).where(User.username == username.lower().strip())
+        select(User)
+        .options(selectinload(User.user_roles).selectinload(UserRole.role))
+        .where(User.username == username.lower().strip())
     )
     return result.scalars().first()
 
