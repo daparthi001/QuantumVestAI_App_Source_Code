@@ -190,20 +190,32 @@ class MultiSourceSentimentAnalyzer:
     
     async def _fetch_yahoo_news(self, symbol: str, days: int) -> List[Dict[str, Any]]:
         """Fetch news from Yahoo Finance"""
+        url = "https://query1.finance.yahoo.com/v1/finance/search"
+        params = {"q": symbol, "newsCount": 5}
         try:
-            # Simulate Yahoo Finance news API call
-            # In a real implementation, this would use actual Yahoo Finance API
-            return [
-                {
-                    "title": f"{symbol} shows strong performance",
-                    "summary": "Stock continues to outperform market expectations",
-                    "timestamp": datetime.now() - timedelta(hours=i)
-                }
-                for i in range(5)
-            ]
+            async with self.session.get(url, params=params, timeout=10) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    articles = data.get("news", [])
+                    parsed = []
+                    for art in articles:
+                        ts = art.get("providerPublishTime")
+                        ts_dt = (
+                            datetime.fromtimestamp(ts)
+                            if isinstance(ts, (int, float))
+                            else datetime.now()
+                        )
+                        parsed.append(
+                            {
+                                "title": art.get("title"),
+                                "summary": art.get("summary", ""),
+                                "timestamp": ts_dt,
+                            }
+                        )
+                    return parsed
         except Exception as e:
             logger.error(f"Yahoo news fetch failed: {e}")
-            return []
+        return []
     
     async def _fetch_reddit_data(self, symbol: str, days: int) -> List[Dict[str, Any]]:
         """Fetch Reddit posts about the stock"""
