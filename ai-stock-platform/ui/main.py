@@ -578,7 +578,9 @@ async def register_post(
                 "username": username,
                 "email": email,
                 "password": password,
+                "confirm_password": confirm_password,
                 "full_name": username,
+                "terms_accepted": terms,
             },
         )
 
