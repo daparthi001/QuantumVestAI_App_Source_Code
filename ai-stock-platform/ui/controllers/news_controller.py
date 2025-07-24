@@ -105,7 +105,8 @@ async def news_page(
             },
         )
     except Exception as e:
-        logger.error(f"News page error: {str(e)}")
+        detail = getattr(e, "detail", str(e))
+        logger.error(f"News page error: {detail}")
         return get_templates(request).TemplateResponse(
             "error.html",
             {
@@ -159,7 +160,8 @@ async def news_article(
     except HTTPException as e:
         raise e
     except Exception as e:
-        logger.error(f"News article error for {article_id}: {str(e)}")
+        detail = getattr(e, "detail", str(e))
+        logger.error(f"News article error for {article_id}: {detail}")
         return get_templates(request).TemplateResponse(
             "error.html",
             {
