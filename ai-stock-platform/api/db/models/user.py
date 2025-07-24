@@ -60,7 +60,6 @@ class User(Base, TimestampMixin):
     username = Column(String, unique=True, index=True, nullable=False)
     uuid = Column(UUID(as_uuid=True), default=uuid_pkg.uuid4, unique=True, nullable=False)
     display_name = Column(String, nullable=True)
-    avatar_url = Column(String, nullable=True)
     is_verified = Column(Boolean, default=False)
     last_login = Column(DateTime(timezone=True))
     # Historically this field has been named either ``hashed_password`` or
@@ -73,6 +72,7 @@ class User(Base, TimestampMixin):
     _use_split_names = False
     _has_is_superuser = True
     _has_role = True
+    _has_avatar_url = True
     try:  # Introspect the DB to determine which columns actually exist
         from core.config import get_settings
         from sqlalchemy import create_engine, inspect
@@ -88,15 +88,28 @@ class User(Base, TimestampMixin):
             _use_split_names = True
         _has_is_superuser = "is_superuser" in cols
         _has_role = "role" in cols
+        _has_avatar_url = "avatar_url" in cols
     except Exception:
         # If inspection fails (e.g., during tests with no DB) default to the
         # original column names.
         _has_is_superuser = True
         _has_role = True
+        _has_avatar_url = True
         pass
 
     hashed_password = Column(_pwd_column_name, String, nullable=False)
     password_hash = synonym("hashed_password")
+
+    if _has_avatar_url:
+        avatar_url = Column(String, nullable=True)
+    else:
+        @property
+        def avatar_url(self) -> Optional[str]:
+            return None
+
+        @avatar_url.setter
+        def avatar_url(self, value: Optional[str]) -> None:
+            pass
 
     if _use_split_names:
         first_name = Column("first_name", String)
