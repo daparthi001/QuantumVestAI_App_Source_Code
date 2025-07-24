@@ -84,8 +84,11 @@ async def login(
     """Authenticate user and return token"""
     logger.info(f"Login attempt for user: {form_data.username}")
 
-    # Find user by username
+    # Find user by username and ensure related roles are loaded to avoid
+    # asynchronous lazy loading issues
     user = await User.get_by_username(db, form_data.username)
+    if user:
+        await db.refresh(user, attribute_names=["user_roles"])
 
     # Check if user exists and password is correct
     if not user or not verify_password(form_data.password, user.hashed_password):
