@@ -431,12 +431,8 @@
 
 /* Value Update Animation */
 .value-updated {
-  animation: valueFlash 1s ease-in-out;
-}
-
-@keyframes valueFlash {
-  0%, 100% { background: transparent; }
-  50% { background: rgba(79, 172, 254, 0.3); }
+  background-color: rgba(79, 172, 254, 0.3);
+  transition: background-color 0.6s ease-in-out;
 }
 
 /* Widget Feedback */
@@ -570,7 +566,6 @@ canvas {
   }
   
   @keyframes livePulse,
-  @keyframes valueFlash,
   @keyframes spin {
     animation: none !important;
   }
