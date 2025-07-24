@@ -58,21 +58,20 @@
     </div>
     <!-- Market Overview Cards -->
     <div class="row mb-4">
-        {% for symbol, idx in market_summary.indices.items()|dictsort %}
+        {% for symbol, idx in market_summary.indices|dictsort %}
         <div class="col-md-3">
             <div class="card quantum-card micro-interaction">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <div>
-                            <h6 class="text-muted mb-1">{{ idx.name }}</h6>
                             <h4 class="mb-0">{{ symbol }}</h4>
                         </div>
                         <span class="badge quantum-badge">{% if idx.change >= 0 %}📈{% else %}📉{% endif %}</span>
                     </div>
                     <div class="mb-2">
-                        <div class="h3 mb-1 price-display">{{ format_currency(idx.price) }}</div>
+                        <div class="h3 mb-1 price-display">{{ format_currency(idx.value) }}</div>
                         <div class="fw-bold {% if idx.change >= 0 %}text-success{% else %}text-danger{% endif %}">
-                            {{ format_change_value(idx.change) }} ({{ format_percentage(idx.change_percent/100) }})
+                            {{ format_change_value(idx.change) }} ({{ format_percentage(idx.change_pct/100) }})
                         </div>
                     </div>
                 </div>
