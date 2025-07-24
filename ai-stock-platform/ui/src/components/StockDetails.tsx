@@ -34,19 +34,6 @@ const StockDetails: React.FC = () => {
     } catch (err) {
       console.error('Error fetching stock details:', err);
       setError('Failed to load stock details. Please try again.');
-      // Set mock data for demonstration
-      setStock({
-        symbol: symbol.toUpperCase(),
-        name: `${symbol.toUpperCase()} Corporation`,
-        price: 198.45,
-        change: 4.12,
-        change_percent: 2.1,
-        market_cap: '$2.1T',
-        pe_ratio: 25.4,
-        dividend_yield: 1.8,
-        '52_week_high': 220.45,
-        '52_week_low': 145.67
-      });
     } finally {
       setLoading(false);
     }
