@@ -236,24 +236,10 @@ class User(Base):
         lazy="select",
     )
 
-    # ==========================================
-    # COMPUTED PROPERTIES (Full Name Support)
-    # ==========================================
 
-    @hybrid_property
-    def full_name(self) -> str:
-        """
-        Generate full name from first_name and last_name.
-        Falls back to username if no name components available.
-        """
-        if self.first_name and self.last_name:
-            return f"{self.first_name.strip()} {self.last_name.strip()}".strip()
-        elif self.first_name:
-            return self.first_name.strip()
-        elif self.last_name:
-            return self.last_name.strip()
-        else:
-            return self.username
+    # ==========================================
+    # COMPUTED PROPERTIES
+    # ==========================================
 
     @hybrid_property
     def effective_display_name(self) -> str:
@@ -262,9 +248,9 @@ class User(Base):
         display_name -> full_name -> first_name -> username
         """
         return (
-            self.display_name or 
-            self.full_name or 
-            self.first_name or 
+            self.display_name or
+            self.full_name or
+            getattr(self, "first_name", None) or
             self.username
         )
 
@@ -641,8 +627,8 @@ class User(Base):
             "uuid": str(self.uuid),
             "username": self.username,
             "email": self.email,
-            "first_name": self.first_name,
-            "last_name": self.last_name,
+            "first_name": getattr(self, "first_name", None),
+            "last_name": getattr(self, "last_name", None),
             "full_name": self.full_name,
             "display_name": self.display_name,
             "effective_display_name": self.effective_display_name,
