@@ -222,12 +222,14 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
         lazy="select",
+        overlaps="user,watchlists",
     )
     watchlists = relationship(
         "Watchlist",
         back_populates="user",
         cascade="all, delete-orphan",
         lazy="select",
+        overlaps="user,watchlist_entries",
     )
     alerts = relationship(
         "Alert",
@@ -755,9 +757,9 @@ def validate_user_before_insert(mapper, connection, target):
         target.email = target.email.lower().strip()
         
     # Ensure names are properly formatted
-    if target.first_name:
+    if hasattr(target, "first_name") and target.first_name:
         target.first_name = target.first_name.strip()
-    if target.last_name:
+    if hasattr(target, "last_name") and target.last_name:
         target.last_name = target.last_name.strip()
     if target.display_name:
         target.display_name = target.display_name.strip()

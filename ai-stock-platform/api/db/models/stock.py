@@ -116,7 +116,11 @@ class WatchList(Base, TimestampMixin):
     is_favorite: Mapped[bool] = Column(Boolean, default=False)
     
     # Relationships
-    user: Mapped["User"] = relationship("User", back_populates="watchlist_entries")
+    user: Mapped["User"] = relationship(
+        "User",
+        back_populates="watchlist_entries",
+        overlaps="watchlists"
+    )
     stock: Mapped["Stock"] = relationship("Stock", back_populates="watchlist_entries")
     
     def __repr__(self) -> str:
