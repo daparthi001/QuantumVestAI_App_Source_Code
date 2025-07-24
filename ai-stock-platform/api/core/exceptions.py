@@ -50,6 +50,12 @@ class NotFoundError(HTTPException):
         )
 
 
+class ResourceNotFoundError(NotFoundError):
+    """Backward compatibility alias for ``NotFoundError``."""
+
+    pass
+
+
 class PermissionError(HTTPException):
     """Raised when user lacks sufficient permissions"""
     
