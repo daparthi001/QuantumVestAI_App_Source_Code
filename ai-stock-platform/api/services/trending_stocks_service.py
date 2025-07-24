@@ -70,11 +70,37 @@ class TrendingStocksService:
         if not AIOHTTP_AVAILABLE:
             raise RuntimeError("aiohttp is required for real-time data access")
         
-        # Default trending symbols to fetch
-        self.trending_symbols = [
-            "AAPL", "MSFT", "AMZN", "GOOGL", "NVDA", 
-            "TSLA", "META", "NFLX", "CRM", "ADBE"
+        # Placeholder list used until live data is fetched
+        self.trending_symbols: List[str] = [
+            "AAPL",
+            "MSFT",
+            "AMZN",
+            "GOOGL",
+            "NVDA",
+            "TSLA",
+            "META",
+            "NFLX",
+            "CRM",
+            "ADBE",
         ]
+
+    async def _fetch_yahoo_trending_symbols(self) -> List[str]:
+        """Fetch trending tickers from Yahoo Finance."""
+        url = "https://query1.finance.yahoo.com/v1/finance/trending/US"
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, timeout=10) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        quotes = (
+                            data.get("finance", {})
+                            .get("result", [{}])[0]
+                            .get("quotes", [])
+                        )
+                        return [q.get("symbol") for q in quotes if q.get("symbol")]
+        except Exception as exc:
+            logger.warning(f"Failed to fetch Yahoo trending symbols: {exc}")
+        return []
     
     async def get_trending_stocks(self, page: int = 1, limit: int = 10) -> Dict[str, Any]:
         """
@@ -92,9 +118,26 @@ class TrendingStocksService:
             if self._is_cache_valid():
                 logger.info("Returning trending stocks from cache")
                 return self._get_paginated_data(self._cache["stocks"], page, limit)
-            
+
             # Fetch fresh data
             logger.info("Fetching fresh trending stocks data")
+            if not self.use_mock and not self.trending_symbols:
+                self.trending_symbols = await self._fetch_yahoo_trending_symbols()
+                if not self.trending_symbols:
+                    logger.warning("No trending symbols from Yahoo; using defaults")
+                    self.trending_symbols = [
+                        "AAPL",
+                        "MSFT",
+                        "AMZN",
+                        "GOOGL",
+                        "NVDA",
+                        "TSLA",
+                        "META",
+                        "NFLX",
+                        "CRM",
+                        "ADBE",
+                    ]
+
             stocks_data = await self._fetch_trending_stocks()
             
             # Update cache
