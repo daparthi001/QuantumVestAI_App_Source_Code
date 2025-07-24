@@ -12,8 +12,16 @@ from typing import Any, Dict, List, Optional, Union
 
 import httpx
 from core.http_client import safe_get_json
-from fastapi import (APIRouter, Depends, HTTPException, Path, Query, Request,
-                     Response, status)
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Path,
+    Query,
+    Request,
+    Response,
+    status,
+)
 from fastapi.responses import HTMLResponse, JSONResponse
 
 API_URL = "http://quantumvestai-dev-api:8000"
@@ -22,22 +30,21 @@ try:
     from auth.dependencies import get_current_user, get_optional_current_user
 except ImportError:
     # Create mock auth functions if they don't exist
-    logging.getLogger(__name__).warning("Auth dependencies not found. Using mock functions.")
-    
+    logging.getLogger(__name__).warning(
+        "Auth dependencies not found. Using mock functions."
+    )
+
     async def get_current_user(request: Request, response: Response = None):
         """Mock function that returns None (demo mode)"""
         return None
-    
+
     async def get_optional_current_user(request: Request, response: Response = None):
         """Mock function that returns None (demo mode)"""
         return None
 
 
 # Set up router
-router = APIRouter(
-    prefix="/market",
-    tags=["market"]
-)
+router = APIRouter(prefix="/market", tags=["market"])
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -50,11 +57,12 @@ CACHE_ENABLED = os.getenv("CACHE_ENABLED", "true").lower() == "true"
 CACHE_TTL = int(os.getenv("CACHE_TTL", "300"))  # Default: 5 minutes
 cache_store = {}
 
+
 def get_cached_data(key: str) -> Union[Dict[str, Any], None]:
     """Get data from cache if it exists and is not expired."""
     if not CACHE_ENABLED:
         return None
-        
+
     if key in cache_store:
         entry = cache_store[key]
         if entry["expires"] > time.time():
@@ -63,123 +71,93 @@ def get_cached_data(key: str) -> Union[Dict[str, Any], None]:
         else:
             logger.debug(f"Cache expired for {key}")
             del cache_store[key]
-    
+
     logger.debug(f"Cache miss for {key}")
     return None
+
 
 def set_cached_data(key: str, data: Dict[str, Any], ttl: int = CACHE_TTL) -> None:
     """Store data in cache with expiration time."""
     if not CACHE_ENABLED:
         return
-        
+
     expires = time.time() + ttl
-    cache_store[key] = {
-        "data": data,
-        "expires": expires
-    }
+    cache_store[key] = {"data": data, "expires": expires}
     logger.debug(f"Cached data for {key}, expires in {ttl} seconds")
+
 
 def get_templates(request: Request):
     """Helper function to get templates from app state or create a new instance."""
-    templates = getattr(request.app.state, 'templates', None)
+    templates = getattr(request.app.state, "templates", None)
     if templates is None:
         from fastapi.templating import Jinja2Templates
+
         templates = Jinja2Templates(directory="templates")
     return templates
 
+
 @router.get("", response_class=HTMLResponse)
-async def market_overview(
-    request: Request,
-    response: Response
-):
-    """
-    Market overview page showing indices, trends, and top movers (demo mode).
-    This page is accessible without authentication.
-    """
+async def market_overview(request: Request, response: Response):
+    """Market overview page showing indices, trends, and top movers."""
     try:
         # Get API URL from app state or environment
-        api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://quantumvestai-dev-api:8000'))
-        
-        # Create cache key for demo mode
-        cache_key = f"market_overview_demo"
-        
+        api_url_base = getattr(request.app.state, "settings", {}).get(
+            "API_URL", os.getenv("API_URL", "http://quantumvestai-dev-api:8000")
+        )
+
+        cache_key = "market_overview"
+
         # Try to get data from cache
         market_data = get_cached_data(cache_key)
-        
+
         if market_data is None:
             try:
                 # Get current user for authentication
                 user = await get_optional_current_user(request, response)
-                auth_token = user.get('token') if user else None
-                
+                auth_token = user.get("token") if user else None
+
                 # Fetch market data from API using centralized HTTP client
                 market_data = await safe_get_json(
-                    url=f"{api_url_base}/api/market/overview",
-                    auth_token=auth_token
+                    url=f"{api_url_base}/api/market/overview", auth_token=auth_token
                 )
-                
+
                 if market_data is None:
                     logger.error("Failed to fetch market data from API")
                     raise HTTPException(
-                        status_code=503,
-                        detail="Error fetching market data"
+                        status_code=503, detail="Error fetching market data"
                     )
-                
+
                 # Cache the data
                 set_cached_data(cache_key, market_data)
             except Exception as e:
                 logger.error(f"Market data fetch error: {str(e)}")
                 logger.error(f"API request error: {str(e)}")
-                # Use fallback data
-                market_data = {
-                    "indices": [
-                        {"name": "S&P 500", "value": 4752.75, "change_percent": 0.8},
-                        {"name": "NASDAQ", "value": 16234.50, "change_percent": 1.2},
-                        {"name": "DOW", "value": 35750.25, "change_percent": 0.5}
-                    ],
-                    "top_gainers": [
-                        {"symbol": "AAPL", "name": "Apple Inc.", "price": 178.50, "change_percent": 3.2},
-                        {"symbol": "MSFT", "name": "Microsoft Corp.", "price": 360.25, "change_percent": 2.5},
-                        {"symbol": "AMZN", "name": "Amazon.com Inc.", "price": 145.75, "change_percent": 1.8}
-                    ],
-                    "top_losers": [
-                        {"symbol": "META", "name": "Meta Platforms Inc.", "price": 425.80, "change_percent": -1.2},
-                        {"symbol": "NFLX", "name": "Netflix Inc.", "price": 615.25, "change_percent": -0.8},
-                        {"symbol": "TSLA", "name": "Tesla Inc.", "price": 215.40, "change_percent": -0.5}
-                    ],
-                    "sectors": [
-                        {"name": "Technology", "change_percent": 1.5},
-                        {"name": "Healthcare", "change_percent": 0.8},
-                        {"name": "Financials", "change_percent": 0.3},
-                        {"name": "Consumer Discretionary", "change_percent": -0.2},
-                        {"name": "Energy", "change_percent": -0.5}
-                    ]
-                }
-        
+                raise HTTPException(
+                    status_code=503, detail="Unable to fetch market data"
+                )
+
         # Get templates
         templates = get_templates(request)
-        
+
         # Render template
         return get_templates(request).TemplateResponse(
             "market/overview.html",
             {
                 "request": request,
                 "user": None,
-                "demo_mode": True,
-
                 "page_title": "Market Overview",
                 "market_data": market_data,
                 "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
-                "is_authenticated": False
-            }
+                "is_authenticated": False,
+            },
         )
-    
+
     except Exception as e:
         logger.exception(f"Market overview error: {str(e)}")
-        
+
         # Get templates
         templates = get_templates(request)
-        
+
         return get_templates(request).TemplateResponse(
             "error.html",
             {
@@ -187,16 +165,16 @@ async def market_overview(
                 "message": "An error occurred while loading market data.",
                 "error_code": "MARKET_ERR",
                 "user": None,
-                "demo_mode": True
             },
-            status_code=500
+            status_code=500,
         )
+
 
 @router.get("/stock/{symbol}", response_class=HTMLResponse)
 async def stock_details(
     request: Request,
     response: Response,
-    symbol: str = Path(..., description="Stock symbol")
+    symbol: str = Path(..., description="Stock symbol"),
 ):
     """
     Stock details page showing price, charts, news, and fundamentals for a specific stock (demo mode).
@@ -204,99 +182,84 @@ async def stock_details(
     """
     try:
         # Get API URL from app state or environment
-        api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://quantumvestai-dev-api:8000'))
-        
+        api_url_base = getattr(request.app.state, "settings", {}).get(
+            "API_URL", os.getenv("API_URL", "http://quantumvestai-dev-api:8000")
+        )
+
         # Create cache key for demo mode
         cache_key = f"stock_details_{symbol.upper()}_demo"
-        
+
         # Try to get data from cache
         stock_data = get_cached_data(cache_key)
-        
+
         if stock_data is None:
             try:
                 # Get current user for authentication
                 user = await get_optional_current_user(request, response)
-                auth_token = user.get('token') if user else None
-                
+                auth_token = user.get("token") if user else None
+
                 # Fetch stock data from API using centralized HTTP client
                 stock_data = await safe_get_json(
                     url=f"{api_url_base}/api/stocks/{symbol.upper()}",
-                    auth_token=auth_token
+                    auth_token=auth_token,
                 )
-                
+
                 if stock_data is None:
                     logger.error(f"Failed to fetch stock data for {symbol}")
                     raise HTTPException(
-                        status_code=503,
-                        detail=f"Error fetching data for {symbol}"
+                        status_code=503, detail=f"Error fetching data for {symbol}"
                     )
-                
+
                 # Cache the data
                 set_cached_data(cache_key, stock_data)
             except Exception as e:
                 logger.error(f"Stock data fetch error: {str(e)}")
                 logger.error(f"API request error: {str(e)}")
-                # Use fallback data
-                stock_data = {
-                    "symbol": symbol.upper(),
-                    "name": f"{symbol.upper()} Corporation",
-                    "price": 178.50,
-                    "change": 5.25,
-                    "change_percent": 3.2,
-                    "market_cap": "2.5T",
-                    "pe_ratio": 28.5,
-                    "dividend_yield": 0.55,
-                    "volume": "25.3M",
-                    "chart_data": {
-                        "labels": ["9:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "1:00", "1:30", "2:00", "2:30", "3:00", "3:30", "4:00"],
-                        "values": [175.25, 176.50, 177.00, 176.75, 177.25, 177.50, 178.00, 177.75, 178.25, 178.50, 178.75, 179.00, 178.75, 178.50]
-                    }
-                }
+                raise HTTPException(
+                    status_code=503, detail="Unable to fetch stock data"
+                )
 
         # Get current user for checking watchlist
         user = await get_optional_current_user(request, response)
-        
+
         # Check if user has this stock in watchlist
         is_in_watchlist = False
         if user:
             try:
                 watchlist_data = await safe_get_json(
                     url=f"{api_url_base}/api/watchlist/check/{symbol.upper()}",
-                    auth_token=user.get('token')
+                    auth_token=user.get("token"),
                 )
-                
+
                 if watchlist_data:
                     is_in_watchlist = watchlist_data.get("in_watchlist", False)
             except Exception as e:
                 logger.warning(f"Error checking watchlist status: {str(e)}")
                 is_in_watchlist = False
-        
 
         # Get templates
         templates = get_templates(request)
-        
+
         # Render template
         return get_templates(request).TemplateResponse(
             "market/stock_details.html",
             {
                 "request": request,
                 "user": None,
-                "demo_mode": True,
-
                 "page_title": f"{stock_data.get('name')} ({stock_data.get('symbol')})",
                 "stock": stock_data,
                 "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
                 "is_authenticated": False,
-                "is_in_watchlist": False
-            }
+                "is_in_watchlist": False,
+            },
         )
-    
+
     except Exception as e:
         logger.exception(f"Stock details error: {str(e)}")
-        
+
         # Get templates
         templates = get_templates(request)
-        
+
         return get_templates(request).TemplateResponse(
             "error.html",
             {
@@ -304,69 +267,58 @@ async def stock_details(
                 "message": f"An error occurred while loading data for {symbol}.",
                 "error_code": "STOCK_ERR",
                 "user": None,
-                "demo_mode": True
             },
-            status_code=500
+            status_code=500,
         )
+
 
 @router.get("/api/stocks/search", response_model=Dict[str, Any])
 async def search_stocks(
-    request: Request,
-    query: str = Query(..., description="Search query")
+    request: Request, query: str = Query(..., description="Search query")
 ):
-    """
-    API endpoint to search for stocks by name or symbol (demo mode).
-    Used for autocomplete functionality.
-    """
+    """API endpoint to search for stocks by name or symbol."""
     try:
         # Get API URL from app state or environment
-        api_url_base = getattr(request.app.state, 'settings', {}).get('API_URL', os.getenv('API_URL', 'http://quantumvestai-dev-api:8000'))
-        
-        # Create cache key for demo mode
-        cache_key = f"stock_search_{query.lower()}_demo"
-        
+        api_url_base = getattr(request.app.state, "settings", {}).get(
+            "API_URL", os.getenv("API_URL", "http://quantumvestai-dev-api:8000")
+        )
+
+        cache_key = f"stock_search_{query.lower()}"
+
         # Try to get data from cache
         search_results = get_cached_data(cache_key)
-        
+
         if search_results is None:
             try:
                 # Get current user for authentication
                 user = await get_optional_current_user(request)
-                auth_token = user.get('token') if user else None
-                
+                auth_token = user.get("token") if user else None
+
                 # Fetch search results from API using centralized HTTP client
                 search_results = await safe_get_json(
                     url=f"{api_url_base}/api/stocks/search",
                     params={"query": query},
-                    auth_token=auth_token
+                    auth_token=auth_token,
                 )
-                
+
                 if search_results is None:
                     logger.error("Failed to fetch search results from API")
                     raise HTTPException(
-                        status_code=503,
-                        detail="Error searching stocks"
+                        status_code=503, detail="Error searching stocks"
                     )
-                
+
                 # Cache the data
                 set_cached_data(cache_key, search_results)
             except Exception as e:
                 logger.error(f"Stock search error: {str(e)}")
                 logger.error(f"API request error: {str(e)}")
-                # Use fallback data based on query
-                search_results = {
-                    "results": [
-                        {"symbol": "AAPL", "name": "Apple Inc."},
-                        {"symbol": "AMZN", "name": "Amazon.com Inc."},
-                        {"symbol": "MSFT", "name": "Microsoft Corporation"}
-                    ]
-                }
-        
+                raise HTTPException(status_code=503, detail="Unable to search stocks")
+
         return search_results
-    
+
     except Exception as e:
         logger.exception(f"Stock search error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error searching stocks"
+            detail="Error searching stocks",
         )
