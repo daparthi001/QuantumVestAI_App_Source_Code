@@ -5,7 +5,9 @@ from fastapi.responses import PlainTextResponse
 
 router = APIRouter(prefix="/docs", tags=["docs"])
 
-BASE_DIR = Path(__file__).resolve().parents[3]
+_current = Path(__file__).resolve()
+parents = _current.parents
+BASE_DIR = parents[min(3, len(parents) - 1)]
 README_FILE = BASE_DIR / "README.md"
 USAGE_FILE = BASE_DIR / "docs" / "API_USES.md"
 
