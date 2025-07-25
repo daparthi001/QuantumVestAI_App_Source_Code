@@ -150,7 +150,8 @@ body {
 .quantum-nav-container {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: var(--space-lg);
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 var(--space-md);
@@ -179,6 +180,19 @@ body {
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+.nav-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.quantum-search {
+  flex: 1;
+  max-width: 300px;
+  margin: 0 var(--space-md);
 }
 
 /* Sidebar navigation list */

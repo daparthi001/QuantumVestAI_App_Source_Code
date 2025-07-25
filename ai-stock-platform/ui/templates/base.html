@@ -158,32 +158,16 @@
                         News
                     </a>
                 </li>
-                {% if user %}
-                <li class="quantum-nav-item">
-                    <a href="/profile" class="quantum-nav-link {% if '/profile' in request.url.path %}active{% endif %}" data-i18n="nav.profile">
-                        Profile
-                    </a>
-                </li>
-                <li class="quantum-nav-item">
-                    <a href="/logout" class="quantum-nav-link" data-i18n="nav.logout">
-                        Logout
-                    </a>
-                </li>
-                {% else %}
-                <li class="quantum-nav-item">
-                    <a href="/login" class="quantum-nav-link {% if '/login' in request.url.path %}active{% endif %}" data-i18n="nav.login">
-                        Login
-                    </a>
-                </li>
-                <li class="quantum-nav-item">
-                    <a href="/auth/register" class="quantum-nav-link {% if '/auth/register' in request.url.path %}active{% endif %}" data-i18n="nav.register">
-                        Register
-                    </a>
-                </li>
-                {% endif %}
             </ul>
 
             <div class="nav-right">
+                {% if user %}
+                <a href="/profile" class="quantum-nav-link {% if '/profile' in request.url.path %}active{% endif %}" data-i18n="nav.profile">Profile</a>
+                <a href="/logout" class="quantum-nav-link" data-i18n="nav.logout">Logout</a>
+                {% else %}
+                <a href="/login" class="quantum-nav-link {% if '/login' in request.url.path %}active{% endif %}" data-i18n="nav.login">Login</a>
+                <a href="/auth/register" class="quantum-nav-link {% if '/auth/register' in request.url.path %}active{% endif %}" data-i18n="nav.register">Register</a>
+                {% endif %}
                 <div class="nav-item">
                     <button class="theme-toggle" id="themeToggle" title="Dark Mode">
                         <i class="bi bi-moon-fill"></i>
