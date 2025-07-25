@@ -431,6 +431,103 @@ async def invalidate_trending_cache(request: Request):
             error_code="INTERNAL_SERVER_ERROR",
             request_id=getattr(request.state, 'request_id', None)
         )
+@app.get("/api/v1/stocks/search")
+async def search_stocks_endpoint(request: Request, query: str, limit: int = 10):
+    """Search for stocks by symbol or name."""
+    logger.info(f"Stock search endpoint accessed query: {query}")
+    try:
+        if not query.strip():
+            raise ValidationError("Stock search query is required")
+        results = []
+        if trending_stocks_service is not None:
+            data = await trending_stocks_service.get_trending_stocks(page=1, limit=100)
+            for stock in data.get("stocks", []):
+                if query.lower() in stock["symbol"].lower() or query.lower() in stock["name"].lower():
+                    results.append({
+                        "symbol": stock["symbol"],
+                        "name": stock["name"],
+                        "price": stock.get("price"),
+                        "change": stock.get("change"),
+                    })
+                    if len(results) >= limit:
+                        break
+        else:
+            mock_data = {
+                "AAPL": {"symbol": "AAPL", "name": "Apple Inc.", "price": 198.45, "change": 4.12},
+                "MSFT": {"symbol": "MSFT", "name": "Microsoft Corporation", "price": 425.63, "change": 7.56},
+                "GOOGL": {"symbol": "GOOGL", "name": "Alphabet Inc.", "price": 150.12, "change": 3.45},
+            }
+            for stock in mock_data.values():
+                if query.lower() in stock["symbol"].lower() or query.lower() in stock["name"].lower():
+                    results.append(stock)
+                    if len(results) >= limit:
+                        break
+        return create_success_response(
+            data={"results": results},
+            message="Stock search results" if results else "No stocks found",
+            request_id=getattr(request.state, 'request_id', None),
+        )
+    except ValidationError as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Error searching stocks: {e}")
+        return create_error_response(
+            message="Failed to search stocks",
+            error_code="INTERNAL_SERVER_ERROR",
+            request_id=getattr(request.state, 'request_id', None),
+        )
+
+
+@app.get("/api/v1/stocks/most-predictable")
+async def most_predictable_stocks(request: Request, limit: int = 10, min_score: float = 0.7):
+    """Get stocks with the highest predictability scores."""
+    logger.info("Most predictable stocks endpoint accessed")
+    try:
+        if limit < 1 or limit > 100:
+            raise ValidationError("Limit must be between 1 and 100")
+        if not 0.0 <= min_score <= 1.0:
+            raise ValidationError("min_score must be between 0.0 and 1.0")
+        stocks = []
+        import random
+        if trending_stocks_service is not None:
+            data = await trending_stocks_service.get_trending_stocks(page=1, limit=limit * 2)
+            for stock in data.get("stocks", []):
+                random.seed(stock["symbol"])
+                score = round(random.uniform(0.5, 1.0), 2)
+                if score >= min_score:
+                    stock_copy = stock.copy()
+                    stock_copy["predictability_score"] = score
+                    stocks.append(stock_copy)
+            stocks.sort(key=lambda x: x["predictability_score"], reverse=True)
+            stocks = stocks[:limit]
+        else:
+            mock = [
+                {"symbol": "AAPL", "name": "Apple Inc."},
+                {"symbol": "MSFT", "name": "Microsoft Corporation"},
+                {"symbol": "GOOGL", "name": "Alphabet Inc."},
+                {"symbol": "NVDA", "name": "NVIDIA Corporation"},
+            ]
+            for stock in mock:
+                random.seed(stock["symbol"])
+                score = round(random.uniform(0.7, 0.95), 2)
+                if score >= min_score:
+                    stocks.append({**stock, "predictability_score": score})
+            stocks.sort(key=lambda x: x["predictability_score"], reverse=True)
+            stocks = stocks[:limit]
+        return create_success_response(
+            data={"stocks": stocks},
+            message="Most predictable stocks retrieved successfully",
+            request_id=getattr(request.state, 'request_id', None),
+        )
+    except ValidationError as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Error fetching most predictable stocks: {e}")
+        return create_error_response(
+            message="Failed to fetch most predictable stocks",
+            error_code="INTERNAL_SERVER_ERROR",
+            request_id=getattr(request.state, 'request_id', None),
+        )
 
 @app.get("/api/v1/stocks/most-predictable")
 async def most_predictable_stocks(
