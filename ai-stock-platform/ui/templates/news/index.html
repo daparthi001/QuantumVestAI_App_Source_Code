@@ -105,7 +105,7 @@
                 <div class="card-body">
                     {% if data.trending %}
                         {% for topic in data.trending %}
-                        <span class="topic-pill quantum-tooltip" data-topic="{{ topic }}" data-tooltip="Filter by {{ topic }}">{{ topic }}</span>
+                        <span class="topic-pill bg-blue-600 text-white rounded-full px-3 py-1 quantum-tooltip" data-topic="{{ topic }}" data-tooltip="Filter by {{ topic }}">{{ topic }}</span>
                         {% endfor %}
                     {% endif %}
                 </div>
