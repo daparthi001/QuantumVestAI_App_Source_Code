@@ -12,7 +12,20 @@ from typing import Any, Dict, List, Optional
 
 import aiohttp
 from textblob import TextBlob
-from api.models.finbert_sentiment import FinBertSentiment
+# Attempt to import the FinBertSentiment model. When running the API from within
+# the ``api`` package, the module is available as ``api.models``. However when
+# executed from the package root (e.g. during local development), only the
+# relative ``models`` package may be on ``sys.path``. Use a fallback approach
+# similar to other services so the import succeeds in both cases.
+try:
+    from api.models.finbert_sentiment import FinBertSentiment
+except ModuleNotFoundError:
+    try:  # pragma: no cover - fallback path
+        from models.finbert_sentiment import FinBertSentiment  # type: ignore
+    except ModuleNotFoundError as e:  # pragma: no cover - explicit error path
+        raise ImportError(
+            "Could not import FinBertSentiment. Ensure PYTHONPATH includes the api package."
+        ) from e
 
 from .twitter_sentiment import TwitterSentimentAnalyzer
 
