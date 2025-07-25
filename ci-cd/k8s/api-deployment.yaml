@@ -124,6 +124,11 @@ spec:
             secretKeyRef:
               name: app-secrets
               key: ALPHA_VANTAGE_API_KEY
+        - name: RAPIDAPI_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: RAPIDAPI_KEY
         envFrom:
         - configMapRef:
             name: api-configmap
