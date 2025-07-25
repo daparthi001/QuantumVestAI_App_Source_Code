@@ -9,6 +9,7 @@ import { mlService, PredictionResult, ModelInfo } from '../../services/ml-servic
 import { stockService } from '../../services/api';
 import { useError } from '../../contexts/ErrorContext';
 import PredictionChart from './charts/PredictionChart';
+import useDebounce from '../../hooks/useDebounce';
 
 const PredictionAnalysis: React.FC = () => {
   const [symbol, setSymbol] = useState<string>('AAPL');
@@ -19,6 +20,7 @@ const PredictionAnalysis: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [stockOptions, setStockOptions] = useState<Array<{symbol: string, name: string}>>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const debouncedSearch = useDebounce(searchTerm, 300);
   const { showErrorMessage } = useError();
   
   // Fetch available models
@@ -50,9 +52,9 @@ const PredictionAnalysis: React.FC = () => {
   }, []);
   
   // Filter stocks based on search term
-  const filteredStocks = stockOptions.filter(stock => 
-    stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    stock.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredStocks = stockOptions.filter(stock =>
+    stock.symbol.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+    stock.name.toLowerCase().includes(debouncedSearch.toLowerCase())
   ).slice(0, 10); // Limit to 10 results
   
   // Generate prediction
@@ -114,7 +116,7 @@ const PredictionAnalysis: React.FC = () => {
                 <div className="search-select">
                   <Form.Control
                     type="text"
-                    placeholder="Search stocks..."
+                    placeholder="\u{1F50D} Search stocks..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     autoComplete="off"
