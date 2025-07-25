@@ -56,7 +56,7 @@ const TwitterTrendingStocks: React.FC = () => {
       } catch (err: any) {
         console.error('Error fetching trending stocks:', err);
         if (err.response && err.response.status === 503) {
-          setError('Twitter integration not configured. Using demo data.');
+          setError('Twitter integration not configured. Using demo data. See docs/SENTIMENT_WORKAROUNDS.md for options.');
         } else {
           setError('Failed to load trending stocks');
         }

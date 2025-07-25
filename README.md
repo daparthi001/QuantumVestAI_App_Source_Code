@@ -3,6 +3,7 @@
 This document provides a comprehensive list of API and UI endpoints for the QuantumVestAI application.
 For screenshots and icons used in the interface, see [UI Visuals](docs/UI_IMAGES.md).
 For instructions on integrating ChatGPT into the UI, see [ChatGPT Guide](docs/CHATGPT_UI_INTEGRATION.md).
+For strategies to gather social sentiment without a paid Twitter plan, see [Sentiment Workarounds](docs/SENTIMENT_WORKAROUNDS.md).
 
 ---
 
