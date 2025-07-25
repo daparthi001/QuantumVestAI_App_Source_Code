@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import {
-  Card, CardContent, Typography, CircularProgress,
+  Card, CardContent, Typography, Skeleton,
   Box, List, ListItem, ListItemText, ListItemIcon,
-  Divider, Chip, Avatar, IconButton
+  Divider, Avatar, IconButton
 } from '@mui/material';
 import { 
   ArrowUpward, ArrowDownward, TrendingUp, 
   Refresh 
 } from '@mui/icons-material';
 import { green, red, grey, blue } from '@mui/material/colors';
-import axios from 'axios';
 import { formatPrice, formatChange, formatPercentage } from '../utils/formatters';
+import useTrendingStocks from '../hooks/useTrendingStocks';
 
 interface TrendingStock {
   symbol: string;
@@ -22,95 +22,24 @@ interface TrendingStock {
   last_updated: string;
 }
 
-interface TrendingStocksResponse {
-  status: string;
-  data: {
-    stocks: TrendingStock[];
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      has_next: boolean;
-      has_prev: boolean;
-    };
-    metadata: {
-      last_updated: string;
-      cache_ttl_seconds: number;
-      data_source: string;
-    };
-  };
-  message: string;
-}
 
 interface TrendingStocksProps {
   limit?: number;
-  refreshInterval?: number;
   showHeader?: boolean;
   compact?: boolean;
 }
 
 const TrendingStocks: React.FC<TrendingStocksProps> = ({
   limit = 10,
-  refreshInterval = 60000, // 1 minute
   showHeader = true,
   compact = false
 }) => {
-  const [stocks, setStocks] = useState<TrendingStock[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<string>('');
-  const [dataSource, setDataSource] = useState<string>('');
-  const [refreshing, setRefreshing] = useState<boolean>(false);
-
-  const fetchTrendingStocks = useCallback(async (showRefreshIndicator = false) => {
-    if (showRefreshIndicator) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
-    }
-    setError(null);
-
-    try {
-      const response = await axios.get<TrendingStocksResponse>(
-        `/api/v1/stocks/trending`,
-        {
-          params: {
-            page: 1,
-            limit: limit
-          }
-        }
-      );
-
-      if (response.data.status === 'success' && response.data.data) {
-        const { stocks, metadata } = response.data.data;
-        setStocks(stocks);
-        setLastUpdated(metadata.last_updated);
-        setDataSource(metadata.data_source);
-      } else {
-        setError('Failed to load trending stocks');
-      }
-    } catch (err: any) {
-      console.error('Error fetching trending stocks:', err);
-      setError('Failed to load trending stocks');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [limit]);
-
-  useEffect(() => {
-    fetchTrendingStocks();
-    
-    // Set up auto-refresh
-    const intervalId = setInterval(() => {
-      fetchTrendingStocks(true);
-    }, refreshInterval);
-
-    return () => clearInterval(intervalId);
-  }, [fetchTrendingStocks, refreshInterval]);
+  const { stocks, lastUpdate, loading, error } = useTrendingStocks(limit);
+  const [refreshing, setRefreshing] = React.useState<boolean>(false);
 
   const handleRefresh = () => {
-    fetchTrendingStocks(true);
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 1000);
   };
 
   const getPriceChangeIcon = (changePercent: number) => {
@@ -170,9 +99,19 @@ const TrendingStocks: React.FC<TrendingStocksProps> = ({
               </Typography>
             </Box>
           )}
-          <Box display="flex" justifyContent="center" alignItems="center" height={200}>
-            <CircularProgress />
-          </Box>
+          <List>
+            {Array.from({ length: limit }).map((_, idx) => (
+              <ListItem key={idx}>
+                <ListItemIcon>
+                  <Skeleton variant="circular" width={32} height={32} />
+                </ListItemIcon>
+                <ListItemText
+                  primary={<Skeleton width="60%" />}
+                  secondary={<Skeleton width="40%" />}
+                />
+              </ListItem>
+            ))}
+          </List>
         </CardContent>
       </Card>
     );
@@ -213,16 +152,10 @@ const TrendingStocks: React.FC<TrendingStocksProps> = ({
               <Typography variant="h6" component="h2">
                 Trending Stocks
               </Typography>
-              <Chip 
-                label={dataSource === 'real' ? 'Live' : 'Demo'} 
-                size="small" 
-                color={dataSource === 'real' ? 'success' : 'warning'}
-                sx={{ ml: 1 }}
-              />
             </Box>
             <Box display="flex" alignItems="center">
               <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>
-                {formatLastUpdated(lastUpdated)}
+                {formatLastUpdated(lastUpdate)}
               </Typography>
               <IconButton 
                 onClick={handleRefresh} 
