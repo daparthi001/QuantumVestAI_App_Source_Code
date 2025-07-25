@@ -32,6 +32,7 @@ from routers.auth import router as auth_router
 from routers.websocket import manager as websocket_manager
 from routers.websocket import router as websocket_router
 from routers.social import router as social_router
+from routers.docs import router as docs_router
 import sentry_sdk
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from fastapi import Response as FastAPIResponse
@@ -91,6 +92,7 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 app.include_router(websocket_router)
 app.include_router(auth_router, prefix="/api/v1/auth")
 app.include_router(social_router)
+app.include_router(docs_router)
 
 # Request logging middleware
 @app.middleware("http")
