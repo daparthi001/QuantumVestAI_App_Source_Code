@@ -168,6 +168,16 @@ production deployments. Instead, create a Kubernetes `Secret` and mount it as an
 environment variable or file. Both the API and UI startup scripts will read a
 `SECRET_KEY_FILE` path if provided to load the key securely.
 
+All Kubernetes secrets for the application are consolidated in
+`ci-cd/k8s/all-secrets.yaml`. Populate this file with your base64-encoded values
+and apply it once using:
+
+```bash
+kubectl apply -f ci-cd/k8s/all-secrets.yaml
+```
+
+This single file avoids managing multiple secret manifests across environments.
+
 **Important:** The UI and API must use the same `SECRET_KEY` value. If these values differ, the UI cannot verify JWT tokens issued by the API and users may be redirected back to the login page repeatedly.
 
 ### Generating Test JWT Tokens

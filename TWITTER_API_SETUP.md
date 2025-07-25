@@ -73,22 +73,14 @@ TWITTER_ACCESS_TOKEN_SECRET=your_access_token_secret
 
 #### For Production (Kubernetes)
 
-1. Create a Kubernetes secret with your Twitter credentials:
+1. Add your Twitter credentials to `ci-cd/k8s/all-secrets.yaml` and apply the
+   file. This consolidated manifest stores all application secrets in one place:
 
 ```bash
-# Using the provided script
-cd ci-cd/k8s/
-echo "TWITTER_BEARER_TOKEN=your_bearer_token" >> .env.secrets
-echo "TWITTER_API_KEY=your_api_key" >> .env.secrets
-echo "TWITTER_API_SECRET=your_api_secret" >> .env.secrets
-echo "TWITTER_ACCESS_TOKEN=your_access_token" >> .env.secrets
-echo "TWITTER_ACCESS_TOKEN_SECRET=your_access_token_secret" >> .env.secrets
-
-# Create the secret
-./create-secrets.sh
+kubectl apply -f ci-cd/k8s/all-secrets.yaml
 ```
 
-2. Or create the secret manually:
+2. If you prefer to create a standalone secret you can still run:
 
 ```bash
 kubectl create secret generic twitter-secrets \
