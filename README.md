@@ -168,6 +168,17 @@ production deployments. Instead, create a Kubernetes `Secret` and mount it as an
 environment variable or file. Both the API and UI startup scripts will read a
 `SECRET_KEY_FILE` path if provided to load the key securely.
 
+**Important:** The UI and API must use the same `SECRET_KEY` value. If these values differ, the UI cannot verify JWT tokens issued by the API and users may be redirected back to the login page repeatedly.
+
+### Generating Test JWT Tokens
+For manual testing you can generate a signed JWT from the command line:
+
+```bash
+python utils/generate_jwt.py --username alice --secret "$SECRET_KEY"
+```
+
+The script outputs a token signed with the provided secret (or `SECRET_KEY` environment variable) that expires in 60 minutes by default. Adjust the `--expire` flag to change the expiration window.
+
 ### Offline UI Docker Builds
 The UI Dockerfile installs Node.js dependencies at build time. In environments
 without internet access this step may fail. The build now logs a warning and
