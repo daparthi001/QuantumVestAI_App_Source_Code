@@ -193,10 +193,11 @@ style.textContent = `
     }
     
     .notification-toast {
-        backdrop-filter: blur(10px);
-        background: rgba(255, 255, 255, 0.95);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(4px);
+        background: rgba(31, 41, 55, 0.8);
+        border-radius: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     }
 `;
 document.head.appendChild(style);
