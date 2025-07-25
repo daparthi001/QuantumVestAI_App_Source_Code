@@ -95,6 +95,52 @@
 html {
   scroll-behavior: smooth;
   font-size: 16px;
+  }
+
+.notifications-dropdown {
+  width: 320px;
+  padding: var(--space-md);
+}
+
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.notification-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.notification-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.875rem;
+}
+
+.notification-text,
+.notification-time {
+  margin: 0;
+}
+
+.notification-time {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.dropdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mark-all-read-btn {
+  margin-left: auto;
 }
 
 body {
@@ -1130,15 +1176,16 @@ body {
 /* Notification Cards */
 .notification-card {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-sm);
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  padding: var(--space-sm) var(--space-md);
+  width: 100%;
+  padding: var(--space-md);
   margin-bottom: var(--space-sm);
   color: var(--text-primary, #e5e5e5);
-}
+  }
 
 .notification-card .notification-dismiss {
   margin-left: auto;
