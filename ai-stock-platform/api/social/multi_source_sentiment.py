@@ -5,12 +5,14 @@ Author: AI Assistant for QuantumVestAI
 """
 import asyncio
 import logging
+import os
 import re
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 import aiohttp
 from textblob import TextBlob
+from api.models.finbert_sentiment import FinBertSentiment
 
 from .twitter_sentiment import TwitterSentimentAnalyzer
 
@@ -21,9 +23,11 @@ class MultiSourceSentimentAnalyzer:
     
     def __init__(self):
         self.twitter_analyzer = TwitterSentimentAnalyzer()
+        self.finbert = FinBertSentiment()
         self.session = None
         self.cache = {}
         self.cache_timeout = timedelta(minutes=30)
+        self.news_api_key = os.environ.get("NEWS_API_KEY")
         
     async def __aenter__(self):
         self.session = aiohttp.ClientSession()
@@ -103,8 +107,11 @@ class MultiSourceSentimentAnalyzer:
             if not self.session:
                 return {"source": "news", "success": False, "error": "Session not initialized"}
             
-            # Use Yahoo Finance news API as a free alternative
-            news_data = await self._fetch_yahoo_news(symbol, days)
+            # Fetch news via NewsAPI if key configured, otherwise use Yahoo Finance
+            if self.news_api_key:
+                news_data = await self._fetch_newsapi_news(symbol, days)
+            else:
+                news_data = await self._fetch_yahoo_news(symbol, days)
             
             if not news_data:
                 return {"source": "news", "success": False, "error": "No news data"}
@@ -216,36 +223,95 @@ class MultiSourceSentimentAnalyzer:
         except Exception as e:
             logger.error(f"Yahoo news fetch failed: {e}")
         return []
+
+    async def _fetch_newsapi_news(self, symbol: str, days: int) -> List[Dict[str, Any]]:
+        """Fetch news using NewsAPI.org"""
+        if not self.news_api_key:
+            return []
+
+        url = "https://newsapi.org/v2/everything"
+        from_param = (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%d")
+        params = {
+            "q": symbol,
+            "from": from_param,
+            "language": "en",
+            "sortBy": "publishedAt",
+            "apiKey": self.news_api_key,
+            "pageSize": 20,
+        }
+        try:
+            async with self.session.get(url, params=params, timeout=10) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    articles = data.get("articles", [])
+                    parsed = []
+                    for art in articles:
+                        ts = art.get("publishedAt")
+                        try:
+                            ts_dt = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%SZ") if ts else datetime.utcnow()
+                        except Exception:
+                            ts_dt = datetime.utcnow()
+                        parsed.append({
+                            "title": art.get("title"),
+                            "summary": art.get("description", ""),
+                            "timestamp": ts_dt,
+                        })
+                    return parsed
+        except Exception as e:
+            logger.error(f"NewsAPI fetch failed: {e}")
+        return []
     
     async def _fetch_reddit_data(self, symbol: str, days: int) -> List[Dict[str, Any]]:
         """Fetch Reddit posts about the stock"""
         try:
-            # Simulate Reddit API call
-            # In a real implementation, this would use Reddit API
-            return [
-                {
-                    "title": f"Discussion about {symbol}",
-                    "selftext": "This stock looks promising for the future",
-                    "score": 10 + i,
-                    "timestamp": datetime.now() - timedelta(hours=i * 2)
+            subreddits = ["stocks", "investing"]
+            posts: List[Dict[str, Any]] = []
+            headers = {"User-Agent": "QuantumVestAI/1.0"}
+
+            for sub in subreddits:
+                url = f"https://www.reddit.com/r/{sub}/search.json"
+                params = {
+                    "q": symbol,
+                    "restrict_sr": 1,
+                    "sort": "new",
+                    "limit": 10,
                 }
-                for i in range(3)
-            ]
+                async with self.session.get(url, params=params, headers=headers, timeout=10) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        for child in data.get("data", {}).get("children", []):
+                            item = child.get("data", {})
+                            ts = item.get("created_utc")
+                            ts_dt = datetime.fromtimestamp(ts) if ts else datetime.utcnow()
+                            posts.append({
+                                "title": item.get("title"),
+                                "selftext": item.get("selftext", ""),
+                                "score": item.get("score", 0),
+                                "timestamp": ts_dt,
+                            })
+
+            return posts
         except Exception as e:
             logger.error(f"Reddit data fetch failed: {e}")
             return []
     
     def _analyze_text_sentiment(self, text: str) -> float:
-        """Analyze sentiment of text using TextBlob"""
+        """Analyze sentiment of text using FinBERT with TextBlob fallback."""
         if not text or not text.strip():
             return 0.0
-        
+
         try:
-            blob = TextBlob(text)
-            return blob.sentiment.polarity
+            result = self.finbert.predict([text])[0]
+            mapping = {"positive": 0.5, "neutral": 0.0, "negative": -0.5}
+            return mapping.get(result.get("sentiment"), 0.0)
         except Exception as e:
-            logger.error(f"Text sentiment analysis failed: {e}")
-            return 0.0
+            logger.error(f"FinBERT sentiment analysis failed: {e}")
+            try:
+                blob = TextBlob(text)
+                return blob.sentiment.polarity
+            except Exception as e2:
+                logger.error(f"Text sentiment analysis failed: {e2}")
+                return 0.0
     
     def _combine_sentiment_sources(
         self,
