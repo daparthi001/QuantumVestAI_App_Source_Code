@@ -14,7 +14,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from ..exceptions import APIException
+from ..exceptions import APIException, ValidationError
 from ..responses import create_error_response
 
 logger = logging.getLogger("api")
@@ -85,6 +85,22 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                 request_id=request_id
             )
             
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content=error_response
+            )
+
+        except ValidationError as e:
+            # Handle custom validation errors
+            logger.error(f"Validation Error [{request_id}]: {str(e)}")
+
+            error_response = create_error_response(
+                message=getattr(e, 'message', str(e)),
+                error_code=getattr(e, 'error_code', 'VALIDATION_ERROR'),
+                details=getattr(e, 'details', None),
+                request_id=request_id
+            )
+
             return JSONResponse(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 content=error_response
