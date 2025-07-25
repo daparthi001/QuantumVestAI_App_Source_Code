@@ -41,9 +41,10 @@
 .quantum-card {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  backdrop-filter: blur(10px);
-  box-shadow: 
+  border-radius: 1rem;
+  /* Use lighter blur via opacity instead of heavy filter */
+  backdrop-filter: blur(4px);
+  box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.3),
     0 2px 8px rgba(0, 210, 255, 0.1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

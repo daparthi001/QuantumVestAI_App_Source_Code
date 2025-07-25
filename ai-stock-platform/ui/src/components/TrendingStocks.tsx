@@ -89,7 +89,7 @@ const TrendingStocks: React.FC<TrendingStocksProps> = ({
 
   if (loading) {
     return (
-      <Card sx={{ minHeight: compact ? 300 : 400 }}>
+      <Card className="quantum-card rounded-2xl shadow-lg p-4" sx={{ minHeight: compact ? 300 : 400 }}>
         <CardContent>
           {showHeader && (
             <Box display="flex" alignItems="center" mb={2}>
@@ -119,7 +119,7 @@ const TrendingStocks: React.FC<TrendingStocksProps> = ({
 
   if (error) {
     return (
-      <Card sx={{ minHeight: compact ? 300 : 400 }}>
+      <Card className="quantum-card rounded-2xl shadow-lg p-4" sx={{ minHeight: compact ? 300 : 400 }}>
         <CardContent>
           {showHeader && (
             <Box display="flex" alignItems="center" mb={2}>
@@ -143,7 +143,7 @@ const TrendingStocks: React.FC<TrendingStocksProps> = ({
   }
 
   return (
-    <Card sx={{ minHeight: compact ? 300 : 400 }}>
+    <Card className="quantum-card rounded-2xl shadow-lg p-4" sx={{ minHeight: compact ? 300 : 400 }}>
       <CardContent>
         {showHeader && (
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>

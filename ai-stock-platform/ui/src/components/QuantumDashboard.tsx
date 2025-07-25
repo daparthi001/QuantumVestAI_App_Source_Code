@@ -4,6 +4,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import Skeleton from '@mui/material/Skeleton';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ROUTES } from '../config/constants';
@@ -37,6 +38,8 @@ const Dashboard: React.FC = () => {
   const [marketData, setMarketData] = useState<MarketData[]>([]);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [portfolioMetrics, setPortfolioMetrics] = useState<PortfolioMetric[]>([]);
+  const [highlightMarket, setHighlightMarket] = useState(false);
+  const [highlightNews, setHighlightNews] = useState(false);
 
   useEffect(() => {
     // Simulate data loading
@@ -64,6 +67,12 @@ const Dashboard: React.FC = () => {
       ]);
 
       setIsLoading(false);
+      setHighlightMarket(true);
+      setHighlightNews(true);
+      setTimeout(() => {
+        setHighlightMarket(false);
+        setHighlightNews(false);
+      }, 1500);
     }, 1000);
   }, []);
 
@@ -90,16 +99,24 @@ const Dashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          Loading your quantum dashboard...
-        </motion.p>
-      </div>
+      <Container fluid className="py-4">
+        <Row className="g-4">
+          <Col lg={8}>
+            <Card className="quantum-card rounded-2xl shadow-lg p-4">
+              <Card.Body>
+                <Skeleton variant="rectangular" height={300} animation="wave" />
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col lg={4}>
+            <Card className="quantum-card rounded-2xl shadow-lg p-4">
+              <Card.Body>
+                <Skeleton variant="rectangular" height={300} animation="wave" />
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
     );
   }
 
@@ -276,7 +293,7 @@ const Dashboard: React.FC = () => {
           {/* Top Performing Stocks */}
           <Col lg={6} className="mb-4">
             <motion.div variants={itemVariants}>
-              <Card className="quantum-card">
+              <Card className={`quantum-card ${highlightMarket ? 'quantum-animate-pulse' : ''}`}>
                 <Card.Header className="quantum-card-header">
                   <h5 className="mb-0">🚀 Top Performers</h5>
                 </Card.Header>
@@ -321,7 +338,7 @@ const Dashboard: React.FC = () => {
           {/* AI News & Sentiment */}
           <Col lg={6} className="mb-4">
             <motion.div variants={itemVariants}>
-              <Card className="quantum-card">
+              <Card className={`quantum-card ${highlightNews ? 'quantum-animate-pulse' : ''}`}>
                 <Card.Header className="quantum-card-header">
                   <div className="d-flex align-items-center">
                     <h5 className="mb-0">📰 AI News Sentiment</h5>
