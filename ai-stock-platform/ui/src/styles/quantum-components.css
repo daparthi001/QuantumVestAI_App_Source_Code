@@ -45,7 +45,7 @@
   padding: var(--space-md) var(--space-lg);
   margin-bottom: var(--space-sm);
   border-radius: var(--radius-lg);
-  color: rgba(255, 255, 255, 0.8) !important;
+  color: var(--text-secondary) !important;
   text-decoration: none !important;
   transition: var(--transition-smooth);
   position: relative;
@@ -78,9 +78,9 @@
 }
 
 .quantum-sidebar-item.active {
-  background: var(--glass-strong);
+  background: rgba(74, 144, 226, 0.15);
   color: #ffffff !important;
-  box-shadow: inset 3px 0 0 var(--item-color, var(--quantum-accent));
+  box-shadow: inset 3px 0 0 var(--primary-color);
 }
 
 .quantum-sidebar-item.active::after {
@@ -91,9 +91,9 @@
   transform: translateY(-50%);
   width: 6px;
   height: 6px;
-  background: var(--item-color, var(--quantum-accent));
+  background: var(--primary-color);
   border-radius: 50%;
-  box-shadow: 0 0 10px var(--item-color, var(--quantum-accent));
+  box-shadow: 0 0 10px var(--primary-color);
 }
 
 .quantum-sidebar-icon {
