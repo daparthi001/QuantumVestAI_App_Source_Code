@@ -144,7 +144,8 @@ class QuantumCharts {
     setupWebSocketConnection() {
         try {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${protocol}//${window.location.host}/ws/market-data`;
+            const clientId = this.options.clientId || 'market-data';
+            const wsUrl = `${protocol}//${window.location.host}/ws/${clientId}`;
             
             this.websocket = new WebSocket(wsUrl);
             
