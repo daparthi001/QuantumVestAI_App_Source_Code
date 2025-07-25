@@ -92,6 +92,11 @@ spec:
             secretKeyRef:
               name: ui-secrets
               key: ALPHA_VANTAGE_API_KEY
+        - name: RAPIDAPI_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ui-secrets
+              key: RAPIDAPI_KEY
         - name: PYTHONPATH
           value: /app/core:/app/ai-stock-platform:/app/core:/app/api:/app
         - name: PYTHONUNBUFFERED
