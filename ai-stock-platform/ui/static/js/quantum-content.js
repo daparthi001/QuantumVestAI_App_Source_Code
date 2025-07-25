@@ -904,8 +904,8 @@ class QuantumContent {
         if (filteredArticles.length === 0) {
             container.innerHTML = `
                 <div class="no-articles">
-                    <p>No articles found matching your criteria.</p>
-                    <button class="clear-filters-btn quantum-btn quantum-btn-secondary">Clear Filters</button>
+                    <p>No articles found matching your criteria. Try different filters or reset them below.</p>
+                    <button class="clear-filters-btn quantum-btn quantum-btn-secondary">Reset Filters</button>
                 </div>
             `;
             return;
