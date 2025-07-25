@@ -189,7 +189,13 @@ const News: React.FC = () => {
         <div className="text-center text-muted">
           <h5>No Articles Found</h5>
           <p>Try adjusting your search criteria or category filter.</p>
-          <Button variant="outline-primary" onClick={() => { setSearchTerm(''); setSelectedCategory('all'); }}>
+          <Button
+            className="quantum-btn-secondary rounded-lg shadow hover:bg-opacity-80"
+            onClick={() => {
+              setSearchTerm('');
+              setSelectedCategory('all');
+            }}
+          >
             Clear Filters
           </Button>
         </div>
