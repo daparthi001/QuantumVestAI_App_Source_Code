@@ -26,7 +26,18 @@
     <meta property="twitter:description" content="{% block twitter_description %}{{ self.description() }}{% endblock %}">
     <meta property="twitter:image" content="{{ get_asset_url('img/twitter-card.jpg') }}">
 
-    
+    <!-- Persist theme and language before styles load -->
+    <script>
+        const savedTheme = localStorage.getItem('quantum-theme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+        const savedLang = localStorage.getItem('quantum-language');
+        if (savedLang) {
+            document.documentElement.setAttribute('lang', savedLang);
+        }
+    </script>
+
     <!-- Preconnect to external resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -514,13 +525,7 @@
             }
         });
         
-        // Theme Persistence
-        const theme = localStorage.getItem('quantum-theme') || 'dark';
-        document.documentElement.setAttribute('data-theme', theme);
-        
-        // Language Persistence
-        const language = localStorage.getItem('quantum-language') || 'en';
-        document.documentElement.setAttribute('lang', language);
+        // Theme and language persistence handled earlier in the <head>
         
         // Error Handling
         window.addEventListener('error', (e) => {
