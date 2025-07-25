@@ -6,7 +6,13 @@ from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
-import torch
+try:
+    import torch
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    torch = None  # type: ignore
+    logging.getLogger("api").warning(
+        "PyTorch not available, FinBertSentiment will use mock predictions"
+    )
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 logger = logging.getLogger("api")
@@ -27,7 +33,12 @@ class FinBertSentiment:
             model_name: Pre-trained model name or path
         """
         self.model_name = model_name
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        if torch is not None:
+            self.device = torch.device(
+                "cuda" if torch.cuda.is_available() else "cpu"
+            )
+        else:
+            self.device = "cpu"
         self.tokenizer = None
         self.model = None
         self.labels = ["negative", "neutral", "positive"]
@@ -39,6 +50,11 @@ class FinBertSentiment:
     def _load_model(self) -> None:
         """Load model and tokenizer if not already loaded."""
         if not self.loaded:
+            if torch is None:
+                logger.warning(
+                    "PyTorch not installed. FinBERT model cannot be loaded; using mock predictions"
+                )
+                return
             try:
                 logger.info(f"Loading FinBERT model from {self.model_name}")
                 
@@ -114,19 +130,21 @@ class FinBertSentiment:
             List of dictionaries with sentiment analysis results
         """
         results = []
-        
+        if torch is None or self.model is None or self.tokenizer is None:
+            return self._mock_predictions(texts)
+
         # Tokenize texts
         encoded_input = self.tokenizer(
-            texts, 
-            padding=True, 
-            truncation=True, 
-            max_length=512, 
+            texts,
+            padding=True,
+            truncation=True,
+            max_length=512,
             return_tensors="pt"
         )
-        
+
         # Move inputs to the same device as model
         encoded_input = {k: v.to(self.device) for k, v in encoded_input.items()}
-        
+
         # Predict
         with torch.no_grad():
             outputs = self.model(**encoded_input)
