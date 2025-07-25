@@ -84,7 +84,7 @@ class Settings(BaseSettings):
 
     # Cache settings
     CACHE_TTL_TRENDING_STOCKS: int = Field(default=300, env='CACHE_TTL_TRENDING_STOCKS')
-    ENABLE_REAL_DATA: bool = Field(default=False, env='ENABLE_REAL_DATA')
+    ENABLE_REAL_DATA: bool = Field(default=True, env='ENABLE_REAL_DATA')
     
     # Logging
     LOG_LEVEL: str = Field(default="INFO", env='LOG_LEVEL')
