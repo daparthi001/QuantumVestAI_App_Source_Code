@@ -1,168 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuantumVestAI - Login</title>
-    <link rel="stylesheet" href="{{ get_asset_url('css/main.css') }}">
-    <link rel="shortcut icon" href="{{ get_asset_url('img/favicon.ico') }}" type="image/x-icon">
+{% extends "auth_layout.html" %}
 
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background: linear-gradient(135deg, #1a2a3a 0%, #0c1824 100%);
-            color: #fff;
-        }
-        .login-container {
-            background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            padding: 40px;
-            width: 400px;
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .login-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .login-header h1 {
-            color: #fff;
-            margin-bottom: 10px;
-            font-size: 24px;
-        }
-        .login-header .tagline {
-            color: #aaa;
-            font-size: 14px;
-            margin-top: 0;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #ddd;
-            font-size: 14px;
-        }
-        .form-control {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            background-color: rgba(255, 255, 255, 0.05);
-            color: #fff;
-            box-sizing: border-box;
-        }
-        .form-control:focus {
-            outline: none;
-            border-color: #4a90e2;
-        }
-        .btn {
-            background-color: #4a90e2;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
-        .btn:hover {
-            background-color: #3a80d2;
-        }
-        .login-footer {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 14px;
-            color: #aaa;
-        }
-        .alert {
-            padding: 12px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            color: white;
-        }
-        .alert-danger {
-            background-color: rgba(220, 53, 69, 0.2);
-            border: 1px solid rgba(220, 53, 69, 0.3);
-        }
-        .alert-success {
-            background-color: rgba(40, 167, 69, 0.2);
-            border: 1px solid rgba(40, 167, 69, 0.3);
-        }
-        .logo {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .logo img {
-            max-width: 120px;
-        }
-        .illustration {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .illustration img {
-            max-width: 220px;
-            filter: drop-shadow(0 4px 24px rgba(74, 144, 226, 0.15));
-        }
-        .form-check {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .form-check-input {
-            margin-right: 8px;
-        }
-        .form-check-label {
-            color: #ddd;
-            font-size: 14px;
-        }
-        .password-input-container {
-            position: relative;
-        }
-        .password-toggle {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: #aaa;
-            cursor: pointer;
-        }
-        .password-toggle:hover {
-            color: #fff;
-        }
-    </style>
-</head>
-<body>
-    <div class="login-container">
-        <div class="logo">
-            <img src="{{ get_asset_url('img/logo.svg') }}" alt="QuantumVestAI Logo" onerror="this.src='{{ get_asset_url('img/logo-placeholder.png') }}';">
-        </div>
-        <div class="illustration" style="text-align:center;margin-bottom:20px;">
-            <img src="{{ get_asset_url('img/hero-investment.svg') }}" alt="Investment Illustration" style="max-width:220px;filter:drop-shadow(0 4px 24px rgba(74,144,226,0.15));">
-        </div>
-        <div class="login-header">
-            <h1>Login to QuantumVestAI</h1>
-            <p class="tagline">Quantum-powered investment analytics</p>
-            <!-- Remove or safely handle datetime reference -->
+{% block title %}Login | QuantumVestAI{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <a href="/" class="auth-logo">
+                <img src="{{ get_asset_url('img/logo.svg') }}" alt="QuantumVestAI">
+            </a>
+            <h1 class="auth-title">Sign In</h1>
+            <p class="auth-subtitle">Access your QuantumVestAI account</p>
             {% if now is defined %}
-            <p class="timestamp" style="font-size: 10px; opacity: 0.5;">{{ now().strftime('%Y-%m-%d') }}</p>
+            <p class="auth-timestamp" style="font-size: 10px; opacity: 0.5;">{{ now().strftime('%Y-%m-%d') }}</p>
             {% endif %}
         </div>
-        
+
         {% if msg %}
-        <div class="alert alert-{{ msg_type or 'danger' }}">
+        <div class="alert alert-{{ msg_type or 'danger' }} alert-dismissible fade show" role="alert">
             {% if msg is string %}
                 {{ msg }}
             {% else %}
@@ -176,74 +31,78 @@
                     {% endif %}
                 {% endfor %}
             {% endif %}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
         {% endif %}
-        
-        <form method="post" action="/auth/login">
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" class="form-control" id="username" name="username" value="{{ username|default('') }}" required autofocus>
+
+        <div class="auth-body">
+            <form id="loginForm" action="/auth/login" method="POST" novalidate>
+            <div class="form-group mb-3">
+                <label for="username" class="form-label">Username or Email</label>
+                <input type="text"
+                       id="username"
+                       name="username"
+                       class="form-control"
+                       value="{{ username or '' }}"
+                       required
+                       autofocus
+                       placeholder="Enter your username or email"
+                       autocomplete="username">
+                <div class="invalid-feedback"></div>
             </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <div class="password-input-container">
-                    <input type="password" class="form-control" id="password" name="password" required>
-                    <button type="button" class="password-toggle" data-target="password">
-                        <i>👁️</i>
+
+            <div class="form-group mb-3">
+                <label for="password" class="form-label">Password</label>
+                <div class="password-input-container position-relative">
+                    <input type="password"
+                           id="password"
+                           name="password"
+                           class="form-control"
+                           required
+                           placeholder="Enter your password"
+                           autocomplete="current-password">
+                    <button type="button"
+                            class="password-toggle position-absolute top-50 end-0 translate-middle-y border-0 bg-transparent"
+                            style="margin-right: 10px;"
+                            data-target="password">
+                        <i class="bi bi-eye"></i>
                     </button>
                 </div>
+                <div class="invalid-feedback"></div>
             </div>
-            <div class="form-check">
+
+            <div class="form-group form-check mb-3">
                 <input type="checkbox" class="form-check-input" id="remember" name="remember" value="true">
-                <label class="form-check-label" for="remember">Remember me</label>
+                <label class="form-check-label" for="remember">Remember me for 30 days</label>
             </div>
-            <div class="form-group">
-                <button type="submit" class="btn">Login</button>
+
+            <button type="submit" class="btn btn-primary btn-block w-100 mb-3">
+                Sign In
+            </button>
+
+            <div class="auth-links text-center mb-3">
+                <a href="/password-reset" class="text-decoration-none">Forgot your password?</a>
             </div>
         </form>
-        
-        <div class="login-footer">
-            <p>Don't have an account? <a href="/auth/register" style="color: #4a90e2;">Register</a></p>
-            <p><a href="/auth/password-reset" style="color: #aaa;">Forgot your password?</a></p>
+
+        </div>
+
+        <div class="auth-footer text-center">
+            Don't have an account? <a href="/auth/register" class="text-decoration-none">Sign up here</a>
         </div>
     </div>
+</div>
+{% endblock %}
 
-    <script>
-        // Define now variable in JavaScript to prevent any potential errors
-        const now = new Date();
-        
-        // Password visibility toggle
-        document.querySelectorAll('.password-toggle').forEach(button => {
-            button.addEventListener('click', function() {
-                const targetId = this.getAttribute('data-target');
-                const input = document.getElementById(targetId);
-                if (!input) return;
-                
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    this.innerHTML = '<i>🔓</i>';
-                } else {
-                    input.type = 'password';
-                    this.innerHTML = '<i>👁️</i>';
-                }
-            });
-        });
-        
-        // Get URL parameters and handle redirects
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set redirect_to parameter if present in URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const redirectTo = urlParams.get('next') || urlParams.get('redirect_to');
-            
-            if (redirectTo) {
-                // Add a hidden field to the form for the redirect
-                const redirectInput = document.createElement('input');
-                redirectInput.type = 'hidden';
-                redirectInput.name = 'next';
-                redirectInput.value = redirectTo;
-                document.querySelector('form').appendChild(redirectInput);
-            }
-        });
-    </script>
-</body>
-</html>
+{% block scripts %}
+<script>
+// Set API base URL for the enhanced UI
+window.API_BASE_URL = '/api/v1';
+
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        console.log('Login form enhanced error handling initialized');
+    }
+});
+</script>{% endblock %}
