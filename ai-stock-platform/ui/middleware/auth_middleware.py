@@ -7,6 +7,7 @@ API requests receive a 401 JSON response.
 """
 
 import logging
+import os
 from typing import Any, Dict, Optional
 from datetime import timedelta, datetime
 
@@ -24,7 +25,7 @@ try:
     from core.config import settings
 except Exception:  # pragma: no cover - fallback for demo mode
     class Settings:
-        SECRET_KEY = "supersecretkey123456789abcdef"
+        SECRET_KEY = os.getenv("JWT_SECRET") or os.getenv("SECRET_KEY", "supersecretkey123456789abcdef")
         JWT_ALGORITHM = "HS256"
         ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
