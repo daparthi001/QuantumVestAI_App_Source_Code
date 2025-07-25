@@ -23,6 +23,7 @@
         <div class="btn-group" role="group">
             <button type="button" class="btn btn-outline-primary active" id="live-view">Live View</button>
             <button type="button" class="btn btn-outline-primary" id="historical-view">Historical</button>
+            <button type="button" class="btn btn-outline-secondary" id="pull-data">Pull Latest</button>
         </div>
     </div>
 </div>
@@ -341,14 +342,41 @@
                             display: true,
                             text: 'Request Count'
                         }
-                    },
-                    y2: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        grid: {
-                            drawOnChartArea: false,
-                        },
-                        title: {
-                            display: true,
-                            
+                    },                      y2: {
+                          type: 'linear',
+                          display: true,
+                          position: 'right',
+                          grid: {
+                              drawOnChartArea: false,
+                          },
+                          title: {
+                              display: true,
+                              text: 'Error Rate (%)'
+                          }
+                      }
+                  }
+              }
+          });
+
+        const pullBtn = document.getElementById('pull-data');
+        if (pullBtn) {
+            pullBtn.addEventListener('click', async () => {
+                pullBtn.disabled = true;
+                try {
+                    const resp = await fetch('/admin/api-status/data');
+                    if (resp.ok) {
+                        location.reload();
+                    } else {
+                        alert('Failed to fetch data');
+                    }
+                } catch (err) {
+                    console.error('Error fetching API status data:', err);
+                    alert('Error fetching data');
+                } finally {
+                    pullBtn.disabled = false;
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
