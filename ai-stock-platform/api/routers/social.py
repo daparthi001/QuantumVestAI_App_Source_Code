@@ -18,6 +18,7 @@ sys.path.append(parent_dir)
 from services.trending_stocks_service import TrendingStocksService
 # Import Twitter configuration and analyzer
 from twitter_config import twitter_config
+from fastapi import APIRouter, HTTPException, Query
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +147,8 @@ class SocialAPI:
 
     def __init__(self):
         self.twitter_analyzer = TwitterSentimentAnalyzer()
-        self.trending_service = TrendingStocksService()
+        # Delay creation of TrendingStocksService to avoid missing configuration
+        self.trending_service: Optional[TrendingStocksService] = None
     
     async def get_twitter_sentiment(self, symbol: str, days: int = 7, max_tweets: int = 500):
         """Get Twitter sentiment analysis for a stock symbol"""
@@ -184,6 +186,17 @@ class SocialAPI:
     async def get_trending_stocks(self, limit: int = 10):
         """Get trending stocks based on Twitter activity"""
         try:
+            if self.trending_service is None:
+                try:
+                    self.trending_service = TrendingStocksService()
+                except Exception as e:
+                    logger.warning(f"Trending service unavailable: {e}")
+                    return {
+                        "status": "error",
+                        "error": str(e),
+                        "code": "SERVICE_UNAVAILABLE",
+                    }
+
             trending_result = await self.trending_service.get_trending_stocks(page=1, limit=limit)
             trending_data = trending_result.get("stocks", [])
 
@@ -256,3 +269,38 @@ async def get_trending_tickers(limit: int = 10):
 def get_twitter_health():
     """Get Twitter API health status"""
     return social_api.check_twitter_health()
+
+# ---------------------------------------------------------------
+# FastAPI router exposing the social media endpoints
+# ---------------------------------------------------------------
+
+# Define APIRouter with prefix matching the documentation
+router = APIRouter(prefix="/api/social", tags=["Social Media"])
+
+
+@router.get("/twitter/sentiment/{symbol}")
+async def twitter_sentiment_endpoint(
+    symbol: str,
+    days: int = Query(7, ge=1, le=30),
+    max_tweets: int = Query(500, ge=10, le=1000),
+):
+    """Endpoint wrapper for Twitter sentiment analysis."""
+    result = await social_api.get_twitter_sentiment(symbol, days, max_tweets)
+    if result.get("status") == "error":
+        raise HTTPException(status_code=503, detail=result.get("error"))
+    return result
+
+
+@router.get("/twitter/trending")
+async def twitter_trending_endpoint(limit: int = Query(10, ge=1, le=50)):
+    """Endpoint wrapper for trending tickers."""
+    result = await social_api.get_trending_stocks(limit)
+    if result.get("status") == "error":
+        raise HTTPException(status_code=503, detail=result.get("error"))
+    return result
+
+
+@router.get("/twitter/health")
+async def twitter_health_endpoint():
+    """Endpoint wrapper for Twitter health check."""
+    return get_twitter_health()
