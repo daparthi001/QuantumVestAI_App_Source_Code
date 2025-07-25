@@ -225,7 +225,7 @@ class QuantumContent {
                     <div class="content-tab-panel active" data-tab="news">
                         <div class="articles-container"></div>
                         <div class="load-more-container">
-                            <button class="load-more-btn quantum-btn quantum-btn-secondary" data-i18n="common.load_more">
+                            <button class="load-more-btn quantum-btn quantum-btn-secondary rounded-lg shadow hover:bg-opacity-80" data-i18n="common.load_more">
                                 Load More Articles
                             </button>
                         </div>

@@ -199,7 +199,13 @@ const Stocks: React.FC = () => {
           {!loading && filteredStocks.length === 0 && (
             <div className="text-center text-muted">
               <p>No stocks found matching your criteria.</p>
-              <Button variant="outline-primary" onClick={() => { setSearchTerm(''); setSelectedSector('all'); }}>
+              <Button
+                className="quantum-btn-secondary rounded-lg shadow hover:bg-opacity-80"
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedSector('all');
+                }}
+              >
                 Clear Filters
               </Button>
             </div>
