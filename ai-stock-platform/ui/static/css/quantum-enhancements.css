@@ -24,7 +24,8 @@
   /* Glass Morphism Effects Enhanced */
   --glass-bg: rgba(255, 255, 255, 0.1);
   --glass-border: rgba(255, 255, 255, 0.2);
-  --glass-blur: blur(16px);
+  /* Use a lighter blur for better clarity */
+  --glass-blur: blur(4px);
   --glass-dark: rgba(0, 0, 0, 0.2);
   --glass-strong: rgba(255, 255, 255, 0.25);
   --glass-subtle: rgba(255, 255, 255, 0.05);
@@ -342,8 +343,10 @@ body {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
-  border-radius: 20px;
-  padding: var(--space-lg);
+  /* Consistent rounded card styling */
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: var(--quantum-shadow-soft);
   transition: var(--transition-quantum);
   position: relative;
   overflow: hidden;
