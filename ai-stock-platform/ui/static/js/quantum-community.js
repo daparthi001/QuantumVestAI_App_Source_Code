@@ -19,6 +19,9 @@ class QuantumCommunity {
         this.createCommunityInterface();
         this.setupEventListeners();
         this.loadUserStats();
+        this.loadTopics();
+        this.loadLeaderboard();
+        this.loadAchievements();
         this.checkForNewAchievements();
     }
 
@@ -132,7 +135,7 @@ class QuantumCommunity {
                 </div>
                 
                 <div class="forum-topics" id="forum-topics">
-                    ${this.getTopicsHTML()}
+                    <!-- topics will be loaded dynamically -->
                 </div>
                 
                 <div class="forum-pagination">
@@ -144,65 +147,43 @@ class QuantumCommunity {
         `;
     }
 
-    getTopicsHTML() {
-        // Mock forum topics - in real app, fetch from API
-        const topics = [
-            {
-                id: 1,
-                title: "Q4 Market Predictions - What are your thoughts?",
-                author: "TradingMaster",
-                category: "market",
-                replies: 23,
-                lastReply: "2 hours ago",
-                isPinned: true,
-                hasNewReplies: true
-            },
-            {
-                id: 2,
-                title: "Best AI trading strategies for 2025",
-                author: "AIInvestor",
-                category: "ai",
-                replies: 15,
-                lastReply: "4 hours ago",
-                isPinned: false,
-                hasNewReplies: false
-            },
-            {
-                id: 3,
-                title: "Portfolio diversification tips",
-                author: "WealthBuilder",
-                category: "strategies",
-                replies: 8,
-                lastReply: "1 day ago",
-                isPinned: false,
-                hasNewReplies: true
-            }
-        ];
+    async loadTopics() {
+        try {
+            const response = await fetch('/api/community/topics');
+            if (!response.ok) throw new Error('Failed to fetch topics');
+            const topics = await response.json();
+            const container = document.getElementById('forum-topics');
+            if (!container) return;
 
-        return topics.map(topic => `
-            <div class="forum-topic ${topic.isPinned ? 'pinned' : ''}" data-topic-id="${topic.id}">
-                <div class="topic-info">
-                    ${topic.isPinned ? '<i class="bi bi-pin-fill pin-icon"></i>' : ''}
-                    <div class="topic-title">
-                        <a href="/forum/topic/${topic.id}" class="topic-link">
-                            ${topic.title}
-                            ${topic.hasNewReplies ? '<span class="new-badge">New</span>' : ''}
-                        </a>
-                        <div class="topic-meta">
-                            <span class="topic-author">by ${topic.author}</span>
-                            <span class="topic-category">${topic.category}</span>
+            const html = topics.map(topic => `
+                <div class="forum-topic ${topic.isPinned ? 'pinned' : ''}" data-topic-id="${topic.id}">
+                    <div class="topic-info">
+                        ${topic.isPinned ? '<i class="bi bi-pin-fill pin-icon"></i>' : ''}
+                        <div class="topic-title">
+                            <a href="/forum/topic/${topic.id}" class="topic-link">
+                                ${topic.title}
+                                ${topic.hasNewReplies ? '<span class="new-badge">New</span>' : ''}
+                            </a>
+                            <div class="topic-meta">
+                                <span class="topic-author">by ${topic.author}</span>
+                                <span class="topic-category">${topic.category}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="topic-stats">
-                    <div class="stat">
-                        <i class="bi bi-chat"></i>
-                        <span>${topic.replies}</span>
+                    <div class="topic-stats">
+                        <div class="stat">
+                            <i class="bi bi-chat"></i>
+                            <span>${topic.replies}</span>
+                        </div>
+                        <div class="last-reply">${topic.lastReply}</div>
                     </div>
-                    <div class="last-reply">${topic.lastReply}</div>
                 </div>
-            </div>
-        `).join('');
+            `).join('');
+
+            container.innerHTML = html;
+        } catch (error) {
+            console.error('Failed to load topics', error);
+        }
     }
 
     getLeaderboardHTML() {
@@ -220,8 +201,8 @@ class QuantumCommunity {
                     </div>
                 </div>
                 
-                <div class="leaderboard-list">
-                    ${this.getLeaderboardListHTML()}
+                <div class="leaderboard-list" id="leaderboard-list">
+                    <!-- leaderboard will be loaded dynamically -->
                 </div>
                 
                 <div class="user-ranking">
@@ -234,33 +215,36 @@ class QuantumCommunity {
         `;
     }
 
-    getLeaderboardListHTML() {
-        // Mock leaderboard data
-        const leaders = [
-            { rank: 1, username: "QuantumTrader", points: 25420, level: 8, returns: "+24.5%" },
-            { rank: 2, username: "AIWizard", points: 22180, level: 7, returns: "+22.1%" },
-            { rank: 3, username: "MarketMaven", points: 19850, level: 6, returns: "+19.8%" },
-            { rank: 4, username: "TechInvestor", points: 18200, level: 6, returns: "+18.2%" },
-            { rank: 5, username: "ValueSeeker", points: 16750, level: 5, returns: "+16.7%" }
-        ];
+    async loadLeaderboard() {
+        try {
+            const response = await fetch('/api/community/leaderboard');
+            if (!response.ok) throw new Error('Failed to fetch leaderboard');
+            const leaders = await response.json();
+            const container = document.getElementById('leaderboard-list');
+            if (!container) return;
 
-        return leaders.map(leader => `
-            <div class="leaderboard-item ${leader.rank <= 3 ? 'top-three' : ''}">
-                <div class="rank-badge rank-${leader.rank}">
-                    ${leader.rank <= 3 ? this.getRankIcon(leader.rank) : leader.rank}
-                </div>
-                <div class="leader-info">
-                    <div class="leader-name">${leader.username}</div>
-                    <div class="leader-level">Level ${leader.level}</div>
-                </div>
-                <div class="leader-stats">
-                    <div class="points">${this.formatNumber(leader.points)} pts</div>
-                    <div class="returns ${leader.returns.startsWith('+') ? 'positive' : 'negative'}">
-                        ${leader.returns}
+            const html = leaders.map(leader => `
+                <div class="leaderboard-item ${leader.rank <= 3 ? 'top-three' : ''}">
+                    <div class="rank-badge rank-${leader.rank}">
+                        ${leader.rank <= 3 ? this.getRankIcon(leader.rank) : leader.rank}
+                    </div>
+                    <div class="leader-info">
+                        <div class="leader-name">${leader.username}</div>
+                        <div class="leader-level">Level ${leader.level}</div>
+                    </div>
+                    <div class="leader-stats">
+                        <div class="points">${this.formatNumber(leader.points)} pts</div>
+                        <div class="returns ${leader.returns.startsWith('+') ? 'positive' : 'negative'}">
+                            ${leader.returns}
+                        </div>
                     </div>
                 </div>
-            </div>
-        `).join('');
+            `).join('');
+
+            container.innerHTML = html;
+        } catch (error) {
+            console.error('Failed to load leaderboard', error);
+        }
     }
 
     getAchievementsHTML() {
@@ -283,38 +267,38 @@ class QuantumCommunity {
                     <button class="achievement-category-tab" data-category="learning" data-i18n="achievements.learning">Learning</button>
                 </div>
                 
-                <div class="achievements-grid">
-                    ${this.getAchievementsGridHTML()}
+                <div class="achievements-grid" id="achievements-grid">
+                    <!-- achievements will be loaded dynamically -->
                 </div>
             </div>
         `;
     }
 
-    getAchievementsGridHTML() {
-        const allAchievements = [
-            { id: 'first_trade', name: 'First Trade', description: 'Complete your first trade', icon: '💰', category: 'trading', unlocked: true },
-            { id: 'profit_maker', name: 'Profit Maker', description: 'Earn your first profit', icon: '📈', category: 'trading', unlocked: true },
-            { id: 'community_member', name: 'Community Member', description: 'Join the QuantumVestAI community', icon: '👥', category: 'social', unlocked: true },
-            { id: 'forum_poster', name: 'Forum Contributor', description: 'Make your first forum post', icon: '💬', category: 'social', unlocked: false },
-            { id: 'ai_user', name: 'AI Pioneer', description: 'Use AI predictions 10 times', icon: '🤖', category: 'trading', unlocked: true },
-            { id: 'streak_keeper', name: 'Streak Keeper', description: 'Login for 7 days straight', icon: '🔥', category: 'learning', unlocked: false },
-            { id: 'big_winner', name: 'Big Winner', description: 'Gain 20% or more on a trade', icon: '🏆', category: 'trading', unlocked: false },
-            { id: 'diversified', name: 'Diversified Portfolio', description: 'Hold 10+ different stocks', icon: '📊', category: 'trading', unlocked: false },
-            { id: 'mentor', name: 'Mentor', description: 'Help 5 community members', icon: '🎓', category: 'social', unlocked: false }
-        ];
+    async loadAchievements() {
+        try {
+            const response = await fetch('/api/community/achievements');
+            if (!response.ok) throw new Error('Failed to fetch achievements');
+            const allAchievements = await response.json();
+            const container = document.getElementById('achievements-grid');
+            if (!container) return;
 
-        return allAchievements.map(achievement => `
-            <div class="achievement-item ${achievement.unlocked ? 'unlocked' : 'locked'}" 
-                 data-achievement-id="${achievement.id}" 
-                 data-category="${achievement.category}">
-                <div class="achievement-icon">${achievement.icon}</div>
-                <div class="achievement-content">
-                    <div class="achievement-name">${achievement.name}</div>
-                    <div class="achievement-description">${achievement.description}</div>
+            const html = allAchievements.map(achievement => `
+                <div class="achievement-item ${achievement.unlocked ? 'unlocked' : 'locked'}"
+                     data-achievement-id="${achievement.id}"
+                     data-category="${achievement.category}">
+                    <div class="achievement-icon">${achievement.icon}</div>
+                    <div class="achievement-content">
+                        <div class="achievement-name">${achievement.name}</div>
+                        <div class="achievement-description">${achievement.description}</div>
+                    </div>
+                    ${achievement.unlocked ? '<div class="achievement-check">✓</div>' : '<div class="achievement-lock">🔒</div>'}
                 </div>
-                ${achievement.unlocked ? '<div class="achievement-check">✓</div>' : '<div class="achievement-lock">🔒</div>'}
-            </div>
-        `).join('');
+            `).join('');
+
+            container.innerHTML = html;
+        } catch (error) {
+            console.error('Failed to load achievements', error);
+        }
     }
 
     getSocialHTML() {
