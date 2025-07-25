@@ -12,6 +12,7 @@ export class OrderWebSocket {
     private reconnectAttempts = 0;
     private maxReconnectAttempts = 5;
     private reconnectTimeout = 1000;
+    private heartbeatIntervalId: ReturnType<typeof setInterval> | null = null;
 
     constructor() {
         this.handleMessage = this.handleMessage.bind(this);
@@ -50,14 +51,18 @@ export class OrderWebSocket {
             this.ws.close();
             this.ws = null;
         }
+        if (this.heartbeatIntervalId) {
+            clearInterval(this.heartbeatIntervalId);
+            this.heartbeatIntervalId = null;
+        }
     }
 
     private handleOpen() {
         console.log('WebSocket connected');
         this.reconnectAttempts = 0;
-        
+
         // Send heartbeat every 30 seconds
-        setInterval(() => {
+        this.heartbeatIntervalId = setInterval(() => {
             this.sendHeartbeat();
         }, 30000);
     }
@@ -86,6 +91,11 @@ export class OrderWebSocket {
 
     private handleClose(event: CloseEvent) {
         console.log('WebSocket closed:', event.code, event.reason);
+
+        if (this.heartbeatIntervalId) {
+            clearInterval(this.heartbeatIntervalId);
+            this.heartbeatIntervalId = null;
+        }
 
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
             setTimeout(() => {
