@@ -3,6 +3,7 @@ Centralized Application Configuration Settings
 This module provides the canonical settings and configuration for all QuantumVestAI services.
 """
 from typing import Optional
+import os
 from pydantic import BaseModel, Field, PostgresDsn, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -58,9 +59,24 @@ class Settings(BaseSettings):
     def get_db_url(self) -> str:
         return self.database.get_db_url()
 
-settings = Settings()
+def get_settings() -> Settings:
+    """Return an initialized :class:`Settings` instance.
 
-def get_settings():
-    return settings
+    The Kubernetes deployment defines an environment variable named ``DATABASE``
+    which conflicts with Pydantic's handling of the nested ``database`` model.
+    Removing this variable before instantiation prevents JSON decoding errors
+    when the settings object is created.
+    """
+
+    removed = os.environ.pop("DATABASE", None)
+    try:
+        return Settings()
+    finally:
+        if removed is not None:
+            os.environ["DATABASE"] = removed
+
+
+settings = get_settings()
 
 __all__ = ["settings", "Settings", "get_settings"]
+
