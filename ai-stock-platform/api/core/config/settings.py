@@ -78,7 +78,9 @@ class Settings(BaseSettings):
     SLACK_WEBHOOK_URL: Optional[str] = Field(default=None, env='SLACK_WEBHOOK_URL')
 
     # Stock Market Data
-    ALPHA_VANTAGE_API_KEY: str = Field(default="demo", env='ALPHA_VANTAGE_API_KEY')
+    # Read the Alpha Vantage API key from the environment. No demo default is
+    # provided so missing configuration results in a clear error.
+    ALPHA_VANTAGE_API_KEY: Optional[str] = Field(default=None, env='ALPHA_VANTAGE_API_KEY')
 
     # Cache settings
     CACHE_TTL_TRENDING_STOCKS: int = Field(default=300, env='CACHE_TTL_TRENDING_STOCKS')

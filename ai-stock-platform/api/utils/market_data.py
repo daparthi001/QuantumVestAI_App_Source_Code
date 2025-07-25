@@ -9,8 +9,9 @@ import requests
 import json
 from datetime import datetime, timedelta
 
-# Expose the API key for other modules if needed
-ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY", "demo")
+# Expose the API key for other modules if needed. Do not fall back to the demo
+# key so that a missing configuration fails fast and is easier to debug.
+ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
 
 class MarketDataClient:
     def __init__(self):
