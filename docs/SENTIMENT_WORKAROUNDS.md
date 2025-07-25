@@ -7,6 +7,10 @@ This guide summarizes alternative approaches for collecting sentiment data when 
 - Query the Reddit API for subreddits such as `r/stocks` and `r/investing`.
 - Analyze text with models like **FinBERT** to obtain sentiment scores.
 
+The `MultiSourceSentimentAnalyzer` in the backend now integrates these sources
+directly, fetching news via NewsAPI when an API key is provided and scraping
+relevant Reddit discussions for sentiment analysis using FinBERT.
+
 These sources provide rich, real sentiment data without relying on Twitter.
 
 ## 2. Public Twitter Search via Web Scraping
