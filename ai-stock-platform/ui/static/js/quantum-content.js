@@ -904,8 +904,8 @@ class QuantumContent {
         if (filteredArticles.length === 0) {
             container.innerHTML = `
                 <div class="no-articles">
-                    <p>No articles found matching your criteria. Try different filters or reset them below.</p>
-                    <button class="clear-filters-btn quantum-btn quantum-btn-secondary">Reset Filters</button>
+                    <p>No articles found. Try other topics or clear filters.</p>
+                    <button class="clear-filters-btn quantum-btn quantum-btn-secondary">Clear Filters</button>
                 </div>
             `;
             return;
@@ -1029,7 +1029,7 @@ class QuantumContent {
         if (!container) return;
 
         container.innerHTML = topics.map(topic => `
-            <div class="trending-item" data-topic="${topic.name}">
+            <div class="trending-item bg-blue-600 text-white rounded-full px-3 py-1" data-topic="${topic.name}">
                 <span class="trending-topic">${topic.name}</span>
                 <span class="trending-count">${topic.count}</span>
             </div>
@@ -1315,6 +1315,18 @@ class QuantumContent {
                 source: article.source
             });
         }
+    }
+
+    searchByTopic(topic) {
+        const searchInput = document.querySelector('.content-search-input');
+        if (searchInput) searchInput.value = topic;
+        this.executeSearch(topic);
+    }
+
+    searchBySymbol(symbol) {
+        const searchInput = document.querySelector('.content-search-input');
+        if (searchInput) searchInput.value = symbol;
+        this.executeSearch(symbol);
     }
 
     // Tab content loading
