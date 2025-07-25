@@ -668,20 +668,22 @@ a:hover {
   }
 }
 /* Notification panel fix */
+
 .notification-panel {
   padding: 1rem;
   font-size: 0.9rem;
-  color: #cbd5e1;
+  /* Improved contrast for readability */
+  color: #e2e8f0;
 }
 
 .notification-panel a {
-  color: #93c5fd;
+  color: #bfdbfe;
   display: block;
   margin-bottom: 0.6rem;
 }
 
 .notification-panel a:hover {
-  color: #38bdf8;
+  color: #60a5fa;
 }
 
 /* Navigation tab fix */
