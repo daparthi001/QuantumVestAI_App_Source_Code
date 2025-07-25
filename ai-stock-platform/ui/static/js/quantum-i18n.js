@@ -269,9 +269,9 @@ class QuantumI18n {
         if (existingSelector) return;
 
         const selector = document.createElement('div');
-        selector.className = 'quantum-language-selector';
+        selector.className = 'nav-item quantum-language-selector';
         selector.innerHTML = `
-            <button class="quantum-language-button quantum-btn quantum-btn-secondary" aria-label="Select Language">
+            <button class="quantum-language-button quantum-btn quantum-btn-secondary" aria-label="Select Language" title="Change Language" data-tooltip="Change Language">
                 <span class="language-flag">${this.supportedLanguages[this.currentLanguage].flag}</span>
                 <span class="language-code">${this.currentLanguage.toUpperCase()}</span>
                 <span class="language-arrow">▼</span>
@@ -291,7 +291,7 @@ class QuantumI18n {
         this.addLanguageSelectorStyles();
 
         // Add to navigation
-        const nav = document.querySelector('.quantum-nav-container, .navbar');
+        const nav = document.querySelector('.nav-right');
         if (nav) {
             nav.appendChild(selector);
         } else {
