@@ -14,7 +14,12 @@ from ui.config.constants import (
     TIMEFRAME_1Y,
     TIMEFRAME_MAX,
 )
-from ui.config.settings import settings
+# Import settings from the shared configuration module.
+# ``ui.config.settings`` was deprecated and no longer exposes a ``settings``
+# instance which caused runtime import errors when this service was imported
+# directly.  Using the shared ``core.config.settings`` ensures the service
+# always has access to the application settings object.
+from core.config.settings import settings
 
 
 class YahooFinanceService:
