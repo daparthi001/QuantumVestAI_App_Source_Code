@@ -22,7 +22,9 @@ class NavigationController {
         this.setupSearchFunctionality();
         this.setupDropdownMenus();
         this.setupTooltips();
-        this.setupScrollEffects();
+        // Scroll-based nav hiding caused unexpected jumping on some pages.
+        // Temporarily disable scroll effects to keep the main menu fixed.
+        // this.setupScrollEffects();
         this.setupKeyboardNavigation();
     }
     
