@@ -5,7 +5,9 @@ from fastapi.responses import PlainTextResponse
 
 router = APIRouter(prefix="/docs", tags=["docs"])
 
-BASE_DIR = Path(__file__).resolve().parents[3]
+BASE_DIR = Path(__file__).resolve()
+while not (BASE_DIR / "README.md").exists() and BASE_DIR != BASE_DIR.parent:
+    BASE_DIR = BASE_DIR.parent
 README_FILE = BASE_DIR / "README.md"
 USAGE_FILE = BASE_DIR / "docs" / "API_USES.md"
 
