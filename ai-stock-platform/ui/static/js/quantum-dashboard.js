@@ -294,7 +294,15 @@ class QuantumDashboard {
 
     loadMarketData(widget) {
         const container = widget.querySelector('#market-indices');
-        
+
+        container.innerHTML = `
+            <div class="quantum-loading-skeleton">
+                <div class="quantum-skeleton quantum-skeleton-text"></div>
+                <div class="quantum-skeleton quantum-skeleton-text"></div>
+                <div class="quantum-skeleton quantum-skeleton-text"></div>
+            </div>`;
+
+        setTimeout(() => {
         const mockIndices = [
             { name: 'S&P 500', value: 4150.25, change: 1.25 },
             { name: 'NASDAQ', value: 12750.80, change: -0.85 },
@@ -310,11 +318,21 @@ class QuantumDashboard {
                 </div>
             </div>
         `).join('');
+        }, 500);
     }
 
     loadWatchlistData(widget) {
         const container = widget.querySelector('#watchlist-items');
-        
+
+        container.innerHTML = `
+            <div class="quantum-loading-skeleton">
+                <div class="quantum-skeleton quantum-skeleton-text"></div>
+                <div class="quantum-skeleton quantum-skeleton-text"></div>
+                <div class="quantum-skeleton quantum-skeleton-text"></div>
+            </div>`;
+
+        setTimeout(() => {
+
         const mockStocks = [
             { symbol: 'AAPL', name: 'Apple Inc.', price: 175.25, change: 2.15 },
             { symbol: 'GOOGL', name: 'Alphabet Inc.', price: 2650.80, change: -1.25 },
@@ -336,6 +354,7 @@ class QuantumDashboard {
                 </div>
             </div>
         `).join('');
+        }, 500);
     }
 
     loadNewsData(widget) {

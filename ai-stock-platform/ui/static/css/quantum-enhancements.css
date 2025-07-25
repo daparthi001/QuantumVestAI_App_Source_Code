@@ -1126,3 +1126,25 @@ body {
   width: 120px;
   border-radius: var(--radius-md);
 }
+
+/* Notification Cards */
+.notification-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-sm);
+  color: var(--text-primary, #e5e5e5);
+}
+
+.notification-card .notification-dismiss {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 16px;
+}

@@ -185,7 +185,7 @@
 
             <div class="nav-right">
                 <div class="nav-item">
-                    <button class="theme-toggle" id="themeToggle">
+                    <button class="theme-toggle" id="themeToggle" title="Dark Mode">
                         <i class="bi bi-moon-fill"></i>
                     </button>
                 </div>
@@ -200,7 +200,7 @@
                             <a href="#" class="mark-all-read">Mark all as read</a>
                         </div>
                         <div class="notifications-list">
-                            <a href="#" class="notification-item unread">
+                            <div class="notification-card unread">
                                 <div class="notification-icon warning">
                                     <i class="bi bi-exclamation-triangle"></i>
                                 </div>
@@ -208,8 +208,9 @@
                                     <p class="notification-text">AAPL price alert triggered at $180</p>
                                     <p class="notification-time">Just now</p>
                                 </div>
-                            </a>
-                            <a href="#" class="notification-item unread">
+                                <button class="notification-dismiss" aria-label="Dismiss">&times;</button>
+                            </div>
+                            <div class="notification-card unread">
                                 <div class="notification-icon info">
                                     <i class="bi bi-info-circle"></i>
                                 </div>
@@ -217,8 +218,9 @@
                                     <p class="notification-text">New forecast models available</p>
                                     <p class="notification-time">2 hours ago</p>
                                 </div>
-                            </a>
-                            <a href="#" class="notification-item unread">
+                                <button class="notification-dismiss" aria-label="Dismiss">&times;</button>
+                            </div>
+                            <div class="notification-card unread">
                                 <div class="notification-icon success">
                                     <i class="bi bi-check-circle"></i>
                                 </div>
@@ -226,7 +228,8 @@
                                     <p class="notification-text">Weekly market report is ready</p>
                                     <p class="notification-time">Yesterday</p>
                                 </div>
-                            </a>
+                                <button class="notification-dismiss" aria-label="Dismiss">&times;</button>
+                            </div>
                         </div>
                         <div class="dropdown-footer">
                             <a href="/notifications">View all notifications</a>
