@@ -226,6 +226,27 @@ async def stock_detail(
             status_code=500
         )
 
+
+@router.get("/stocks/flow", response_class=HTMLResponse)
+async def stock_flow_page(request: Request):
+    """Display interactive stock flow visualization page."""
+    try:
+        return get_templates(request).TemplateResponse(
+            "stocks/flow.html",
+            {
+                "request": request,
+                "user": None,
+                "demo_mode": True,
+            },
+        )
+    except Exception as e:  # pragma: no cover - template errors
+        logger.error(f"Error loading stock flow page: {str(e)}")
+        return get_templates(request).TemplateResponse(
+            "error.html",
+            {"request": request, "error": "Unable to load stock flow page"},
+            status_code=500,
+        )
+
 @router.post("/stock/{ticker}/add-to-watchlist")
 async def add_to_watchlist(
     request: Request,
