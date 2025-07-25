@@ -160,14 +160,17 @@ class NavigationController {
         if (!themeToggle) return;
         
         // Get saved theme or default to light
-        const savedTheme = localStorage.getItem('theme') || 'light';
+        // Keep theme consistent with the rest of the application by using the
+        // "quantum-theme" localStorage key (also referenced in base.html and
+        // quantum-enhancements.js). Fallback to light mode when not set.
+        const savedTheme = localStorage.getItem('quantum-theme') || 'light';
         this.setTheme(savedTheme);
-        
+
         themeToggle.addEventListener('click', () => {
             const currentTheme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
             const newTheme = currentTheme === 'light' ? 'dark' : 'light';
             this.setTheme(newTheme);
-            localStorage.setItem('theme', newTheme);
+            localStorage.setItem('quantum-theme', newTheme);
         });
     }
     
