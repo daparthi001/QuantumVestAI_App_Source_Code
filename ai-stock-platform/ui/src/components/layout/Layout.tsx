@@ -178,7 +178,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <span className="quantum-text-gradient">QuantumVestAI</span>
             </Navbar.Brand>
 
-            <Nav className="ms-auto d-flex align-items-center">
+            <Nav className="ms-auto d-flex align-items-center gap-2">
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
                   variant="outline-secondary"
@@ -209,7 +209,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <div className="d-flex">
         {/* Enhanced Desktop Sidebar */}
         <motion.div
-          className="quantum-sidebar d-none d-lg-block"
+          className="quantum-sidebar d-lg-none"
           variants={sidebarVariants}
           initial={{ x: -280, opacity: 0 }}
           animate={sidebarCollapsed ? 'collapsed' : 'expanded'}
@@ -321,7 +321,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           show={showSidebar}
           onHide={() => setShowSidebar(false)}
           placement="start"
-          className="quantum-mobile-sidebar"
+          className="quantum-mobile-sidebar d-lg-none"
         >
           <Offcanvas.Header closeButton className="quantum-card-header">
             <Offcanvas.Title className="quantum-text-gradient">

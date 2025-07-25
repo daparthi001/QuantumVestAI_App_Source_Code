@@ -164,6 +164,11 @@
   border-right: 1px solid var(--glass-border);
 }
 
+/* Ensure mobile sidebar overlays content properly */
+.quantum-mobile-sidebar {
+  z-index: 1055;
+}
+
 .quantum-mobile-icon {
   display: flex;
   align-items: center;
@@ -275,9 +280,15 @@
   .quantum-sidebar {
     transform: translateX(-100%);
   }
-  
+
   .quantum-sidebar.show {
     transform: translateX(0);
+  }
+}
+
+@media (min-width: 992px) {
+  .quantum-sidebar {
+    display: none;
   }
 }
 
