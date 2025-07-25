@@ -145,8 +145,10 @@ class QuantumCharts {
         try {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const clientId = this.options.clientId || 'market-data';
-            const wsUrl = `${protocol}//${window.location.host}/ws/${clientId}`;
-            
+            const token = window.authUtils && window.authUtils.getToken();
+            const query = token ? `?token=${encodeURIComponent(token)}` : '';
+            const wsUrl = `${protocol}//${window.location.host}/ws/${clientId}${query}`;
+
             this.websocket = new WebSocket(wsUrl);
             
             this.websocket.onopen = () => {

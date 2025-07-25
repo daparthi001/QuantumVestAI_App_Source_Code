@@ -10,7 +10,7 @@ from typing import Optional
 from core.security import get_current_user
 from core.middleware.cors import is_origin_allowed
 from db.models.user import User
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 
 # Import the local websocket manager using a relative import to avoid package
 # resolution issues when the application is executed as a module
@@ -27,9 +27,9 @@ manager = ConnectionManager()
 
 @router.websocket("/ws/{client_id}")
 async def websocket_endpoint(
-    websocket: WebSocket, client_id: str, token: Optional[str] = None
+    websocket: WebSocket, client_id: str, token: Optional[str] = Query(None)
 ):
-    """WebSocket endpoint for real-time updates"""
+    """WebSocket endpoint for real-time updates."""
     try:
         origin = websocket.headers.get("origin")
         if not is_origin_allowed(origin):
@@ -37,14 +37,17 @@ async def websocket_endpoint(
             await websocket.close(code=1008)
             return
 
-        # Verify token if provided
+        # Require and verify token
+        if not token:
+            await websocket.close(code=4001, reason="Token required")
+            return
+
         user = None
-        if token:
-            try:
-                user = await get_current_user(token)
-            except Exception as e:
-                await websocket.close(code=4001, reason="Invalid token")
-                return
+        try:
+            user = await get_current_user(token)
+        except Exception:
+            await websocket.close(code=4001, reason="Invalid token")
+            return
 
         # Connect to WebSocket
         await manager.connect(websocket, client_id)
