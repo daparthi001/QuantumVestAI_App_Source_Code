@@ -70,6 +70,11 @@ spec:
             secretKeyRef:
               name: ui-secrets
               key: ALPHA_VANTAGE_API_KEY
+        - name: RAPIDAPI_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: RAPIDAPI_KEY
         # API connection - explicit URL to ensure access from UI
         - name: API_URL
           value: "http://quantumvestai-dev-api.dev.svc.cluster.local:8000"
