@@ -708,3 +708,10 @@
         max-width: 1320px;
     }
 }
+/* Responsive layout for login info section */
+@media (max-width: 576px) {
+    .auth-info {
+        padding: 1rem;
+    }
+}
+
