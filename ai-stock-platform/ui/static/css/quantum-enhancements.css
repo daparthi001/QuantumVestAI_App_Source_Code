@@ -840,6 +840,31 @@ body {
   background: var(--quantum-electric);
 }
 
+/* News topic pill style */
+.topic-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  box-shadow: var(--quantum-shadow-soft);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  margin-right: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.topic-pill:hover {
+  box-shadow: var(--quantum-shadow-medium);
+  transform: translateY(-2px);
+}
+
+.topic-pill.active {
+  background: linear-gradient(135deg, #8b5cf6 0%, #00d2ff 100%);
+}
+
 /* Enhanced Dropdown Menus */
 .quantum-dropdown {
   position: relative;
