@@ -3,7 +3,7 @@
  * Features floating sidebar, glass morphism, and quantum animations
  */
 import React, { useState, useEffect } from 'react';
-import { Navbar, Nav, Container, Offcanvas, Button } from 'react-bootstrap';
+import { Navbar, Nav, Container, Offcanvas, Button, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../providers/ThemeProvider';
@@ -180,16 +180,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
             <Nav className="ms-auto d-flex align-items-center gap-2">
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  variant="outline-secondary"
-                  size="sm"
-                  className="me-3 quantum-btn-outline"
-                  onClick={toggleTheme}
-                  title="Toggle theme"
-                  aria-label="Toggle theme"
-                >
-                  {theme === 'dark' ? '☀️' : '🌙'}
-                </Button>
+                <OverlayTrigger placement="bottom" overlay={<Tooltip id="theme-tip">Toggle theme</Tooltip>}>
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    className="me-3 quantum-btn-outline"
+                    onClick={toggleTheme}
+                    aria-label="Toggle theme"
+                  >
+                    {theme === 'dark' ? '☀️' : '🌙'}
+                  </Button>
+                </OverlayTrigger>
               </motion.div>
               
               <Nav.Link as={Link} to={ROUTES.PROFILE} className="text-white me-3">

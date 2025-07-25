@@ -502,7 +502,7 @@ async def index(request: Request):
                 <body>
                     <h1>Error rendering page</h1>
                     <p>{str(e)}</p>
-                    <a href="/">Try again</a>
+                    <button onclick="location.href='/'" style="background:none;border:none;color:#0d6efd;text-decoration:underline;cursor:pointer;">Try again</button>
                 </body>
             </html>
             """,
@@ -533,7 +533,7 @@ async def register_page(request: Request, msg: str = None):
                 <body>
                     <h1>Error rendering registration page</h1>
                     <p>{str(e)}</p>
-                    <a href="/">Go to home</a>
+                    <button onclick="location.href='/'" style="background:none;border:none;color:#0d6efd;text-decoration:underline;cursor:pointer;">Go to home</button>
                 </body>
             </html>
             """,
@@ -666,7 +666,7 @@ async def login_page(request: Request, msg: str = None):
                 <body>
                     <h1>Error rendering login page</h1>
                     <p>{str(e)}</p>
-                    <a href="/">Go to home</a>
+                    <button onclick="location.href='/'" style="background:none;border:none;color:#0d6efd;text-decoration:underline;cursor:pointer;">Go to home</button>
                 </body>
             </html>
             """,
@@ -962,12 +962,12 @@ async def dashboard(request: Request):
                             </div>
                             
                             <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-                                <a href="/dashboard" class="btn btn-primary">
+                                <button onclick="location.href='/dashboard'" class="btn btn-primary">
                                     🔄 Try Again
-                                </a>
-                                <a href="/login" class="btn btn-outline-secondary">
+                                </button>
+                                <button onclick="location.href='/login'" class="btn btn-outline-secondary">
                                     🏠 Back to Login
-                                </a>
+                                </button>
                             </div>
                             
                             <div class="mt-4 text-muted small">

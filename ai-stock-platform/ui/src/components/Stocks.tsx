@@ -3,13 +3,15 @@
  * Stock listing and search functionality with API integration
  */
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Table, Spinner, Alert, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Table, Spinner, Alert, Badge, Placeholder } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '../config/constants';
 import apiService, { Stock } from '../services/api-service';
+import useDebounce from '../hooks/useDebounce';
 
 const Stocks: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 300);
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [filteredStocks, setFilteredStocks] = useState<Stock[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -22,7 +24,7 @@ const Stocks: React.FC = () => {
 
   useEffect(() => {
     filterStocks();
-  }, [searchTerm, selectedSector, stocks]);
+  }, [debouncedSearch, selectedSector, stocks]);
 
   const fetchStocks = async () => {
     try {
@@ -41,10 +43,10 @@ const Stocks: React.FC = () => {
   const filterStocks = () => {
     let filtered = stocks;
 
-    if (searchTerm) {
+    if (debouncedSearch) {
       filtered = filtered.filter(stock =>
-        stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        stock.name.toLowerCase().includes(searchTerm.toLowerCase())
+        stock.symbol.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        stock.name.toLowerCase().includes(debouncedSearch.toLowerCase())
       );
     }
 
@@ -100,7 +102,7 @@ const Stocks: React.FC = () => {
           <Form.Group>
             <Form.Control
               type="text"
-              placeholder="Search stocks by symbol or name..."
+              placeholder="\u{1F50D} Search stocks by symbol or name"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -132,12 +134,19 @@ const Stocks: React.FC = () => {
         </Card.Header>
         <Card.Body>
           {loading ? (
-            <div className="text-center">
-              <Spinner animation="border" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </Spinner>
-              <p className="mt-2">Loading stocks...</p>
-            </div>
+            <Table responsive hover>
+              <tbody>
+                {Array.from({ length: 5 }).map((_, idx) => (
+                  <tr key={idx}>
+                    {Array.from({ length: 8 }).map((__, i) => (
+                      <td key={i}>
+                        <Placeholder animation="wave" className="w-100" />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
           ) : (
             <Table responsive hover>
               <thead>
