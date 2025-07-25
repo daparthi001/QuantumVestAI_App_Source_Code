@@ -524,10 +524,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const forecastCtx = document.getElementById('forecastChart').getContext('2d');
     const forecastData = {{ stock.forecast.data | tojson }};
     
-    // Split data into historical and forecast
+    // Split data into historical and forecast with basic validation
     const splitIndex = forecastData.findIndex(d => d.type === 'forecast');
-    const historicalData = forecastData.slice(0, splitIndex);
-    const futureData = forecastData.slice(splitIndex - 1); // Include overlap point
+    let historicalData = [];
+    let futureData = [];
+    if (splitIndex === -1) {
+        // If no explicit forecast marker, treat entire set as historical
+        historicalData = forecastData;
+    } else {
+        historicalData = forecastData.slice(0, splitIndex);
+        // Include the last historical point as the first forecast point for smooth transition
+        futureData = forecastData.slice(Math.max(splitIndex - 1, 0));
+    }
     
     const forecastChart = new Chart(forecastCtx, {
         type: 'line',
