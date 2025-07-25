@@ -57,8 +57,11 @@ def is_origin_allowed(origin: str | None, allowed: List[str] | None = None) -> b
         allowed = get_cors_origins()
 
     if "*" in allowed:
-        # Wildcard allows any origin, but reject missing origin for security
-        return origin is not None
+        # Wildcard allows any origin. In development environments we may not
+        # receive an Origin header (e.g., when connecting from non-browser
+        # clients). Accept the connection even if the header is missing to
+        # prevent unnecessary 403 errors during local testing.
+        return True
 
     return bool(origin) and origin in allowed
 
