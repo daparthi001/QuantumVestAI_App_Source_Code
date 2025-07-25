@@ -432,6 +432,52 @@ async def invalidate_trending_cache(request: Request):
             request_id=getattr(request.state, 'request_id', None)
         )
 
+@app.get("/api/v1/stocks/most-predictable")
+async def most_predictable_stocks(
+    request: Request,
+    limit: int = 10,
+    min_score: float = 0.7,
+) -> Response:
+    """Return a list of stocks with the highest predictability scores."""
+    logger.info("Most predictable stocks endpoint accessed")
+
+    try:
+        sample_data = [
+            {
+                "symbol": "AAPL",
+                "name": "Apple Inc.",
+                "current_price": 198.45,
+                "predictability_score": 0.95,
+            },
+            {
+                "symbol": "MSFT",
+                "name": "Microsoft Corporation",
+                "current_price": 425.63,
+                "predictability_score": 0.92,
+            },
+            {
+                "symbol": "NVDA",
+                "name": "NVIDIA Corporation",
+                "current_price": 129.31,
+                "predictability_score": 0.9,
+            },
+        ]
+
+        filtered = [s for s in sample_data if s["predictability_score"] >= min_score][:limit]
+
+        return create_success_response(
+            data=filtered,
+            message="Most predictable stocks retrieved successfully",
+            request_id=getattr(request.state, 'request_id', None),
+        )
+
+    except Exception as e:  # pragma: no cover - unexpected errors
+        logger.error(f"Error fetching most predictable stocks: {e}")
+        return create_error_response(
+            message="Failed to fetch most predictable stocks",
+            error_code="INTERNAL_SERVER_ERROR",
+            request_id=getattr(request.state, 'request_id', None),
+        )
 
 @app.get("/api/v1/stocks/{symbol}")
 async def get_stock(request: Request, symbol: str):
