@@ -34,7 +34,7 @@
                 <div class="card-body">
                     {% if data.articles %}
                         {% for article in data.articles %}
-                        <div class="border-bottom pb-3 mb-3">
+                        <div class="border-bottom pb-3 mb-3 article-item" data-title="{{ article.title | lower }}">
                             <div class="row">
                                 <div class="col-md-8">
                                     <h5 class="card-title">
@@ -105,7 +105,7 @@
                 <div class="card-body">
                     {% if data.trending %}
                         {% for topic in data.trending %}
-                        <span class="badge bg-primary me-2 mb-2">{{ topic }}</span>
+                        <span class="topic-pill quantum-tooltip" data-topic="{{ topic }}" data-tooltip="Filter by {{ topic }}">{{ topic }}</span>
                         {% endfor %}
                     {% endif %}
                 </div>
@@ -143,6 +143,30 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(function() {
         location.reload();
     }, 5 * 60 * 1000);
+
+    const topics = document.querySelectorAll('.topic-pill');
+    const articles = document.querySelectorAll('.article-item');
+
+    topics.forEach(tag => {
+        tag.addEventListener('click', () => {
+            const isActive = tag.classList.contains('active');
+            topics.forEach(t => t.classList.remove('active'));
+            if (isActive) {
+                articles.forEach(a => a.style.display = '');
+                return;
+            }
+            tag.classList.add('active');
+            const topic = tag.dataset.topic.toLowerCase();
+            articles.forEach(article => {
+                const title = article.dataset.title || '';
+                if (title.includes(topic)) {
+                    article.style.display = '';
+                } else {
+                    article.style.display = 'none';
+                }
+            });
+        });
+    });
 });
 </script>
 {% endblock %}
