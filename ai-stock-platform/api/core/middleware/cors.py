@@ -13,9 +13,10 @@ from fastapi.middleware.cors import CORSMiddleware
 # Try to import settings safely
 try:
     from core.config import settings
-    FRONTEND_URL = getattr(settings, 'FRONTEND_URL', 'http://ui-service:3000')
+
+    FRONTEND_URL = getattr(settings, "FRONTEND_URL", "http://ui-service:3000")
 except ImportError:
-    FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://ui-service:3000')
+    FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://ui-service:3000")
 
 
 def get_cors_origins() -> List[str]:
@@ -24,7 +25,7 @@ def get_cors_origins() -> List[str]:
     cors_origins_env = os.environ.get("CORS_ORIGINS")
     if cors_origins_env:
         return [origin.strip() for origin in cors_origins_env.split(",")]
-    
+
     # Default origins for development and production
     default_origins = [
         FRONTEND_URL,
@@ -40,46 +41,54 @@ def get_cors_origins() -> List[str]:
         "https://quantumvestai.com",
         "https://www.quantumvestai.com",
         "https://app.quantumvestai.com",
-        "https://api.quantumvestai.com"
+        "https://api.quantumvestai.com",
     ]
-    
+
     # Only allow wildcard in development
     if os.environ.get("ENVIRONMENT", "development").lower() == "development":
         default_origins.append("*")
-    
+
     return default_origins
+
+
+def is_origin_allowed(origin: str | None, allowed: List[str] | None = None) -> bool:
+    """Return True if the origin is allowed based on CORS settings."""
+    if allowed is None:
+        allowed = get_cors_origins()
+
+    if "*" in allowed:
+        # Wildcard allows any origin, but reject missing origin for security
+        return origin is not None
+
+    return bool(origin) and origin in allowed
 
 
 def configure_cors(app: FastAPI) -> FastAPI:
     """Configure CORS for the FastAPI application with enhanced security"""
-    
+
     origins = get_cors_origins()
-    
+
     # Log CORS configuration
     import logging
+
     logger = logging.getLogger("api")
     logger.info(f"Configuring CORS with origins: {origins}")
-    
+
     # Determine if we should allow credentials
     allow_credentials = True
-    
+
     # If wildcard is in origins, we cannot allow credentials
     if "*" in origins:
         allow_credentials = False
-        logger.warning("Wildcard (*) in CORS origins detected. Credentials will be disabled.")
-    
+        logger.warning(
+            "Wildcard (*) in CORS origins detected. Credentials will be disabled."
+        )
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
         allow_credentials=allow_credentials,
-        allow_methods=[
-            "GET",
-            "POST", 
-            "PUT",
-            "DELETE",
-            "OPTIONS",
-            "PATCH"
-        ],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
         allow_headers=[
             "Content-Type",
             "Authorization",
@@ -88,7 +97,7 @@ def configure_cors(app: FastAPI) -> FastAPI:
             "Accept",
             "Accept-Language",
             "Cache-Control",
-            "User-Agent"
+            "User-Agent",
         ],
         expose_headers=[
             "X-Request-ID",
@@ -96,29 +105,29 @@ def configure_cors(app: FastAPI) -> FastAPI:
             "X-RateLimit-Limit",
             "X-RateLimit-Remaining",
             "X-RateLimit-Used",
-            "X-RateLimit-Window"
+            "X-RateLimit-Window",
         ],
         max_age=86400,  # Cache preflight requests for 24 hours
     )
-    
+
     return app
 
 
 def configure_cors_strict(app: FastAPI) -> FastAPI:
     """Configure CORS with strict settings for production"""
-    
+
     # Production-only origins (no wildcards)
     origins = [
         "https://quantumvestai.com",
         "https://www.quantumvestai.com",
-        "https://app.quantumvestai.com"
+        "https://app.quantumvestai.com",
     ]
-    
+
     # Add custom origins from environment
     custom_origins = os.environ.get("CORS_ORIGINS_STRICT")
     if custom_origins:
         origins.extend([origin.strip() for origin in custom_origins.split(",")])
-    
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
@@ -128,5 +137,5 @@ def configure_cors_strict(app: FastAPI) -> FastAPI:
         expose_headers=["X-Request-ID", "X-Process-Time"],
         max_age=86400,
     )
-    
+
     return app
