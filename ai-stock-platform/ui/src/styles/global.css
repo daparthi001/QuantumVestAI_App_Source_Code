@@ -547,6 +547,60 @@ a:hover {
   background: rgba(255, 255, 255, 0.05);
 }
 
+/* Notification panel fixes */
+.Toastify__toast-body a {
+  color: var(--primary-color);
+}
+
+.Toastify__toast-body a:hover {
+  color: var(--secondary-color);
+  text-decoration: underline;
+}
+
+.Toastify__toast-container > div {
+  margin-bottom: 0.5rem;
+}
+
+/* Navigation tabs improvements */
+.advanced-tabs .nav-link {
+  color: var(--text-secondary);
+  transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
+}
+
+.advanced-tabs .nav-link:hover {
+  color: var(--text-primary);
+}
+
+.advanced-tabs .nav-link.active {
+  color: var(--text-primary);
+  background-color: rgba(255, 255, 255, 0.1);
+  border-bottom: 2px solid var(--primary-color);
+}
+
+/* Search bar enhancements */
+.quantum-search-input {
+  padding-left: 2.25rem;
+  padding-right: 2.25rem;
+  border-radius: 999px;
+}
+
+.search-icon,
+.filter-icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+.search-icon {
+  left: 0.75rem;
+}
+
+.filter-icon {
+  right: 0.75rem;
+}
+
 /* Enhanced Responsive Design */
 @media (max-width: 768px) {
   .container-fluid {
