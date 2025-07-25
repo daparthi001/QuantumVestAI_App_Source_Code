@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     DB_ECHO: bool = Field(default=False)
     
     # Security Settings
-    SECRET_KEY: str = Field(default="your-secret-key-here")
+    SECRET_KEY: str = Field(default="bURrrZAcIM7D4/8a+zOYf4UNAjZPUL8LK0tnZdMQqj0=")
     ALGORITHM: str = Field(default="HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=30)
     
