@@ -12,7 +12,8 @@ from core.config import get_settings
 config = get_settings()
 
 class TokenHandler:
-    SECRET_KEY = config.SECRET_KEY
+    # Use JWT_SECRET value if provided, falling back to SECRET_KEY
+    SECRET_KEY = config.JWT_SECRET.get_secret_value() if hasattr(config, "JWT_SECRET") else config.SECRET_KEY
     ALGORITHM = config.ALGORITHM
     ACCESS_TOKEN_EXPIRE_MINUTES = config.ACCESS_TOKEN_EXPIRE_MINUTES
 
