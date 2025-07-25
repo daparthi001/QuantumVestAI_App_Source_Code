@@ -11,12 +11,14 @@ import pytest
 pytest.importorskip("httpx")
 
 from api.main import app, ws_manager
+from core.security import create_access_token
 from fastapi.testclient import TestClient
 
 
 def test_websocket_broadcasts_updates():
     client = TestClient(app)
-    with client.websocket_connect("/ws/test-client") as ws:
+    token = create_access_token({"sub": "testuser"})
+    with client.websocket_connect(f"/ws/test-client?token={token}") as ws:
         ws.send_json({"type": "subscribe", "data": {"symbol": "AAPL"}})
         resp = ws.receive_json()
         assert resp["type"] == "subscribed"
