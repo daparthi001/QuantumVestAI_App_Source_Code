@@ -117,7 +117,7 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "ui" / "static")), nam
 
 # Import controllers - moved after app creation
 try:
-    from controllers import auth_controller
+    from ui.controllers import auth_controller
     from utils.template_filters import (get_template_filter_status,
                                         register_filters,
                                         validate_template_filters)
@@ -246,55 +246,55 @@ except ImportError as e:
 controllers = {}
 try:
     if 'auth_controller' not in locals():
-        from controllers import auth_controller
+        from ui.controllers import auth_controller
     controllers["auth_controller"] = auth_controller
 except Exception as e:
     logger.error(f"Could not import auth_controller: {str(e)}")
 
 try:
-    from controllers import dashboard_controller
+    from ui.controllers import dashboard_controller
     controllers["dashboard_controller"] = dashboard_controller
 except ImportError as e:
     logger.error(f"Could not import dashboard_controller: {str(e)}")
 
 try:
-    from controllers import market_controller
+    from ui.controllers import market_controller
     controllers["market_controller"] = market_controller
 except ImportError as e:
     logger.error(f"Could not import market_controller: {str(e)}")
 
 try:
-    from controllers import stock_controller
+    from ui.controllers import stock_controller
     controllers["stock_controller"] = stock_controller
 except ImportError as e:
     logger.error(f"Could not import stock_controller: {str(e)}")
 
 try:
-    from controllers import watchlist_controller
+    from ui.controllers import watchlist_controller
     controllers["watchlist_controller"] = watchlist_controller
 except ImportError as e:
     logger.error(f"Could not import watchlist_controller: {str(e)}")
 
 try:
-    from controllers import profile_controller
+    from ui.controllers import profile_controller
     controllers["profile_controller"] = profile_controller
 except ImportError as e:
     logger.error(f"Could not import profile_controller: {str(e)}")
 
 try:
-    from controllers import forecast_controller
+    from ui.controllers import forecast_controller
     controllers["forecast_controller"] = forecast_controller
 except ImportError as e:
     logger.error(f"Could not import forecast_controller: {str(e)}")
 
 try:
-    from controllers import news_controller
+    from ui.controllers import news_controller
     controllers["news_controller"] = news_controller
 except ImportError as e:
     logger.error(f"Could not import news_controller: {str(e)}")
 
 try:
-    from controllers import feature_controller
+    from ui.controllers import feature_controller
     controllers["feature_controller"] = feature_controller
 except ImportError as e:
     logger.error(f"Could not import feature_controller: {str(e)}")
