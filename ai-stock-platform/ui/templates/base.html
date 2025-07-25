@@ -168,17 +168,18 @@
                 <a href="/login" class="quantum-nav-link {% if '/login' in request.url.path %}active{% endif %}" data-i18n="nav.login">Login</a>
                 <a href="/auth/register" class="quantum-nav-link {% if '/auth/register' in request.url.path %}active{% endif %}" data-i18n="nav.register">Register</a>
                 {% endif %}
-                <div class="nav-item">
-                    <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode" data-tooltip="Toggle Dark Mode">
-                        <i class="bi bi-moon-fill"></i>
-                    </button>
-                </div>
-                <div class="nav-item">
-                    <button class="notifications-toggle" id="notificationsToggle">
-                        <i class="bi bi-bell"></i>
-                        <span class="badge bg-danger notification-badge">3</span>
-                    </button>
-                    <div class="notifications-dropdown" id="notificationsDropdown">
+                <div class="nav-utilities">
+                    <div class="nav-item">
+                        <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode" data-tooltip="Toggle Dark Mode">
+                            <i class="bi bi-moon-fill"></i>
+                        </button>
+                    </div>
+                    <div class="nav-item">
+                        <button class="notifications-toggle" id="notificationsToggle">
+                            <i class="bi bi-bell"></i>
+                            <span class="badge bg-danger notification-badge">3</span>
+                        </button>
+                        <div class="notifications-dropdown" id="notificationsDropdown">
                         <div class="dropdown-header">
                             <h6>Notifications</h6>
                             <button type="button" class="mark-all-read-btn btn btn-sm">Mark all as read</button>

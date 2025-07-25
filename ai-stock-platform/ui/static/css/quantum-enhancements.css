@@ -235,6 +235,12 @@ body {
   gap: var(--space-md);
 }
 
+.nav-utilities {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
 .quantum-search {
   flex: 1;
   max-width: 300px;

@@ -291,8 +291,11 @@ class QuantumI18n {
         this.addLanguageSelectorStyles();
 
         // Add to navigation
+        const utilities = document.querySelector('.nav-utilities');
         const nav = document.querySelector('.nav-right');
-        if (nav) {
+        if (utilities) {
+            utilities.appendChild(selector);
+        } else if (nav) {
             nav.appendChild(selector);
         } else {
             // Fallback: add to body
@@ -315,6 +318,7 @@ class QuantumI18n {
             .quantum-language-selector {
                 position: relative;
                 display: inline-block;
+                margin-right: var(--space-md);
             }
 
             .quantum-language-button {
