@@ -225,7 +225,8 @@
 /* Quantum Background */
 .quantum-bg {
   background: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 50%, #0c0c0c 100%);
-  background-attachment: fixed;
+  /* Avoid flicker when scrolling */
+  background-attachment: scroll;
   position: relative;
   overflow-x: hidden;
 }
