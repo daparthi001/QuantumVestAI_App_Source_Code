@@ -646,14 +646,31 @@ async def enhanced_dashboard(request: Request):
         }
         
         # Demo data for dashboard
+        # The dashboard template expects each index entry to provide ``price``
+        # and ``change_percent`` fields.  Older demo data used ``value`` and
+        # ``change_pct`` which caused Jinja to fail with ``'dict object' has no
+        # attribute 'price'`` when rendering in demo mode.  Align the keys with
+        # the real service output to avoid template errors.
         market_summary = {
             "indices": {
-                "S&P 500": {"value": 4567.89, "change": 23.45, "change_pct": 0.52},
-                "NASDAQ": {"value": 14234.56, "change": -45.67, "change_pct": -0.32},
-                "DOW": {"value": 34567.12, "change": 156.78, "change_pct": 0.46}
+                "S&P 500": {
+                    "price": 4567.89,
+                    "change": 23.45,
+                    "change_percent": 0.52,
+                },
+                "NASDAQ": {
+                    "price": 14234.56,
+                    "change": -45.67,
+                    "change_percent": -0.32,
+                },
+                "DOW": {
+                    "price": 34567.12,
+                    "change": 156.78,
+                    "change_percent": 0.46,
+                },
             },
             "sectors": {},
-            "top_movers": {}
+            "top_movers": {},
         }
         
         return get_templates(request).TemplateResponse(
