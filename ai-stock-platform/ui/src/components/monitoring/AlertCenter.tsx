@@ -152,7 +152,15 @@ const AlertItem: React.FC<{
             sx={{
                 mb: 1,
                 opacity: alert.acknowledged ? 0.7 : 1,
-                cursor: 'pointer'
+                cursor: 'pointer',
+                bgcolor: 'var(--bg-secondary)',
+                color: 'var(--text-primary)',
+                '& .MuiAlert-icon': {
+                    color: 'var(--primary-color)'
+                },
+                '& a': {
+                    color: 'var(--primary-color)'
+                }
             }}
             onClick={() => setExpanded(!expanded)}
         >
@@ -173,7 +181,7 @@ const AlertItem: React.FC<{
             </AlertTitle>
             <Collapse in={expanded}>
                 <Box sx={{ mt: 1 }}>
-                    <Typography variant="caption" display="block">
+                    <Typography variant="caption" display="block" className="alert-timestamp">
                         Time: {new Date(alert.timestamp).toLocaleString()}
                     </Typography>
                     {alert.details && (

@@ -221,7 +221,7 @@ body {
 }
 
 .quantum-nav-link {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-secondary);
   text-decoration: none;
   font-weight: 500;
   padding: var(--space-sm) var(--space-md);
@@ -254,8 +254,9 @@ body {
 }
 
 .quantum-nav-link.active {
-  background: var(--quantum-accent);
+  background: rgba(74, 144, 226, 0.15);
   color: #ffffff;
+  box-shadow: inset 0 -2px 0 var(--primary-color);
 }
 
 /* Enhanced Responsive Grid System */

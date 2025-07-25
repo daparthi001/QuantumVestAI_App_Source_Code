@@ -59,6 +59,16 @@ body {
   background-attachment: fixed;
 }
 
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--secondary-color);
+  text-decoration: underline;
+}
+
 /* Enhanced Loading States */
 .loading-container {
   display: flex;
@@ -355,6 +365,19 @@ body {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+}
+
+.dark-theme .MuiAlert-root {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.dark-theme .MuiAlert-icon {
+  color: var(--primary-color);
+}
+
+.dark-theme .alert-timestamp {
+  color: var(--text-secondary);
 }
 
 /* Enhanced Text Utilities */
