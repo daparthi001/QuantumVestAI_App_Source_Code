@@ -141,6 +141,14 @@ html {
 
 .mark-all-read-btn {
   margin-left: auto;
+  background: none;
+  border: none;
+  color: #60a5fa;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+.mark-all-read-btn:hover {
+  color: #bfdbfe;
 }
 
 body {
@@ -1212,20 +1220,23 @@ body {
 
 /* Notification Cards */
 .notification-card {
+  position: relative;
   display: flex;
   align-items: flex-start;
   gap: var(--space-sm);
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  border-radius: 1rem;
   width: 100%;
   padding: var(--space-md);
   margin-bottom: var(--space-sm);
   color: var(--text-primary, #e5e5e5);
-  }
+}
 
 .notification-card .notification-dismiss {
-  margin-left: auto;
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
   background: none;
   border: none;
   color: inherit;
