@@ -55,7 +55,7 @@ class TrendingStocksService:
         # Determine whether to fetch real data or use mocked values
         self.use_mock = not getattr(settings, "ENABLE_REAL_DATA", False)
 
-        # Use configured API key or fallback to the default demo key
+        # Use configured API key, falling back to the settings value if provided
         self.api_key = os.getenv("ALPHA_VANTAGE_API_KEY", settings.ALPHA_VANTAGE_API_KEY)
         if not self.api_key and not self.use_mock:
             raise RuntimeError(

@@ -6,6 +6,7 @@ Updated: 2025-01-09 (AI Assistant) - Added Warren Buffett analysis methods
 """
 import asyncio
 import logging
+import os
 from typing import Any, Dict, List, Optional
 
 import aiohttp
@@ -42,7 +43,9 @@ logger = logging.getLogger(__name__)
 class StockService:
     def __init__(self, db: Session):
         self.db = db
-        self.api_key = settings.ALPHA_VANTAGE_API_KEY.get_secret_value()
+        # Read the API key from the environment first to allow overrides during
+        # deployment and testing. ``settings`` acts as a fallback source.
+        self.api_key = os.getenv("ALPHA_VANTAGE_API_KEY", settings.ALPHA_VANTAGE_API_KEY)
         self.base_url = "https://www.alphavantage.co/query"
 
     async def get_stock_data(self, symbol: str) -> Optional[Dict[str, Any]]:
