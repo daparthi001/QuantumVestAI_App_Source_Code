@@ -13,7 +13,15 @@ except ModuleNotFoundError:  # pragma: no cover - optional dependency
     logging.getLogger("api").warning(
         "PyTorch not available, FinBertSentiment will use mock predictions"
     )
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
+try:
+    from transformers import AutoModelForSequenceClassification, AutoTokenizer
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    AutoModelForSequenceClassification = None  # type: ignore
+    AutoTokenizer = None  # type: ignore
+    logging.getLogger("api").warning(
+        "Transformers not available, FinBertSentiment will use mock predictions"
+    )
 
 logger = logging.getLogger("api")
 
@@ -50,9 +58,9 @@ class FinBertSentiment:
     def _load_model(self) -> None:
         """Load model and tokenizer if not already loaded."""
         if not self.loaded:
-            if torch is None:
+            if torch is None or AutoModelForSequenceClassification is None or AutoTokenizer is None:
                 logger.warning(
-                    "PyTorch not installed. FinBERT model cannot be loaded; using mock predictions"
+                    "Required ML libraries not installed. FinBERT model cannot be loaded; using mock predictions"
                 )
                 return
             try:
