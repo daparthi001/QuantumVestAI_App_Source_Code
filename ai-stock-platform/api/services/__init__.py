@@ -38,6 +38,14 @@ except ImportError as e:
     ForecastService = None
     FORECAST_SERVICE_AVAILABLE = False
 
+try:
+    from services.yahoo_rapidapi_service import YahooRapidAPIService
+    YAHOO_RAPIDAPI_SERVICE_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: YahooRapidAPIService not available - {e}")
+    YahooRapidAPIService = None
+    YAHOO_RAPIDAPI_SERVICE_AVAILABLE = False
+
 # Only include available services in __all__
 __all__ = []
 if STOCK_SERVICE_AVAILABLE:
@@ -48,3 +56,5 @@ if TRENDING_STOCKS_SERVICE_AVAILABLE:
     __all__.append('TrendingStocksService')
 if FORECAST_SERVICE_AVAILABLE:
     __all__.append('ForecastService')
+if YAHOO_RAPIDAPI_SERVICE_AVAILABLE:
+    __all__.append('YahooRapidAPIService')
