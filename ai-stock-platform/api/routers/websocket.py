@@ -8,8 +8,10 @@ from datetime import datetime
 from typing import Optional
 
 from core.security import get_current_user
+from core.middleware.cors import is_origin_allowed
 from db.models.user import User
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+
 # Import the local websocket manager using a relative import to avoid package
 # resolution issues when the application is executed as a module
 # Import the local websocket manager using an absolute path so the module works
@@ -22,14 +24,19 @@ router = APIRouter()
 
 manager = ConnectionManager()
 
+
 @router.websocket("/ws/{client_id}")
 async def websocket_endpoint(
-    websocket: WebSocket,
-    client_id: str,
-    token: Optional[str] = None
+    websocket: WebSocket, client_id: str, token: Optional[str] = None
 ):
     """WebSocket endpoint for real-time updates"""
     try:
+        origin = websocket.headers.get("origin")
+        if not is_origin_allowed(origin):
+            logger.warning(f"Rejected WebSocket connection from origin: {origin}")
+            await websocket.close(code=1008)
+            return
+
         # Verify token if provided
         user = None
         if token:
@@ -38,22 +45,22 @@ async def websocket_endpoint(
             except Exception as e:
                 await websocket.close(code=4001, reason="Invalid token")
                 return
-        
+
         # Connect to WebSocket
         await manager.connect(websocket, client_id)
         logger.info(f"WebSocket connected: {client_id}")
-        
+
         try:
             while True:
                 # Receive message
                 data = await websocket.receive_json()
-                
+
                 # Add metadata
                 data["timestamp"] = datetime.utcnow().isoformat()
                 data["client_id"] = client_id
                 if user:
                     data["user_id"] = user.id
-                
+
                 # Process message based on type
                 message_type = data.get("type")
                 if message_type == "subscribe":
@@ -64,19 +71,21 @@ async def websocket_endpoint(
                     await handle_unsubscription(websocket, data, user)
                 else:
                     # Handle unknown message type
-                    await websocket.send_json({
-                        "error": "Unknown message type",
-                        "timestamp": datetime.utcnow().isoformat()
-                    })
-        
+                    await websocket.send_json(
+                        {
+                            "error": "Unknown message type",
+                            "timestamp": datetime.utcnow().isoformat(),
+                        }
+                    )
+
         except WebSocketDisconnect:
             await manager.disconnect(websocket, client_id)
             logger.info(f"WebSocket disconnected: {client_id}")
-        
+
         except Exception as e:
             logger.error(f"WebSocket error for {client_id}: {str(e)}")
             await websocket.close(code=4000, reason="Internal server error")
-    
+
     except Exception as e:
         logger.error(f"WebSocket connection error: {str(e)}")
         try:
@@ -84,31 +93,36 @@ async def websocket_endpoint(
         except:
             pass
 
+
 async def handle_subscription(websocket: WebSocket, data: dict, user: Optional[User]):
     """Handle subscription requests"""
     try:
         payload = data.get("data", data)
         topic = payload.get("type") or payload.get("symbol") or payload.get("topic")
         if not topic:
-            await websocket.send_json({
-                "error": "Missing topic in subscription request",
-                "timestamp": datetime.utcnow().isoformat()
-            })
+            await websocket.send_json(
+                {
+                    "error": "Missing topic in subscription request",
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+            )
             return
 
         await manager.subscribe(websocket, topic)
-        await websocket.send_json({
-            "type": "subscribed",
-            "topic": topic,
-            "timestamp": datetime.utcnow().isoformat()
-        })
-        
+        await websocket.send_json(
+            {
+                "type": "subscribed",
+                "topic": topic,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        )
+
     except Exception as e:
         logger.error(f"Subscription error: {str(e)}")
-        await websocket.send_json({
-            "error": "Subscription failed",
-            "timestamp": datetime.utcnow().isoformat()
-        })
+        await websocket.send_json(
+            {"error": "Subscription failed", "timestamp": datetime.utcnow().isoformat()}
+        )
+
 
 async def handle_unsubscription(websocket: WebSocket, data: dict, user: Optional[User]):
     """Handle unsubscription requests"""
@@ -116,21 +130,28 @@ async def handle_unsubscription(websocket: WebSocket, data: dict, user: Optional
         payload = data.get("data", data)
         topic = payload.get("type") or payload.get("symbol") or payload.get("topic")
         if not topic:
-            await websocket.send_json({
-                "error": "Missing topic in unsubscription request",
-                "timestamp": datetime.utcnow().isoformat()
-            })
+            await websocket.send_json(
+                {
+                    "error": "Missing topic in unsubscription request",
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+            )
             return
 
         await manager.unsubscribe(websocket, topic)
-        await websocket.send_json({
-            "type": "unsubscribed",
-            "topic": topic,
-            "timestamp": datetime.utcnow().isoformat()
-        })
-        
+        await websocket.send_json(
+            {
+                "type": "unsubscribed",
+                "topic": topic,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        )
+
     except Exception as e:
         logger.error(f"Unsubscription error: {str(e)}")
-        await websocket.send_json({
-            "error": "Unsubscription failed",
-            "timestamp": datetime.utcnow().isoformat()        })
+        await websocket.send_json(
+            {
+                "error": "Unsubscription failed",
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        )
