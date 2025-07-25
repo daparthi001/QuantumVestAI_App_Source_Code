@@ -9,7 +9,7 @@ class QuantumSearch {
     constructor(options = {}) {
         this.options = {
             selector: '.quantum-search',
-            apiEndpoint: '/api/search',
+            apiEndpoint: '/api/stocks/search',
             debounceDelay: 300,
             minQueryLength: 2,
             maxResults: 20,
@@ -48,7 +48,7 @@ class QuantumSearch {
                         <input 
                             type="text" 
                             class="quantum-search-input" 
-                            placeholder="Search stocks, news, companies..."
+                            placeholder="Search stocks, companies, or news"
                             aria-label="Search QuantumVestAI"
                             autocomplete="off"
                         />
@@ -64,7 +64,7 @@ class QuantumSearch {
                         </button>
                     </div>
                     <div class="quantum-search-voice-button" style="display: none;">
-                        <button class="quantum-voice-search" aria-label="Voice search">
+                        <button class="quantum-voice-search" aria-label="Voice search" title="Voice search">
                             <svg viewBox="0 0 24 24" width="16" height="16">
                                 <path fill="currentColor" d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
                             </svg>
@@ -724,8 +724,8 @@ class QuantumSearch {
         try {
             this.showLoadingState();
 
-            // Simulate API call for demo with better error handling
-            const results = await this.simulateSearch(trimmedQuery);
+            // Fetch suggestions from backend with graceful fallback
+            const results = await this.fetchResults(trimmedQuery);
             
             if (results && (results.suggestions || results.results)) {
                 this.searchCache.set(trimmedQuery, results);
@@ -931,6 +931,23 @@ class QuantumSearch {
         }
         if (history) {
             history.style.display = 'none';
+        }
+    }
+
+    async fetchResults(query) {
+        try {
+            const resp = await fetch(`${this.options.apiEndpoint}?query=${encodeURIComponent(query)}&limit=${this.options.maxResults}`);
+            if (!resp.ok) throw new Error('Request failed');
+            const data = await resp.json();
+            const results = data.results || data.data || [];
+            const suggestions = Array.isArray(results) ? results.slice(0, 5).map(r => {
+                if (r.symbol && r.name) return `${r.symbol} - ${r.name}`;
+                return r.title || r.name || '';
+            }) : [];
+            return { suggestions, results: Array.isArray(results) ? results : [] };
+        } catch (err) {
+            console.error('Fetch error:', err);
+            return this.simulateSearch(query);
         }
     }
 
