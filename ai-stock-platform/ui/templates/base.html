@@ -171,7 +171,59 @@
                 </li>
                 {% endif %}
             </ul>
-            
+
+            <div class="nav-right">
+                <div class="nav-item">
+                    <button class="theme-toggle" id="themeToggle">
+                        <i class="bi bi-moon-fill"></i>
+                    </button>
+                </div>
+                <div class="nav-item">
+                    <button class="notifications-toggle" id="notificationsToggle">
+                        <i class="bi bi-bell"></i>
+                        <span class="badge bg-danger notification-badge">3</span>
+                    </button>
+                    <div class="notifications-dropdown" id="notificationsDropdown">
+                        <div class="dropdown-header">
+                            <h6>Notifications</h6>
+                            <a href="#" class="mark-all-read">Mark all as read</a>
+                        </div>
+                        <div class="notifications-list">
+                            <a href="#" class="notification-item unread">
+                                <div class="notification-icon warning">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <p class="notification-text">AAPL price alert triggered at $180</p>
+                                    <p class="notification-time">Just now</p>
+                                </div>
+                            </a>
+                            <a href="#" class="notification-item unread">
+                                <div class="notification-icon info">
+                                    <i class="bi bi-info-circle"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <p class="notification-text">New forecast models available</p>
+                                    <p class="notification-time">2 hours ago</p>
+                                </div>
+                            </a>
+                            <a href="#" class="notification-item unread">
+                                <div class="notification-icon success">
+                                    <i class="bi bi-check-circle"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <p class="notification-text">Weekly market report is ready</p>
+                                    <p class="notification-time">Yesterday</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="dropdown-footer">
+                            <a href="/notifications">View all notifications</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Mobile Hamburger Menu -->
             <div class="quantum-hamburger">
                 <span></span>
@@ -308,82 +360,9 @@
             </div>
         </aside>
 
+
         <!-- Main Content Area -->
         <main class="main-content" id="main-content" role="main">
-            <!-- Top Navigation -->
-            <header class="top-nav">
-                <div class="nav-left">
-                    <button class="mobile-menu-toggle" id="mobileMenuToggle">
-                        <i class="bi bi-list"></i>
-                    </button>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            {% block breadcrumb %}
-                            <li class="breadcrumb-item"><a href="/">Home</a></li>
-                            {% endblock %}
-                        </ol>
-                    </nav>
-                </div>
-                <div class="nav-right">
-                    <div class="nav-item search-container">
-                        <form action="/search" method="GET" class="search-form">
-                            <input type="text" name="q" class="search-input" placeholder="Search for stocks...">
-                            <button type="submit" class="search-btn">
-                                <i class="bi bi-search"></i>
-                            </button>
-                        </form>
-                    </div>
-                    <div class="nav-item">
-                        <button class="theme-toggle" id="themeToggle">
-                            <i class="bi bi-moon-fill"></i>
-                        </button>
-                    </div>
-                    <div class="nav-item">
-                        <button class="notifications-toggle" id="notificationsToggle">
-                            <i class="bi bi-bell"></i>
-                            <span class="badge bg-danger notification-badge">3</span>
-                        </button>
-                        <div class="notifications-dropdown" id="notificationsDropdown">
-                            <div class="dropdown-header">
-                                <h6>Notifications</h6>
-                                <a href="#" class="mark-all-read">Mark all as read</a>
-                            </div>
-                            <div class="notifications-list">
-                                <a href="#" class="notification-item unread">
-                                    <div class="notification-icon warning">
-                                        <i class="bi bi-exclamation-triangle"></i>
-                                    </div>
-                                    <div class="notification-content">
-                                        <p class="notification-text">AAPL price alert triggered at $180</p>
-                                        <p class="notification-time">Just now</p>
-                                    </div>
-                                </a>
-                                <a href="#" class="notification-item unread">
-                                    <div class="notification-icon info">
-                                        <i class="bi bi-info-circle"></i>
-                                    </div>
-                                    <div class="notification-content">
-                                        <p class="notification-text">New forecast models available</p>
-                                        <p class="notification-time">2 hours ago</p>
-                                    </div>
-                                </a>
-                                <a href="#" class="notification-item unread">
-                                    <div class="notification-icon success">
-                                        <i class="bi bi-check-circle"></i>
-                                    </div>
-                                    <div class="notification-content">
-                                        <p class="notification-text">Weekly market report is ready</p>
-                                        <p class="notification-time">Yesterday</p>
-                                    </div>
-                                </a>
-                            </div>
-                            <div class="dropdown-footer">
-                                <a href="/notifications">View all notifications</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </header>
 
             <!-- Page Content -->
             <div class="page-content">
