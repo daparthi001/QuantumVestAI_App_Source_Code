@@ -183,7 +183,8 @@
   box-shadow: var(--quantum-shadow-soft);
   position: sticky !important;
   top: 0;
-  z-index: 1030;
+  /* Keep navigation above expanding sidebar */
+  z-index: 1050;
 }
 
 .quantum-nav .navbar-brand {

@@ -185,6 +185,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   size="sm"
                   className="me-3 quantum-btn-outline"
                   onClick={toggleTheme}
+                  title="Toggle theme"
+                  aria-label="Toggle theme"
                 >
                   {theme === 'dark' ? '☀️' : '🌙'}
                 </Button>
