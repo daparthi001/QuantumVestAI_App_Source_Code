@@ -70,18 +70,28 @@ class ConnectionManager:
                     await self.handle_disconnection(websocket)
 
     async def broadcast_event(self, event_type: str, data: Any):
-        if event_type in self.symbol_subscribers:
-            message = {
-                "type": event_type,
-                "data": data,
-            }
+        message = {
+            "type": event_type,
+            "data": data,
+        }
 
-            for websocket in self.symbol_subscribers[event_type].copy():
-                try:
-                    await websocket.send_json(message)
-                except Exception as e:
-                    logger.error(f"Error sending message to client: {e}")
-                    await self.handle_disconnection(websocket)
+        # Send to any clients explicitly subscribed to this event type
+        subscribers = self.symbol_subscribers.get(event_type, set())
+
+        # If no explicit subscribers, fall back to broadcasting to all
+        targets: Set[WebSocket] = set()
+        if subscribers:
+            targets.update(subscribers)
+        else:
+            for conns in self.active_connections.values():
+                targets.update(conns)
+
+        for websocket in targets.copy():
+            try:
+                await websocket.send_json(message)
+            except Exception as e:
+                logger.error(f"Error sending message to client: {e}")
+                await self.handle_disconnection(websocket)
                     
     async def handle_disconnection(self, websocket: WebSocket):
         """Remove a websocket from all tracking structures."""
