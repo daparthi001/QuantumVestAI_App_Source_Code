@@ -12,7 +12,7 @@ from core.exceptions import ResourceNotFoundError, ValidationError
 from scipy import stats
 from sklearn.preprocessing import StandardScaler
 from sqlalchemy.orm import Session
-from api.utils.market_data import ALPHA_VANTAGE_API_KEY
+from utils.market_data import ALPHA_VANTAGE_API_KEY
 from utils.market_data import MarketDataClient
 # from utils.ml_models import PredictiveModels
 # from utils.sentiment import SentimentAnalyzer
