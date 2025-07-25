@@ -91,6 +91,10 @@ For practice trading without risking capital, follow the [PaperMoney Setup](docs
 - **GET** `/api/v1/data/sectors/performance` - Get sector performance
 - **GET** `/api/v1/data/industries/performance` - Get industry performance
 
+## **Documentation APIs**
+- **GET** `/docs/readme` - Get repository README
+- **GET** `/docs/uses` - Get API usage guide
+
 ---
 Feel free to reach out for further assistance or to report issues!
 ## Environment Setup
