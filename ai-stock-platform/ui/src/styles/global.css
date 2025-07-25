@@ -45,29 +45,24 @@
 }
 
 body {
-  font-family: var(--font-family);
+  font-family: 'Inter', sans-serif;
   line-height: 1.6;
   margin: 0;
   padding: 0;
-  background: var(--bg-primary);
-  color: var(--text-primary);
+  background-color: #0f172a;
+  color: #e2e8f0;
   transition: var(--transition);
   overflow-x: hidden;
-  
-  /* Apply quantum background effects */
-  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
-  /* Prevent janky scrolling caused by fixed backgrounds */
-  background-attachment: scroll;
 }
 
 a {
-  color: var(--primary-color);
+  color: #60a5fa;
   text-decoration: none;
 }
 
 a:hover {
-  color: var(--secondary-color);
-  text-decoration: underline;
+  color: #38bdf8;
+  text-decoration: none;
 }
 
 /* Enhanced Loading States */
@@ -518,6 +513,8 @@ a:hover {
 
 /* Enhanced Dark Theme Support */
 .dark-theme {
+  background-color: #0f172a;
+  color: #e5e7eb;
   --bs-body-bg: var(--bg-primary);
   --bs-body-color: var(--text-primary);
   --bs-border-color: var(--border-color);
@@ -669,4 +666,60 @@ a:hover {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+/* Notification panel fix */
+.notification-panel {
+  padding: 1rem;
+  font-size: 0.9rem;
+  color: #cbd5e1;
+}
+
+.notification-panel a {
+  color: #93c5fd;
+  display: block;
+  margin-bottom: 0.6rem;
+}
+
+.notification-panel a:hover {
+  color: #38bdf8;
+}
+
+/* Navigation tab fix */
+.nav-tab {
+  background-color: #1e293b;
+  color: #cbd5e1;
+  border-radius: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  margin: 0 6px;
+  transition: all 0.2s ease-in-out;
+}
+
+.nav-tab:hover {
+  background-color: #334155;
+  color: #ffffff;
+}
+
+.nav-tab.active {
+  background-color: #3b82f6;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Search bar styling */
+.search-bar {
+  background-color: #334155;
+  color: #e2e8f0;
+  border-radius: 9999px;
+  padding: 0.6rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.search-bar input::placeholder {
+  color: #94a3b8;
+}
+
+.search-icon, .mic-icon, .filter-icon {
+  color: #cbd5e1;
 }
