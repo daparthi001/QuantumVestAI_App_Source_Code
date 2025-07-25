@@ -62,7 +62,7 @@ const TwitterSentiment: React.FC<TwitterSentimentProps> = ({ ticker }) => {
       } catch (err: any) {
         // Check if this is a configuration error (HTTP 503)
         if (err.response && err.response.status === 503) {
-          setError('Twitter integration not configured. Please set up Twitter API credentials.');
+          setError('Twitter integration not configured. See docs/SENTIMENT_WORKAROUNDS.md for alternatives.');
         } else if (err.response && err.response.status === 429) {
           setError('Twitter API rate limit exceeded. Please try again later.');
         } else {

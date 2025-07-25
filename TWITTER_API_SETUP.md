@@ -2,6 +2,10 @@
 
 This guide explains how to set up and configure the Twitter API integration for real-time social sentiment analysis in the QuantumVestAI application.
 
+If you do not have a paid Twitter plan or prefer free alternatives, see
+[Stock Sentiment Workarounds](docs/SENTIMENT_WORKAROUNDS.md) for ways to gather
+sentiment data without official API access.
+
 ## Overview
 
 The Twitter integration provides:
