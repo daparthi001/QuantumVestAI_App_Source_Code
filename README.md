@@ -4,6 +4,7 @@ This document provides a comprehensive list of API and UI endpoints for the Quan
 For screenshots and icons used in the interface, see [UI Visuals](docs/UI_IMAGES.md).
 For instructions on integrating ChatGPT into the UI, see [ChatGPT Guide](docs/CHATGPT_UI_INTEGRATION.md).
 For strategies to gather social sentiment without a paid Twitter plan, see [Sentiment Workarounds](docs/SENTIMENT_WORKAROUNDS.md).
+For practice trading without risking capital, follow the [PaperMoney Setup](docs/PAPERMONEY_TRADING.md).
 
 ---
 
