@@ -410,4 +410,21 @@
   .quantum-bg::before,
   .quantum-pulse {
     animation: none !important;
-  }}
+  }
+}
+
+/* Responsive layout tweaks */
+@media (min-width: 1200px) {
+  .quantum-sidebar {
+    width: 300px;
+  }
+  .quantum-content {
+    margin-left: 300px;
+  }
+}
+
+@media (max-width: 1199.98px) {
+  .quantum-content {
+    margin-left: 0;
+  }
+}
