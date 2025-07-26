@@ -149,8 +149,8 @@ const Dashboard: React.FC = () => {
           </div>
           <div>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button onClick={() => navigate(ROUTES.STOCKS)} className="quantum-btn me-2">
-                🚀 Explore Stocks
+              <Button onClick={() => navigate(ROUTES.STOCKS)} className="quantum-btn me-2 explore-btn">
+                Explore Stocks <i className="bi bi-arrow-right ms-1"></i>
               </Button>
             </motion.div>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>

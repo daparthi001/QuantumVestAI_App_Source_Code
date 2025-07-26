@@ -98,6 +98,16 @@ html {
   font-size: 16px;
   }
 
+h1, h2, h3 {
+  font-weight: var(--font-weight-bold);
+  margin-bottom: 0.5rem;
+}
+
+p {
+  font-weight: var(--font-weight-normal);
+  margin-bottom: 1rem;
+}
+
 .notifications-dropdown {
   width: 320px;
   padding: var(--space-md);
@@ -212,7 +222,7 @@ body {
 
 .quantum-nav-brand {
   font-size: var(--font-size-xl);
-  font-weight: 700;
+  font-weight: 600;
   color: #ffffff; /* Improve contrast against blurred background */
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
   text-decoration: none;
@@ -249,7 +259,34 @@ body {
 .quantum-search {
   flex: 1;
   max-width: 300px;
-  margin: 0 var(--space-md);
+  margin-left: var(--space-lg);
+  margin-right: var(--space-md);
+}
+
+.quantum-search-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.quantum-search-toggle:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.quantum-search-collapsed .quantum-search-input-container {
+  display: none;
+}
+
+.quantum-search-collapsed .quantum-search-toggle {
+  display: flex;
 }
 
 /* Sidebar navigation list */

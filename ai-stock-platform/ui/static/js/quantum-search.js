@@ -39,7 +39,12 @@ class QuantumSearch {
         const container = document.querySelector(this.options.selector) || this.createSearchContainer();
         
         container.innerHTML = `
-            <div class="quantum-search-container">
+            <div class="quantum-search-container quantum-search-collapsed">
+                <button class="quantum-search-toggle" aria-label="Open search">
+                    <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path fill="currentColor" d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    </svg>
+                </button>
                 <div class="quantum-search-input-container">
                     <div class="quantum-search-input-wrapper">
                         <svg class="quantum-search-icon" viewBox="0 0 24 24" width="20" height="20">
@@ -180,6 +185,32 @@ class QuantumSearch {
                 width: 100%;
             }
 
+            .quantum-search-toggle {
+                display: none;
+                align-items: center;
+                justify-content: center;
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                background: rgba(255, 255, 255, 0.15);
+                color: #fff;
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+
+            .quantum-search-toggle:hover {
+                background: rgba(255, 255, 255, 0.25);
+            }
+
+            .quantum-search-collapsed .quantum-search-input-container {
+                display: none;
+            }
+
+            .quantum-search-collapsed .quantum-search-toggle {
+                display: flex;
+            }
+
             .quantum-search-input-container {
                 display: flex;
                 align-items: center;
@@ -191,23 +222,23 @@ class QuantumSearch {
                 flex: 1;
                 display: flex;
                 align-items: center;
-                /* Increase opacity and reduce blur for clarity */
-                background: var(--glass-bg, rgba(255, 255, 255, 0.2));
-                border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.3));
-                border-radius: 25px;
-                padding: 12px 16px;
-                backdrop-filter: blur(4px);
+                background: rgba(240, 240, 240, 0.9);
+                border: 1px solid rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+                padding: 6px 12px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.15);
                 transition: var(--transition-smooth, all 0.3s ease);
             }
 
             .quantum-search-input-wrapper:focus-within {
                 border-color: var(--quantum-accent, #4facfe);
                 box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.2);
-                background: rgba(255, 255, 255, 0.15);
+                background: rgba(255, 255, 255, 0.95);
+                transform: scale(1.02);
             }
 
             .quantum-search-icon {
-                color: rgba(255, 255, 255, 0.6);
+                color: #666;
                 margin-right: 12px;
                 flex-shrink: 0;
             }
@@ -216,13 +247,13 @@ class QuantumSearch {
                 flex: 1;
                 border: none;
                 background: transparent;
-                color: white;
+                color: #333;
                 font-size: 16px;
                 outline: none;
             }
 
             .quantum-search-input::placeholder {
-                color: rgba(255, 255, 255, 0.5);
+                color: rgba(0, 0, 0, 0.5);
             }
 
             .quantum-search-clear,
@@ -542,6 +573,7 @@ class QuantumSearch {
         const clearBtn = container.querySelector('.quantum-search-clear');
         const filtersToggle = container.querySelector('.quantum-search-filters-toggle');
         const filters = container.querySelector('.quantum-search-filters');
+        const toggleBtn = container.querySelector('.quantum-search-toggle');
         const results = container.querySelector('.quantum-search-results');
         const history = container.querySelector('.quantum-search-history');
 
@@ -553,6 +585,16 @@ class QuantumSearch {
 
         // Clear button
         clearBtn.addEventListener('click', () => this.clearSearch());
+
+        // Toggle collapse
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                container.classList.toggle('quantum-search-collapsed');
+                if (!container.classList.contains('quantum-search-collapsed')) {
+                    input.focus();
+                }
+            });
+        }
 
         // Filters toggle
         if (filtersToggle && filters) {
@@ -644,6 +686,8 @@ class QuantumSearch {
     }
 
     handleFocus() {
+        const container = document.querySelector('.quantum-search-container');
+        container.classList.remove('quantum-search-collapsed');
         if (this.currentQuery.length === 0) {
             this.showHistory();
         } else if (this.currentQuery.length >= this.options.minQueryLength) {
@@ -657,6 +701,8 @@ class QuantumSearch {
             if (!document.querySelector('.quantum-search-container:focus-within')) {
                 this.hideResults();
                 this.hideHistory();
+                const container = document.querySelector('.quantum-search-container');
+                container.classList.add('quantum-search-collapsed');
             }
         }, 150);
     }

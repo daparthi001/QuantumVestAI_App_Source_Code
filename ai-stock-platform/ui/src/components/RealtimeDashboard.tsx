@@ -225,8 +225,8 @@ const RealtimeDashboard: React.FC = () => {
               </div>
             </div>
             <div className="dashboard-actions">
-              <Button as={Link as any} to={ROUTES.STOCKS} variant="primary" className="me-2">
-                🚀 Explore Stocks
+              <Button as={Link as any} to={ROUTES.STOCKS} variant="primary" className="me-2 explore-btn">
+                Explore Stocks <i className="bi bi-arrow-right ms-1"></i>
               </Button>
               <Button as={Link as any} to={ROUTES.PORTFOLIO} variant="outline-primary">
                 💼 Portfolio
