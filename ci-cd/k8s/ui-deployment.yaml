@@ -133,8 +133,8 @@ spec:
             cpu: "1"
             memory: "1Gi"
           limits:
-            cpu: "2"
-            memory: "3Gi"
+            cpu: "4"
+            memory: "4Gi"
             
         # Volume mounts - simplified to only include logs volume
         volumeMounts:

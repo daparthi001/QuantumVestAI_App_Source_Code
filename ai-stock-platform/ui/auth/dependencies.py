@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 # JWT Configuration
 # Prefer JWT_SECRET but fall back to SECRET_KEY for backward compatibility
-JWT_SECRET_KEY = os.getenv("JWT_SECRET") or os.getenv("SECRET_KEY", "default-dev-key")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY") or os.getenv("SECRET_KEY", "default-dev-key")
 JWT_ALGORITHM = "HS256"
 TOKEN_EXPIRE_MINUTES = int(os.getenv("TOKEN_EXPIRE_MINUTES", "60"))
 
