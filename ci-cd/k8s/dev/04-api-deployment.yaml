@@ -97,6 +97,8 @@ spec:
             secretKeyRef:
               name: ui-secrets
               key: RAPIDAPI_KEY
+        - name: ENABLE_REAL_DATA
+          value: "true"
         - name: PYTHONPATH
           value: /app/core:/app/ai-stock-platform:/app/core:/app/api:/app
         - name: PYTHONUNBUFFERED
