@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: list[str] | str | None = None
 
     # Toggle demo mode for UI. When False the UI fetches live data.
-    DEMO_MODE: bool = Field(default=True, env="DEMO_MODE")
+    DEMO_MODE: bool = Field(default=False, env="DEMO_MODE")
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
