@@ -3,7 +3,6 @@
  * Manage and view user watchlists with full API integration
  */
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Table, Spinner, Alert, Modal, Form, Badge } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import apiService, { Watchlist } from '../services/api-service';
 
@@ -105,202 +104,189 @@ const WatchlistComponent: React.FC = () => {
   };
 
   return (
-    <Container fluid>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1>My Watchlists</h1>
-        <div>
-          <Button variant="primary" onClick={() => setShowCreateModal(true)}>
-            Create New Watchlist
-          </Button>
-        </div>
+    <div className="max-w-5xl mx-auto p-4">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-semibold">My Watchlists</h1>
+        <button
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg"
+          onClick={() => setShowCreateModal(true)}
+        >
+          Create New Watchlist
+        </button>
       </div>
 
       {error && (
-        <Alert variant="danger" className="mb-4">
-          {error}
-          <Button variant="link" onClick={fetchWatchlists}>
-            Retry
-          </Button>
-        </Alert>
+        <div className="bg-red-100 text-red-700 p-3 rounded mb-4 flex justify-between">
+          <span>{error}</span>
+          <button className="underline" onClick={fetchWatchlists}>Retry</button>
+        </div>
       )}
 
       {loading ? (
-        <div className="text-center">
-          <Spinner animation="border" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </Spinner>
-          <p className="mt-2">Loading watchlists...</p>
+        <div className="text-center py-10">
+          <div className="w-8 h-8 mx-auto border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <p className="mt-2 text-gray-500">Loading watchlists...</p>
         </div>
       ) : watchlists.length === 0 ? (
-        <Card>
-          <Card.Body className="text-center">
-            <h5>No Watchlists Yet</h5>
-            <p className="text-muted">Create your first watchlist to start tracking your favorite stocks.</p>
-            <Button variant="primary" onClick={() => setShowCreateModal(true)}>
-              Create Your First Watchlist
-            </Button>
-          </Card.Body>
-        </Card>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow text-center">
+          <h5 className="text-lg font-semibold mb-2">No Watchlists Yet</h5>
+          <p className="text-gray-500 mb-4">Create your first watchlist to start tracking your favorite stocks.</p>
+          <button
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg"
+            onClick={() => setShowCreateModal(true)}
+          >
+            Create Your First Watchlist
+          </button>
+        </div>
       ) : (
-        <Row>
+        <div className="grid md:grid-cols-2 gap-4">
           {watchlists.map((watchlist) => (
-            <Col lg={6} key={watchlist.id} className="mb-4">
-              <Card>
-                <Card.Header className="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h5 className="mb-0">{watchlist.name}</h5>
-                    <small className="text-muted">
-                      {watchlist.stocks.length} stock{watchlist.stocks.length !== 1 ? 's' : ''}
-                    </small>
-                  </div>
-                  <div>
-                    <Button
-                      variant="outline-primary"
-                      size="sm"
-                      className="me-2"
+            <div key={watchlist.id} className="bg-white dark:bg-gray-800 rounded-xl shadow">
+              <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
+                <div>
+                  <h5 className="font-semibold">{watchlist.name}</h5>
+                  <small className="text-gray-500">
+                    {watchlist.stocks.length} stock{watchlist.stocks.length !== 1 ? 's' : ''}
+                  </small>
+                </div>
+                <div className="space-x-2">
+                  <button
+                    className="px-2 py-1 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded"
+                    onClick={() => {
+                      setSelectedWatchlist(watchlist);
+                      setShowAddStockModal(true);
+                    }}
+                  >
+                    Add Stock
+                  </button>
+                  <button
+                    className="px-2 py-1 text-sm bg-red-600 hover:bg-red-500 text-white rounded"
+                    onClick={() => handleDeleteWatchlist(watchlist.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+              <div className="p-4">
+                {watchlist.stocks.length === 0 ? (
+                  <div className="text-center text-gray-500">
+                    <p>No stocks in this watchlist yet.</p>
+                    <button
+                      className="mt-2 px-3 py-1 text-sm border border-blue-600 text-blue-600 rounded hover:bg-blue-600 hover:text-white"
                       onClick={() => {
                         setSelectedWatchlist(watchlist);
                         setShowAddStockModal(true);
                       }}
                     >
-                      Add Stock
-                    </Button>
-                    <Button
-                      variant="outline-danger"
-                      size="sm"
-                      onClick={() => handleDeleteWatchlist(watchlist.id)}
-                    >
-                      Delete
-                    </Button>
+                      Add Your First Stock
+                    </button>
                   </div>
-                </Card.Header>
-                <Card.Body>
-                  {watchlist.stocks.length === 0 ? (
-                    <div className="text-center text-muted">
-                      <p>No stocks in this watchlist yet.</p>
-                      <Button
-                        variant="outline-primary"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedWatchlist(watchlist);
-                          setShowAddStockModal(true);
-                        }}
-                      >
-                        Add Your First Stock
-                      </Button>
-                    </div>
-                  ) : (
-                    <Table responsive hover>
-                      <thead>
-                        <tr>
-                          <th>Symbol</th>
-                          <th>Name</th>
-                          <th>Price</th>
-                          <th>Change %</th>
-                          <th>Actions</th>
+                ) : (
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="py-1 text-left">Symbol</th>
+                        <th className="py-1 text-left">Name</th>
+                        <th className="py-1 text-left">Price</th>
+                        <th className="py-1 text-left">Change %</th>
+                        <th className="py-1 text-left">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {watchlist.stocks.map((stock) => (
+                        <tr key={stock.symbol} className="border-b last:border-none">
+                          <td className="py-1">
+                            <Link to={`/stocks/${stock.symbol}`} className="font-semibold hover:underline">
+                              {stock.symbol}
+                            </Link>
+                          </td>
+                          <td className="py-1">{stock.name}</td>
+                          <td className="py-1">{formatPrice(stock.price)}</td>
+                          <td className="py-1">
+                            <span className={stock.change_percent >= 0 ? 'text-green-600' : 'text-red-600'}>
+                              {stock.change_percent >= 0 ? '+' : ''}{stock.change_percent.toFixed(2)}%
+                            </span>
+                          </td>
+                          <td className="py-1">
+                            <button
+                              className="text-red-600 hover:underline"
+                              onClick={() => handleRemoveStock(watchlist.id, stock.symbol)}
+                            >
+                              Remove
+                            </button>
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {watchlist.stocks.map((stock) => (
-                          <tr key={stock.symbol}>
-                            <td>
-                              <Link to={`/stocks/${stock.symbol}`} className="text-decoration-none fw-bold">
-                                {stock.symbol}
-                              </Link>
-                            </td>
-                            <td>{stock.name}</td>
-                            <td>{formatPrice(stock.price)}</td>
-                            <td>
-                              <Badge bg={stock.change_percent >= 0 ? 'success' : 'danger'}>
-                                {stock.change_percent >= 0 ? '+' : ''}{stock.change_percent.toFixed(2)}%
-                              </Badge>
-                            </td>
-                            <td>
-                              <Button
-                                variant="outline-danger"
-                                size="sm"
-                                onClick={() => handleRemoveStock(watchlist.id, stock.symbol)}
-                              >
-                                Remove
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </Table>
-                  )}
-                </Card.Body>
-              </Card>
-            </Col>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
           ))}
-        </Row>
+        </div>
       )}
 
-      {/* Create Watchlist Modal */}
-      <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Create New Watchlist</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group>
-              <Form.Label>Watchlist Name</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Enter watchlist name"
-                value={newWatchlistName}
-                onChange={(e) => setNewWatchlistName(e.target.value)}
-              />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowCreateModal(false)}>
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            onClick={handleCreateWatchlist}
-            disabled={!newWatchlistName.trim() || creating}
-          >
-            {creating ? <Spinner animation="border" size="sm" /> : 'Create'}
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg w-80 space-y-4">
+            <h3 className="text-lg font-semibold">Create New Watchlist</h3>
+            <input
+              type="text"
+              value={newWatchlistName}
+              onChange={(e) => setNewWatchlistName(e.target.value)}
+              placeholder="Watchlist Name"
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="px-3 py-2 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateWatchlist}
+                disabled={!newWatchlistName.trim() || creating}
+                className="px-3 py-2 rounded bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
+              >
+                {creating ? 'Creating...' : 'Create'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* Add Stock Modal */}
-      <Modal show={showAddStockModal} onHide={() => setShowAddStockModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Add Stock to {selectedWatchlist?.name}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group>
-              <Form.Label>Stock Symbol</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Enter stock symbol (e.g., AAPL)"
-                value={newStockSymbol}
-                onChange={(e) => setNewStockSymbol(e.target.value)}
-                style={{ textTransform: 'uppercase' }}
-              />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowAddStockModal(false)}>
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            onClick={handleAddStock}
-            disabled={!newStockSymbol.trim() || adding}
-          >
-            {adding ? <Spinner animation="border" size="sm" /> : 'Add Stock'}
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </Container>
+      {showAddStockModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg w-80 space-y-4">
+            <h3 className="text-lg font-semibold">Add Stock to {selectedWatchlist?.name}</h3>
+            <input
+              type="text"
+              value={newStockSymbol}
+              onChange={(e) => setNewStockSymbol(e.target.value)}
+              placeholder="Stock Symbol (e.g., AAPL)"
+              style={{ textTransform: 'uppercase' }}
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowAddStockModal(false)}
+                className="px-3 py-2 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddStock}
+                disabled={!newStockSymbol.trim() || adding}
+                className="px-3 py-2 rounded bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
+              >
+                {adding ? 'Adding...' : 'Add Stock'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
