@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(extra="ignore")
 
     # API base URL used by the UI when calling the backend
-    API_BASE_URL: str = Field(default="http://quantumvestai-dev-api:8000", env="API_BASE_URL")
+    API_BASE_URL: str = Field(default="http://quantumvestai-dev-api.dev.svc.cluster.local:8000", env="API_BASE_URL")
 
     # Security Settings
     SECRET_KEY: str = Field(default="your-secret-key", env="SECRET_KEY")

@@ -31,13 +31,13 @@ def get_cors_origins() -> List[str]:
         FRONTEND_URL,
         # Local development
         "http://ui-service:3000",
-        "http://quantumvestai-dev-api:8000",
+        "http://quantumvestai-dev-api.dev.svc.cluster.local:8000",
         "http://localhost:3000",
         "http://localhost:8000",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:8000",
         # Development and production domains
-        "http://quantumvestai-dev-api:8000",
+        "http://quantumvestai-dev-api.dev.svc.cluster.local:8000",
         "https://quantumvestai.com",
         "https://www.quantumvestai.com",
         "https://app.quantumvestai.com",

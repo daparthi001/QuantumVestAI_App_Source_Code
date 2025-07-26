@@ -9,7 +9,7 @@ const viteEnv: Record<string, string> = (typeof import.meta !== 'undefined' && i
 export const API_BASE_URL =
   viteEnv.VITE_API_URL ||
   (typeof process !== 'undefined' ? process.env.REACT_APP_API_URL : undefined) ||
-  'http://quantumvestai-dev-api:8000';
+  'http://quantumvestai-dev-api.dev.svc.cluster.local:8000';
 
 // Authentication
 export const ACCESS_TOKEN_KEY = 'qvai_token';

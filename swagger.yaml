@@ -23,7 +23,7 @@ info:
     - Admin users: Unlimited
     
     ## Base URL
-    - **Development**: `http://quantumvestai-dev-api:8000`
+    - **Development**: `http://quantumvestai-dev-api.dev.svc.cluster.local:8000`
     - **Production**: `https://api.quantumvestai.com`
     
   version: 1.0.0
@@ -35,11 +35,11 @@ info:
     url: https://opensource.org/licenses/MIT
 
 servers:
-  - url: http://quantumvestai-dev-api:8000
+  - url: http://quantumvestai-dev-api.dev.svc.cluster.local:8000
     description: Development server
   - url: https://api.quantumvestai.com
     description: Production server
-  - url: http://quantumvestai-dev-api:8000
+  - url: http://quantumvestai-dev-api.dev.svc.cluster.local:8000
     description: Internal cluster service
 
 security:

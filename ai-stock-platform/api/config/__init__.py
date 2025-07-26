@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     
     # CORS Settings
     BACKEND_CORS_ORIGINS: List[str] = [
-        "http://quantumvestai-dev-api:8000",
+        "http://quantumvestai-dev-api.dev.svc.cluster.local:8000",
         "http://ui-service:3000"
     ]
     

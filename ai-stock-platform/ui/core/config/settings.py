@@ -34,10 +34,10 @@ class Settings:
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production")
     
     # CORS settings
-    CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://ui-service:3000,http://quantumvestai-dev-api:8000").split(",")
+    CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://ui-service:3000,http://quantumvestai-dev-api.dev.svc.cluster.local:8000").split(",")
     
     # Base URL for API requests (without trailing slash)
-    API_BASE_URL = os.environ.get("API_BASE_URL", "http://quantumvestai-dev-api:8000")
+    API_BASE_URL = os.environ.get("API_BASE_URL", "http://quantumvestai-dev-api.dev.svc.cluster.local:8000")
     
     # JWT settings
     JWT_SECRET = os.environ.get("JWT_SECRET_KEY", "jwt-secret-change-in-production")

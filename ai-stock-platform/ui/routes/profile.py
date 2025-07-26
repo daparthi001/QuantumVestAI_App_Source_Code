@@ -21,7 +21,7 @@ from services.api_client import APIClient
 logger = logging.getLogger(__name__)
 
 # API Configuration
-API_URL = os.environ.get("API_URL", "http://quantumvestai-dev-api:8000")
+API_URL = os.environ.get("API_URL", "http://quantumvestai-dev-api.dev.svc.cluster.local:8000")
 API_V1_URL = f"{API_URL}/api/v1"
 
 # Templates setup

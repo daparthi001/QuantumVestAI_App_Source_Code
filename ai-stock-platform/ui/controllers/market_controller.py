@@ -24,7 +24,7 @@ from fastapi import (
 )
 from fastapi.responses import HTMLResponse, JSONResponse
 
-API_URL = "http://quantumvestai-dev-api:8000"
+API_URL = "http://quantumvestai-dev-api.dev.svc.cluster.local:8000"
 # Import dependencies with fallback
 try:
     from auth.dependencies import get_current_user, get_optional_current_user
@@ -102,7 +102,7 @@ async def market_overview(request: Request, response: Response):
     try:
         # Get API URL from app state or environment
         api_url_base = getattr(request.app.state, "settings", {}).get(
-            "API_URL", os.getenv("API_URL", "http://quantumvestai-dev-api:8000")
+            "API_URL", os.getenv("API_URL", "http://quantumvestai-dev-api.dev.svc.cluster.local:8000")
         )
 
         cache_key = "market_overview"
@@ -183,7 +183,7 @@ async def stock_details(
     try:
         # Get API URL from app state or environment
         api_url_base = getattr(request.app.state, "settings", {}).get(
-            "API_URL", os.getenv("API_URL", "http://quantumvestai-dev-api:8000")
+            "API_URL", os.getenv("API_URL", "http://quantumvestai-dev-api.dev.svc.cluster.local:8000")
         )
 
         # Create cache key for demo mode
@@ -280,7 +280,7 @@ async def search_stocks(
     try:
         # Get API URL from app state or environment
         api_url_base = getattr(request.app.state, "settings", {}).get(
-            "API_URL", os.getenv("API_URL", "http://quantumvestai-dev-api:8000")
+            "API_URL", os.getenv("API_URL", "http://quantumvestai-dev-api.dev.svc.cluster.local:8000")
         )
 
         cache_key = f"stock_search_{query.lower()}"
