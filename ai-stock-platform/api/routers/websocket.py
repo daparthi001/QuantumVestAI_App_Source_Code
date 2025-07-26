@@ -37,17 +37,20 @@ async def websocket_endpoint(
             await websocket.close(code=1008)
             return
 
-        # Require and verify token
-        if not token:
-            await websocket.close(code=4001, reason="Token required")
-            return
-
+        # Require and verify token, except for public market data stream
         user = None
-        try:
-            user = await get_current_user(token)
-        except Exception:
-            await websocket.close(code=4001, reason="Invalid token")
-            return
+        if not token:
+            if client_id == "market-data":
+                logger.info("Allowing anonymous WebSocket connection for market-data")
+            else:
+                await websocket.close(code=4001, reason="Token required")
+                return
+        if token:
+            try:
+                user = await get_current_user(token)
+            except Exception:
+                await websocket.close(code=4001, reason="Invalid token")
+                return
 
         # Connect to WebSocket
         await manager.connect(websocket, client_id)
