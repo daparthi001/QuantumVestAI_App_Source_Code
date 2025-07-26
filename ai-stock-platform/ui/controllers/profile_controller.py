@@ -16,7 +16,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from services.api_client import APIClient
 
-API_URL = "http://quantumvestai-dev-api:8000"
+API_URL = "http://quantumvestai-dev-api.dev.svc.cluster.local:8000"
 
 # Setup router and templates
 router = APIRouter()

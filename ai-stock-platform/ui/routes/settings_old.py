@@ -17,7 +17,7 @@ from services.api_client import APIClient
 logger = logging.getLogger(__name__)
 
 # API Configuration
-API_URL = "http://quantumvestai-dev-api:8000"
+API_URL = "http://quantumvestai-dev-api.dev.svc.cluster.local:8000"
 
 # Templates setup
 templates = Jinja2Templates(directory="templates")

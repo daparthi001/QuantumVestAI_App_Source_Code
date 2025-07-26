@@ -11,7 +11,7 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - fallback for tests
     from ui.services.api_client import APIClient
 
-API_URL = "http://quantumvestai-dev-api:8000"
+API_URL = "http://quantumvestai-dev-api.dev.svc.cluster.local:8000"
 
 async def get_api_client(request: Request) -> APIClient:
     """Dependency to get API client without authentication."""

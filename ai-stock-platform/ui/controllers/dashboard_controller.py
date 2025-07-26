@@ -16,7 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response,
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-API_URL = "http://quantumvestai-dev-api:8000"
+API_URL = "http://quantumvestai-dev-api.dev.svc.cluster.local:8000"
 # Auth dependencies removed as per requirements
 
 
@@ -157,7 +157,7 @@ async def dashboard(
         if dashboard_data is None:
             # Check if app.state has settings attribute
             api_url_base = getattr(request.app.state, "settings", {}).get(
-                "API_URL", os.getenv("API_URL", "http://quantumvestai-dev-api:8000")
+                "API_URL", os.getenv("API_URL", "http://quantumvestai-dev-api.dev.svc.cluster.local:8000")
             )
 
             try:

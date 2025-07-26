@@ -14,9 +14,9 @@ The QuantumVestAI API provides comprehensive access to AI-powered stock market a
 
 ### Base URLs
 
-- **Development**: `http://quantumvestai-dev-api:8000`
+- **Development**: `http://quantumvestai-dev-api.dev.svc.cluster.local:8000`
 - **Production**: `https://api.quantumvestai.com`
-- **Internal Service**: `http://quantumvestai-dev-api:8000`
+- **Internal Service**: `http://quantumvestai-dev-api.dev.svc.cluster.local:8000`
 
 ### Authentication
 
@@ -158,24 +158,24 @@ Use the OpenAPI specification to generate client libraries in your preferred pro
 ### Authentication
 ```bash
 # Login
-curl -X POST "http://quantumvestai-dev-api:8000/api/v1/auth/login" \
+curl -X POST "http://quantumvestai-dev-api.dev.svc.cluster.local:8000/api/v1/auth/login" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "username=demo&password=password"
 
 # Use the returned token
-curl -X GET "http://quantumvestai-dev-api:8000/api/v1/stocks/AAPL" \
+curl -X GET "http://quantumvestai-dev-api.dev.svc.cluster.local:8000/api/v1/stocks/AAPL" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ### Get Stock Forecast
 ```bash
-curl -X GET "http://quantumvestai-dev-api:8000/api/v1/forecast/AAPL?horizon=30&model=ensemble" \
+curl -X GET "http://quantumvestai-dev-api.dev.svc.cluster.local:8000/api/v1/forecast/AAPL?horizon=30&model=ensemble" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ### Twitter Sentiment Analysis
 ```bash
-curl -X GET "http://quantumvestai-dev-api:8000/api/social/twitter/sentiment/AAPL?days=7" \
+curl -X GET "http://quantumvestai-dev-api.dev.svc.cluster.local:8000/api/social/twitter/sentiment/AAPL?days=7" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -194,8 +194,8 @@ For additional support:
 To test the API inside the Kubernetes cluster:
 
 1. Ensure the `quantumvestai-dev-api` service is running
-2. Use the service base URL: `http://quantumvestai-dev-api:8000`
-3. Access the interactive docs at: `http://quantumvestai-dev-api:8000/docs`
+2. Use the service base URL: `http://quantumvestai-dev-api.dev.svc.cluster.local:8000`
+3. Access the interactive docs at: `http://quantumvestai-dev-api.dev.svc.cluster.local:8000/docs`
 
 ### Validation
 The OpenAPI specification has been validated for:

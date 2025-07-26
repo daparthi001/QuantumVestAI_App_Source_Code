@@ -173,7 +173,7 @@ if [ -n "$ALB_HOSTNAME" ]; then
   echo ""
   echo "Next steps:"
   echo "1. Update your DNS to point dev.quantumvestai.com to $ALB_HOSTNAME"
-  echo "2. Test HTTPS access: http://quantumvestai-dev-api:8000/"
+  echo "2. Test HTTPS access: http://quantumvestai-dev-api.dev.svc.cluster.local:8000/"
 else
   echo "ALB is still being provisioned. Check status with:"
   echo "kubectl get ingress quantumvestai-alb -n dev"

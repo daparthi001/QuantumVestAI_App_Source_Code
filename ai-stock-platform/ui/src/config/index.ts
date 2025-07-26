@@ -12,7 +12,7 @@ export default {
         baseUrl:
             (typeof import.meta !== 'undefined' && import.meta.env.VITE_API_URL) ||
             (typeof process !== 'undefined' ? process.env.REACT_APP_API_URL : undefined) ||
-            'http://quantumvestai-dev-api:8000',
+            'http://quantumvestai-dev-api.dev.svc.cluster.local:8000',
         timeout: 30000
     },
     cache: {

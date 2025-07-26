@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "QuantumVestAI API",
-    "description": "**QuantumVestAI** is a comprehensive stock market analysis platform that provides AI-powered forecasting, sentiment analysis, and portfolio management capabilities.\n\n## Features\n- **AI-Powered Stock Forecasting**: Advanced machine learning models for stock price predictions\n- **Real-Time Sentiment Analysis**: Twitter sentiment analysis for stock symbols\n- **Portfolio Management**: Complete portfolio tracking and management\n- **User Management**: Role-based access control and user authentication\n- **Administrative Tools**: System monitoring and administrative functions\n\n## Authentication\nThis API uses JWT Bearer token authentication. To authenticate:\n1. Use the `/api/v1/auth/login` endpoint with your credentials\n2. Include the returned token in the Authorization header: `Authorization: Bearer <token>`\n\n## Rate Limiting\nAPI requests are rate-limited to prevent abuse:\n- Standard users: 100 requests per minute\n- Premium users: 1000 requests per minute\n- Admin users: Unlimited\n\n## Base URL\n- **Development**: `http://quantumvestai-dev-api:8000`\n- **Production**: `https://api.quantumvestai.com`\n",
+    "description": "**QuantumVestAI** is a comprehensive stock market analysis platform that provides AI-powered forecasting, sentiment analysis, and portfolio management capabilities.\n\n## Features\n- **AI-Powered Stock Forecasting**: Advanced machine learning models for stock price predictions\n- **Real-Time Sentiment Analysis**: Twitter sentiment analysis for stock symbols\n- **Portfolio Management**: Complete portfolio tracking and management\n- **User Management**: Role-based access control and user authentication\n- **Administrative Tools**: System monitoring and administrative functions\n\n## Authentication\nThis API uses JWT Bearer token authentication. To authenticate:\n1. Use the `/api/v1/auth/login` endpoint with your credentials\n2. Include the returned token in the Authorization header: `Authorization: Bearer <token>`\n\n## Rate Limiting\nAPI requests are rate-limited to prevent abuse:\n- Standard users: 100 requests per minute\n- Premium users: 1000 requests per minute\n- Admin users: Unlimited\n\n## Base URL\n- **Development**: `http://quantumvestai-dev-api.dev.svc.cluster.local:8000`\n- **Production**: `https://api.quantumvestai.com`\n",
     "version": "1.0.0",
     "contact": {
       "name": "QuantumVestAI Support",
@@ -15,7 +15,7 @@
   },
   "servers": [
     {
-      "url": "http://quantumvestai-dev-api:8000",
+      "url": "http://quantumvestai-dev-api.dev.svc.cluster.local:8000",
       "description": "Development server"
     },
     {
@@ -23,7 +23,7 @@
       "description": "Production server"
     },
     {
-      "url": "http://quantumvestai-dev-api:8000",
+      "url": "http://quantumvestai-dev-api.dev.svc.cluster.local:8000",
       "description": "Internal cluster service"
     }
   ],

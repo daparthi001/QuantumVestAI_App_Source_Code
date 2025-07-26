@@ -101,17 +101,17 @@ To verify your Twitter API integration is working:
 
 1. **Health Check Endpoint**
    ```bash
-   curl http://quantumvestai-dev-api:8000/api/social/twitter/health
+   curl http://quantumvestai-dev-api.dev.svc.cluster.local:8000/api/social/twitter/health
    ```
 
 2. **Test Sentiment Analysis**
    ```bash
-   curl http://quantumvestai-dev-api:8000/api/social/twitter/sentiment/AAPL
+   curl http://quantumvestai-dev-api.dev.svc.cluster.local:8000/api/social/twitter/sentiment/AAPL
    ```
 
 3. **Test Trending Stocks**
    ```bash
-   curl http://quantumvestai-dev-api:8000/api/social/twitter/trending
+   curl http://quantumvestai-dev-api.dev.svc.cluster.local:8000/api/social/twitter/trending
    ```
 
 ## API Endpoints

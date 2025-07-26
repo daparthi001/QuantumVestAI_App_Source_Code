@@ -181,7 +181,7 @@ async def service_worker():
         raise HTTPException(status_code=404, detail="Service worker not found")
 
 # API configuration
-API_URL = os.environ.get("API_URL", "http://quantumvestai-dev-api:8000")
+API_URL = os.environ.get("API_URL", "http://quantumvestai-dev-api.dev.svc.cluster.local:8000")
 API_V1_URL = f"{API_URL}/api/v1"
 
 def _add_fallback_filters(templates):

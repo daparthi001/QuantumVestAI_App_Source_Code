@@ -15,7 +15,7 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'http://quantumvestai-dev-api:8000',
+        target: 'http://quantumvestai-dev-api.dev.svc.cluster.local:8000',
         changeOrigin: true,
         secure: false,
       },

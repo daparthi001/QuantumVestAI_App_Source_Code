@@ -33,7 +33,7 @@ export class OrderWebSocket {
             const wsBase =
                 viteEnv.VITE_WS_URL ||
                 (typeof process !== 'undefined' ? process.env.REACT_APP_WS_URL : undefined) ||
-                'ws://quantumvestai-dev-api:8000/ws';
+                'ws://quantumvestai-dev-api.dev.svc.cluster.local:8000/ws';
             this.ws = new WebSocket(`${wsBase}/orders/${userId}?token=${token}`);
 
             this.ws.onopen = this.handleOpen.bind(this);
