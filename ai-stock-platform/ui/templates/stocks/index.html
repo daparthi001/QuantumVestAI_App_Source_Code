@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Stocks - QuantumVestAI{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="/">Home</a></li>
+<li class="breadcrumb-item active">Stocks</li>
+{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <div class="header-content">
+        <h1 class="page-title">Trending Stocks</h1>
+        <p class="text-muted">Browse currently trending stocks</p>
+    </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger" role="alert">
+    {{ error }}
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Change</th>
+                        <th>% Change</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for stock in stocks %}
+                    <tr>
+                        <td><a href="/stock/{{ stock.symbol }}">{{ stock.symbol }}</a></td>
+                        <td>{{ stock.name }}</td>
+                        <td>${{ stock.price | round(2) }}</td>
+                        <td class="{% if stock.change > 0 %}text-success{% elif stock.change < 0 %}text-danger{% endif %}">
+                            {{ stock.change | round(2) }}
+                        </td>
+                        <td class="{% if stock.change_percent > 0 %}text-success{% elif stock.change_percent < 0 %}text-danger{% endif %}">
+                            {{ stock.change_percent | round(2) }}%
+                        </td>
+                        <td><a class="btn btn-sm btn-primary" href="/stock/{{ stock.symbol }}">Details</a></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

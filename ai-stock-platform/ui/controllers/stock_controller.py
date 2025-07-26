@@ -13,6 +13,7 @@ from ui.config.constants import AVAILABLE_MODELS, MODEL_ENSEMBLE
 
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from services.trending_stocks_service import TrendingStocksService
 
 router = APIRouter()
 templates = Jinja2Templates(directory=str(Path(__file__).resolve().parent.parent / "templates"))
@@ -26,6 +27,39 @@ logger = logging.getLogger("quantumvestai.stock_controller")
 # Get API URL from environment or use default
 API_URL = os.environ.get("API_URL", "http://quantumvestai-dev-api:8000")
 API_V1_URL = f"{API_URL}/api/v1"
+
+
+@router.get("/stocks", response_class=HTMLResponse)
+async def stocks_list(
+    request: Request,
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+):
+    """Display a list of trending stocks."""
+    try:
+        trending = await TrendingStocksService().get_trending_stocks(page=page, limit=limit)
+        stocks = trending.get("stocks", [])
+        return get_templates(request).TemplateResponse(
+            "stocks/index.html",
+            {
+                "request": request,
+                "stocks": stocks,
+                "pagination": trending.get("pagination"),
+                "demo_mode": True,
+                "page_title": "Stocks - QuantumVestAI",
+            },
+        )
+    except Exception as e:
+        logger.error(f"Error loading stocks list: {e}")
+        return get_templates(request).TemplateResponse(
+            "error.html",
+            {
+                "request": request,
+                "error": "Unable to load stocks",
+                "page_title": "Stocks Error",
+            },
+            status_code=500,
+        )
 
 @router.get("/stock/search", response_class=HTMLResponse)
 async def stock_search(
