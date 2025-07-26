@@ -22,7 +22,7 @@ class UserBase(BaseModel):
     is_active: bool
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class LoginResponse(BaseModel):
     access_token: str
