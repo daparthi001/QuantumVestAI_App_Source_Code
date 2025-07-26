@@ -191,11 +191,12 @@ class QuantumSearch {
                 flex: 1;
                 display: flex;
                 align-items: center;
-                background: var(--glass-bg, rgba(255, 255, 255, 0.1));
-                border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.2));
+                /* Increase opacity and reduce blur for clarity */
+                background: var(--glass-bg, rgba(255, 255, 255, 0.2));
+                border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.3));
                 border-radius: 25px;
                 padding: 12px 16px;
-                backdrop-filter: blur(10px);
+                backdrop-filter: blur(4px);
                 transition: var(--transition-smooth, all 0.3s ease);
             }
 
