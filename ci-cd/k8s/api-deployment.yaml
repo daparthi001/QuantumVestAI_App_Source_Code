@@ -129,6 +129,8 @@ spec:
             secretKeyRef:
               name: app-secrets
               key: RAPIDAPI_KEY
+        - name: ENABLE_REAL_DATA
+          value: "true"
         envFrom:
         - configMapRef:
             name: api-configmap

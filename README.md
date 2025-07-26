@@ -136,6 +136,10 @@ To disable the built-in mock responses and fetch live quotes you must also set
 unset (the default) will cause the services to fall back to generated demo data
 even if the API key is provided.
 
+For Kubernetes deployments, edit `ci-cd/k8s/api-deployment.yaml` and add
+`ENABLE_REAL_DATA=true` to the API container's environment variables so the
+service fetches live data.
+
 ## Database Setup
 
 The API uses asynchronous SQLAlchemy connections. Before running the server you must
