@@ -234,6 +234,13 @@ class ApiService {
     return response.data.data;
   }
 
+  async getPreMarketPrediction(symbol: string): Promise<StockPrediction> {
+    const response = await apiClient.get<StandardResponse<StockPrediction>>(
+      API_ENDPOINTS.PREDICTIONS.PRE_MARKET(symbol)
+    );
+    return response.data.data;
+  }
+
   // Sentiment methods
   async getStockSentiment(symbol: string): Promise<StockSentiment> {
     const response = await apiClient.get<StandardResponse<StockSentiment>>(

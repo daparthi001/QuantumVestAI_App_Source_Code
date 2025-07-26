@@ -43,6 +43,7 @@ export const API_ENDPOINTS = {
     COMPARISON: '/api/v1/predictions/comparison',
     ACCURACY: '/api/v1/predictions/accuracy',
     MODELS: '/api/v1/predictions/models',
+    PRE_MARKET: (symbol: string) => `/api/v1/predictions/pre-market/${symbol}`,
   },
   // Watchlist endpoints
   WATCHLISTS: {
