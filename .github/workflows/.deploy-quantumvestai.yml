@@ -115,6 +115,8 @@ jobs:
     - name: Update kubeconfig
       run: |
         aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+        kubectl get po -l app=quantumvestai -n dev
+        kubectl delete po -l app=quantumvestai -n dev
 
     - name: Validate EKS Connection
       run: |
@@ -274,7 +276,7 @@ jobs:
 
     - name: Remove Kubernetes resources
       run: |
-        kubectl delete namespace ${{ env.ENVIRONMENT }} --ignore-not-found
+        # kubectl delete namespace ${{ env.ENVIRONMENT }} --ignore-not-found
 
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v2
