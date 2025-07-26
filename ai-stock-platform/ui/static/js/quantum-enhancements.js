@@ -91,25 +91,15 @@ class QuantumUIEnhancer {
         const nav = document.querySelector('.quantum-nav');
         if (!nav) return;
 
-        // Add scrolled class on scroll
-        let lastScrollY = window.scrollY;
+        // Add scrolled class on scroll while keeping the menu fixed
         window.addEventListener('scroll', () => {
             const currentScrollY = window.scrollY;
-            
+
             if (currentScrollY > 100) {
                 nav.classList.add('scrolled');
             } else {
                 nav.classList.remove('scrolled');
             }
-
-            // Hide/show nav on scroll
-            if (currentScrollY > lastScrollY && currentScrollY > 200) {
-                nav.style.transform = 'translateY(-100%)';
-            } else {
-                nav.style.transform = 'translateY(0)';
-            }
-            
-            lastScrollY = currentScrollY;
         }, { passive: true });
 
         // Setup mobile menu
