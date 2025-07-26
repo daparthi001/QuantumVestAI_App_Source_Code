@@ -3,12 +3,13 @@
  * Features floating sidebar, glass morphism, and quantum animations
  */
 import React, { useState, useEffect } from 'react';
-import { Navbar, Nav, Container, Offcanvas, Button, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Navbar, Nav, Container, Button, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../providers/ThemeProvider';
 import { ROUTES } from '../../config/constants';
 import { motion, AnimatePresence } from 'framer-motion';
+import MobileDrawer from './MobileDrawer';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -319,55 +320,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
         </motion.div>
 
-        {/* Enhanced Mobile Sidebar */}
-        <Offcanvas
-          show={showSidebar}
-          onHide={() => setShowSidebar(false)}
-          placement="start"
-          className="quantum-mobile-sidebar d-lg-none"
-        >
-          <Offcanvas.Header closeButton className="quantum-card-header">
-            <Offcanvas.Title className="quantum-text-gradient">
-              ⚛️ QuantumVestAI
-            </Offcanvas.Title>
-          </Offcanvas.Header>
-          <Offcanvas.Body className="quantum-card-body">
-            <Nav className="flex-column">
-              {navigationItems.map((item, index) => (
-                <motion.div
-                  key={item.path}
-                  initial={{ opacity: 0, x: -50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                >
-                  <Nav.Link
-                    as={Link}
-                    to={item.path}
-                    className={`quantum-nav-item ${
-                      location.pathname === item.path ? 'active' : ''
-                    }`}
-                    onClick={() => setShowSidebar(false)}
-                    style={{
-                      '--item-color': item.color
-                    } as React.CSSProperties}
-                  >
-                    <motion.div 
-                      className="me-3 quantum-mobile-icon"
-                      whileHover={{ scale: 1.2, rotate: 360 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <i className={`bi ${item.modernIcon}`} style={{ color: item.color, fontSize: '1.2rem' }}></i>
-                    </motion.div>
-                    <div>
-                      <div className="fw-semibold">{item.label}</div>
-                      <small className="text-muted">{item.description}</small>
-                    </div>
-                  </Nav.Link>
-                </motion.div>
-              ))}
-            </Nav>
-          </Offcanvas.Body>
-        </Offcanvas>
+        {/* Mobile Drawer */}
+        <MobileDrawer
+          open={showSidebar}
+          onClose={() => setShowSidebar(false)}
+          items={navigationItems}
+        />
 
         {/* Enhanced Main Content */}
         <motion.div
