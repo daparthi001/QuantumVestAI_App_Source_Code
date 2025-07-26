@@ -10,9 +10,11 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy import Column, Integer, Float, String, DateTime
 
 TestBase = declarative_base()
+# Mark the base class so PyTest does not treat it as a test
+TestBase.__test__ = False
 
 
-class TestStock(TestBase):
+class Stock(TestBase):
     __tablename__ = "stocks"
     id = Column(Integer, primary_key=True)
     ticker = Column(String)
@@ -22,7 +24,7 @@ class TestStock(TestBase):
     last_updated = Column(DateTime)
 
 
-class TestStockPrice(TestBase):
+class StockPrice(TestBase):
     __tablename__ = "stock_prices"
     id = Column(Integer, primary_key=True)
     stock_id = Column(Integer)
@@ -59,11 +61,11 @@ def test_prediction_data_agent(monkeypatch):
     agent = PredictionDataAgent(
         session,
         ["TEST"],
-        stock_model=TestStock,
-        price_model=TestStockPrice,
+        stock_model=Stock,
+        price_model=StockPrice,
     )
     agent.update_symbols(days=1)
 
-    assert session.query(TestStock).count() == 1
-    assert session.query(TestStockPrice).count() == 1
+    assert session.query(Stock).count() == 1
+    assert session.query(StockPrice).count() == 1
 

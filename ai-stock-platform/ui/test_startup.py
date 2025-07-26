@@ -42,10 +42,11 @@ try:
     for module in modules_to_test:
         try:
             # Test if we can at least parse the module
-            with open(f"{module.replace('.', '/')}.py", 'r') as f:
+            module_path = current_dir / f"{module.replace('.', '/')}.py"
+            with open(module_path, 'r') as f:
                 content = f.read()
                 # Simple validation - check if it compiles
-                compile(content, f"{module}.py", 'exec')
+                compile(content, str(module_path), 'exec')
             imported_modules.append(module)
             print(f"✓ {module}")
         except Exception as e:
@@ -72,19 +73,21 @@ try:
     missing_dirs = []
     
     for dir_name in required_dirs:
-        if os.path.exists(dir_name):
+        dir_path = current_dir / dir_name
+        if dir_path.exists():
             print(f"✓ {dir_name}/ directory exists")
         else:
             missing_dirs.append(dir_name)
             print(f"✗ {dir_name}/ directory missing")
     
     # Check main.py
-    if os.path.exists('main.py'):
+    main_path = current_dir / 'main.py'
+    if main_path.exists():
         print("✓ main.py exists")
         try:
-            with open('main.py', 'r') as f:
+            with open(main_path, 'r') as f:
                 content = f.read()
-                compile(content, 'main.py', 'exec')
+                compile(content, str(main_path), 'exec')
             print("✓ main.py compiles successfully")
         except Exception as e:
             print(f"✗ main.py compilation error: {str(e)}")
