@@ -1,12 +1,15 @@
 """ChatGPT integration service."""
 
+from __future__ import annotations
+
 import logging
 import os
-from typing import Optional
 
 import openai
 
+
 logger = logging.getLogger(__name__)
+
 
 class ChatGPTService:
     """Wrapper for the OpenAI Chat Completion API."""
@@ -25,7 +28,6 @@ class ChatGPTService:
                 temperature=0.7,
             )
             return response.choices[0].message.content.strip()
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             logger.error("ChatGPT request failed: %s", exc)
             return "Unable to fetch response from ChatGPT."
-
