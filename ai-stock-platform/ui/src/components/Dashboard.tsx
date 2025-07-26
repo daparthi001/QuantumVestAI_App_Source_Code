@@ -10,21 +10,34 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ROUTES } from '../config/constants';
 import TrendingStocks from './TrendingStocks';
+import apiService, { MarketOverview, Portfolio } from '../services/api-service';
 
 const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [marketOverview, setMarketOverview] = useState<MarketOverview | null>(null);
+  const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
+
+  const formatCurrency = (amount: number) =>
+    amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
         setError(null);
-        // Simulate loading delay for demo purposes
-        setTimeout(() => setLoading(false), 1000);
+        const [overviewData, portfolios] = await Promise.all([
+          apiService.getMarketOverview(),
+          apiService.getPortfolios(),
+        ]);
+        setMarketOverview(overviewData);
+        if (portfolios.length > 0) {
+          setPortfolio(portfolios[0]);
+        }
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
         setError('Failed to load dashboard data. Please try again.');
+      } finally {
         setLoading(false);
       }
     };
@@ -160,91 +173,84 @@ const Dashboard: React.FC = () => {
                         </Spinner>
                       </motion.div>
                       <p className="mt-3 text-muted">Loading market data...</p>
-                    </div>
-                  ) : (
+                  ) : marketOverview ? (
                     <Row>
-                      {[
-                        { name: 'S&P 500', value: '5,421.53', change: 0.8, icon: '📊' },
-                        { name: 'NASDAQ', value: '17,658.23', change: 1.2, icon: '💻' },
-                        { name: 'Dow Jones', value: '39,875.12', change: 0.5, icon: '🏭' }
-                      ].map((index, idx) => (
-                        <Col md={4} key={idx} className="mb-3">
-                          <motion.div
-                            className="quantum-stat-card text-center p-3"
-                            whileHover={{ scale: 1.05, y: -5 }}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.2, delay: idx * 0.1 }}
-                          >
-                            <div className="mb-2 fs-2">{index.icon}</div>
-                            <h6 className="text-muted">{index.name}</h6>
-                            <h4 className="quantum-text-primary mb-2">{index.value}</h4>
-                            <span className="text-success">
-                              ↗ +{index.change}%
-                            </span>
-                          </motion.div>
-                        </Col>
-                      ))}
+                      {marketOverview.indices.map((idxData, idx) => {
+                        const iconMap: Record<string, string> = {
+                          'S&P 500': '📊',
+                          NASDAQ: '💻',
+                          'Dow Jones': '🏭',
+                        };
+                        const icon = iconMap[idxData.name] || '📈';
+                        return (
+                          <Col md={4} key={idx} className="mb-3">
+                            <motion.div
+                              className="quantum-stat-card text-center p-3"
+                              whileHover={{ scale: 1.05, y: -5 }}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.2, delay: idx * 0.1 }}
+                            >
+                              <div className="mb-2 fs-2">{icon}</div>
+                              <h6 className="text-muted">{idxData.name}</h6>
+                              <h4 className="quantum-text-primary mb-2">{idxData.value.toLocaleString()}</h4>
+                              <span className={idxData.change_percent >= 0 ? 'text-success' : 'text-danger'}>
+                                {idxData.change_percent >= 0 ? '↗ ' : '↘ '}
+                                {idxData.change_percent.toFixed(2)}%
+                              </span>
+                            </motion.div>
+                          </Col>
+                        );
+                      })}
                     </Row>
-                  )}
-                </Card.Body>
-              </Card>
-            </motion.div>
-          </Col>
-
-          {/* Quick Stats */}
-          <Col lg={4} className="mb-4">
-            <motion.div variants={itemVariants}>
-              <Card className="quantum-card h-100">
-                <Card.Header className="quantum-card-header">
-                  <h5 className="mb-0 d-flex align-items-center">
-                    <motion.span
-                      className="me-2"
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      💼
-                    </motion.span>
-                    Portfolio Summary
-                  </h5>
-                </Card.Header>
-                <Card.Body>
+                  ) : (
+                    <div className="text-center text-muted">No market data available</div>
+                  )
+                  }
                   <motion.div
                     className="text-center mb-3 quantum-stat-card p-3"
                     whileHover={{ scale: 1.02 }}
                   >
-                    <h4 className="quantum-text-primary">$124,567.89</h4>
-                    <small className="text-success">+$2,456 (+2.0%)</small>
-                  </motion.div>
-                  <hr />
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 }}
-                  >
-                    <div className="d-flex justify-content-between mb-2">
-                      <span className="text-muted">Day's Change:</span>
-                      <span className="text-success fw-semibold">+$523.12</span>
-                    </div>
-                    <div className="d-flex justify-content-between mb-2">
-                      <span className="text-muted">Total Invested:</span>
-                      <span className="fw-semibold">$120,000.00</span>
-                    </div>
-                    <div className="d-flex justify-content-between mb-3">
-                      <span className="text-muted">Total Gain:</span>
-                      <span className="text-success fw-semibold">+$4,567.89</span>
-                    </div>
-                  </motion.div>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button 
-                      as={Link as any} 
-                      to={ROUTES.PORTFOLIO} 
-                      className="quantum-btn w-100"
+                      <h4 className="quantum-text-primary">{portfolio ? formatCurrency(portfolio.total_value) : '--'}</h4>
+                      {portfolio && (
+                        <small className={portfolio.total_profit_loss >= 0 ? 'text-success' : 'text-danger'}>
+                          {portfolio.total_profit_loss >= 0 ? '+' : ''}{formatCurrency(portfolio.total_profit_loss)} ({portfolio.total_profit_loss_percent.toFixed(2)}%)
+                        </small>
+                      )}
+                    </motion.div>
+                    <hr />
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.6 }}
                     >
-                      <span className="me-2">💼</span>
-                      View Full Portfolio
-                    </Button>
-                  </motion.div>
+                      <div className="d-flex justify-content-between mb-2">
+                        <span className="text-muted">Day's Change:</span>
+                        <span className={portfolio && portfolio.daily_change_percent >= 0 ? 'text-success fw-semibold' : 'text-danger fw-semibold'}>
+                          {portfolio ? (portfolio.daily_change_percent >= 0 ? '+' : '') + portfolio.daily_change_percent.toFixed(2) + '%' : '--'}
+                        </span>
+                      </div>
+                      <div className="d-flex justify-content-between mb-2">
+                        <span className="text-muted">Total Invested:</span>
+                        <span className="fw-semibold">{portfolio ? formatCurrency(portfolio.total_value - portfolio.total_profit_loss) : '--'}</span>
+                      </div>
+                      <div className="d-flex justify-content-between mb-3">
+                        <span className="text-muted">Total Gain:</span>
+                        <span className={portfolio && portfolio.total_profit_loss >= 0 ? 'text-success fw-semibold' : 'text-danger fw-semibold'}>
+                          {portfolio ? (portfolio.total_profit_loss >= 0 ? '+' : '') + formatCurrency(portfolio.total_profit_loss) : '--'}
+                        </span>
+                      </div>
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button
+                        as={Link as any}
+                        to={ROUTES.PORTFOLIO}
+                        className="quantum-btn w-100"
+                      >
+                        <span className="me-2">💼</span>
+                        View Full Portfolio
+                      </Button>
+                    </motion.div>
                 </Card.Body>
               </Card>
             </motion.div>
