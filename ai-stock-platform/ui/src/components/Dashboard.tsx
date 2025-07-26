@@ -91,14 +91,13 @@ const Dashboard: React.FC = () => {
           </div>
           <div className="d-flex gap-2">
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button 
-                as={Link as any} 
-                to={ROUTES.STOCKS} 
-                className="quantum-btn me-2"
+              <Button
+                as={Link as any}
+                to={ROUTES.STOCKS}
+                className="quantum-btn me-2 explore-btn"
                 size="lg"
               >
-                <span className="me-2">🚀</span>
-                Explore Stocks
+                Explore Stocks <i className="bi bi-arrow-right ms-1"></i>
               </Button>
             </motion.div>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>

@@ -19,6 +19,53 @@ body {
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
 }
 .btn-primary {
-  background-image: linear-gradient(135deg, var(--modern-primary), var(--modern-secondary));
+  background-image: linear-gradient(135deg, #1EC1FF, #0077FF);
   border: none;
+  box-shadow: 0 0 8px rgba(0, 119, 255, 0.4);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 0 12px rgba(0, 119, 255, 0.6);
+}
+
+.market-card {
+  background: #2A2A2E;
+  color: rgba(255, 255, 255, 0.8);
+  padding: 1rem;
+  border: none;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+
+.market-card .market-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.market-card .market-price {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.explore-btn {
+  border-radius: 9999px;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+.section {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 }
