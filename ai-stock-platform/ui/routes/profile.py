@@ -10,7 +10,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from config.settings import settings
+# Import settings from the shared core config
+from core.config.settings import settings
 from fastapi import (APIRouter, Depends, File, Form, HTTPException, Request,
                      UploadFile)
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse

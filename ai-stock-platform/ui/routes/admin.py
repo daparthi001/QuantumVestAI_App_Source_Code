@@ -7,7 +7,8 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from config.settings import settings
+# Import settings from the shared core config to avoid missing-module errors
+from core.config.settings import settings
 from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
