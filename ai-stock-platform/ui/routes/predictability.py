@@ -131,7 +131,7 @@ async def predictability_ranking_page(
                 "request": request,
                 "sector": sector,
                 "limit": limit,
-                "demo_mode": True,
+                "demo_mode": settings.DEMO_MODE,
                 "ranked_stocks": ranked_stocks,
                 "sector_data": SECTOR_PREDICTABILITY,
                 "available_sectors": list(SECTOR_PREDICTABILITY.keys()),
@@ -193,7 +193,7 @@ async def predictability_comparison_page(
                 "request": request,
                 "tickers": ticker_list,
                 "timeframe": timeframe,
-                "demo_mode": True,
+                "demo_mode": settings.DEMO_MODE,
                 "comparison_data": comparison_data,
                 "page_title": "Predictability Comparison - QuantumVestAI"
             }
@@ -207,7 +207,7 @@ async def predictability_comparison_page(
                 "request": request,
                 "tickers": tickers.split(","),
                 "timeframe": timeframe,
-                "demo_mode": True,
+                "demo_mode": settings.DEMO_MODE,
                 "comparison_data": [],
                 "error": f"Error loading comparison: {str(e)}",
                 "page_title": "Comparison Error"
@@ -270,7 +270,7 @@ async def predictability_health_check():
         "status": "healthy",
         "service": "predictability",
         "timestamp": datetime.utcnow().isoformat(),
-        "demo_mode": True,
+        "demo_mode": settings.DEMO_MODE,
         "stocks_analyzed": 0,
         "sectors_available": 0
     }

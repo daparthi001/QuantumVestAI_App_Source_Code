@@ -11,6 +11,7 @@ from typing import Optional
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from core.config import settings
 
 # Setup router
 router = APIRouter(prefix="/settings", tags=["settings"])
@@ -43,7 +44,7 @@ async def settings_page(request: Request):
             "settings.html",
             {
                 "request": request,
-                "demo_mode": True,
+                "demo_mode": settings.DEMO_MODE,
                 "settings": DEMO_USER_SETTINGS,
                 "page_title": "Settings - QuantumVestAI"
             }

@@ -13,6 +13,7 @@ import requests
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from core.config import settings
 
 router = APIRouter()
 logger = logging.getLogger("quantumvestai.auth_controller")
@@ -406,9 +407,6 @@ async def password_reset_post(request: Request, email: str = Form(...)):
 
 @router.get("/auth/whoami")
 async def whoami(request: Request):
-    """Test route to show current user info (demo mode)"""
-    
-    # Demo mode - always return unauthenticated
-    return JSONResponse({"authenticated": False, "demo_mode": True}, status_code=401)
-    """Test route to show current user info"""
-    return JSONResponse({"authenticated": False}, status_code=401)
+    """Test route to show current user info."""
+
+    return JSONResponse({"authenticated": False, "demo_mode": settings.DEMO_MODE}, status_code=401)

@@ -11,6 +11,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from core.config import settings
 
 # Setup router
 router = APIRouter(prefix="/watchlist", tags=["watchlist"])
@@ -50,7 +51,7 @@ async def watchlist_page(request: Request, view: str = "grid"):
             "watchlist.html",
             {
                 "request": request,
-                "demo_mode": True,
+                "demo_mode": settings.DEMO_MODE,
                 "watchlist": DEMO_WATCHLIST,
                 "portfolio": DEMO_PORTFOLIO,
                 "summary": watchlist_summary,
@@ -65,7 +66,7 @@ async def watchlist_page(request: Request, view: str = "grid"):
             "watchlist.html",
             {
                 "request": request,
-                "demo_mode": True,
+                "demo_mode": settings.DEMO_MODE,
                 "watchlist": [],
                 "portfolio": {},
                 "summary": {},
@@ -296,7 +297,7 @@ async def portfolio_page(request: Request):
             "portfolio.html",
             {
                 "request": request,
-                "demo_mode": True,
+                "demo_mode": settings.DEMO_MODE,
                 "portfolio": DEMO_PORTFOLIO,
                 "metrics": portfolio_metrics,
                 "page_title": "Portfolio - QuantumVestAI"
@@ -343,7 +344,7 @@ async def alerts_page(request: Request):
             "alerts.html",
             {
                 "request": request,
-                "demo_mode": True,
+                "demo_mode": settings.DEMO_MODE,
                 "alerts": active_alerts,
                 "page_title": "Price Alerts - QuantumVestAI"
             }
