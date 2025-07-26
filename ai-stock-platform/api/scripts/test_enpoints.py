@@ -13,7 +13,7 @@ from datetime import datetime
 import requests
 
 # Base URL for the API
-BASE_URL = "https://dev.quantumvestai.com"
+BASE_URL = "http://quantumvestai-dev-api:8000"
 
 def test_health_endpoint():
     """Test the health endpoint"""

@@ -13,7 +13,7 @@ from datetime import datetime
 import requests
 
 # Constants
-API_URL = "https://dev.quantumvestai.com"
+API_URL = "http://quantumvestai-dev-api:8000"
 HEALTH_PATH = "/api/v1/health"
 TIMEOUT = 10  # seconds
 

@@ -14,7 +14,7 @@ The QuantumVestAI API provides comprehensive access to AI-powered stock market a
 
 ### Base URLs
 
-- **Development**: `https://dev.quantumvestai.com`
+- **Development**: `http://quantumvestai-dev-api:8000`
 - **Production**: `https://api.quantumvestai.com`
 - **Internal Service**: `http://quantumvestai-dev-api:8000`
 
@@ -158,24 +158,24 @@ Use the OpenAPI specification to generate client libraries in your preferred pro
 ### Authentication
 ```bash
 # Login
-curl -X POST "https://dev.quantumvestai.com/api/v1/auth/login" \
+curl -X POST "http://quantumvestai-dev-api:8000/api/v1/auth/login" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "username=demo&password=password"
 
 # Use the returned token
-curl -X GET "https://dev.quantumvestai.com/api/v1/stocks/AAPL" \
+curl -X GET "http://quantumvestai-dev-api:8000/api/v1/stocks/AAPL" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ### Get Stock Forecast
 ```bash
-curl -X GET "https://dev.quantumvestai.com/api/v1/forecast/AAPL?horizon=30&model=ensemble" \
+curl -X GET "http://quantumvestai-dev-api:8000/api/v1/forecast/AAPL?horizon=30&model=ensemble" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ### Twitter Sentiment Analysis
 ```bash
-curl -X GET "https://dev.quantumvestai.com/api/social/twitter/sentiment/AAPL?days=7" \
+curl -X GET "http://quantumvestai-dev-api:8000/api/social/twitter/sentiment/AAPL?days=7" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 

@@ -37,7 +37,7 @@ def get_cors_origins() -> List[str]:
         "http://127.0.0.1:3000",
         "http://127.0.0.1:8000",
         # Development and production domains
-        "https://dev.quantumvestai.com",
+        "http://quantumvestai-dev-api:8000",
         "https://quantumvestai.com",
         "https://www.quantumvestai.com",
         "https://app.quantumvestai.com",
