@@ -33,9 +33,15 @@ logger = logging.getLogger("api.social.multi_source")
 
 class MultiSourceSentimentAnalyzer:
     """Enhanced sentiment analysis combining multiple data sources"""
-    
+
     def __init__(self):
-        self.twitter_analyzer = TwitterSentimentAnalyzer()
+        try:
+            self.twitter_analyzer = TwitterSentimentAnalyzer()
+        except Exception as e:
+            logger.warning(
+                "Twitter sentiment unavailable, continuing without it: %s", e
+            )
+            self.twitter_analyzer = None
         self.finbert = FinBertSentiment()
         self.session = None
         self.cache = {}
@@ -93,6 +99,12 @@ class MultiSourceSentimentAnalyzer:
         days: int
     ) -> Dict[str, Any]:
         """Get Twitter sentiment using existing analyzer"""
+        if not self.twitter_analyzer:
+            return {
+                "source": "twitter",
+                "success": False,
+                "error": "Twitter sentiment disabled",
+            }
         try:
             twitter_data = await self.twitter_analyzer.analyze_sentiment(
                 symbol, company_name, days
@@ -103,7 +115,7 @@ class MultiSourceSentimentAnalyzer:
                 "confidence": twitter_data.get("confidence", 0),
                 "volume": twitter_data.get("tweet_count", 0),
                 "daily_sentiment": twitter_data.get("daily_sentiment", []),
-                "success": True
+                "success": True,
             }
         except Exception as e:
             logger.error(f"Twitter sentiment analysis failed: {e}")
