@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+from core.config import settings
 
 # Setup router
 router = APIRouter(prefix="/predictability", tags=["predictability"])
@@ -66,8 +67,9 @@ async def predictability_page(
                 "ticker": ticker,
                 "timeframe": timeframe,
                 "model": model,
-                "demo_mode": True,
+                "demo_mode": settings.DEMO_MODE,
                 "stock_data": stock_data,
+                "stock_info": stock_data,
                 "historical_scores": historical_scores,
                 "top_stocks": top_stocks,
                 "sector_data": SECTOR_PREDICTABILITY,
@@ -84,11 +86,12 @@ async def predictability_page(
                 "ticker": ticker,
                 "timeframe": timeframe,
                 "model": model,
-                "demo_mode": True,
-                "stock_data": {},
-                "historical_scores": [],
-                "top_stocks": [],
-                "sector_data": {},
+            "demo_mode": settings.DEMO_MODE,
+            "stock_data": {},
+            "stock_info": {},
+            "historical_scores": [],
+            "top_stocks": [],
+            "sector_data": {},
                 "error": f"Error loading predictability analysis: {str(e)}",
                 "page_title": "Predictability Error"
             },

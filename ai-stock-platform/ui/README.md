@@ -90,4 +90,4 @@ This is a complete, production-ready web UI for the QuantumVestAI platform featu
 
 ## 🎉 Ready for Production Deployment!
 
-This application is fully functional and ready for immediate deployment. By default it runs in demo mode using sample data. Set `DEMO_MODE=false` and configure the database variables (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`) to enable live data for subscribed users. When live mode is enabled, market data is persisted to the configured PostgreSQL database and AI price predictions are displayed on the dashboard.
+This application is fully functional and ready for immediate deployment. Demo mode is disabled by default. Set `DEMO_MODE=true` to use sample data or configure the database variables (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`) to enable live data for subscribed users. When live mode is enabled, market data is persisted to the configured PostgreSQL database and AI price predictions are displayed on the dashboard.
