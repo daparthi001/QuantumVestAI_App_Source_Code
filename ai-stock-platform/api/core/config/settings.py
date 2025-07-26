@@ -107,13 +107,20 @@ class Settings(BaseSettings):
         return self.database.get_db_url()
 
 def get_settings() -> Settings:
+    """Return an initialized :class:`Settings` instance.
+
+    The hosting environment may define an environment variable named
+    ``DATABASE`` which conflicts with Pydantic's handling of the nested
+    ``database`` model.  Temporarily removing this variable prevents JSON
+    decoding errors during instantiation.
     """
-    Initialize and return application settings
-    
-    Returns:
-        Settings: Configured application settings
-    """
-    return Settings()
+
+    removed = os.environ.pop("DATABASE", None)
+    try:
+        return Settings()
+    finally:
+        if removed is not None:
+            os.environ["DATABASE"] = removed
 
 # Global settings instance
 settings = get_settings()
