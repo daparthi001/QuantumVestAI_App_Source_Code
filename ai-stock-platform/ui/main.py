@@ -955,6 +955,7 @@ routers_to_include = [
     ("ui.routes.forecast", "forecast"),
     ("ui.routes.market", "market"),
     ("ui.routes.watchlist", "watchlist"),
+    ("ui.routes.profile", "profile"),
     ("ui.routes.predictability", "predictability"),
     ("ui.routes.settings", "settings"),
     ("ui.routes.ai_api", "ai_api"),
