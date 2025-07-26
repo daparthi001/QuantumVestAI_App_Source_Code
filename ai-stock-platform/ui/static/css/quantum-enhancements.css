@@ -247,7 +247,7 @@ body {
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--space-lg);
 }
 
 .nav-utilities {
