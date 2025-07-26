@@ -29,6 +29,11 @@ except ImportError:
     watchlist_router = None
 
 try:
+    from .profile import router as profile_router
+except ImportError:
+    profile_router = None
+
+try:
     from .predictability import router as predictability_router
 except ImportError:
     predictability_router = None
@@ -55,7 +60,8 @@ all_routers = [
         dashboard_router, 
         forecast_router,
         market_router,
-        watchlist_router, 
+        watchlist_router,
+        profile_router,
         predictability_router,
         settings_router,
         api_proxy_router,
