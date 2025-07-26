@@ -1,48 +1,53 @@
-# Update the function to use the scheduler instead of direct access
+"""Simplified social media router used for integration tests.
 
-from app.main import get_twitter_scheduler
+This module originally referenced a scheduler in ``app.main`` that is not part of
+the open source codebase. The endpoints below now use the lightweight
+``SocialMediaAPI`` implemented in :mod:`social_api_simple` so they work out of the
+box without additional infrastructure.
+"""
+
+from fastapi import APIRouter, HTTPException, Query
+
+from social_api_simple import SocialMediaAPI
+
+
+router = APIRouter(prefix="/api/simple-social", tags=["Social Media"])
+
+social_api = SocialMediaAPI()
 
 
 @router.get("/twitter/sentiment/{ticker}")
-def get_stock_twitter_sentiment(
+async def get_stock_twitter_sentiment(
     ticker: str,
     days: int = Query(7, ge=1, le=30),
 ):
-    """
-    Get Twitter sentiment analysis for a specific stock ticker.
-    """
+    """Return Twitter sentiment analysis for a stock ticker."""
     try:
-        scheduler = get_twitter_scheduler()
-        if scheduler:
-            # Get cached data (and queue refresh if needed)
-            return scheduler.get_sentiment(ticker)
-        else:
-            # Fall back to direct access if scheduler isn't available
-            twitter_service = TwitterService()
-            return twitter_service.get_sentiment_summary(ticker=ticker, days_back=days)
+        result = await social_api.get_twitter_sentiment(symbol=ticker, days=days)
+        if result.get("status") == "error":
+            raise HTTPException(status_code=503, detail=result.get("error"))
+        return result["data"]
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving Twitter sentiment: {str(e)}")
 
+
 @router.get("/twitter/trending")
-def get_trending_tickers(
-    limit: int = Query(10, ge=1, le=50),
-):
-    """
-    Get trending stock tickers on Twitter.
-    """
+async def get_trending_tickers(limit: int = Query(10, ge=1, le=50)):
+    """Return trending stock tickers on Twitter."""
     try:
-        scheduler = get_twitter_scheduler()
-        if scheduler:
-            # Get cached trending data
-            trending_data = scheduler.get_trending()
-            # Apply limit
-            trending_data['trending_tickers'] = trending_data['trending_tickers'][:limit]
-            trending_data['count'] = len(trending_data['trending_tickers'])
-            return trending_data
-        else:
-            # Fall back to direct access
-            twitter_service = TwitterService()
-            trending = twitter_service.get_trending_tickers(limit=limit)
-            return {"trending_tickers": trending, "count": len(trending)}
+        result = await social_api.get_trending_stocks(limit=limit)
+        if result.get("status") == "error":
+            raise HTTPException(status_code=503, detail=result.get("error"))
+        return result["data"]
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving trending tickers: {str(e)}")
+
+
+@router.get("/twitter/health")
+async def twitter_health() -> dict:
+    """Simple health check for the Twitter integration."""
+    return social_api.check_twitter_health()
