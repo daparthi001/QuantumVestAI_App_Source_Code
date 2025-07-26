@@ -260,9 +260,11 @@ class QuantumContent {
                 background: var(--glass-bg, rgba(255, 255, 255, 0.05));
                 border-radius: 16px;
                 padding: 24px;
-                margin: 20px 0;
+                margin: 20px 0 80px;
                 backdrop-filter: blur(10px);
                 border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+                max-height: 90vh;
+                overflow-y: auto;
             }
 
             .content-header {
@@ -656,6 +658,11 @@ class QuantumContent {
                 color: var(--quantum-accent, #4facfe);
                 font-size: 12px;
                 font-weight: 600;
+            }
+
+            .recommendation-icon {
+                font-size: 14px;
+                margin-left: 4px;
             }
 
             .load-more-container {
@@ -1098,6 +1105,7 @@ class QuantumContent {
             <div class="recommendation-item" data-article-id="${rec.articleId}">
                 <span class="recommendation-title">${rec.title}</span>
                 <span class="recommendation-score">${(rec.score * 100).toFixed(0)}%</span>
+                <span class="recommendation-icon text-warning" title="Editor's Pick">★</span>
             </div>
         `).join('');
 
