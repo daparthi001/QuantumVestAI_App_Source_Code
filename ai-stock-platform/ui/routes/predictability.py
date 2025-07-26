@@ -11,7 +11,10 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from core.config import settings
+# Import the settings instance directly from the configuration module. Importing
+# via ``core.config`` can sometimes resolve to the module object rather than the
+# ``settings`` instance which leads to missing attributes like ``DEMO_MODE``.
+from core.config.settings import settings
 
 # Setup router
 router = APIRouter(prefix="/predictability", tags=["predictability"])
