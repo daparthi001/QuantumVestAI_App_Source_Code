@@ -56,7 +56,7 @@ class UserCreate(UserBase):
         return v
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "username": "johndoe",
                 "email": "john.doe@example.com",
@@ -99,7 +99,7 @@ class UserUpdate(BaseModel):
         return v
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "first_name": "John",
                 "last_name": "Doe",
@@ -150,8 +150,8 @@ class UserProfile(BaseModel):
     updated_at: datetime
 
     class Config:
-        orm_mode = True
-        schema_extra = {
+        from_attributes = True
+        json_schema_extra = {
             "example": {
                 "id": 1,
                 "uuid": "123e4567-e89b-12d3-a456-426614174000",
@@ -190,7 +190,7 @@ class UserPublic(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserListResponse(BaseModel):
@@ -201,7 +201,7 @@ class UserListResponse(BaseModel):
     limit: int
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "users": [],
                 "total": 25,
@@ -221,7 +221,7 @@ class UserSuggestion(BaseModel):
     avatar_url: Optional[str]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserSuggestionsResponse(BaseModel):
@@ -258,7 +258,7 @@ class Role(RoleBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserRoleAssignment(BaseModel):
@@ -276,7 +276,7 @@ class UserRoleResponse(BaseModel):
     assigned_by: Optional[int]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # ==========================================
@@ -290,7 +290,7 @@ class LoginRequest(BaseModel):
     remember_me: Optional[bool] = Field(False, description="Remember me option")
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "username_or_email": "johndoe",
                 "password": "securepassword123",
@@ -307,7 +307,7 @@ class LoginResponse(BaseModel):
     user: UserProfile
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
                 "token_type": "bearer",
@@ -356,7 +356,7 @@ class MessageResponse(BaseModel):
     success: bool = True
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "message": "Operation completed successfully",
                 "success": True
@@ -371,7 +371,7 @@ class ErrorResponse(BaseModel):
     success: bool = False
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "detail": "User not found",
                 "error_code": "USER_NOT_FOUND",

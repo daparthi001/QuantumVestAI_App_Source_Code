@@ -26,7 +26,7 @@ class Stock(StockBase):
     last_updated: Optional[datetime]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class WatchlistItem(BaseModel):
     symbol: str
