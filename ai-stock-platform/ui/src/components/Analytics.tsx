@@ -259,19 +259,22 @@ const Analytics: React.FC = () => {
         <Card.Header>
           <div className="d-flex gap-2">
             <Button
-              variant={activeTab === 'overview' ? 'primary' : 'outline-primary'}
+              size="sm"
+              variant={activeTab === 'overview' ? 'secondary' : 'outline-secondary'}
               onClick={() => setActiveTab('overview')}
             >
               Market Overview
             </Button>
             <Button
-              variant={activeTab === 'movers' ? 'primary' : 'outline-primary'}
+              size="sm"
+              variant={activeTab === 'movers' ? 'secondary' : 'outline-secondary'}
               onClick={() => setActiveTab('movers')}
             >
               Top Movers
             </Button>
             <Button
-              variant={activeTab === 'analysis' ? 'primary' : 'outline-primary'}
+              size="sm"
+              variant={activeTab === 'analysis' ? 'secondary' : 'outline-secondary'}
               onClick={() => setActiveTab('analysis')}
             >
               Analysis

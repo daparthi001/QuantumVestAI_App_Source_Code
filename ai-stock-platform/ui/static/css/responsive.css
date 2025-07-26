@@ -139,7 +139,8 @@
     /* Quantum Navigation improvements */
     .quantum-nav {
         padding: 0.75rem 1rem;
-        backdrop-filter: blur(20px);
+        /* Reduce heavy blur for better clarity */
+        backdrop-filter: blur(4px);
     }
     
     .quantum-nav .navbar-brand {
