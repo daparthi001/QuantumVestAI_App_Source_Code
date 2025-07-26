@@ -145,7 +145,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, []);
 
   return (
-    <div className="quantum-bg min-vh-100">
+    <div className="quantum-bg min-vh-100" style={{ paddingTop: '76px' }}>
       {/* Enhanced Top Navigation */}
       <motion.div
         className="quantum-nav"
