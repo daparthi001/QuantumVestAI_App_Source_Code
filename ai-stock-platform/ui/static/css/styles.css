@@ -24,3 +24,24 @@
 .global-error-alert .alert {
     margin-bottom: 0;
 }
+
+/* Layout utilities to keep footer at the bottom */
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.main-content {
+    flex: 1 0 auto;
+}
+
+.app-footer {
+    margin-top: auto;
+    padding: 0.75rem 1rem;
+    text-align: center;
+}
+
+.footer-links a {
+    margin: 0 0.5rem;
+}
