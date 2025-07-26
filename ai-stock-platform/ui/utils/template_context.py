@@ -9,6 +9,7 @@ This ensures consistent availability of essential variables like `now`, `user`, 
 
 import logging
 import os
+from core.config import settings
 from datetime import datetime
 from typing import Any, Callable, Dict, Optional
 
@@ -54,8 +55,8 @@ class TemplateContextProcessor:
             
             # Feature flags
             "debug_mode": os.environ.get("DEBUG", "false").lower() == "true",
-            # Demo mode is disabled by default. Enable by setting DEMO_MODE=true
-            "demo_mode": os.environ.get("DEMO_MODE", "false").lower() == "true",
+            # Demo mode flag from shared settings
+            "demo_mode": settings.DEMO_MODE,
             
             # Time helpers
             "timestamp": datetime.utcnow().isoformat(),

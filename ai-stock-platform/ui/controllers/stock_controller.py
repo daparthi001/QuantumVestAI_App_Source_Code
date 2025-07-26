@@ -10,6 +10,7 @@ from pathlib import Path
 import aiohttp
 from fastapi import APIRouter, Form, HTTPException, Query, Request
 from ui.config.constants import AVAILABLE_MODELS, MODEL_ENSEMBLE
+from core.config import settings
 
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -45,7 +46,7 @@ async def stocks_list(
                 "request": request,
                 "stocks": stocks,
                 "pagination": trending.get("pagination"),
-                "demo_mode": True,
+                "demo_mode": settings.DEMO_MODE,
                 "page_title": "Stocks - QuantumVestAI",
             },
         )
@@ -143,7 +144,7 @@ async def stock_search(
                 "results": search_results,
                 "error": error_message,
                 "user": None,
-                "demo_mode": True
+                "demo_mode": settings.DEMO_MODE
             }
         )
     except Exception as e:
@@ -158,7 +159,7 @@ async def stock_search(
                 "error": f"An unexpected error occurred: {str(e)}",
                 "results": [],
                 "user": None,
-                "demo_mode": True
+                "demo_mode": settings.DEMO_MODE
             }
         )
 
@@ -246,7 +247,7 @@ async def stock_detail(
                 "request": request,
                 "stock": stock_data,
                 "user": None,
-                "demo_mode": True,
+                "demo_mode": settings.DEMO_MODE,
                 "available_models": AVAILABLE_MODELS
             }
         )
@@ -256,7 +257,7 @@ async def stock_detail(
         logger.error(f"Stock detail error for {ticker}: {str(e)}")
         return get_templates(request).TemplateResponse(
             "error.html",
-            {"request": request, "error": str(e), "user": None, "demo_mode": True},
+            {"request": request, "error": str(e), "user": None, "demo_mode": settings.DEMO_MODE},
             status_code=500
         )
 
@@ -270,7 +271,7 @@ async def stock_flow_page(request: Request):
             {
                 "request": request,
                 "user": None,
-                "demo_mode": True,
+                "demo_mode": settings.DEMO_MODE,
             },
         )
     except Exception as e:  # pragma: no cover - template errors

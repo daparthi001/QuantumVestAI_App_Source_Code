@@ -12,6 +12,7 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+from core.config import settings
 
 # Setup router
 router = APIRouter(prefix="/forecast", tags=["forecast"])
@@ -44,7 +45,7 @@ async def forecast_home(request: Request):
             "forecast.html",
             {
                 "request": request,
-                "demo_mode": True,
+                "demo_mode": settings.DEMO_MODE,
                 "predictions": top_predictions,
                 "market_sentiment": MARKET_SENTIMENT,
                 "featured_stocks": [],
@@ -58,7 +59,7 @@ async def forecast_home(request: Request):
             "forecast.html",
             {
                 "request": request,
-                "demo_mode": True,
+                "demo_mode": settings.DEMO_MODE,
                 "predictions": [],
                 "market_sentiment": {},
                 "featured_stocks": [],
@@ -101,7 +102,7 @@ async def stock_forecast(
                 "request": request,
                 "symbol": symbol,
                 "timeframe": timeframe,
-                "demo_mode": True,
+                "demo_mode": settings.DEMO_MODE,
                 "stock_data": demo_data,
                 "prediction": prediction,
                 "historical_data": historical_data,
@@ -161,7 +162,7 @@ async def model_comparison(request: Request):
             "model_comparison.html",
             {
                 "request": request,
-                "demo_mode": True,
+                "demo_mode": settings.DEMO_MODE,
                 "models": model_performance,
                 "page_title": "Model Comparison - QuantumVestAI"
             }
@@ -234,7 +235,7 @@ async def forecast_health_check():
         "status": "healthy",
         "service": "forecast",
         "timestamp": datetime.utcnow().isoformat(),
-        "demo_mode": True,
+        "demo_mode": settings.DEMO_MODE,
         "models_available": [],
         "predictions_count": 0
     }

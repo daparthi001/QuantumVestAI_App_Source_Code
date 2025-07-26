@@ -11,6 +11,7 @@ from typing import Optional
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+from core.config import settings
 
 # Setup router
 router = APIRouter(prefix="/utils", tags=["utils"])
@@ -32,7 +33,7 @@ async def health_check():
         "status": "healthy",
         "service": "utils",
         "timestamp": datetime.utcnow().isoformat(),
-        "demo_mode": True,
+        "demo_mode": settings.DEMO_MODE,
         "version": "2.0.0",
         "author": "hemanth9398"
     }
@@ -49,7 +50,7 @@ async def get_version_info():
             "build": {
                 "environment": "demo",
                 "features": ["auth", "dashboard", "forecast", "market", "watchlist", "predictability", "settings"],
-                "demo_mode": True
+                "demo_mode": settings.DEMO_MODE
             },
             "timestamp": datetime.utcnow().isoformat()
         })

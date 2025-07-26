@@ -3,6 +3,7 @@ from typing import Any, Dict, Optional, Tuple
 
 from core.config.constants import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
 from fastapi import Query, Request
+from core.config import settings
 
 # Prefer the standalone ``services`` package but fall back to the
 # old ``ui.services`` path when running tests from the monorepo.
@@ -26,7 +27,7 @@ async def get_template_context(request: Request) -> Dict[str, Any]:
         "request": request,
         "user": None,
         "now": datetime.now(),
-        "demo_mode": True,
+        "demo_mode": settings.DEMO_MODE,
         "is_admin": False,
         "is_premium": False
     }

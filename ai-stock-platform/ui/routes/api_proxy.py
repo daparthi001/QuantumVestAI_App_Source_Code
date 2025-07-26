@@ -9,6 +9,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
+from core.config import settings
 
 # Setup router
 router = APIRouter(prefix="/api/v1", tags=["api"])
@@ -108,7 +109,7 @@ async def api_proxy_health():
         "status": "healthy",
         "service": "api_proxy",
         "timestamp": datetime.utcnow().isoformat(),
-        "demo_mode": True
+        "demo_mode": settings.DEMO_MODE
     }
 
 # Generic API proxy for other endpoints
@@ -123,7 +124,7 @@ async def generic_api_proxy(request: Request, path: str):
         return JSONResponse({
             "status": "success",
             "message": f"Demo response for {method} /{path}",
-            "demo_mode": True,
+            "demo_mode": settings.DEMO_MODE,
             "timestamp": datetime.utcnow().isoformat()
         })
         
