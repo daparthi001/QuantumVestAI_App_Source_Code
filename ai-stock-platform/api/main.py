@@ -36,6 +36,7 @@ from routers.docs import router as docs_router
 import sentry_sdk
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from fastapi import Response as FastAPIResponse
+from utils.data_loader import load_stock_data
 
 REQUEST_COUNT = Counter(
     'api_requests_total',
@@ -625,6 +626,38 @@ async def get_stock(request: Request, symbol: str):
         )
     else:
         raise NotFoundError(f"Stock with symbol {validated_symbol} not found")
+
+
+@app.get("/api/v1/predictions/pre-market/{symbol}")
+async def pre_market_prediction(request: Request, symbol: str) -> Response:
+    """Generate a simple pre-market prediction based on recent closing prices."""
+    logger.info("Pre-market prediction endpoint accessed")
+    try:
+        df = await load_stock_data(symbol, period="5d")
+        if df.empty or "close" not in df.columns:
+            raise ValueError("No historical data available")
+
+        predicted_open = float(df["close"].tail(5).mean())
+        current_price = float(df["close"].iloc[-1])
+
+        data = {
+            "symbol": symbol,
+            "current_price": current_price,
+            "predicted_open": predicted_open,
+        }
+
+        return create_success_response(
+            data=data,
+            message="Pre-market prediction generated",
+            request_id=getattr(request.state, 'request_id', None),
+        )
+    except Exception as e:
+        logger.error(f"Error generating pre-market prediction: {e}")
+        return create_error_response(
+            message="Failed to generate pre-market prediction",
+            error_code="INTERNAL_SERVER_ERROR",
+            request_id=getattr(request.state, 'request_id', None),
+        )
 
 
 async def trending_stock_broadcaster() -> None:
