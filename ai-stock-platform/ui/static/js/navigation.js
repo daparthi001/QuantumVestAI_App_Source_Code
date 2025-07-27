@@ -22,9 +22,7 @@ class NavigationController {
         this.setupSearchFunctionality();
         this.setupDropdownMenus();
         this.setupTooltips();
-        // Scroll-based nav hiding caused unexpected jumping on some pages.
-        // Temporarily disable scroll effects to keep the main menu fixed.
-        // this.setupScrollEffects();
+        this.setupScrollEffects();
         this.setupKeyboardNavigation();
     }
     
@@ -522,28 +520,34 @@ NavigationController.prototype.setupTooltips = function() {
 NavigationController.prototype.setupScrollEffects = function() {
     const nav = document.querySelector('.quantum-nav');
     if (!nav) return;
-    
     let lastScrollY = window.scrollY;
-    
-    window.addEventListener('scroll', () => {
+    let ticking = false;
+
+    const update = () => {
         const currentScrollY = window.scrollY;
-        
-        // Add scrolled class when scrolling down
+
         if (currentScrollY > 50) {
             nav.classList.add('scrolled');
         } else {
             nav.classList.remove('scrolled');
         }
-        
-        // Hide/show navigation based on scroll direction
-        if (currentScrollY > lastScrollY && currentScrollY > 200) {
-            nav.style.transform = 'translateY(-100%)';
+
+        if (currentScrollY > lastScrollY && currentScrollY > 100) {
+            nav.classList.add('nav-hidden');
         } else {
-            nav.style.transform = 'translateY(0)';
+            nav.classList.remove('nav-hidden');
         }
-        
+
         lastScrollY = currentScrollY;
-    });
+        ticking = false;
+    };
+
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            window.requestAnimationFrame(update);
+            ticking = true;
+        }
+    }, { passive: true });
 };
 
 NavigationController.prototype.setupKeyboardNavigation = function() {
