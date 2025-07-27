@@ -86,9 +86,12 @@ class Settings(BaseSettings):
     CACHE_TTL_TRENDING_STOCKS: int = Field(default=300, env='CACHE_TTL_TRENDING_STOCKS')
     # Default to False so real API calls are only made when explicitly enabled
     ENABLE_REAL_DATA: bool = Field(default=False, env='ENABLE_REAL_DATA')
-    
+
     # Logging
     LOG_LEVEL: str = Field(default="INFO", env='LOG_LEVEL')
+
+    # Toggle demo mode for the UI. When False the UI fetches live data.
+    DEMO_MODE: bool = Field(default=False, env="DEMO_MODE")
 
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
