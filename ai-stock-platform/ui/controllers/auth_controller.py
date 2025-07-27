@@ -409,4 +409,4 @@ async def password_reset_post(request: Request, email: str = Form(...)):
 async def whoami(request: Request):
     """Test route to show current user info."""
 
-    return JSONResponse({"authenticated": False, "demo_mode": settings.DEMO_MODE}, status_code=401)
+    return JSONResponse({"authenticated": False}, status_code=401)

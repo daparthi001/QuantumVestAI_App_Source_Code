@@ -31,9 +31,9 @@ DEMO_STOCKS_DB = {}
 
 @router.get("/", response_class=HTMLResponse)
 async def market_overview(request: Request):
-    """Market overview page (demo mode)"""
+    """Market overview page."""
     try:
-        logger.info("Loading market overview in demo mode")
+        logger.info("Loading market overview")
         
         # Market news removed
         market_news = []
@@ -44,7 +44,6 @@ async def market_overview(request: Request):
             "market/overview.html",
             {
                 "request": request,
-                "demo_mode": settings.DEMO_MODE,
                 "data": data,
                 "market_news": market_news,
                 "page_title": "Market Overview - QuantumVestAI"
@@ -57,7 +56,6 @@ async def market_overview(request: Request):
             "market/overview.html",
             {
                 "request": request,
-                "demo_mode": settings.DEMO_MODE,
                 "data": {
                     "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
                     "overview": None,
@@ -135,7 +133,6 @@ async def ticker_details(
                 "request": request,
                 "ticker": ticker,
                 "period": period,
-                "demo_mode": settings.DEMO_MODE,
                 "stock_data": stock_data,
                 "chart_data": chart_data,
                 "technical_indicators": technical_indicators,
@@ -217,7 +214,6 @@ async def market_sentiment(
             {
                 "request": request,
                 "period": period,
-                "demo_mode": settings.DEMO_MODE,
                 "sentiment_data": sentiment_data,
                 "page_title": "Market Sentiment - QuantumVestAI"
             }

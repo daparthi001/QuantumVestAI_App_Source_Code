@@ -30,29 +30,29 @@ API_V1_URL = f"{API_URL}/api/v1"
 
 @router.get("/advanced", response_class=HTMLResponse)
 async def advanced_features(request: Request):
-    """Advanced features page (demo mode)"""
+    """Advanced features page."""
     
     # Demo mode - redirect to login with a message
-    return RedirectResponse(url="/login?msg=Advanced+features+require+authentication+(demo+mode)", status_code=302)
+    return RedirectResponse(url="/login?msg=Advanced+features+require+authentication", status_code=302)
 
 @router.post("/activate")
 async def activate_features(request: Request):
-    """Activate features (demo mode)"""
+    """Activate features."""
     
     # Demo mode - redirect to login with a message
-    return RedirectResponse(url="/login?msg=Feature+activation+requires+authentication+(demo+mode)", status_code=302)
+    return RedirectResponse(url="/login?msg=Feature+activation+requires+authentication", status_code=302)
 
 @router.get("/status")
 async def feature_status(request: Request):
-    """Feature status (demo mode)"""
+    """Feature status."""
     
     # Demo mode - redirect to login with a message
-    return RedirectResponse(url="/login?msg=Feature+status+requires+authentication+(demo+mode)", status_code=302)
+    return RedirectResponse(url="/login?msg=Feature+status+requires+authentication", status_code=302)
 
 @router.get("/debug", response_class=HTMLResponse)
 async def debug_features(request: Request):
-    """Debug features page (demo mode)"""
+    """Debug features page."""
 
     # Demo mode - redirect to login with a message
-    return RedirectResponse(url="/login?msg=Debug+features+require+authentication+(demo+mode)", status_code=302)
+    return RedirectResponse(url="/login?msg=Debug+features+require+authentication", status_code=302)
 

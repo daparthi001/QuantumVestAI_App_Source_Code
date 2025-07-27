@@ -30,59 +30,59 @@ logger = logging.getLogger(__name__)
 
 @router.get("/profile", response_class=HTMLResponse)
 async def profile_page(request: Request):
-    """Display user profile page (demo mode)"""
+    """Display user profile page."""
     
     # Demo mode - redirect to login with a message that profile requires authentication
-    return RedirectResponse(url="/login?msg=Profile+requires+authentication+(demo+mode)", status_code=302)
+    return RedirectResponse(url="/login?msg=Profile+requires+authentication", status_code=302)
 
 @router.get("/profile/settings", response_class=HTMLResponse)
 async def profile_settings(request: Request):
-    """Display profile settings page (demo mode)"""
+    """Display profile settings page."""
     
     # Demo mode - redirect to login with a message that profile requires authentication
-    return RedirectResponse(url="/login?msg=Profile+settings+require+authentication+(demo+mode)", status_code=302)
+    return RedirectResponse(url="/login?msg=Profile+settings+require+authentication", status_code=302)
 
 @router.post("/profile/update")
 async def update_profile(request: Request):
-    """Update user profile (demo mode)"""
+    """Update user profile."""
     
     # Demo mode - redirect to login with a message
-    return RedirectResponse(url="/login?msg=Profile+updates+require+authentication+(demo+mode)", status_code=302)
+    return RedirectResponse(url="/login?msg=Profile+updates+require+authentication", status_code=302)
 
 @router.post("/profile/update-preferences")
 async def update_preferences(request: Request):
-    """Update user preferences (demo mode)"""
+    """Update user preferences."""
     
     # Demo mode - redirect to login with a message
-    return RedirectResponse(url="/login?msg=Preference+updates+require+authentication+(demo+mode)", status_code=302)
+    return RedirectResponse(url="/login?msg=Preference+updates+require+authentication", status_code=302)
 
 @router.post("/profile/update-notifications")
 async def update_notifications(request: Request):
-    """Update notification settings (demo mode)"""
+    """Update notification settings."""
     
     # Demo mode - redirect to login with a message
-    return RedirectResponse(url="/login?msg=Notification+settings+require+authentication+(demo+mode)", status_code=302)
+    return RedirectResponse(url="/login?msg=Notification+settings+require+authentication", status_code=302)
 
 @router.post("/profile/change-password")
 async def change_password(request: Request):
-    """Change user password (demo mode)"""
+    """Change user password."""
     
     # Demo mode - redirect to login with a message
-    return RedirectResponse(url="/login?msg=Password+changes+require+authentication+(demo+mode)", status_code=302)
+    return RedirectResponse(url="/login?msg=Password+changes+require+authentication", status_code=302)
 
 @router.post("/activate-advanced-features")
 async def activate_advanced_features(request: Request):
-    """Activate advanced features (demo mode)"""
+    """Activate advanced features."""
     
     # Demo mode - redirect to login with a message
-    return RedirectResponse(url="/login?msg=Advanced+features+require+authentication+(demo+mode)", status_code=302)
+    return RedirectResponse(url="/login?msg=Advanced+features+require+authentication", status_code=302)
 
 @router.get("/advanced-features", response_class=HTMLResponse)
 async def advanced_features_page(request: Request):
-    """Display advanced features page (demo mode)"""
+    """Display advanced features page."""
     
     # Demo mode - redirect to login with a message
-    return RedirectResponse(url="/login?msg=Advanced+features+require+authentication+(demo+mode)", status_code=302)
+    return RedirectResponse(url="/login?msg=Advanced+features+require+authentication", status_code=302)
 
 @router.get("/profile/settings", response_class=HTMLResponse)
 async def profile_settings(request: Request):

@@ -40,8 +40,6 @@ DEMO_NEWS = []
 async def dashboard_page(request: Request):
     """Render main dashboard page"""
     try:
-        demo_mode = settings.DEMO_MODE
-
         token = request.cookies.get("access_token")
         api = APIClient(token=token) if token else None
         user = api.get("/users/me") if api else None
@@ -53,7 +51,7 @@ async def dashboard_page(request: Request):
         popular_stocks = DEMO_STOCKS
         news = DEMO_NEWS
 
-        if not demo_mode and subscribed:
+        if subscribed:
             market_summary = YahooFinanceService.get_market_summary()
             try:
                 trending = await TrendingStocksService().get_trending_stocks(limit=5)
@@ -80,7 +78,6 @@ async def dashboard_page(request: Request):
             {
                 "request": request,
                 "user": user,
-                "demo_mode": demo_mode,
                 "market_summary": market_summary,
                 "popular_stocks": popular_stocks,
                 "news": news,
@@ -97,7 +94,6 @@ async def dashboard_page(request: Request):
             {
                 "request": request,
                 "user": None,
-                "demo_mode": demo_mode,
                 "market_summary": {"indices": {}, "sectors": {}, "top_movers": {}},
                 "popular_stocks": [],
                 "news": [],
@@ -122,7 +118,6 @@ async def portfolio_page(request: Request):
             {
                 "request": request,
                 "portfolio": portfolio_data,
-                "demo_mode": settings.DEMO_MODE,
                 "page_title": "Portfolio - QuantumVestAI",
             },
         )
@@ -152,7 +147,6 @@ async def analytics_page(request: Request):
             {
                 "request": request,
                 "analytics": analytics_data,
-                "demo_mode": settings.DEMO_MODE,
                 "page_title": "Analytics - QuantumVestAI",
             },
         )
@@ -176,7 +170,7 @@ async def dashboard_api_summary(request: Request):
     try:
         token = request.cookies.get("access_token")
         api = APIClient(token=token) if token else None
-        if settings.DEMO_MODE or not api:
+        if not api:
             data = {}
         else:
             data = YahooFinanceService.get_market_summary()

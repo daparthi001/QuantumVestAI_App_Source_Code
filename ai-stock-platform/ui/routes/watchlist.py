@@ -34,9 +34,9 @@ DEMO_PORTFOLIO = {}
 
 @router.get("/", response_class=HTMLResponse)
 async def watchlist_page(request: Request, view: str = "grid"):
-    """Render watchlist page (demo mode)"""
+    """Render watchlist page."""
     try:
-        logger.info("Loading watchlist page in demo mode")
+        logger.info("Loading watchlist page")
         
         # Calculate watchlist summary
         watchlist_summary = {
@@ -51,7 +51,6 @@ async def watchlist_page(request: Request, view: str = "grid"):
             "watchlist.html",
             {
                 "request": request,
-                "demo_mode": settings.DEMO_MODE,
                 "watchlist": DEMO_WATCHLIST,
                 "portfolio": DEMO_PORTFOLIO,
                 "summary": watchlist_summary,
@@ -66,7 +65,6 @@ async def watchlist_page(request: Request, view: str = "grid"):
             "watchlist.html",
             {
                 "request": request,
-                "demo_mode": settings.DEMO_MODE,
                 "watchlist": [],
                 "portfolio": {},
                 "summary": {},
@@ -85,10 +83,10 @@ async def add_to_watchlist(
     alert_price: Optional[float] = Form(None),
     alert_type: str = Form("above")
 ):
-    """Add stock to watchlist (demo mode)"""
+    """Add stock to watchlist."""
     try:
         ticker = ticker.upper()
-        logger.info(f"Adding {ticker} to watchlist in demo mode")
+        logger.info(f"Adding {ticker} to watchlist")
         
         # Check if already in watchlist
         existing = next((item for item in DEMO_WATCHLIST if item["symbol"] == ticker), None)
@@ -135,10 +133,10 @@ async def remove_from_watchlist(
     request: Request,
     ticker: str = Form(...)
 ):
-    """Remove stock from watchlist (demo mode)"""
+    """Remove stock from watchlist."""
     try:
         ticker = ticker.upper()
-        logger.info(f"Removing {ticker} from watchlist in demo mode")
+        logger.info(f"Removing {ticker} from watchlist")
         
         # Find and remove item
         original_length = len(DEMO_WATCHLIST)
@@ -175,10 +173,10 @@ async def set_price_alert(
     alert_price: float = Form(...),
     alert_type: str = Form("above")
 ):
-    """Set price alert for watchlist item (demo mode)"""
+    """Set price alert for watchlist item."""
     try:
         ticker = ticker.upper()
-        logger.info(f"Setting alert for {ticker} at ${alert_price} ({alert_type}) in demo mode")
+        logger.info(f"Setting alert for {ticker} at ${alert_price} ({alert_type})")
         
         # Find and update item
         item = next((item for item in DEMO_WATCHLIST if item["symbol"] == ticker), None)
@@ -210,10 +208,10 @@ async def update_notes(
     ticker: str = Form(...),
     notes: str = Form(...)
 ):
-    """Update notes for watchlist item (demo mode)"""
+    """Update notes for watchlist item."""
     try:
         ticker = ticker.upper()
-        logger.info(f"Updating notes for {ticker} in demo mode")
+        logger.info(f"Updating notes for {ticker}")
         
         # Find and update item
         item = next((item for item in DEMO_WATCHLIST if item["symbol"] == ticker), None)
@@ -240,7 +238,7 @@ async def update_notes(
 
 @router.get("/data", response_class=JSONResponse)
 async def get_watchlist_data(request: Request):
-    """Get watchlist data (demo mode)"""
+    """Get watchlist data."""
     try:
         return JSONResponse({
             "status": "success",
@@ -259,7 +257,7 @@ async def get_watchlist_data(request: Request):
 
 @router.post("/reorder")
 async def reorder_watchlist(request: Request):
-    """Reorder watchlist items (demo mode)"""
+    """Reorder watchlist items."""
     try:
         # In a real implementation, this would update the order in the database
         # For demo, we'll just return success
@@ -297,7 +295,6 @@ async def portfolio_page(request: Request):
             "portfolio.html",
             {
                 "request": request,
-                "demo_mode": settings.DEMO_MODE,
                 "portfolio": DEMO_PORTFOLIO,
                 "metrics": portfolio_metrics,
                 "page_title": "Portfolio - QuantumVestAI"
@@ -344,7 +341,6 @@ async def alerts_page(request: Request):
             "alerts.html",
             {
                 "request": request,
-                "demo_mode": settings.DEMO_MODE,
                 "alerts": active_alerts,
                 "page_title": "Price Alerts - QuantumVestAI"
             }

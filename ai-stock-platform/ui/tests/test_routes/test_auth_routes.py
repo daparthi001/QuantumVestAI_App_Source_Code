@@ -196,7 +196,7 @@ def test_password_reset_request_submit(client):
         "/password-reset",
         data={"email": "user@example.com"}
     )
-    # Should return 200 and show success message (demo mode)
+    # Should return 200 and show success message
     assert response.status_code == 200
     assert "Password reset instructions have been sent" in response.text
 

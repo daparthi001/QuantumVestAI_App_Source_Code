@@ -13,7 +13,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 # Import the settings instance directly from the configuration module. Importing
 # via ``core.config`` can sometimes resolve to the module object rather than the
-# ``settings`` instance which leads to missing attributes like ``DEMO_MODE``.
+# ``settings`` instance.
 from core.config.settings import settings
 
 # Setup router
@@ -70,7 +70,6 @@ async def predictability_page(
                 "ticker": ticker,
                 "timeframe": timeframe,
                 "model": model,
-                "demo_mode": settings.DEMO_MODE,
                 "stock_data": stock_data,
                 "stock_info": stock_data,
                 "historical_scores": historical_scores,
@@ -89,7 +88,6 @@ async def predictability_page(
                 "ticker": ticker,
                 "timeframe": timeframe,
                 "model": model,
-            "demo_mode": settings.DEMO_MODE,
             "stock_data": {},
             "stock_info": {},
             "historical_scores": [],
@@ -131,7 +129,6 @@ async def predictability_ranking_page(
                 "request": request,
                 "sector": sector,
                 "limit": limit,
-                "demo_mode": settings.DEMO_MODE,
                 "ranked_stocks": ranked_stocks,
                 "sector_data": SECTOR_PREDICTABILITY,
                 "available_sectors": list(SECTOR_PREDICTABILITY.keys()),
@@ -193,7 +190,6 @@ async def predictability_comparison_page(
                 "request": request,
                 "tickers": ticker_list,
                 "timeframe": timeframe,
-                "demo_mode": settings.DEMO_MODE,
                 "comparison_data": comparison_data,
                 "page_title": "Predictability Comparison - QuantumVestAI"
             }
@@ -207,7 +203,6 @@ async def predictability_comparison_page(
                 "request": request,
                 "tickers": tickers.split(","),
                 "timeframe": timeframe,
-                "demo_mode": settings.DEMO_MODE,
                 "comparison_data": [],
                 "error": f"Error loading comparison: {str(e)}",
                 "page_title": "Comparison Error"
@@ -270,7 +265,6 @@ async def predictability_health_check():
         "status": "healthy",
         "service": "predictability",
         "timestamp": datetime.utcnow().isoformat(),
-        "demo_mode": settings.DEMO_MODE,
         "stocks_analyzed": 0,
         "sectors_available": 0
     }

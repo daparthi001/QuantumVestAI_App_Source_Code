@@ -33,7 +33,6 @@ async def health_check():
         "status": "healthy",
         "service": "utils",
         "timestamp": datetime.utcnow().isoformat(),
-        "demo_mode": settings.DEMO_MODE,
         "version": "2.0.0",
         "author": "hemanth9398"
     }
@@ -47,10 +46,9 @@ async def get_version_info():
             "version": "2.0.0",
             "author": "hemanth9398",
             "updated": "2025-07-07 21:54:42",
-            "build": {
-                "environment": "demo",
-                "features": ["auth", "dashboard", "forecast", "market", "watchlist", "predictability", "settings"],
-                "demo_mode": settings.DEMO_MODE
+                "build": {
+                "environment": "production",
+                "features": ["auth", "dashboard", "forecast", "market", "watchlist", "predictability", "settings"]
             },
             "timestamp": datetime.utcnow().isoformat()
         })

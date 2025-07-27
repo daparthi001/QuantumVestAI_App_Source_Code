@@ -269,7 +269,7 @@ async def track_pageview(
     request: Request,
     pageview_data: PageviewRequest
 ):
-    """Track page view for analytics (demo mode)."""
+    """Track page view for analytics."""
     # In a real implementation, this would save to database
     # For now, just return success response
     return {

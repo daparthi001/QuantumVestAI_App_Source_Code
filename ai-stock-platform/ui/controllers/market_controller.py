@@ -35,11 +35,11 @@ except ImportError:
     )
 
     async def get_current_user(request: Request, response: Response = None):
-        """Mock function that returns None (demo mode)"""
+        """Mock function that returns None."""
         return None
 
     async def get_optional_current_user(request: Request, response: Response = None):
-        """Mock function that returns None (demo mode)"""
+        """Mock function that returns None."""
         return None
 
 
@@ -176,18 +176,15 @@ async def stock_details(
     response: Response,
     symbol: str = Path(..., description="Stock symbol"),
 ):
-    """
-    Stock details page showing price, charts, news, and fundamentals for a specific stock (demo mode).
-    This page is accessible without authentication.
-    """
+    """Stock details page showing price, charts, news, and fundamentals for a specific stock."""
     try:
         # Get API URL from app state or environment
         api_url_base = getattr(request.app.state, "settings", {}).get(
             "API_URL", os.getenv("API_URL", "http://quantumvestai-dev-api.dev.svc.cluster.local:8000")
         )
 
-        # Create cache key for demo mode
-        cache_key = f"stock_details_{symbol.upper()}_demo"
+        # Create cache key
+        cache_key = f"stock_details_{symbol.upper()}"
 
         # Try to get data from cache
         stock_data = get_cached_data(cache_key)

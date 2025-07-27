@@ -23,7 +23,7 @@ try:
     # instance.  Using the ``core`` compatibility layer can return the
     # module object when both packages are present on ``PYTHONPATH``.
     from core.config.settings import settings
-except Exception:  # pragma: no cover - fallback for demo mode
+except Exception:  # pragma: no cover - fallback if settings import fails
     class Settings:
         SECRET_KEY = os.getenv("JWT_SECRET") or os.getenv("SECRET_KEY", "supersecretkey123456789abcdef")
         JWT_ALGORITHM = "HS256"

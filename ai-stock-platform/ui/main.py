@@ -430,7 +430,6 @@ async def login_page(request: Request, msg: str = None):
                 "msg": msg,
                 "api_url": API_URL,
                 "request_id": request_id,
-                "demo_mode": False
             }
         )
     except Exception as e:
@@ -491,7 +490,6 @@ async def enhanced_login_post(
                 "username": username,
                 "api_url": API_URL,
                 "request_id": request_id,
-                "demo_mode": False
             },
             status_code=400
         )
@@ -507,7 +505,6 @@ async def enhanced_login_post(
                 "username": username,
                 "api_url": API_URL,
                 "request_id": request_id,
-                "demo_mode": False
             },
             status_code=500
         )
@@ -529,7 +526,6 @@ async def register_page(request: Request, msg: str = None):
                 "msg": msg,
                 "api_url": API_URL,
                 "request_id": request_id,
-                "demo_mode": False
             }
         )
     except Exception as e:
@@ -601,7 +597,6 @@ async def register_post(
                 "email": email,
                 "api_url": API_URL,
                 "request_id": request_id,
-                "demo_mode": False
             },
             status_code=400
         )
@@ -618,7 +613,6 @@ async def register_post(
                 "email": email,
                 "api_url": API_URL,
                 "request_id": request_id,
-                "demo_mode": False
             },
             status_code=500
         )
@@ -649,7 +643,7 @@ async def enhanced_dashboard(request: Request):
         # The dashboard template expects each index entry to provide ``price``
         # and ``change_percent`` fields.  Older demo data used ``value`` and
         # ``change_pct`` which caused Jinja to fail with ``'dict object' has no
-        # attribute 'price'`` when rendering in demo mode.  Align the keys with
+        # attribute 'price'`` when rendering. Align the keys with
         # the real service output to avoid template errors.
         market_summary = {
             "indices": {
@@ -680,7 +674,6 @@ async def enhanced_dashboard(request: Request):
                 "user": user,
                 "api_url": API_URL,
                 "request_id": request_id,
-                "demo_mode": False,
                 "portfolio": demo_portfolio,
                 "market_summary": market_summary,
                 "popular_stocks": [],
@@ -730,7 +723,6 @@ async def enhanced_health_check():
             "updated": "2025-07-07 21:54:42",
             "features": {
                 "enhanced_error_handling": "enabled",
-                "demo_mode": "disabled",
                 "responsive_design": "enabled",
                 "real_time_updates": "enabled",
                 "template_filters": "enhanced"
@@ -848,7 +840,7 @@ class PageviewRequest(BaseModel):
 
 @app.post("/analytics/pageview")
 async def track_pageview(request: Request, pageview_data: PageviewRequest):
-    """Track page view for analytics (demo mode)."""
+    """Track page view for analytics."""
     try:
         # In a real implementation, this would save to database
         # For now, just log the pageview and return success

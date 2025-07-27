@@ -53,22 +53,6 @@ async def fetch_news(category: str, page: int = 1, ttl: int = 600) -> Dict[str, 
         return cached["data"]
 
     if not NEWS_API_KEY:
-        if settings.DEMO_MODE:
-            logger.warning("NEWS_API_KEY not set, returning demo news data")
-            demo_list = await get_demo_news()
-            demo_articles = [
-                {
-                    "title": item["title"],
-                    "description": item["summary"],
-                    "url": item["url"],
-                    "source": {"name": item["source"]},
-                    "publishedAt": item.get("timestamp"),
-                }
-                for item in demo_list
-            ]
-            data = {"articles": demo_articles, "totalResults": len(demo_articles)}
-            _NEWS_CACHE[cache_key] = {"data": data, "expires": now + timedelta(seconds=ttl)}
-            return data
         raise HTTPException(status_code=503, detail="News API key not configured")
 
     params = {"apiKey": NEWS_API_KEY, "page": page, "pageSize": 10}

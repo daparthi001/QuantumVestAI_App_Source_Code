@@ -30,11 +30,10 @@ API_V1_URL = f"{API_URL}/api/v1"
 
 @router.get("/", response_class=HTMLResponse)
 async def forecast_home(request: Request):
-    """Forecast dashboard page (demo mode)"""
+    """Forecast dashboard page."""
     
     try:
-        # Demo mode - no authentication required
-        logger.info("Loading forecast dashboard in demo mode")
+        logger.info("Loading forecast dashboard")
         
         # Use demo forecast data
         forecast_data = {
@@ -101,7 +100,6 @@ async def forecast_home(request: Request):
             {
                 "request": request,
                 "user": None,
-                "demo_mode": settings.DEMO_MODE,
                 "forecast_data": forecast_data,
                 "market_overview": market_overview,
                 "page_title": "AI Forecast Dashboard",
@@ -116,7 +114,6 @@ async def forecast_home(request: Request):
             {
                 "request": request,
                 "user": None,
-                "demo_mode": settings.DEMO_MODE,
                 "error": f"Error loading forecast dashboard: {str(e)}",
                 "page_title": "Forecast Error"
             },
@@ -126,7 +123,7 @@ async def forecast_home(request: Request):
 
 @router.get("/dashboard", response_class=HTMLResponse)
 async def forecast_dashboard(request: Request):
-    """Forecast dashboard (alias route - demo mode)"""
+    """Forecast dashboard (alias route)."""
     # Redirect to main forecast page for consistency
     return RedirectResponse(url="/forecast/", status_code=302)
 
@@ -179,7 +176,6 @@ async def stock_forecast(
             {
                 "request": request,
                 "user": None,
-                "demo_mode": settings.DEMO_MODE,
                 "stock_data": stock_forecast_data,
                 "available_timeframes": ["7d", "30d", "90d", "1y"],
                 "page_title": f"{symbol} Forecast",
@@ -194,7 +190,6 @@ async def stock_forecast(
             {
                 "request": request,
                 "user": None,
-                "demo_mode": settings.DEMO_MODE,
                 "error": f"Error loading forecast for {symbol}: {str(e)}",
                 "page_title": "Stock Forecast Error"
             },
@@ -233,8 +228,7 @@ async def get_predictions_api(
             "status": "success",
             "predictions": predictions,
             "timeframe": timeframe,
-            "total_count": len(predictions),
-            "demo_mode": settings.DEMO_MODE
+            "total_count": len(predictions)
         }
         
     except Exception as e:
@@ -265,8 +259,7 @@ async def get_market_sentiment_api(request: Request):
                 "energy": "bearish",
                 "consumer": "neutral"
             },
-            "timestamp": "2025-07-07T21:39:48Z",
-            "demo_mode": settings.DEMO_MODE
+            "timestamp": "2025-07-07T21:39:48Z"
         }
         
         return {
@@ -286,6 +279,5 @@ async def forecast_health_check():
     return {
         "status": "healthy",
         "service": "forecast",
-        "timestamp": "2025-07-07T21:39:48Z",
-        "demo_mode": settings.DEMO_MODE
+        "timestamp": "2025-07-07T21:39:48Z"
     }

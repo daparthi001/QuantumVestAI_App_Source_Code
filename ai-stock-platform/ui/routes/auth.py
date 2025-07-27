@@ -44,7 +44,6 @@ async def login_page(request: Request, msg: str = None, next: str = None):
                 "request": request,
                 "msg": msg,
                 "next": next,
-                "demo_mode": False,
                 "page_title": "Login - QuantumVestAI"
             }
         )
@@ -137,7 +136,6 @@ async def login_post(
                 "msg_type": "danger",
                 "username": username,
                 "next": next,
-                "demo_mode": False,
                 "page_title": "Login - QuantumVestAI"
             },
             status_code=400
@@ -153,7 +151,6 @@ async def login_post(
                 "msg_type": "danger",
                 "username": username,
                 "next": next,
-                "demo_mode": False,
                 "page_title": "Login - QuantumVestAI"
             },
             status_code=500
@@ -168,7 +165,6 @@ async def register_page(request: Request, msg: str = None):
             {
                 "request": request,
                 "msg": msg,
-                "demo_mode": False,
                 "page_title": "Register - QuantumVestAI"
             }
         )
@@ -251,7 +247,6 @@ async def register_post(
                 "email": email,
                 "full_name": full_name,
                 "terms": terms,
-                "demo_mode": False,
                 "page_title": "Register - QuantumVestAI",
             },
             status_code=400,
@@ -265,7 +260,6 @@ async def register_post(
                 "msg": "Registration failed due to a technical error. Please try again.",
                 "msg_type": "danger",
                 "terms": terms,
-                "demo_mode": False,
                 "page_title": "Register - QuantumVestAI"
             },
             status_code=500
@@ -319,7 +313,6 @@ async def profile_page(request: Request):
             {
                 "request": request,
                 "user": user_data,
-                "demo_mode": False,
                 "page_title": "Profile - QuantumVestAI"
             }
         )
@@ -340,7 +333,6 @@ async def forgot_password_page(request: Request, msg: str = None):
             {
                 "request": request,
                 "msg": msg,
-                "demo_mode": False,
                 "page_title": "Forgot Password - QuantumVestAI"
             }
         )
@@ -354,21 +346,20 @@ async def forgot_password_page(request: Request, msg: str = None):
 
 @router.post("/forgot-password")
 async def forgot_password_post(request: Request, email: str = Form(...)):
-    """Handle forgot password form submission (demo mode)"""
+    """Handle forgot password form submission."""
     try:
         logger.info(f"Password reset request for email: {email}")
         
         if not email or "@" not in email:
             raise ValueError("Please enter a valid email address")
         
-        # In demo mode, just show success message
+        # Show success message without sending email
         return get_templates(request).TemplateResponse(
             "auth/forgot_password.html",
             {
                 "request": request,
-                "msg": "Password reset instructions have been sent to your email (demo mode - no actual email sent)",
+                "msg": "Password reset instructions have been sent to your email (no actual email sent)",
                 "msg_type": "success",
-                "demo_mode": False,
                 "page_title": "Forgot Password - QuantumVestAI"
             }
         )
@@ -381,7 +372,6 @@ async def forgot_password_post(request: Request, email: str = Form(...)):
                 "msg": str(e),
                 "msg_type": "danger",
                 "email": email,
-                "demo_mode": False,
                 "page_title": "Forgot Password - QuantumVestAI"
             },
             status_code=400

@@ -26,8 +26,8 @@ router = APIRouter(tags=["features"])
 
 @router.get("/features")
 async def features_page(request: Request):
-    """Features page (demo mode)"""
-    return RedirectResponse(url="/login?msg=Features+require+authentication+(demo+mode)", status_code=302)
+    """Features page."""
+    return RedirectResponse(url="/login?msg=Features+require+authentication", status_code=302)
 
 
 @router.get("/sentiment", response_class=HTMLResponse)
