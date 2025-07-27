@@ -205,6 +205,11 @@ body {
   transition: var(--transition-quantum);
 }
 
+/* Hide navigation when scrolling down */
+.quantum-nav.nav-hidden {
+  transform: translateY(-100%);
+}
+
 .quantum-nav.scrolled {
   background: var(--glass-dark);
   box-shadow: var(--quantum-shadow-soft);
