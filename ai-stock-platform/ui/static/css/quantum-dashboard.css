@@ -416,7 +416,7 @@
   gap: var(--space-xs);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: #43e97b;
+  color: #ef4444; /* match red dot */
   animation: livePulse 2s infinite;
 }
 

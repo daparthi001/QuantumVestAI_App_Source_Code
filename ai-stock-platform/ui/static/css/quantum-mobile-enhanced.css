@@ -37,6 +37,13 @@ Author: AI Assistant for QuantumVestAI
     
     .period-selector {
         margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .period-selector .form-label {
+        margin-bottom: 0;
     }
     
     /* Card improvements */
