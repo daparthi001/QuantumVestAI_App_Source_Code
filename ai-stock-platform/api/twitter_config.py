@@ -7,23 +7,35 @@ from typing import Optional
 
 
 class TwitterConfig:
-    """Simple Twitter configuration class"""
-    
-    def __init__(self):
-        self.TWITTER_BEARER_TOKEN = os.getenv('TWITTER_BEARER_TOKEN')
+    """Simple Twitter configuration class that reads values from the environment"""
 
-        # Support both new-style and legacy environment variable names so that
-        # deployments using either set will work correctly. The *.env.template*
-        # file uses the legacy `TWITTER_CONSUMER_*` names while the code expects
-        # `TWITTER_API_*`.  Here we check the API variables first and fall back
-        # to the consumer versions if they are present.
-        self.TWITTER_API_KEY = os.getenv('TWITTER_API_KEY') or os.getenv('TWITTER_CONSUMER_KEY')
-        self.TWITTER_API_SECRET = os.getenv('TWITTER_API_SECRET') or os.getenv('TWITTER_CONSUMER_SECRET')
-        self.TWITTER_ACCESS_TOKEN = os.getenv('TWITTER_ACCESS_TOKEN')
-        self.TWITTER_ACCESS_TOKEN_SECRET = (
-            os.getenv('TWITTER_ACCESS_TOKEN_SECRET')
-            or os.getenv('TWITTER_ACCESS_SECRET')
-        )
+    def __init__(self) -> None:
+        """No-op constructor for compatibility."""
+        # The previous implementation stored the values at import time.  This
+        # caused issues when environment variables were updated after the module
+        # was loaded.  The new implementation exposes properties that read from
+        # ``os.environ`` on each access so the latest values are always used.
+        pass
+
+    @property
+    def TWITTER_BEARER_TOKEN(self) -> Optional[str]:
+        return os.getenv('TWITTER_BEARER_TOKEN')
+
+    @property
+    def TWITTER_API_KEY(self) -> Optional[str]:
+        return os.getenv('TWITTER_API_KEY') or os.getenv('TWITTER_CONSUMER_KEY')
+
+    @property
+    def TWITTER_API_SECRET(self) -> Optional[str]:
+        return os.getenv('TWITTER_API_SECRET') or os.getenv('TWITTER_CONSUMER_SECRET')
+
+    @property
+    def TWITTER_ACCESS_TOKEN(self) -> Optional[str]:
+        return os.getenv('TWITTER_ACCESS_TOKEN')
+
+    @property
+    def TWITTER_ACCESS_TOKEN_SECRET(self) -> Optional[str]:
+        return os.getenv('TWITTER_ACCESS_TOKEN_SECRET') or os.getenv('TWITTER_ACCESS_SECRET')
     
     def has_credentials(self) -> bool:
         """Check if any Twitter credentials are configured"""
@@ -32,7 +44,7 @@ class TwitterConfig:
             self.TWITTER_API_KEY,
             self.TWITTER_API_SECRET,
             self.TWITTER_ACCESS_TOKEN,
-            self.TWITTER_ACCESS_TOKEN_SECRET
+            self.TWITTER_ACCESS_TOKEN_SECRET,
         ])
 
 # Create global instance
