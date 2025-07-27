@@ -45,7 +45,7 @@
                         <img src="{{ user.avatar_url }}" alt="{{ user.username }}">
                         {% else %}
                         <div class="avatar-placeholder">
-                            <span>{{ user.username[0]|upper }}</span>
+                            <span>{{ user.username[0]|upper if user and user.username else '' }}</span>
                         </div>
                         {% endif %}
                         <div class="avatar-overlay">
