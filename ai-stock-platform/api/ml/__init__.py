@@ -12,7 +12,11 @@ except Exception:  # pragma: no cover - optional heavy deps
     TrendAnalysisModel = None
     PortfolioOptimizationModel = None
 from .agent_system import AgentManager, AIAgent
-from .ensemble_model import EnsemblePredictor, linear_regression_predict
+from .ensemble_model import (
+    EnsemblePredictor,
+    linear_regression_predict,
+    random_forest_predict,
+)
 
 __all__ = [
     "PricePredictionModel",
@@ -21,6 +25,7 @@ __all__ = [
     "PortfolioOptimizationModel",
     "EnsemblePredictor",
     "linear_regression_predict",
+    "random_forest_predict",
     "AIAgent",
     "AgentManager",
     "start_model_training_scheduler",
