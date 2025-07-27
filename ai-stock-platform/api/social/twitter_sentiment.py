@@ -6,15 +6,25 @@ Enhanced: 2025-01-09 (AI Assistant)
 """
 import asyncio
 import logging
+import os
 import re
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
 import tweepy
-from core.config import settings
-from core.exceptions import (ConfigurationError, ExternalAPIError,
-                             RateLimitError)
+from core.exceptions import (
+    ConfigurationError,
+    ExternalAPIError,
+    RateLimitError,
+)
+
+# Read credentials directly from the environment to avoid stale values
+TWITTER_BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN")
+TWITTER_API_KEY = os.getenv("TWITTER_API_KEY") or os.getenv("TWITTER_CONSUMER_KEY")
+TWITTER_API_SECRET = os.getenv("TWITTER_API_SECRET") or os.getenv("TWITTER_CONSUMER_SECRET")
+TWITTER_ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
+TWITTER_ACCESS_TOKEN_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET") or os.getenv("TWITTER_ACCESS_SECRET")
 from textblob import TextBlob
 
 # Import the sentiment record from the API models package explicitly to avoid
@@ -31,21 +41,21 @@ class TwitterSentimentAnalyzer:
         try:
             # Check if credentials are available
             if not any([
-                settings.TWITTER_BEARER_TOKEN,
-                settings.TWITTER_API_KEY,
-                settings.TWITTER_API_SECRET,
-                settings.TWITTER_ACCESS_TOKEN,
-                settings.TWITTER_ACCESS_TOKEN_SECRET
+                TWITTER_BEARER_TOKEN,
+                TWITTER_API_KEY,
+                TWITTER_API_SECRET,
+                TWITTER_ACCESS_TOKEN,
+                TWITTER_ACCESS_TOKEN_SECRET,
             ]):
                 raise ConfigurationError("Twitter API credentials not configured")
-            
+
             # Twitter API credentials
             self.client = tweepy.Client(
-                bearer_token=settings.TWITTER_BEARER_TOKEN,
-                consumer_key=settings.TWITTER_API_KEY,
-                consumer_secret=settings.TWITTER_API_SECRET,
-                access_token=settings.TWITTER_ACCESS_TOKEN,
-                access_token_secret=settings.TWITTER_ACCESS_TOKEN_SECRET,
+                bearer_token=TWITTER_BEARER_TOKEN,
+                consumer_key=TWITTER_API_KEY,
+                consumer_secret=TWITTER_API_SECRET,
+                access_token=TWITTER_ACCESS_TOKEN,
+                access_token_secret=TWITTER_ACCESS_TOKEN_SECRET,
                 wait_on_rate_limit=True  # Automatically wait when rate limited
             )
             
