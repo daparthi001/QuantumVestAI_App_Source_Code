@@ -10,7 +10,7 @@ from db.base import Base, TimestampMixin
 from db.models.associations import user_portfolio, user_watchlist
 from sqlalchemy import (Boolean, Column, DateTime, Float, ForeignKey, Integer,
                         String, Table)
-from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy.orm import Mapped, relationship, synonym
 from sqlalchemy.sql import func
 
 
@@ -58,7 +58,7 @@ class Stock(Base, TimestampMixin):
         cascade="all, delete-orphan",
     )
     # Alias used by older code
-    watchlists = watchlist_entries
+    watchlists = synonym("watchlist_entries")
 
     # New watchlist stocks relationship used by modern watchlist implementation
     watchlist_stocks: Mapped[List["WatchlistStock"]] = relationship(
