@@ -36,7 +36,6 @@ from routers.docs import router as docs_router
 import sentry_sdk
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from fastapi import Response as FastAPIResponse
-from utils.data_loader import load_stock_data
 
 REQUEST_COUNT = Counter(
     'api_requests_total',
@@ -633,6 +632,7 @@ async def pre_market_prediction(request: Request, symbol: str) -> Response:
     """Generate a simple pre-market prediction based on recent closing prices."""
     logger.info("Pre-market prediction endpoint accessed")
     try:
+        from utils.data_loader import load_stock_data
         df = await load_stock_data(symbol, period="5d")
         if df.empty or "close" not in df.columns:
             raise ValueError("No historical data available")
