@@ -54,3 +54,23 @@ def linear_regression_predict(ticker: str, historical_data: pd.DataFrame, days_a
     preds = model.predict(future_index)
     dates = pd.date_range(start=df.index[-1], periods=days_ahead+1)[1:]
     return pd.DataFrame({'date': dates, 'predicted_close': preds}).set_index('date')
+
+
+def random_forest_predict(ticker: str, historical_data: pd.DataFrame, days_ahead: int = 5) -> pd.DataFrame:
+    """Random forest regressor for stronger predictions."""
+    from sklearn.ensemble import RandomForestRegressor
+
+    df = historical_data.dropna()
+    if len(df) < 2:
+        raise ValueError("Not enough data for regression")
+
+    X = np.arange(len(df)).reshape(-1, 1)
+    y = df['adjusted_close'].values
+
+    model = RandomForestRegressor(n_estimators=100, random_state=42)
+    model.fit(X, y)
+
+    future_index = np.arange(len(df), len(df) + days_ahead).reshape(-1, 1)
+    preds = model.predict(future_index)
+    dates = pd.date_range(start=df.index[-1], periods=days_ahead+1)[1:]
+    return pd.DataFrame({'date': dates, 'predicted_close': preds}).set_index('date')
