@@ -24,7 +24,7 @@ spec:
                 memory: "4Gi"
                 cpu: "2000m"
             env:
-            - name: JWT_SECRET_KEY
+            - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: quantumvestai-secrets

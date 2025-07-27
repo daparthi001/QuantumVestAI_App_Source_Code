@@ -62,11 +62,11 @@ spec:
             secretKeyRef:
               name: quantumvestai-cluster-rds-credentials
               key: password
-        - name: JWT_SECRET_KEY
+        - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
               name: ui-secrets
-              key: JWT_SECRET_KEY
+              key: JWT_SECRET
         - name: TWITTER_API_KEY
           valueFrom:
             secretKeyRef:

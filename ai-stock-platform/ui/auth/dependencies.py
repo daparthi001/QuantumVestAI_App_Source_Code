@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 # JWT Configuration
 # Prefer JWT_SECRET but fall back to SECRET_KEY for backward compatibility
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY") or os.getenv("SECRET_KEY", "default-dev-key")
+JWT_SECRET = os.getenv("JWT_SECRET") or os.getenv("SECRET_KEY", "default-dev-key")
 JWT_ALGORITHM = "HS256"
 TOKEN_EXPIRE_MINUTES = int(os.getenv("TOKEN_EXPIRE_MINUTES", "60"))
 
@@ -73,7 +73,7 @@ async def get_current_user(
     
     try:
         # Verify token with JWT
-        payload = jwt.decode(token_to_use, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        payload = jwt.decode(token_to_use, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         username: str = payload.get("sub")
         exp_timestamp: int = payload.get("exp")
         
@@ -128,7 +128,7 @@ async def verify_token_with_api_improved(token: str) -> Dict[str, Any]:
         
         # Fall back to local verification if API is unavailable
         try:
-            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+            payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
             return {
                 "username": payload.get("sub"),
                 "email": payload.get("email"),
@@ -202,7 +202,7 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
     return encoded_jwt
 
 async def decode_token(token: str) -> Dict[str, Any]:
@@ -236,7 +236,7 @@ async def decode_token(token: str) -> Dict[str, Any]:
     
     # Fall back to local JWT verification if API is unavailable
     try:
-        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         return {
             "username": payload.get("sub"),
             "email": payload.get("email"),

@@ -40,11 +40,11 @@ spec:
         image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:ui-dev-latest
         imagePullPolicy: Always
         env:
-        - name: JWT_SECRET_KEY
+        - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
               name: ui-secrets
-              key: JWT_SECRET_KEY
+              key: JWT_SECRET
         - name: TWITTER_API_KEY
           valueFrom:
             secretKeyRef:

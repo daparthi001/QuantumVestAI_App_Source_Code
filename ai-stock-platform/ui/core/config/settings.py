@@ -40,7 +40,7 @@ class Settings:
     API_BASE_URL = os.environ.get("API_BASE_URL", "http://quantumvestai-dev-api.dev.svc.cluster.local:8000")
     
     # JWT settings
-    JWT_SECRET = os.environ.get("JWT_SECRET_KEY", "jwt-secret-change-in-production")
+    JWT_SECRET = os.environ.get("JWT_SECRET", "jwt-secret-change-in-production")
     JWT_ALGORITHM = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES = 60
     

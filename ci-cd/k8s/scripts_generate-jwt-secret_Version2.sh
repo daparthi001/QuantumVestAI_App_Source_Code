@@ -23,7 +23,7 @@ metadata:
     created-by: daparthi001
 type: Opaque
 stringData:
-  JWT_SECRET_KEY: $JWT_SECRET
+  JWT_SECRET: $JWT_SECRET
 EOF
 
 echo "JWT Secret YAML file created: jwt-secret.yaml"
