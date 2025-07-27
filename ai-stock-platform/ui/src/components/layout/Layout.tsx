@@ -168,7 +168,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </motion.div>
             </Button>
             
-            <Navbar.Brand as={Link} to={ROUTES.DASHBOARD} className="fw-bold d-flex align-items-center">
+            <Navbar.Brand
+              as={Link}
+              to={ROUTES.DASHBOARD}
+              className="fw-bold d-flex align-items-center me-lg-4"
+            >
               <motion.div
                 className="me-2"
                 animate={{ rotate: 360 }}
@@ -179,7 +183,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <span className="quantum-text-gradient">QuantumVestAI</span>
             </Navbar.Brand>
 
-            <Nav className="ms-auto d-flex align-items-center gap-2">
+            <Nav className="ms-auto d-flex align-items-center gap-1">
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <OverlayTrigger placement="bottom" overlay={<Tooltip id="theme-tip">Toggle theme</Tooltip>}>
                   <Button

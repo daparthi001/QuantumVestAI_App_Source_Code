@@ -85,7 +85,7 @@ export const AlertCenter: React.FC = () => {
             <IconButton
                 color="inherit"
                 onClick={() => setIsOpen(true)}
-                sx={{ position: 'fixed', right: 20, top: 20 }}
+                sx={{ position: 'fixed', right: 20, top: 80, zIndex: 1300 }}
             >
                 <Badge badgeContent={unreadCount} color="error">
                     <NotificationsIcon />
@@ -97,7 +97,11 @@ export const AlertCenter: React.FC = () => {
                 open={isOpen}
                 onClose={() => setIsOpen(false)}
                 PaperProps={{
-                    sx: { width: 400 }
+                    sx: {
+                        width: 360,
+                        top: 76,
+                        height: 'calc(100% - 76px)'
+                    }
                 }}
             >
                 <Box sx={{ p: 2 }}>
@@ -157,6 +161,9 @@ const AlertItem: React.FC<{
                 color: 'var(--text-primary)',
                 '& .MuiAlert-icon': {
                     color: 'var(--primary-color)'
+                },
+                '& .MuiAlert-message': {
+                    fontSize: '0.95rem'
                 },
                 '& a': {
                     color: 'var(--primary-color)'
