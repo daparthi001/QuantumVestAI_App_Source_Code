@@ -27,13 +27,13 @@ router = APIRouter(tags=["admin"])
 
 @router.get("/admin")
 async def admin_page(request: Request):
-    """Admin page (demo mode)"""
+    """Admin page """
     return RedirectResponse(url="/login?msg=Admin+features+require+authentication+(demo+mode)", status_code=302)
 
 # Admin access middleware
 def admin_required(request: Request):
     """Verify the user has admin privileges"""
-    # In demo mode, simulate admin check
+    # simulate admin check
     user = request.session.get("user")
     if not user or user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin privileges required")
@@ -253,7 +253,7 @@ async def update_user_role(
                 status_code=400
             )
         
-        # In demo mode, simulate successful update
+        # simulate successful update
         logger.info(f"Updated user {user_id} role to {role}")
         
         return JSONResponse(
@@ -283,7 +283,7 @@ async def toggle_user_status(
     try:
         status = "active" if active else "inactive"
         
-        # In demo mode, simulate successful update
+        # simulate successful update
         logger.info(f"Updated user {user_id} status to {status}")
         
         return JSONResponse(
@@ -313,7 +313,7 @@ async def toggle_user_features(
     try:
         feature_status = "enabled" if advanced_features else "disabled"
         
-        # In demo mode, simulate successful update
+        # simulate successful update
         logger.info(f"Advanced features {feature_status} for user {user_id}")
         
         return JSONResponse(
@@ -406,7 +406,7 @@ async def retrain_model(
 ):
     """Retrain a model"""
     try:
-        # In demo mode, simulate model retraining
+        # simulate model retraining
         logger.info(f"Starting retraining for model {model_id}")
         
         return JSONResponse(
@@ -593,7 +593,7 @@ async def update_system_settings(
         # Get form data
         form_data = await request.form()
         
-        # In demo mode, simulate settings update
+        # simulate settings update
         updated_settings = dict(form_data)
         logger.info(f"System settings updated: {updated_settings}")
         
@@ -621,7 +621,7 @@ async def toggle_feature_availability(
 ):
     """Toggle feature availability"""
     try:
-        # In demo mode, simulate feature toggle
+        # simulate feature toggle
         status = "enabled" if enabled else "disabled"
         logger.info(f"Feature {feature_name} {status}")
         

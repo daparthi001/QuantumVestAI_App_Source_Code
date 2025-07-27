@@ -46,7 +46,6 @@ async def stocks_list(
                 "request": request,
                 "stocks": stocks,
                 "pagination": trending.get("pagination"),
-                "demo_mode": settings.DEMO_MODE,
                 "page_title": "Stocks - QuantumVestAI",
             },
         )
@@ -143,8 +142,7 @@ async def stock_search(
                 "limit": limit,
                 "results": search_results,
                 "error": error_message,
-                "user": None,
-                "demo_mode": settings.DEMO_MODE
+                "user": None
             }
         )
     except Exception as e:
@@ -158,8 +156,7 @@ async def stock_search(
                 "limit": limit,
                 "error": f"An unexpected error occurred: {str(e)}",
                 "results": [],
-                "user": None,
-                "demo_mode": settings.DEMO_MODE
+                "user": None
             }
         )
 
@@ -195,7 +192,7 @@ async def stock_detail(
     forecast_days: int = Query(7, ge=1, le=30),
     model: str = Query(MODEL_ENSEMBLE)
 ):
-    """Display stock detail page (demo mode)"""
+    """Display stock detail page."""
     try:
         stock_data = {
             "ticker": ticker.upper(),
@@ -237,8 +234,8 @@ async def stock_detail(
                 else:
                     stock_data["forecast"] = {"status": "unavailable"}
             
-            # Demo mode - skip premium features like sentiment and watchlist
-            stock_data["sentiment"] = {"status": "unavailable", "reason": "demo_mode"}
+            # Premium features currently disabled without authentication
+            stock_data["sentiment"] = {"status": "unavailable"}
             stock_data["in_watchlist"] = False
         
         return get_templates(request).TemplateResponse(
@@ -247,7 +244,6 @@ async def stock_detail(
                 "request": request,
                 "stock": stock_data,
                 "user": None,
-                "demo_mode": settings.DEMO_MODE,
                 "available_models": AVAILABLE_MODELS
             }
         )
@@ -257,7 +253,7 @@ async def stock_detail(
         logger.error(f"Stock detail error for {ticker}: {str(e)}")
         return get_templates(request).TemplateResponse(
             "error.html",
-            {"request": request, "error": str(e), "user": None, "demo_mode": settings.DEMO_MODE},
+            {"request": request, "error": str(e), "user": None},
             status_code=500
         )
 
@@ -271,7 +267,6 @@ async def stock_flow_page(request: Request):
             {
                 "request": request,
                 "user": None,
-                "demo_mode": settings.DEMO_MODE,
             },
         )
     except Exception as e:  # pragma: no cover - template errors
@@ -287,7 +282,7 @@ async def add_to_watchlist(
     request: Request,
     ticker: str
 ):
-    """Add stock to watchlist (demo mode)"""
+    """Add stock to watchlist."""
     
     # Demo mode - redirect to login with a message
-    return RedirectResponse(url="/login?msg=Watchlist+features+require+authentication+(demo+mode)", status_code=302)
+    return RedirectResponse(url="/login?msg=Watchlist+features+require+authentication", status_code=302)

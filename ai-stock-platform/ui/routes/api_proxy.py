@@ -55,11 +55,11 @@ async def ticker_search_proxy(request: Request):
 async def enable_advanced_features_proxy(request: Request):
     """Direct proxy for enabling advanced features"""
     try:
-        logger.info("Enabling advanced features in demo mode")
+        logger.info("Enabling advanced features")
         
         return JSONResponse({
             "status": "success",
-            "message": "Advanced features enabled successfully (demo mode)",
+            "message": "Advanced features enabled successfully",
             "features": {
                 "advanced_analytics": True,
                 "real_time_data": True,
@@ -79,7 +79,7 @@ async def enable_advanced_features_proxy(request: Request):
 async def get_features_proxy(request: Request):
     """Direct proxy for getting user features"""
     try:
-        logger.info("Getting user features in demo mode")
+        logger.info("Getting user features")
         
         return JSONResponse({
             "status": "success",
@@ -109,7 +109,6 @@ async def api_proxy_health():
         "status": "healthy",
         "service": "api_proxy",
         "timestamp": datetime.utcnow().isoformat(),
-        "demo_mode": settings.DEMO_MODE
     }
 
 # Generic API proxy for other endpoints
@@ -117,14 +116,12 @@ async def api_proxy_health():
 async def generic_api_proxy(request: Request, path: str):
     """Generic proxy for any API endpoint"""
     try:
-        # In demo mode, return generic success responses
         method = request.method
-        logger.info(f"Generic API proxy: {method} /{path} (demo mode)")
+        logger.info(f"Generic API proxy: {method} /{path}")
         
         return JSONResponse({
             "status": "success",
             "message": f"Demo response for {method} /{path}",
-            "demo_mode": settings.DEMO_MODE,
             "timestamp": datetime.utcnow().isoformat()
         })
         

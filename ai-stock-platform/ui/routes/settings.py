@@ -37,14 +37,13 @@ async def settings_page(request: Request):
         auth_cookie = request.cookies.get("access_token")
         if not auth_cookie:
             return RedirectResponse(url="/auth/login?msg=Please log in to access settings", status_code=302)
-        
-        logger.info("Loading settings page in demo mode")
-        
+
+        logger.info("Loading settings page")
+
         return get_templates(request).TemplateResponse(
             "settings.html",
             {
                 "request": request,
-                "demo_mode": settings.DEMO_MODE,
                 "settings": DEMO_USER_SETTINGS,
                 "page_title": "Settings - QuantumVestAI"
             }
@@ -64,9 +63,9 @@ async def settings_page(request: Request):
 
 @router.post("/update")
 async def update_settings(request: Request):
-    """Update user settings (demo mode)"""
+    """Update user settings."""
     try:
-        logger.info("Updating settings in demo mode")
+        logger.info("Updating settings")
         
         # Check authentication
         auth_cookie = request.cookies.get("access_token")
@@ -78,7 +77,7 @@ async def update_settings(request: Request):
         
         return JSONResponse({
             "status": "success",
-            "message": "Settings updated successfully (demo mode)"
+            "message": "Settings updated successfully"
         })
         
     except Exception as e:

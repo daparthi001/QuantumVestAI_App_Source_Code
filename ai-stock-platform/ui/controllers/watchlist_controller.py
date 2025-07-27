@@ -26,17 +26,17 @@ API_V1_URL = f"{API_URL}/api/v1"
 
 @router.get("/watchlist", response_class=HTMLResponse)
 async def watchlist(request: Request):
-    """Display user's watchlist (demo mode)"""
+    """Display user's watchlist."""
     
     # Demo mode - redirect to login with a message that watchlist requires authentication
-    return RedirectResponse(url="/login?msg=Watchlist+requires+authentication+(demo+mode)", status_code=302)
+    return RedirectResponse(url="/login?msg=Watchlist+requires+authentication", status_code=302)
 
 @router.post("/watchlist/add")
 async def add_to_watchlist(request: Request):
-    """Add stock to watchlist (demo mode)"""
+    """Add stock to watchlist."""
     
     # Demo mode - redirect to login with a message
-    return RedirectResponse(url="/login?msg=Watchlist+features+require+authentication+(demo+mode)", status_code=302)
+    return RedirectResponse(url="/login?msg=Watchlist+features+require+authentication", status_code=302)
 
 @router.post("/watchlist")
 async def view_watchlist(request: Request):

@@ -42,8 +42,6 @@ class Settings(BaseSettings):
 
     BACKEND_CORS_ORIGINS: list[str] | str | None = None
 
-    # Demo mode has been removed; the UI always fetches live data.
-    DEMO_MODE: bool = False
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod

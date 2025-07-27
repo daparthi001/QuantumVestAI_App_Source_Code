@@ -227,7 +227,7 @@ async def update_settings(
             current_user[key] = value
         request.session["user"] = current_user
         
-        # In demo mode, simulate successful update
+        # simulate successful update
         logger.info(f"Settings updated for user {current_user['id']}: {updated_settings}")
         
         # Get available options for template

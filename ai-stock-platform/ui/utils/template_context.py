@@ -55,8 +55,6 @@ class TemplateContextProcessor:
             
             # Feature flags
             "debug_mode": os.environ.get("DEBUG", "false").lower() == "true",
-            # Demo mode flag from shared settings
-            "demo_mode": settings.DEMO_MODE,
             
             # Time helpers
             "timestamp": datetime.utcnow().isoformat(),

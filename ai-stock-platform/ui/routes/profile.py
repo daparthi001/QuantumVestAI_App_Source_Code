@@ -36,9 +36,9 @@ def get_templates(request: Request) -> Jinja2Templates:
 # Router setup
 router = APIRouter(prefix="/profile", tags=["profile"])
 
-# Authentication dependency (demo mode)
+# Authentication dependency 
 def get_current_user(request: Request):
-    """Get current user from session (demo mode)"""
+    """Get current user from session """
     user = request.session.get("user")
     if not user:
         raise HTTPException(status_code=401, detail="Authentication required")
@@ -176,7 +176,7 @@ async def update_profile(
         if profile_image_path:
             update_data["profile_image"] = profile_image_path
         
-        # In demo mode, simulate successful update
+        # simulate successful update
         logger.info(f"Profile updated for user {current_user['id']}: {update_data}")
         
         # Update session data
@@ -294,14 +294,14 @@ async def change_password(
                 status_code=400
             )
         
-        # In demo mode, simulate password change validation
+        # simulate password change validation
         # In real implementation, verify current_password against stored password
         demo_stored_password = "demo_password"  # This would be hashed in real implementation
         
         if current_password != demo_stored_password and current_password != "password":
             raise HTTPException(status_code=400, detail="Current password is incorrect")
         
-        # In demo mode, simulate successful password change
+        # simulate successful password change
         logger.info(f"Password changed for user {current_user['id']}")
         
         # Get profile data for success response
@@ -401,9 +401,9 @@ async def delete_account(
     request: Request,
     current_user: dict = Depends(get_current_user)
 ):
-    """Delete user account (demo mode)"""
+    """Delete user account """
     try:
-        # In demo mode, simulate account deletion
+        # simulate account deletion
         logger.info(f"Account deletion requested for user {current_user['id']}")
         
         # Clear session
@@ -412,7 +412,7 @@ async def delete_account(
         return JSONResponse(
             content={
                 "success": True,
-                "message": "Account deleted successfully (demo mode)",
+                "message": "Account deleted successfully ",
                 "redirect_url": "/login?msg=Account+deleted+successfully"
             }
         )

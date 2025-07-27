@@ -19,15 +19,12 @@ async def get_api_client(request: Request) -> APIClient:
     return APIClient(token=None)
 
 async def get_template_context(request: Request) -> Dict[str, Any]:
-    """
-    Dependency to get base template context for all templates (demo mode)
-    """
+    """Dependency to get base template context for all templates."""
     # Basic context without user info
     context = {
         "request": request,
         "user": None,
         "now": datetime.now(),
-        "demo_mode": settings.DEMO_MODE,
         "is_admin": False,
         "is_premium": False
     }
