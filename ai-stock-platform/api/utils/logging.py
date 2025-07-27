@@ -1,18 +1,19 @@
 import json
-import logging
+import importlib
+py_logging = importlib.import_module("logging")
 import traceback
 from datetime import datetime
 from typing import Any, Dict, Optional
 
 
-class JsonFormatter(logging.Formatter):
+class JsonFormatter(py_logging.Formatter):
     """Custom formatter that outputs log entries as JSON."""
     
     def __init__(self, fmt=None, datefmt=None, style='%', validate=True):
         """Initialize JsonFormatter."""
         super().__init__(fmt, datefmt, style, validate)
     
-    def format(self, record: logging.LogRecord) -> str:
+    def format(self, record: py_logging.LogRecord) -> str:
         """Format log record as JSON."""
         log_data = {
             "timestamp": datetime.utcnow().isoformat(),
@@ -60,14 +61,14 @@ def setup_logger(
     name: str,
     level: str = "INFO",
     log_file: Optional[str] = None
-) -> logging.Logger:
+) -> py_logging.Logger:
     """Set up and return a logger with the specified configuration."""
-    logger = logging.getLogger(name)
-    logger.setLevel(getattr(logging, level))
+    logger = py_logging.getLogger(name)
+    logger.setLevel(getattr(py_logging, level))
     
     # Add console handler
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(logging.Formatter(
+    console_handler = py_logging.StreamHandler()
+    console_handler.setFormatter(py_logging.Formatter(
         "%(levelname)s | %(asctime)s | %(name)s | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S"
     ))
@@ -75,7 +76,7 @@ def setup_logger(
     
     # Add file handler if log file specified
     if log_file:
-        file_handler = logging.handlers.RotatingFileHandler(
+        file_handler = py_logging.handlers.RotatingFileHandler(
             log_file,
             maxBytes=10485760,  # 10MB
             backupCount=5
