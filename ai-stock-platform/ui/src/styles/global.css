@@ -375,6 +375,10 @@ a:hover {
   color: var(--primary-color);
 }
 
+.dark-theme .MuiAlert-message {
+  font-size: 0.95rem;
+}
+
 .dark-theme .alert-timestamp {
   color: var(--text-secondary);
 }

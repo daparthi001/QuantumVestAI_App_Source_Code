@@ -297,7 +297,7 @@ body {
   color: var(--dark-text-secondary);
   text-decoration: none;
   border-radius: var(--quantum-radius-md);
-  margin: var(--quantum-spacing-xs) var(--quantum-spacing-md);
+  margin: var(--quantum-spacing-xs) var(--quantum-spacing-sm);
   transition: var(--quantum-transition-medium);
   position: relative;
   overflow: hidden;
