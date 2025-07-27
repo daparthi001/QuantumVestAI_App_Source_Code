@@ -90,8 +90,8 @@ class Settings(BaseSettings):
     # Logging
     LOG_LEVEL: str = Field(default="INFO", env='LOG_LEVEL')
 
-    # Toggle demo mode for the UI. When False the UI fetches live data.
-    DEMO_MODE: bool = Field(default=False, env="DEMO_MODE")
+    # Demo mode has been removed; the UI always fetches live data
+    DEMO_MODE: bool = False
 
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
