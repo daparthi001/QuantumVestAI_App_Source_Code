@@ -19,7 +19,17 @@ from core.exceptions import (
 )
 
 # Read credentials directly from the environment each time using twitter_config
-from ..twitter_config import twitter_config
+# Import the configuration with fallbacks so the module works whether the
+# ``api`` package is the execution context or ``social`` is imported as a
+# top-level module.  This avoids ``ImportError: attempted relative import beyond
+# top-level package`` when running the API from different entry points.
+try:
+    from api.twitter_config import twitter_config  # type: ignore
+except Exception:  # pragma: no cover - fallback for local package execution
+    try:
+        from twitter_config import twitter_config  # type: ignore
+    except Exception:  # pragma: no cover - final fallback
+        from ..twitter_config import twitter_config
 from textblob import TextBlob
 
 # Import the sentiment record from the API models package explicitly to avoid
