@@ -13,7 +13,7 @@ import requests
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from core.config import settings
+from core.config.settings import settings
 
 router = APIRouter()
 logger = logging.getLogger("quantumvestai.auth_controller")

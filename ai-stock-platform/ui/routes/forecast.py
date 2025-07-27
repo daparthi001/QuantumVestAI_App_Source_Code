@@ -12,7 +12,7 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from core.config import settings
+from core.config.settings import settings
 
 # Setup router
 router = APIRouter(prefix="/forecast", tags=["forecast"])

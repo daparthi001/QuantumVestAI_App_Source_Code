@@ -11,7 +11,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Optional
 
-from core.config import settings
+from core.config.settings import settings
 
 
 def setup_logging(

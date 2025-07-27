@@ -9,7 +9,7 @@ This ensures consistent availability of essential variables like `now`, `user`, 
 
 import logging
 import os
-from core.config import settings
+from core.config.settings import settings
 from datetime import datetime
 from typing import Any, Callable, Dict, Optional
 

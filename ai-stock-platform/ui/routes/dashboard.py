@@ -11,7 +11,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from core.config import settings
+from core.config.settings import settings
 from services.yahoo_finance import YahooFinanceService
 from services.trending_stocks_service import TrendingStocksService
 from services.api_client import APIClient

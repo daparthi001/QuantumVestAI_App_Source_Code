@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional, Tuple
 
 from core.config.constants import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
 from fastapi import Query, Request
-from core.config import settings
+from core.config.settings import settings
 
 # Prefer the standalone ``services`` package but fall back to the
 # old ``ui.services`` path when running tests from the monorepo.

@@ -9,7 +9,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
-from core.config import settings
+from core.config.settings import settings
 
 # Setup router
 router = APIRouter(prefix="/api/v1", tags=["api"])
