@@ -229,14 +229,9 @@ The integration handles various error scenarios:
 - 429 Rate Limited → Automatic handling
 - 503 Service Unavailable → Twitter API issues
 
-## Demo Mode
+## Twitter API Credentials Required
 
-When Twitter API credentials are not configured, the system automatically runs in demo mode:
-
-- Returns realistic sample data
-- Maintains all API response structures
-- Includes clear indicators that demo data is being used
-- Allows testing of UI components without API access
+Valid Twitter API credentials are now mandatory. The previous demo mode fallback has been removed, so the service will not operate without proper configuration.
 
 ## Troubleshooting
 

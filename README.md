@@ -131,10 +131,8 @@ public demo key, so a missing variable will result in an error:
 export ALPHA_VANTAGE_API_KEY=your_key_here
 ```
 Without this key the trending stock endpoints will not return current data.
-To disable the built-in mock responses and fetch live quotes you must also set
-`ENABLE_REAL_DATA=true` when starting the API server. Leaving this variable
-unset (the default) will cause the services to fall back to generated demo data
-even if the API key is provided.
+Set `ENABLE_REAL_DATA=true` when starting the API server to fetch live quotes.
+If this variable is omitted the services will not return market data.
 
 ## Database Setup
 
