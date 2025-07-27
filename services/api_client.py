@@ -5,11 +5,15 @@ import os
 import json
 import requests
 
-class _Settings:
-    """Minimal settings object for tests."""
-    API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost")
+try:  # Prefer project settings when available
+    from core.config.settings import settings  # type: ignore
+except Exception:  # Fallback for isolated usage
+    class _Settings:
+        """Minimal settings object for tests."""
 
-settings = _Settings()
+        API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost")
+
+    settings = _Settings()
 
 
 class APIClient:
@@ -42,7 +46,8 @@ class APIClient:
             resp = requests.get(
                 self.build_url(endpoint), headers=self.headers, params=params, timeout=self.timeout
             )
-            resp.raise_for_status()
+            if resp.status_code >= 400:
+                return None
             return resp.json()
         except Exception:
             return None
@@ -55,7 +60,8 @@ class APIClient:
                 data=json.dumps(data or {}),
                 timeout=self.timeout,
             )
-            resp.raise_for_status()
+            if resp.status_code >= 400:
+                return None
             return resp.json()
         except Exception:
             return None
@@ -68,7 +74,8 @@ class APIClient:
                 data=json.dumps(data or {}),
                 timeout=self.timeout,
             )
-            resp.raise_for_status()
+            if resp.status_code >= 400:
+                return None
             return resp.json()
         except Exception:
             return None
@@ -78,8 +85,10 @@ class APIClient:
             resp = requests.delete(
                 self.build_url(endpoint), headers=self.headers, timeout=self.timeout
             )
-            resp.raise_for_status()
-            return resp.json()
+            if resp.status_code >= 400:
+                return None
+            # DELETE endpoints often return no content
+            return resp.json() if resp.content else None
         except Exception:
             return None
 
@@ -88,7 +97,8 @@ class APIClient:
             resp = requests.post(
                 self.build_url(endpoint), headers=self.headers, data=data, timeout=self.timeout
             )
-            resp.raise_for_status()
+            if resp.status_code >= 400:
+                return None
             return resp.json()
         except Exception:
             return None
