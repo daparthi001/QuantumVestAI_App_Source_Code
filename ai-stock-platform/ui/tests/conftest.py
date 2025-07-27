@@ -19,7 +19,7 @@ from unittest.mock import MagicMock, patch
 # Import the settings instance directly from the API package.  Using the
 # compatibility package can result in the module object being imported
 # when both UI and API packages modify ``sys.path``.
-from core.config import settings
+from core.config.settings import settings
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 

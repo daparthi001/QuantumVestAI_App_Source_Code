@@ -10,7 +10,7 @@ from pathlib import Path
 import aiohttp
 from fastapi import APIRouter, Form, HTTPException, Query, Request
 from ui.config.constants import AVAILABLE_MODELS, MODEL_ENSEMBLE
-from core.config import settings
+from core.config.settings import settings
 
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates

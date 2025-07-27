@@ -7,7 +7,7 @@ import logging
 import os
 from pathlib import Path
 from typing import Any, Dict, Optional
-from core.config import settings
+from core.config.settings import settings
 
 import requests
 from fastapi import APIRouter, HTTPException, Query, Request

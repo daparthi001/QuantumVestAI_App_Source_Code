@@ -18,7 +18,7 @@ import requests
 # Import settings from the API package to ensure we obtain the actual
 # Settings instance rather than the module when both UI and API paths
 # are on ``sys.path`` during tests.
-from core.config import settings
+from core.config.settings import settings
 
 # Import directly from the services package used by the application
 from services.api_client import APIClient

@@ -10,7 +10,7 @@ from typing import Optional
 # Import settings from the API package directly.  Importing via the
 # ``core`` compatibility package may load the module instead of the
 # ``settings`` instance when multiple ``core`` packages are on the path.
-from core.config import settings
+from core.config.settings import settings
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates

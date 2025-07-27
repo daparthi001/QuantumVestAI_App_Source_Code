@@ -22,7 +22,7 @@ try:
     # Import from the API package to ensure we get the actual Settings
     # instance.  Using the ``core`` compatibility layer can return the
     # module object when both packages are present on ``PYTHONPATH``.
-    from core.config import settings
+    from core.config.settings import settings
 except Exception:  # pragma: no cover - fallback for demo mode
     class Settings:
         SECRET_KEY = os.getenv("JWT_SECRET_KEY") or os.getenv("SECRET_KEY", "supersecretkey123456789abcdef")

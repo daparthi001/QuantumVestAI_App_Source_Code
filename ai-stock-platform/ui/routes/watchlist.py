@@ -11,7 +11,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from core.config import settings
+from core.config.settings import settings
 
 # Setup router
 router = APIRouter(prefix="/watchlist", tags=["watchlist"])
