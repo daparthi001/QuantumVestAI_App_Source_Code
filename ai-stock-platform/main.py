@@ -994,6 +994,15 @@ async def dashboard(request: Request):
             status_code=200
         )
 
+# Notifications page
+@app.get("/notifications", response_class=HTMLResponse)
+async def notifications(request: Request):
+    """Display user notifications."""
+    return app.state.templates.TemplateResponse(
+        "notifications.html",
+        {"request": request}
+    )
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
