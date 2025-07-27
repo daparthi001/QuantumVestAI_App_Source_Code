@@ -19,7 +19,7 @@
   font-weight: 700;
   font-size: 2.5rem;
   margin-bottom: 0.5rem;
-  text-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
+  text-shadow: 0 0 8px rgba(0, 210, 255, 0.4);
 }
 
 /* Live Indicator */
@@ -27,7 +27,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  color: #10b981;
+  color: #ef4444; /* match red dot */
   font-weight: 600;
   animation: pulse 2s infinite;
 }
@@ -202,6 +202,9 @@
   font-weight: 600;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .dashboard-actions .btn:hover {
@@ -317,7 +320,7 @@
   
   .quantum-title {
     -webkit-text-fill-color: #ffffff;
-    text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+    text-shadow: 0 0 6px rgba(0, 210, 255, 0.4);
   }
 }
 
