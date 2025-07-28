@@ -133,6 +133,9 @@ export ALPHA_VANTAGE_API_KEY=your_key_here
 Without this key the trending stock endpoints will not return current data.
 Set `ENABLE_REAL_DATA=true` when starting the API server to fetch live quotes.
 If this variable is omitted the services will not return market data.
+To avoid hitting the Alpha Vantage rate limit the service pauses between
+requests. The delay defaults to 12 seconds but can be adjusted with
+`ALPHA_VANTAGE_REQUEST_INTERVAL`.
 
 ## Database Setup
 
