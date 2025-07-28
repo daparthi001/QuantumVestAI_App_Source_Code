@@ -113,6 +113,9 @@ class PredictiveAnalyticsResponse(BaseModel):
     model_metrics: Dict[str, float]
     feature_importance: Dict[str, float]
 
+    # Disable protected namespace warnings for fields beginning with "model_"
+    model_config = {"protected_namespaces": ()}
+
 class SentimentScore(BaseModel):
     """Sentiment score schema."""
     source: str
