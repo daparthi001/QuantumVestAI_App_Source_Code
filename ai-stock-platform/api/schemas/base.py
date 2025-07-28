@@ -6,7 +6,7 @@ Author: daparthi001
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, ConfigDict, validator
 
 
 class TimestampModel(BaseModel):
@@ -24,3 +24,8 @@ class ApiResponse(BaseModel):
     success: bool
     message: Optional[str] = None
     error: Optional[str] = None
+
+class SafeBaseModel(BaseModel):
+    """BaseModel with protected namespace warnings disabled."""
+
+    model_config = ConfigDict(protected_namespaces=())
