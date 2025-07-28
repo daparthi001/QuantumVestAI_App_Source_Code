@@ -29,18 +29,34 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   const navigationItems = [
-    { 
-      path: ROUTES.DASHBOARD, 
-      label: 'Dashboard', 
-      icon: '📊', 
+    {
+      path: ROUTES.DASHBOARD,
+      label: 'Dashboard',
+      icon: '📊',
       modernIcon: 'bi-speedometer2',
       description: 'Overview & Analytics',
       color: '#4facfe'
     },
-    { 
-      path: ROUTES.STOCKS, 
-      label: 'Stocks', 
-      icon: '📈', 
+    {
+      path: ROUTES.FORECAST,
+      label: 'Forecast',
+      icon: '🔮',
+      modernIcon: 'bi-graph-up',
+      description: 'Price Forecasts',
+      color: '#ff9f1c'
+    },
+    {
+      path: ROUTES.PREDICTABILITY,
+      label: 'Predictability',
+      icon: '📈',
+      modernIcon: 'bi-bar-chart-line',
+      description: 'Predictability Scores',
+      color: '#9d4edd'
+    },
+    {
+      path: ROUTES.STOCKS,
+      label: 'Stocks',
+      icon: '📈',
       modernIcon: 'bi-graph-up-arrow',
       description: 'Market Analysis',
       color: '#43e97b'
@@ -85,10 +101,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       description: 'Strategy Testing',
       color: '#8b5cf6'
     },
-    { 
-      path: ROUTES.NEWS, 
-      label: 'News', 
-      icon: '📰', 
+    {
+      path: ROUTES.MARKET,
+      label: 'Market',
+      icon: '💹',
+      modernIcon: 'bi-currency-exchange',
+      description: 'Market Overview',
+      color: '#1b9aaa'
+    },
+    {
+      path: ROUTES.NEWS,
+      label: 'News',
+      icon: '📰',
       modernIcon: 'bi-newspaper',
       description: 'Market News',
       color: '#fa709a'

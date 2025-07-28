@@ -44,6 +44,9 @@ const Settings = React.lazy(() => import('./components/Settings'));
 const Profile = React.lazy(() => import('./components/Profile'));
 const Portfolio = React.lazy(() => import('./components/Portfolio'));
 const Backtest = React.lazy(() => import('./components/Backtest'));
+const Forecast = React.lazy(() => import('./components/Forecast'));
+const Predictability = React.lazy(() => import('./components/Predictability'));
+const Market = React.lazy(() => import('./components/Market'));
 const AiAssistant = React.lazy(() => import('./components/AiAssistant'));
 const Trading = React.lazy(() => import('./components/Trading'));
 const News = React.lazy(() => import('./components/News'));
@@ -158,6 +161,30 @@ function App() {
                         <ProtectedRoute>
                           <Layout>
                             <Backtest />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
+
+                      <Route path={ROUTES.FORECAST} element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <Forecast />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
+
+                      <Route path={ROUTES.PREDICTABILITY} element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <Predictability />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
+
+                      <Route path={ROUTES.MARKET} element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <Market />
                           </Layout>
                         </ProtectedRoute>
                       } />
