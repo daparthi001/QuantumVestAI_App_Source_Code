@@ -1,39 +1,43 @@
-// Simple notifications dropdown handler
-// Handles toggling and mark-all-read functionality
-
-document.addEventListener('DOMContentLoaded', () => {
-    const toggle = document.getElementById('notificationsToggle');
-    const dropdown = document.getElementById('notificationsDropdown');
-    const markAllBtn = document.querySelector('.mark-all-read-btn');
-    const badge = document.querySelector('.notification-badge');
-
-    if (toggle && dropdown) {
-        toggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            dropdown.classList.toggle('show');
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!dropdown.contains(e.target) && !toggle.contains(e.target)) {
-                dropdown.classList.remove('show');
-            }
-        });
+class NotificationsManager {
+    constructor() {
+        document.addEventListener('DOMContentLoaded', () => this.init());
     }
 
-    if (markAllBtn && dropdown) {
-        markAllBtn.addEventListener('click', () => {
-            dropdown.querySelectorAll('.notification-card.unread')
-                .forEach(card => card.classList.remove('unread'));
-            if (badge) {
-                badge.textContent = '0';
-                badge.style.display = 'none';
-            }
-        });
-    }
+    init() {
+        const toggle = document.getElementById('notificationsToggle');
+        const dropdown = document.getElementById('notificationsDropdown');
+        const markAll = dropdown ? dropdown.querySelector('.mark-all-read-btn') : null;
 
-    dropdown?.querySelectorAll('.notification-dismiss').forEach(btn => {
-        btn.addEventListener('click', () => {
-            btn.closest('.notification-card')?.remove();
-        });
-    });
-});
+        if (toggle && dropdown) {
+            toggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdown.classList.toggle('active');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!dropdown.contains(e.target) && e.target !== toggle) {
+                    dropdown.classList.remove('active');
+                }
+            });
+        }
+
+        if (dropdown) {
+            dropdown.addEventListener('click', (e) => {
+                const dismissBtn = e.target.closest('.notification-dismiss');
+                if (dismissBtn) {
+                    e.preventDefault();
+                    const card = dismissBtn.closest('.notification-card');
+                    if (card) card.remove();
+                }
+            });
+        }
+
+        if (markAll && dropdown) {
+            markAll.addEventListener('click', () => {
+                dropdown.querySelectorAll('.notification-card').forEach(card => card.remove());
+            });
+        }
+    }
+}
+
+new NotificationsManager();
