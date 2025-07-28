@@ -322,11 +322,12 @@
 {% block scripts %}
 <script src="{{ get_asset_url('js/chart.js') }}"></script>
 <script src="{{ get_asset_url('js/predictability.js') }}"></script>
-
+<script>
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize predictability charts and gauges
     if (typeof initializePredictabilityCharts === 'function') {
         initializePredictabilityCharts('{{ ticker }}', {{ predictability_score }});
     }
 });
-</script>{% endblock %}
+</script>
+{% endblock %}
