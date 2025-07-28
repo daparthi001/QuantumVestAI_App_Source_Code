@@ -6,7 +6,7 @@ Author: daparthi001
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from core.exceptions import PermissionDeniedError, ResourceNotFoundError
+from core.exceptions import ResourceNotFoundError, PermissionError as PermissionDeniedError
 from core.security import get_current_user
 from db.models.user import User
 from db.session import get_db
@@ -43,6 +43,8 @@ public_router = APIRouter(
     prefix="/analytics",
     tags=["analytics"]
 )
+
+from services.market_overview_service import MarketOverviewService
 
 @router.get(
     "/portfolio/{portfolio_id}",
@@ -280,3 +282,25 @@ async def track_pageview(
             "timestamp": pageview_data.timestamp
         }
     }
+
+
+@public_router.get(
+    "/market-overview",
+    summary="Market overview",
+    description="Get market indices and sector performance"
+)
+async def get_market_overview() -> Dict[str, Any]:
+    """Return aggregated market overview data."""
+    data = MarketOverviewService.get_market_overview()
+    return {"data": data, "timestamp": datetime.utcnow().isoformat()}
+
+
+@public_router.get(
+    "/top-movers",
+    summary="Top market movers",
+    description="Get top gaining and losing stocks"
+)
+async def get_top_movers() -> Dict[str, Any]:
+    """Return top gainers and losers."""
+    movers = MarketOverviewService.get_top_movers()
+    return {"data": movers, "timestamp": datetime.utcnow().isoformat()}

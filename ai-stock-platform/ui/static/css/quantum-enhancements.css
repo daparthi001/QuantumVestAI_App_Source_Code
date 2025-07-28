@@ -109,8 +109,23 @@ p {
 }
 
 .notifications-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
   width: 320px;
   padding: var(--space-md);
+  background: var(--glass-dark);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--quantum-shadow-strong);
+  margin-top: var(--space-xs);
+  z-index: var(--z-dropdown);
+}
+
+.notifications-dropdown.show {
+  display: block;
 }
 
 .notifications-list {

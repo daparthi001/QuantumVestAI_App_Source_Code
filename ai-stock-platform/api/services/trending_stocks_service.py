@@ -63,6 +63,11 @@ class TrendingStocksService:
             )
         self.base_url = "https://www.alphavantage.co/query"
         self.cache_ttl = int(os.getenv("CACHE_TTL_TRENDING_STOCKS", "300"))  # 5 minutes
+        # Delay between API requests to respect Alpha Vantage rate limits.
+        # Free API keys are limited to 5 requests per minute so the default
+        # interval of ``12`` seconds keeps us under the threshold.  The delay
+        # can be configured via ``ALPHA_VANTAGE_REQUEST_INTERVAL``.
+        self.request_interval = float(os.getenv("ALPHA_VANTAGE_REQUEST_INTERVAL", "12"))
         self._cache: Dict[str, Any] = {}
         self._cache_timestamp: Optional[datetime] = None
         
@@ -170,21 +175,17 @@ class TrendingStocksService:
         else:
             stocks_data = []
             async with aiohttp.ClientSession() as session:
-                # Fetch data for each trending symbol
-                tasks = [
-                    self._fetch_stock_quote(session, symbol)
-                    for symbol in self.trending_symbols
-                ]
-
-                results = await asyncio.gather(*tasks, return_exceptions=True)
-
-                for symbol, result in zip(self.trending_symbols, results):
-                    if isinstance(result, Exception):
-                        logger.warning(f"Failed to fetch data for {symbol}: {result}")
-                        continue
-
+                # Fetch each symbol sequentially to respect API rate limits.
+                for idx, symbol in enumerate(self.trending_symbols):
+                    result = await self._fetch_stock_quote(session, symbol)
                     if result:
                         stocks_data.append(result)
+                    else:
+                        logger.warning(f"Failed to fetch data for {symbol}")
+                    # Avoid hitting the free tier limit of 5 requests per minute
+                    # by sleeping between calls. Skip the delay after the last request.
+                    if idx < len(self.trending_symbols) - 1 and self.request_interval > 0:
+                        await asyncio.sleep(self.request_interval)
 
             # If all real-data fetches failed, fall back to mock data
             if not stocks_data:

@@ -57,19 +57,19 @@
                 <h2 class="stock-name">{{ stock_info.name }}</h2>
                 <div class="stock-meta">
                     <span class="stock-ticker">{{ ticker }}</span>
-                    <span class="stock-exchange">{{ stock_info.exchange }}</span>
-                    <span class="stock-sector">{{ stock_info.sector }}</span>
+                    <span class="stock-exchange">{{ stock_info.exchange | default('') }}</span>
+                    <span class="stock-sector">{{ stock_info.sector | default('') }}</span>
                 </div>
                 <div class="stock-price-info">
                     <div class="current-price">
-                        <span class="price">${{ stock_info.price }}</span>
-                        <span class="change {% if stock_info.change > 0 %}positive{% else %}negative{% endif %}">
-                            {% if stock_info.change > 0 %}
+                        <span class="price">${{ stock_info.price | default('0') }}</span>
+                        <span class="change {% if stock_info.get('change', 0) > 0 %}positive{% else %}negative{% endif %}">
+                            {% if stock_info.get('change', 0) > 0 %}
                             <i class="bi bi-arrow-up-right"></i>
                             {% else %}
                             <i class="bi bi-arrow-down-right"></i>
                             {% endif %}
-                            {{ stock_info.change }} ({{ stock_info.change_percent }}%)
+                            {{ stock_info.get('change', '0') }} ({{ stock_info.get('change_percent', '0') }}%)
                         </span>
                     </div>
                     <div class="trading-info">

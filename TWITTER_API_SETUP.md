@@ -55,7 +55,7 @@ TWITTER_BEARER_TOKEN=your_bearer_token_here
 TWITTER_API_KEY=your_api_key_here
 TWITTER_API_SECRET=your_api_secret_here
 TWITTER_ACCESS_TOKEN=your_access_token_here
-TWITTER_ACCESS_TOKEN_SECRET=your_access_token_secret_here
+TWITTER_ACCESS_SECRET=your_access_token_secret_here
 ```
 
 ### Environment Configuration
@@ -70,7 +70,7 @@ TWITTER_BEARER_TOKEN=AAAAAAAAAAAAAAAAAAAAAMLheAAAAAAA0%2BuSeid%2BULvsea4JtiGRiSD
 TWITTER_API_KEY=your_api_key
 TWITTER_API_SECRET=your_api_secret
 TWITTER_ACCESS_TOKEN=your_access_token
-TWITTER_ACCESS_TOKEN_SECRET=your_access_token_secret
+TWITTER_ACCESS_SECRET=your_access_token_secret
 ```
 
 2. Restart the API server to load the new configuration.
@@ -92,7 +92,7 @@ kubectl create secret generic twitter-secrets \
   --from-literal=TWITTER_API_KEY="your_api_key" \
   --from-literal=TWITTER_API_SECRET="your_api_secret" \
   --from-literal=TWITTER_ACCESS_TOKEN="your_access_token" \
-  --from-literal=TWITTER_ACCESS_TOKEN_SECRET="your_access_token_secret"
+  --from-literal=TWITTER_ACCESS_SECRET="your_access_token_secret"
 ```
 
 ### Verification
