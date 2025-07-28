@@ -74,6 +74,7 @@ async def predictability_page(
                 "stock_info": stock_data,
                 "historical_scores": historical_scores,
                 "top_stocks": top_stocks,
+                "predictability_score": base_score,
                 "sector_data": SECTOR_PREDICTABILITY,
                 "page_title": f"{ticker} Predictability - QuantumVestAI"
             }
@@ -93,6 +94,7 @@ async def predictability_page(
             "historical_scores": [],
             "top_stocks": [],
             "sector_data": {},
+            "predictability_score": 0,
                 "error": f"Error loading predictability analysis: {str(e)}",
                 "page_title": "Predictability Error"
             },
