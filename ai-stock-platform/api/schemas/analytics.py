@@ -6,7 +6,7 @@ Author: daparthi001
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from .base import SafeBaseModel
 
 
@@ -115,7 +115,7 @@ class PredictiveAnalyticsResponse(SafeBaseModel):
     feature_importance: Dict[str, float]
 
     # Disable protected namespace warnings for fields beginning with "model_"
-    model_config = {"protected_namespaces": ()}
+    model_config = ConfigDict(protected_namespaces=())
 
 class SentimentScore(BaseModel):
     """Sentiment score schema."""
