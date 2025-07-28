@@ -25,7 +25,8 @@ try:
     from core.config.settings import settings
 except Exception:  # pragma: no cover - fallback if settings import fails
     class Settings:
-        SECRET_KEY = os.getenv("JWT_SECRET") or os.getenv("SECRET_KEY", "supersecretkey123456789abcdef")
+        # Match API default to prevent token verification issues during import failures
+        SECRET_KEY = os.getenv("JWT_SECRET") or os.getenv("SECRET_KEY", "your-secret-key")
         JWT_ALGORITHM = "HS256"
         ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

@@ -190,7 +190,7 @@ kubectl apply -f ci-cd/k8s/all-secrets.yaml
 
 This single file avoids managing multiple secret manifests across environments.
 
-**Important:** The UI and API must use the same `SECRET_KEY` value. If these values differ, the UI cannot verify JWT tokens issued by the API and users may be redirected back to the login page repeatedly.
+**Important:** The UI and API must use the same `SECRET_KEY` value. If these values differ, the UI cannot verify JWT tokens issued by the API and users may be redirected back to the login page repeatedly. The default for both services is now `"your-secret-key"` to prevent mismatched values during local development.
 
 ### Generating Test JWT Tokens
 For manual testing you can generate a signed JWT from the command line:
