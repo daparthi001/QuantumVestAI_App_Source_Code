@@ -177,6 +177,19 @@ async def test_data_consistency():
             assert -20 <= stock["change_percent"] <= 20  # Reasonable range
 
 
+def test_parse_alpha_vantage_errors():
+    """Ensure API error responses are handled gracefully."""
+    service = TrendingStocksService()
+
+    # Note message should return None
+    data_note = {"Note": "API limit"}
+    assert service._parse_alpha_vantage_response("AAPL", data_note) is None
+
+    # Error message should also return None
+    data_error = {"Error Message": "Invalid API call"}
+    assert service._parse_alpha_vantage_response("AAPL", data_error) is None
+
+
 
 
 if __name__ == "__main__":

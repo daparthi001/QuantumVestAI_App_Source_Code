@@ -31,7 +31,8 @@ class Settings:
     STATIC_DIR = BASE_DIR / "static"
     
     # Secret key for session encryption
-    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production")
+    # Use the same default value as the API to avoid mismatched JWT secrets
+    SECRET_KEY = os.environ.get("SECRET_KEY", "your-secret-key")
     
     # CORS settings
     CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://ui-service:3000,http://quantumvestai-dev-api.dev.svc.cluster.local:8000").split(",")
@@ -40,7 +41,8 @@ class Settings:
     API_BASE_URL = os.environ.get("API_BASE_URL", "http://quantumvestai-dev-api.dev.svc.cluster.local:8000")
     
     # JWT settings
-    JWT_SECRET = os.environ.get("JWT_SECRET", "jwt-secret-change-in-production")
+    # JWT secret should default to the same key as the API for local development
+    JWT_SECRET = os.environ.get("JWT_SECRET", SECRET_KEY)
     JWT_ALGORITHM = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES = 60
     

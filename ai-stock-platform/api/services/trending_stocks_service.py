@@ -11,6 +11,7 @@ import asyncio
 import logging
 import os
 import random
+import json
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
@@ -246,12 +247,20 @@ class TrendingStocksService:
             async with session.get(
                 self.base_url, params=params, timeout=10
             ) as response:
+
                 if response.status == 200:
-                    data = await response.json()
+                    try:
+                        data = json.loads(text)
+                    except Exception as exc:
+                        logger.error(
+                            f"Error decoding response for {symbol}: {exc}; body: {text[:100]}"
+                        )
+                        return None
                     return self._parse_alpha_vantage_response(symbol, data)
                 else:
                     logger.warning(
                         f"API request failed for {symbol}: status {response.status}"
+
                     )
                     return None
 
@@ -267,8 +276,16 @@ class TrendingStocksService:
     ) -> Optional[Dict[str, Any]]:
         """Parse Alpha Vantage API response into our format."""
         try:
+            if "Note" in data:
+                logger.warning(f"Alpha Vantage note for {symbol}: {data['Note']}")
+                return None
+            if "Error Message" in data:
+                logger.error(f"Alpha Vantage error for {symbol}: {data['Error Message']}")
+                return None
+
             quote = data.get("Global Quote", {})
             if not quote:
+                logger.warning(f"No quote data returned for {symbol}: {data}")
                 return None
 
             # Alpha Vantage field mappings
