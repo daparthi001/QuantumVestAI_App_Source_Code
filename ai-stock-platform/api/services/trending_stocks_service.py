@@ -82,19 +82,25 @@ class TrendingStocksService:
         if not AIOHTTP_AVAILABLE:
             raise RuntimeError("aiohttp is required for real-time data access")
 
-        # Placeholder list used until live data is fetched
-        self.trending_symbols: List[str] = [
-            "AAPL",
-            "MSFT",
-            "AMZN",
-            "GOOGL",
-            "NVDA",
-            "TSLA",
-            "META",
-            "NFLX",
-            "CRM",
-            "ADBE",
-        ]
+        # Placeholder list used until live data is fetched. When ``ENABLE_REAL_DATA``
+        # is true we start with an empty list so that ``_fetch_yahoo_trending_symbols``
+        # is called on the first request to populate this list.
+        self.trending_symbols: List[str]
+        if self.use_mock:
+            self.trending_symbols = [
+                "AAPL",
+                "MSFT",
+                "AMZN",
+                "GOOGL",
+                "NVDA",
+                "TSLA",
+                "META",
+                "NFLX",
+                "CRM",
+                "ADBE",
+            ]
+        else:
+            self.trending_symbols = []
 
     async def _fetch_yahoo_trending_symbols(self) -> List[str]:
         """Fetch trending tickers from Yahoo Finance."""
