@@ -38,7 +38,7 @@ async def get_current_user(
     request: Request,
     response: Response,
     token: Optional[str] = Depends(oauth2_scheme),
-    session_token: Optional[str] = Cookie(None)
+    access_token: Optional[str] = Cookie(None)
 ) -> Dict[str, Any]:
     """
     Validate user authentication from JWT token or session cookie.
@@ -47,7 +47,7 @@ async def get_current_user(
         request: FastAPI request object
         response: FastAPI response object
         token: Bearer token from Authorization header
-        session_token: Token from session cookie
+        access_token: Token from session cookie
         
     Returns:
         Dict containing user information
@@ -63,7 +63,7 @@ async def get_current_user(
     )
     
     # Prioritize token from Authorization header
-    token_to_use = token or session_token
+    token_to_use = token or access_token
     
     if not token_to_use:
         # Redirect to login page if no token
@@ -147,7 +147,7 @@ async def get_optional_current_user(
     request: Request,
     response: Response,
     token: Optional[str] = Depends(oauth2_scheme),
-    session_token: Optional[str] = Cookie(None)
+    access_token: Optional[str] = Cookie(None)
 ) -> Optional[Dict[str, Any]]:
     """
     Similar to get_current_user but returns None instead of raising an exception
@@ -158,13 +158,13 @@ async def get_optional_current_user(
         request: FastAPI request object
         response: FastAPI response object
         token: Bearer token from Authorization header
-        session_token: Token from session cookie
+        access_token: Token from session cookie
         
     Returns:
         Dict containing user information or None if not authenticated
     """
     try:
-        return await get_current_user(request, response, token, session_token)
+        return await get_current_user(request, response, token, access_token)
     except HTTPException:
         return None
 
