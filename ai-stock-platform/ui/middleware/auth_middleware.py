@@ -62,6 +62,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "/auth/password-reset",
             "/forgot-password",
             "/auth/forgot-password",
+            "/stocks/flow",
             "/static",
             "/docs",
             "/redoc",
