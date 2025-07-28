@@ -10,6 +10,7 @@ import { useTheme } from '../../providers/ThemeProvider';
 import { ROUTES } from '../../config/constants';
 import { motion, AnimatePresence } from 'framer-motion';
 import MobileDrawer from './MobileDrawer';
+import useMediaQuery from '../../hooks/useMediaQuery';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -22,6 +23,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
+  const isSmallScreen = useMediaQuery('(max-width: 991px)');
 
   const handleLogout = async () => {
     await logout();
@@ -154,19 +156,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 992) {
-        setSidebarCollapsed(false);
-        setShowSidebar(false);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    // Call once to set initial state
-    handleResize();
-    
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    if (!isSmallScreen) {
+      setSidebarCollapsed(false);
+      setShowSidebar(false);
+    }
+  }, [isSmallScreen]);
 
   return (
     <div className="quantum-bg min-vh-100" style={{ paddingTop: '76px' }}>
@@ -179,18 +173,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       >
         <Navbar expand="lg" className="px-4 py-3">
           <Container fluid>
-            <Button
-              variant="outline-secondary"
-              className="me-3 d-lg-none quantum-btn-outline"
-              onClick={() => setShowSidebar(true)}
-            >
-              <motion.div
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+            {isSmallScreen && (
+              <Button
+                variant="outline-secondary"
+                className="me-3 quantum-btn-outline"
+                onClick={() => setShowSidebar(true)}
               >
-                ☰
-              </motion.div>
-            </Button>
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  ☰
+                </motion.div>
+              </Button>
+            )}
             
             <Navbar.Brand
               as={Link}
@@ -239,9 +232,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </motion.div>
 
       <div className="d-flex">
-        {/* Enhanced Desktop Sidebar */}
+        {/* Mobile Sidebar */}
+        {isSmallScreen && (
         <motion.div
-          className="quantum-sidebar d-lg-none"
+          className="quantum-sidebar"
           variants={sidebarVariants}
           initial={{ x: -280, opacity: 0 }}
           animate={sidebarCollapsed ? 'collapsed' : 'expanded'}
@@ -347,13 +341,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             )}
           </div>
         </motion.div>
+        )}
 
         {/* Mobile Drawer */}
+        {isSmallScreen && (
         <MobileDrawer
           open={showSidebar}
           onClose={() => setShowSidebar(false)}
           items={navigationItems}
         />
+        )}
 
         {/* Enhanced Main Content */}
         <motion.div
