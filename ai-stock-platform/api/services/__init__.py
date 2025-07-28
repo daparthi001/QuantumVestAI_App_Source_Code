@@ -46,6 +46,15 @@ except ImportError as e:
     YahooRapidAPIService = None
     YAHOO_RAPIDAPI_SERVICE_AVAILABLE = False
 
+# Market overview service
+try:
+    from services.market_overview_service import MarketOverviewService
+    MARKET_OVERVIEW_SERVICE_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: MarketOverviewService not available - {e}")
+    MarketOverviewService = None  # type: ignore
+    MARKET_OVERVIEW_SERVICE_AVAILABLE = False
+
 # Only include available services in __all__
 __all__ = []
 if STOCK_SERVICE_AVAILABLE:
@@ -58,3 +67,5 @@ if FORECAST_SERVICE_AVAILABLE:
     __all__.append('ForecastService')
 if YAHOO_RAPIDAPI_SERVICE_AVAILABLE:
     __all__.append('YahooRapidAPIService')
+if MARKET_OVERVIEW_SERVICE_AVAILABLE:
+    __all__.append('MarketOverviewService')
