@@ -76,6 +76,7 @@ async def predictability_page(
                 "historical_scores": historical_scores,
                 "top_stocks": top_stocks,
                 "sector_data": SECTOR_PREDICTABILITY,
+                "predictability_score": base_score,
                 "page_title": f"{ticker} Predictability - QuantumVestAI"
             }
         )
