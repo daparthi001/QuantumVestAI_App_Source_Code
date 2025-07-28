@@ -13,8 +13,10 @@ try:  # pragma: no cover - handle missing package gracefully
     # entire ``api.services`` package which has heavy side effects (e.g. DB
     # initialization).  Loading the module directly avoids those side effects
     # while providing the same ``TrendingStocksService`` class.
+    # Resolve the service path relative to the repository root rather than the
+    # ``services`` directory containing this wrapper.
     service_path = (
-        Path(__file__).resolve().parent
+        Path(__file__).resolve().parent.parent
         / "ai-stock-platform"
         / "api"
         / "services"
