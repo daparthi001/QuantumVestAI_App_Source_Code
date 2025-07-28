@@ -52,18 +52,28 @@ def get_cors_origins() -> List[str]:
 
 
 def is_origin_allowed(origin: str | None, allowed: List[str] | None = None) -> bool:
-    """Return True if the origin is allowed based on CORS settings."""
+    """Return True if the origin is allowed based on CORS settings.
+
+    The previous implementation only permitted missing ``Origin`` headers
+    when a wildcard entry was present. In local development it is common to
+    use CLI tools (e.g. ``websocat``) that omit this header. To make testing
+    easier we now allow a ``None`` origin whenever the environment is set to
+    ``development`` or a wildcard is configured.
+    """
     if allowed is None:
         allowed = get_cors_origins()
 
+    # Always allow when wildcard is configured
     if "*" in allowed:
-        # Wildcard allows any origin. In development environments we may not
-        # receive an Origin header (e.g., when connecting from non-browser
-        # clients). Accept the connection even if the header is missing to
-        # prevent unnecessary 403 errors during local testing.
         return True
 
-    return bool(origin) and origin in allowed
+    # Permit connections without an Origin header during development
+    if origin is None:
+        if os.environ.get("ENVIRONMENT", "development").lower() == "development":
+            return True
+        return False
+
+    return origin in allowed
 
 
 def configure_cors(app: FastAPI) -> FastAPI:
