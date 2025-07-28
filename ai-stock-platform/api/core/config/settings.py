@@ -74,7 +74,7 @@ class Settings(BaseSettings):
     TWITTER_API_KEY: Optional[str] = Field(default=None, env='TWITTER_API_KEY')
     TWITTER_API_SECRET: Optional[str] = Field(default=None, env='TWITTER_API_SECRET')
     TWITTER_ACCESS_TOKEN: Optional[str] = Field(default=None, env='TWITTER_ACCESS_TOKEN')
-    TWITTER_ACCESS_TOKEN_SECRET: Optional[str] = Field(default=None, env='TWITTER_ACCESS_TOKEN_SECRET')
+    TWITTER_ACCESS_SECRET: Optional[str] = Field(default=None, env='TWITTER_ACCESS_SECRET')
     SLACK_WEBHOOK_URL: Optional[str] = Field(default=None, env='SLACK_WEBHOOK_URL')
 
     # Stock Market Data

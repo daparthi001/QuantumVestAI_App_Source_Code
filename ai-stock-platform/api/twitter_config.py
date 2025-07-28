@@ -34,8 +34,8 @@ class TwitterConfig:
         return os.getenv('TWITTER_ACCESS_TOKEN')
 
     @property
-    def TWITTER_ACCESS_TOKEN_SECRET(self) -> Optional[str]:
-        return os.getenv('TWITTER_ACCESS_TOKEN_SECRET') or os.getenv('TWITTER_ACCESS_SECRET')
+    def TWITTER_ACCESS_SECRET(self) -> Optional[str]:
+        return os.getenv('TWITTER_ACCESS_SECRET') or os.getenv('TWITTER_ACCESS_SECRET')
     
     def has_credentials(self) -> bool:
         """Check if any Twitter credentials are configured"""
@@ -44,7 +44,7 @@ class TwitterConfig:
             self.TWITTER_API_KEY,
             self.TWITTER_API_SECRET,
             self.TWITTER_ACCESS_TOKEN,
-            self.TWITTER_ACCESS_TOKEN_SECRET,
+            self.TWITTER_ACCESS_SECRET,
         ])
 
 # Create global instance
