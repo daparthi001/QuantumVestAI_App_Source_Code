@@ -5,9 +5,31 @@
 # simply re-export the implementation from ``api.services``.  This thin wrapper
 # avoids import errors without duplicating the full service implementation.
 
-try:
-    from api.services.trending_stocks_service import TrendingStocksService
-except Exception as exc:  # pragma: no cover - API package missing in test envs
+import importlib.util
+from pathlib import Path
+
+try:  # pragma: no cover - handle missing package gracefully
+    # Resolve the path to the API service implementation without importing the
+    # entire ``api.services`` package which has heavy side effects (e.g. DB
+    # initialization).  Loading the module directly avoids those side effects
+    # while providing the same ``TrendingStocksService`` class.
+    service_path = (
+        Path(__file__).resolve().parent
+        / "ai-stock-platform"
+        / "api"
+        / "services"
+        / "trending_stocks_service.py"
+    )
+    spec = importlib.util.spec_from_file_location(
+        "trending_stocks_service", service_path
+    )
+    if spec and spec.loader:
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        TrendingStocksService = module.TrendingStocksService
+    else:  # pragma: no cover - invalid spec
+        raise ImportError("Cannot load TrendingStocksService module")
+except Exception as exc:
     raise ImportError(
         "TrendingStocksService implementation not found. "
         "Ensure the API package is on PYTHONPATH"
