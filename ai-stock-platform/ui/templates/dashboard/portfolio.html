@@ -33,7 +33,7 @@
                         </div>
                         <div class="flex-grow-1 ms-3">
                             <div class="text-muted small">Total Value</div>
-                            <div class="h4 mb-0">${{ "{:,.2f}".format(portfolio.total_value) }}</div>
+                            <div class="h4 mb-0">{{ format_currency(portfolio.total_value | default(0)) }}</div>
                         </div>
                     </div>
                 </div>
@@ -51,7 +51,7 @@
                         <div class="flex-grow-1 ms-3">
                             <div class="text-muted small">Daily Change</div>
                             <div class="h4 mb-0 text-{{ 'success' if portfolio.daily_change > 0 else 'danger' }}">
-                                {{ '+' if portfolio.daily_change > 0 else '' }}${{ "{:,.2f}".format(portfolio.daily_change) }}
+                                {{ format_change_value(portfolio.daily_change, with_color=False) }}
                             </div>
                         </div>
                     </div>
@@ -70,7 +70,7 @@
                         <div class="flex-grow-1 ms-3">
                             <div class="text-muted small">Total Gain/Loss</div>
                             <div class="h4 mb-0 text-{{ 'success' if portfolio.total_gain_loss > 0 else 'danger' }}">
-                                {{ '+' if portfolio.total_gain_loss > 0 else '' }}${{ "{:,.2f}".format(portfolio.total_gain_loss) }}
+                                {{ format_change_value(portfolio.total_gain_loss, with_color=False) }}
                             </div>
                         </div>
                     </div>
@@ -89,7 +89,7 @@
                         <div class="flex-grow-1 ms-3">
                             <div class="text-muted small">Total Return</div>
                             <div class="h4 mb-0 text-{{ 'success' if portfolio.total_gain_loss_pct > 0 else 'danger' }}">
-                                {{ '+' if portfolio.total_gain_loss_pct > 0 else '' }}{{ "{:.2f}".format(portfolio.total_gain_loss_pct) }}%
+                                {{ format_percentage(portfolio.total_gain_loss_pct) }}
                             </div>
                         </div>
                     </div>
@@ -134,14 +134,14 @@
                                 </div>
                             </td>
                             <td class="text-end">{{ position.shares }}</td>
-                            <td class="text-end">${{ "{:.2f}".format(position.avg_cost) }}</td>
-                            <td class="text-end">${{ "{:.2f}".format(position.current_price) }}</td>
-                            <td class="text-end">${{ "{:,.2f}".format(position.market_value) }}</td>
+                            <td class="text-end">{{ format_currency(position.avg_cost) }}</td>
+                            <td class="text-end">{{ format_currency(position.current_price) }}</td>
+                            <td class="text-end">{{ format_currency(position.market_value) }}</td>
                             <td class="text-end text-{{ 'success' if position.gain_loss > 0 else 'danger' }}">
-                                {{ '+' if position.gain_loss > 0 else '' }}${{ "{:,.2f}".format(position.gain_loss) }}
+                                {{ format_change_value(position.gain_loss, with_color=False) }}
                             </td>
                             <td class="text-end text-{{ 'success' if position.gain_loss_pct > 0 else 'danger' }}">
-                                {{ '+' if position.gain_loss_pct > 0 else '' }}{{ "{:.2f}".format(position.gain_loss_pct) }}%
+                                {{ format_percentage(position.gain_loss_pct) }}
                             </td>
                             <td class="text-center">
                                 <div class="dropdown">
