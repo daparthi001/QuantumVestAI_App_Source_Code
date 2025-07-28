@@ -16,6 +16,9 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.responses import JSONResponse, RedirectResponse, Response
 from jose import JWTError, jwt
 
+# Use the shared HTTP client utilities for API verification
+from core.http_client import safe_post_json
+
 logger = logging.getLogger(__name__)
 
 try:
@@ -35,15 +38,36 @@ except Exception:  # pragma: no cover - fallback if settings import fails
 
 
 async def verify_token(token: str) -> Dict[str, Any]:
-    """Validate JWT token and return user info."""
+    """Validate JWT token and return user info.
+
+    The middleware first attempts local JWT validation using the configured
+    ``SECRET_KEY``.  If that fails (commonly due to the UI and API using
+    different secrets) it falls back to calling the API's ``/auth/verify``
+    endpoint.  This ensures the UI remains functional even when the secrets are
+    misconfigured, matching the behaviour described in the project
+    documentation.
+    """
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
         username = payload.get("sub")
         if not username:
             raise ValueError("Invalid token payload")
         return {"username": username}
-    except (JWTError, ValueError) as e:
-        logger.error(f"Token validation error: {e}")
+    except (JWTError, ValueError) as decode_error:
+        logger.warning(f"Local token validation failed: {decode_error}; attempting API verification")
+
+        api_url = os.getenv("API_URL", settings.API_BASE_URL).rstrip("/")
+        verify_url = f"{api_url}/api/v1/auth/verify"
+        try:
+            resp = await safe_post_json(verify_url, json_data={"token": token})
+            if resp and resp.get("status") == "success":
+                user = resp.get("data", {}).get("user", {})
+                username = user.get("username") or user.get("id")
+                if username:
+                    return {"username": username}
+        except Exception as api_error:
+            logger.error(f"API token verification error: {api_error}")
+
         raise HTTPException(status_code=401, detail="Invalid authentication token")
 
 
