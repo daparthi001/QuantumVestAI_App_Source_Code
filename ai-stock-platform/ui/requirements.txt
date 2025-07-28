@@ -65,3 +65,6 @@ PyJWT==2.7.0
 sentry-sdk
 prometheus_client
 openai==1.14.3
+
+torch==2.3.0
+transformers==4.30.0
