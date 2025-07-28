@@ -250,6 +250,7 @@ class TrendingStocksService:
 
                 if response.status == 200:
                     try:
+                        text = await response.text()
                         data = json.loads(text)
                     except Exception as exc:
                         logger.error(
