@@ -10,8 +10,8 @@ try:
     import torch
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
     torch = None  # type: ignore
-    logging.getLogger("api").warning(
-        "PyTorch not available, FinBertSentiment will use mock predictions"
+    logging.getLogger("api").info(
+        "PyTorch not available. Install the 'torch' package for full FinBERT support; using mock predictions"
     )
 
 try:
@@ -19,8 +19,8 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
     AutoModelForSequenceClassification = None  # type: ignore
     AutoTokenizer = None  # type: ignore
-    logging.getLogger("api").warning(
-        "Transformers not available, FinBertSentiment will use mock predictions"
+    logging.getLogger("api").info(
+        "Transformers not available. Install the 'transformers' package for full FinBERT support; using mock predictions"
     )
 
 logger = logging.getLogger("api")

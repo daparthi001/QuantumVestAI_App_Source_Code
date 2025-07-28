@@ -121,6 +121,11 @@ export PYTHONPATH="$(pwd)/ai-stock-platform:$PYTHONPATH"
 > ```
 > This guarantees that the shared `core` package is used for configuration.
 
+The sentiment analysis functionality uses the **FinBERT** model. Ensure the
+`torch` and `transformers` packages install successfully when running
+`./setup_env.sh`. If these libraries are missing the API falls back to mock
+predictions and logs a message advising you to install them.
+
 ## External API Key
 To fetch real-time stock market data you must set the `ALPHA_VANTAGE_API_KEY`
 environment variable. Sign up for a free key at
