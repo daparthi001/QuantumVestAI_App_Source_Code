@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
+from .base import SafeBaseModel
 
 
 class PortfolioMetrics(BaseModel):
@@ -104,7 +105,7 @@ class Prediction(BaseModel):
     probability: float
     factors: Dict[str, float]
 
-class PredictiveAnalyticsResponse(BaseModel):
+class PredictiveAnalyticsResponse(SafeBaseModel):
     """Predictive analytics response schema."""
     timestamp: datetime
     horizon: str

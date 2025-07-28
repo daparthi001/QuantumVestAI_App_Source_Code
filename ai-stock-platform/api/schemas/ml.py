@@ -7,9 +7,10 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
+from .base import SafeBaseModel
 
 
-class ModelMetrics(BaseModel):
+class ModelMetrics(SafeBaseModel):
     """Model metrics schema."""
     accuracy: float
     precision: float
@@ -21,7 +22,7 @@ class ModelMetrics(BaseModel):
     latency: float
     memory_usage: float
 
-class ModelResponse(BaseModel):
+class ModelResponse(SafeBaseModel):
     """Model response schema."""
     id: int
     name: str
@@ -50,7 +51,7 @@ class TrainingConfig(BaseModel):
     early_stopping: bool
     custom_parameters: Optional[Dict[str, Any]]
 
-class ModelTrainingResponse(BaseModel):
+class ModelTrainingResponse(SafeBaseModel):
     """Model training response schema."""
     job_id: str
     model_id: int
@@ -69,7 +70,7 @@ class EvaluationMetric(BaseModel):
     threshold: Optional[float]
     comparison: Optional[str]
 
-class ModelEvaluationResponse(BaseModel):
+class ModelEvaluationResponse(SafeBaseModel):
     """Model evaluation response schema."""
     model_id: int
     timestamp: datetime
@@ -87,7 +88,7 @@ class PredictionResult(BaseModel):
     features_used: Dict[str, Any]
     explanation: Optional[Dict[str, Any]]
 
-class ModelPredictionResponse(BaseModel):
+class ModelPredictionResponse(SafeBaseModel):
     """Model prediction response schema."""
     model_id: int
     timestamp: datetime
@@ -110,7 +111,7 @@ class FeatureImportanceResponse(BaseModel):
     features: List[FeatureImportance]
     visualization_data: Dict[str, Any]
 
-class ModelComparison(BaseModel):
+class ModelComparison(SafeBaseModel):
     """Model comparison schema."""
     model_id: int
     name: str
@@ -118,7 +119,7 @@ class ModelComparison(BaseModel):
     advantages: List[str]
     disadvantages: List[str]
 
-class ModelComparisonResponse(BaseModel):
+class ModelComparisonResponse(SafeBaseModel):
     """Model comparison response schema."""
     timestamp: datetime
     models: List[ModelComparison]
@@ -126,7 +127,7 @@ class ModelComparisonResponse(BaseModel):
     comparison_matrix: Dict[str, List[float]]
     statistical_tests: Dict[str, Any]
 
-class Hyperparameter(BaseModel):
+class Hyperparameter(SafeBaseModel):
     """Hyperparameter schema."""
     name: str
     value: Any
@@ -134,7 +135,7 @@ class Hyperparameter(BaseModel):
     range: Optional[List[Any]]
     importance: Optional[float]
 
-class HyperparameterResponse(BaseModel):
+class HyperparameterResponse(SafeBaseModel):
     """Hyperparameter response schema."""
     model_id: int
     timestamp: datetime
@@ -142,7 +143,7 @@ class HyperparameterResponse(BaseModel):
     tuning_history: Optional[Dict[str, Any]]
     optimal_values: Dict[str, Any]
 
-class DatasetMetadata(BaseModel):
+class DatasetMetadata(SafeBaseModel):
     """Dataset metadata schema."""
     rows: int
     columns: int
@@ -151,7 +152,7 @@ class DatasetMetadata(BaseModel):
     time_range: Dict[str, datetime]
     missing_values: Dict[str, int]
 
-class DatasetResponse(BaseModel):
+class DatasetResponse(SafeBaseModel):
     """Dataset response schema."""
     id: int
     name: str

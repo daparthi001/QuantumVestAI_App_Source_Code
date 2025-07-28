@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
+from .base import SafeBaseModel
 
 
 class SystemMetrics(BaseModel):
@@ -55,7 +56,7 @@ class APIKeyResponse(BaseModel):
     last_used: Optional[datetime]
     permissions: List[str]
 
-class UsageMetrics(BaseModel):
+class UsageMetrics(SafeBaseModel):
     """Usage metrics schema."""
     total_requests: int
     unique_users: int
@@ -65,7 +66,7 @@ class UsageMetrics(BaseModel):
     model_accuracy: float
     average_response_time: float
 
-class UsageStatsResponse(BaseModel):
+class UsageStatsResponse(SafeBaseModel):
     """Usage statistics response schema."""
     period_start: datetime
     period_end: datetime
@@ -74,7 +75,7 @@ class UsageStatsResponse(BaseModel):
     popular_endpoints: List[Dict[str, Any]]
     error_rates: Dict[str, float]
 
-class ModelMetrics(BaseModel):
+class ModelMetrics(SafeBaseModel):
     """Model metrics schema."""
     accuracy: float
     precision: float
@@ -83,7 +84,7 @@ class ModelMetrics(BaseModel):
     latency: float
     throughput: int
 
-class ModelPerformanceResponse(BaseModel):
+class ModelPerformanceResponse(SafeBaseModel):
     """Model performance response schema."""
     model_name: str
     model_version: str
