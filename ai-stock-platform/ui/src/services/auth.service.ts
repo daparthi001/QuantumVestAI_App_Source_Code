@@ -95,7 +95,11 @@ class AuthService {
 
         // Store token in local storage
         localStorage.setItem('qvai_token', token);
-        
+
+        // Persist token in cookies so server-rendered pages stay authenticated
+        document.cookie = `qvai_token=${token}; path=/; samesite=lax`;
+        document.cookie = `access_token=Bearer ${token}; path=/; samesite=lax`;
+
         // Update token subject
         this.tokenSubject.next(token);
 
@@ -167,7 +171,12 @@ class AuthService {
   logout(): void {
     // Clear token from storage
     localStorage.removeItem('qvai_token');
-    
+
+    // Remove authentication cookies
+    document.cookie = 'qvai_token=; Max-Age=0; path=/';
+    document.cookie = 'access_token=; Max-Age=0; path=/';
+    document.cookie = 'user_info=; Max-Age=0; path=/';
+
     // Clear current user and token from subjects
     this.currentUserSubject.next(null);
     this.tokenSubject.next(null);
