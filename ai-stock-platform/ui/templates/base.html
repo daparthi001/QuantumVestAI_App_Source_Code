@@ -36,6 +36,15 @@
         if (savedLang) {
             document.documentElement.setAttribute('lang', savedLang);
         }
+        // Sync auth token from cookie to localStorage for SPA compatibility
+        (function () {
+            const tokenKey = 'qvai_token';
+            const match = document.cookie.match(new RegExp('(?:^|; )' + tokenKey.replace(/([.$?*|{}()\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)'));
+            const cookieToken = match ? decodeURIComponent(match[1]) : null;
+            if (cookieToken && !localStorage.getItem(tokenKey)) {
+                localStorage.setItem(tokenKey, cookieToken);
+            }
+        })();
     </script>
 
     <!-- Preconnect to external resources -->

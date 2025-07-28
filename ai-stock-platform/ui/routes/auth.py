@@ -114,6 +114,14 @@ async def login_post(
             samesite="lax",
             secure=request.url.scheme == "https"
         )
+        # Additional non-HTTP-only cookie so the SPA can sync the token
+        response.set_cookie(
+            key="qvai_token",
+            value=token,
+            max_age=max_age,
+            samesite="lax",
+            secure=request.url.scheme == "https"
+        )
 
         if user_info:
             response.set_cookie(
@@ -275,6 +283,7 @@ async def logout(request: Request):
         response = RedirectResponse(url="/auth/login?msg=Successfully logged out", status_code=status.HTTP_302_FOUND)
         response.delete_cookie("access_token")
         response.delete_cookie("user_info")
+        response.delete_cookie("qvai_token")
         
         return response
         

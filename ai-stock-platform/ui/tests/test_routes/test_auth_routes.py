@@ -89,7 +89,7 @@ def test_logout_route(client):
     
     # Check token cookie is cleared
     cookies = response.headers.get('set-cookie', '')
-    assert 'token=;' in cookies
+    assert 'qvai_token=;' in cookies
     assert 'Max-Age=0' in cookies
 
 def test_register_page_get(client):
