@@ -17,16 +17,22 @@ from fastapi.templating import Jinja2Templates
 from services.trending_stocks_service import TrendingStocksService
 
 router = APIRouter()
-templates = Jinja2Templates(directory=str(Path(__file__).resolve().parent.parent / "templates"))
+templates = Jinja2Templates(
+    directory=str(Path(__file__).resolve().parent.parent / "templates")
+)
 
 
 def get_templates(request: Request) -> Jinja2Templates:
     """Return app-level templates if available."""
     return getattr(request.app.state, "templates", templates)
+
+
 logger = logging.getLogger("quantumvestai.stock_controller")
 
 # Get API URL from environment or use default
-API_URL = os.environ.get("API_URL", "http://quantumvestai-dev-api.dev.svc.cluster.local:8000")
+API_URL = os.environ.get(
+    "API_URL", "http://quantumvestai-dev-api.dev.svc.cluster.local:8000"
+)
 API_V1_URL = f"{API_URL}/api/v1"
 
 
@@ -38,7 +44,9 @@ async def stocks_list(
 ):
     """Display a list of trending stocks."""
     try:
-        trending = await TrendingStocksService().get_trending_stocks(page=page, limit=limit)
+        trending = await TrendingStocksService().get_trending_stocks(
+            page=page, limit=limit
+        )
         stocks = trending.get("stocks", [])
         return get_templates(request).TemplateResponse(
             "stocks/index.html",
@@ -61,36 +69,34 @@ async def stocks_list(
             status_code=500,
         )
 
+
 @router.get("/stock/search", response_class=HTMLResponse)
 async def stock_search(
     request: Request,
     q: str = Query(None),
     sector: str = Query(None),
-    limit: int = Query(10, ge=1, le=100)
+    limit: int = Query(10, ge=1, le=100),
 ):
     """Search for stocks with enhanced filtering"""
     try:
         search_results = []
         error_message = None
-        
+
         if q:
             # Get authentication token if available
             auth_token = request.cookies.get("access_token")
             headers = {}
             if auth_token:
                 headers["Authorization"] = auth_token
-            
+
             # Build query parameters
-            params = {
-                "query": q,
-                "limit": limit
-            }
-            
+            params = {"query": q, "limit": limit}
+
             # Note: sector parameter is included but API may not support it yet
             # This is prepared for future API enhancement
             if sector:
                 params["sector"] = sector
-            
+
             # Try to connect to the real API first
             try:
                 async with aiohttp.ClientSession() as session:
@@ -98,41 +104,51 @@ async def stock_search(
                         f"{API_V1_URL}/stocks/search",
                         params=params,
                         headers=headers,
-                        timeout=5  # Reduced timeout for quick fallback
+                        timeout=5,  # Reduced timeout for quick fallback
                     ) as response:
                         if response.status == 200:
                             search_results = await response.json()
-                            logger.info(f"Stock search successful: {len(search_results)} results for query '{q}'")
+                            logger.info(
+                                f"Stock search successful: {len(search_results)} results for query '{q}'"
+                            )
                         elif response.status == 401:
                             error_message = "Authentication required. Please log in to search for stocks."
-                            logger.warning(f"Authentication required for stock search: {q}")
+                            logger.warning(
+                                f"Authentication required for stock search: {q}"
+                            )
                         elif response.status == 404:
-                            error_message = "Stock search service is currently unavailable."
-                            logger.error(f"Stock search API not found: {response.status}")
+                            error_message = (
+                                "Stock search service is currently unavailable."
+                            )
+                            logger.error(
+                                f"Stock search API not found: {response.status}"
+                            )
                         else:
                             error_message = f"Search failed with status {response.status}. Please try again."
-                            logger.error(f"Stock search API error: Status {response.status}")
-                            
+                            logger.error(
+                                f"Stock search API error: Status {response.status}"
+                            )
+
             except Exception as e:
                 # API not available, fall back to Yahoo Finance search
                 logger.info(
                     f"API not available, fetching live data from Yahoo Finance: {q}"
                 )
                 search_results = await _get_live_search_results(q, limit)
-        
+
         # Process results to ensure proper data structure
         if search_results and isinstance(search_results, list):
             for result in search_results:
                 # Ensure required fields exist with defaults
                 if not isinstance(result, dict):
                     continue
-                result.setdefault('symbol', 'N/A')
-                result.setdefault('name', 'N/A')
-                result.setdefault('sector', None)
-                result.setdefault('price', None)
-                result.setdefault('change', None)
-                result.setdefault('change_percent', None)
-        
+                result.setdefault("symbol", "N/A")
+                result.setdefault("name", "N/A")
+                result.setdefault("sector", None)
+                result.setdefault("price", None)
+                result.setdefault("change", None)
+                result.setdefault("change_percent", None)
+
         return get_templates(request).TemplateResponse(
             "stocks/search.html",
             {
@@ -142,8 +158,8 @@ async def stock_search(
                 "limit": limit,
                 "results": search_results,
                 "error": error_message,
-                "user": None
-            }
+                "user": None,
+            },
         )
     except Exception as e:
         logger.error(f"Stock search error: {str(e)}")
@@ -156,9 +172,10 @@ async def stock_search(
                 "limit": limit,
                 "error": f"An unexpected error occurred: {str(e)}",
                 "results": [],
-                "user": None
-            }
+                "user": None,
+            },
         )
+
 
 async def _get_live_search_results(query: str, limit: int = 10) -> list:
     """Fetch search results from Yahoo Finance."""
@@ -171,18 +188,23 @@ async def _get_live_search_results(query: str, limit: int = 10) -> list:
                     data = await resp.json()
                     results = []
                     for quote in data.get("quotes", [])[:limit]:
-                        results.append({
-                            "symbol": quote.get("symbol"),
-                            "name": quote.get("shortname") or quote.get("longname"),
-                            "sector": quote.get("sector"),
-                            "price": quote.get("regularMarketPrice"),
-                            "change": quote.get("regularMarketChange"),
-                            "change_percent": quote.get("regularMarketChangePercent"),
-                        })
+                        results.append(
+                            {
+                                "symbol": quote.get("symbol"),
+                                "name": quote.get("shortname") or quote.get("longname"),
+                                "sector": quote.get("sector"),
+                                "price": quote.get("regularMarketPrice"),
+                                "change": quote.get("regularMarketChange"),
+                                "change_percent": quote.get(
+                                    "regularMarketChangePercent"
+                                ),
+                            }
+                        )
                     return results
     except Exception as exc:
         logger.error(f"Yahoo Finance search failed: {exc}")
     return []
+
 
 @router.get("/stock/{ticker}", response_class=HTMLResponse)
 async def stock_detail(
@@ -190,7 +212,7 @@ async def stock_detail(
     ticker: str,
     timeframe: str = Query("1d", regex="^(1d|1w|1m|3m|6m|1y|5y)$"),
     forecast_days: int = Query(7, ge=1, le=30),
-    model: str = Query(MODEL_ENSEMBLE)
+    model: str = Query(MODEL_ENSEMBLE),
 ):
     """Display stock detail page."""
     try:
@@ -198,54 +220,62 @@ async def stock_detail(
             "ticker": ticker.upper(),
             "timeframe": timeframe,
             "forecast_days": forecast_days,
-            "model": model
+            "model": model,
         }
-        
+
         # Demo mode - no authentication headers
-        
+
         async with aiohttp.ClientSession() as session:
             # Get stock details
-            async with session.get(f"{API_V1_URL}/stocks/{ticker}", timeout=5) as response:
+            async with session.get(
+                f"{API_V1_URL}/stocks/{ticker}", timeout=5
+            ) as response:
                 if response.status == 200:
                     stock_data["details"] = await response.json()
                 elif response.status == 404:
-                    raise HTTPException(status_code=404, detail=f"Stock {ticker} not found")
+                    raise HTTPException(
+                        status_code=404, detail=f"Stock {ticker} not found"
+                    )
                 else:
-                    logger.error(f"Error fetching stock details: Status {response.status}")
-                    stock_data["details"] = {"status": "error", "error": f"API returned status {response.status}"}
-            
+                    logger.error(
+                        f"Error fetching stock details: Status {response.status}"
+                    )
+                    stock_data["details"] = {
+                        "status": "error",
+                        "error": f"API returned status {response.status}",
+                    }
+
             # Get stock price
             async with session.get(
-                f"{API_V1_URL}/stocks/{ticker}/price?interval={timeframe}", 
-                timeout=5
+                f"{API_V1_URL}/stocks/{ticker}/price?interval={timeframe}", timeout=5
             ) as response:
                 if response.status == 200:
                     stock_data["price"] = await response.json()
                 else:
                     stock_data["price"] = {"status": "unavailable"}
-            
+
             # Get stock forecast
             async with session.get(
                 f"{API_V1_URL}/forecast/{ticker}?days={forecast_days}&model={model}",
-                timeout=5
+                timeout=5,
             ) as response:
                 if response.status == 200:
                     stock_data["forecast"] = await response.json()
                 else:
                     stock_data["forecast"] = {"status": "unavailable"}
-            
+
             # Premium features currently disabled without authentication
             stock_data["sentiment"] = {"status": "unavailable"}
             stock_data["in_watchlist"] = False
-        
+
         return get_templates(request).TemplateResponse(
             "stocks/detail.html",
             {
                 "request": request,
                 "stock": stock_data,
                 "user": None,
-                "available_models": AVAILABLE_MODELS
-            }
+                "available_models": AVAILABLE_MODELS,
+            },
         )
     except HTTPException as e:
         raise e
@@ -254,7 +284,7 @@ async def stock_detail(
         return get_templates(request).TemplateResponse(
             "error.html",
             {"request": request, "error": str(e), "user": None},
-            status_code=500
+            status_code=500,
         )
 
 
@@ -277,12 +307,12 @@ async def stock_flow_page(request: Request):
             status_code=500,
         )
 
+
 @router.post("/stock/{ticker}/add-to-watchlist")
-async def add_to_watchlist(
-    request: Request,
-    ticker: str
-):
+async def add_to_watchlist(request: Request, ticker: str):
     """Add stock to watchlist."""
-    
+
     # Demo mode - redirect to login with a message
-    return RedirectResponse(url="/login?msg=Watchlist+features+require+authentication", status_code=302)
+    return RedirectResponse(
+        url="/login?msg=Watchlist+features+require+authentication", status_code=302
+    )
