@@ -42,12 +42,35 @@ class Settings(BaseSettings):
 
     BACKEND_CORS_ORIGINS: list[str] | str | None = None
 
+    # UI CORS origins for backwards compatibility
+    CORS_ORIGINS: list[str] | str | None = Field(
+        default=["http://ui-service:3000", "https://app.quantumvestai.com"],
+        env="CORS_ORIGINS",
+    )
+
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v):
         if isinstance(v, str) and v:
             return [i.strip() for i in v.split(",")]
+        return v or []
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v):
+        """Allow comma-separated string or JSON list."""
+        if isinstance(v, str):
+            if not v:
+                return []
+            if v.startswith("["):
+                try:
+                    import json
+                    parsed = json.loads(v)
+                    return [orig.strip() for orig in parsed if orig.strip()]
+                except Exception:
+                    return [orig.strip() for orig in v.strip("[]").split(",") if orig.strip()]
+            return [orig.strip() for orig in v.split(",") if orig.strip()]
         return v or []
 
     @property
