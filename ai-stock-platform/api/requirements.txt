@@ -20,6 +20,8 @@ textblob==0.17.1
 nltk==3.8.1
 apscheduler==3.11.0
 aiosqlite==0.19.0
+# Caching
+redis==5.0.1
 # Monitoring & Observability
 sentry-sdk
 prometheus_client

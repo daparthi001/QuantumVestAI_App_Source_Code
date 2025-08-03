@@ -1,0 +1,6 @@
+image:
+  repository: quantumvest/api
+  tag: latest
+service:
+  type: ClusterIP
+  port: 8000
