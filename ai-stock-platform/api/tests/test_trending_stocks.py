@@ -30,9 +30,6 @@ trending_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(trending_module)
 TrendingStocksService = trending_module.TrendingStocksService
 
-if not getattr(trending_module, "AIOHTTP_AVAILABLE", False):
-    pytest.skip("aiohttp not available", allow_module_level=True)
-
 
 def test_trending_stocks_service_initialization():
     """Test that the service initializes correctly."""
@@ -175,6 +172,17 @@ async def test_data_consistency():
         for stock in stocks:
             assert isinstance(stock["change_percent"], (int, float))
             assert -20 <= stock["change_percent"] <= 20  # Reasonable range
+
+
+@pytest.mark.asyncio
+async def test_service_without_aiohttp(monkeypatch):
+    """Service should fall back to mock data if aiohttp is missing."""
+    monkeypatch.setattr(trending_module, "AIOHTTP_AVAILABLE", False, raising=False)
+    monkeypatch.setattr(trending_module, "aiohttp", None, raising=False)
+    service = TrendingStocksService()
+    result = await service.get_trending_stocks(limit=1)
+    assert result["metadata"]["data_source"] == "mock"
+    assert len(result["stocks"]) == 1
 
 
 def test_parse_alpha_vantage_errors():
