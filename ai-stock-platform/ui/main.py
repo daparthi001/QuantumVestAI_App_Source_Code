@@ -57,6 +57,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.middleware.sessions import SessionMiddleware
+
+from core.config.settings import settings
 
 # Import the API client from the local services package. The project
 # originally referenced ``ui.services`` but the UI Docker image only
@@ -138,6 +141,9 @@ app = FastAPI(
     description="Complete Web UI for QuantumVestAI Platform - Production Ready with Demo Mode",
     version="2.0.0"
 )
+
+# Enable server-side sessions for authentication state management
+app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
 # CORS configuration
 origins = [origin.strip() for origin in os.environ.get("CORS_ORIGINS", "*").split(",")]

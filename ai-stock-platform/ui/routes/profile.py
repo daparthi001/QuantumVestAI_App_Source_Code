@@ -119,7 +119,8 @@ async def profile_page(request: Request):
             "profile.html",
             {
                 "request": request,
-                "user": None,
+                # Provide empty user dict to prevent template attribute errors
+                "user": {},
                 "profile": {},
                 "activity": [],
                 "error": error_message,
