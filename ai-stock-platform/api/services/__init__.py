@@ -69,3 +69,35 @@ if YAHOO_RAPIDAPI_SERVICE_AVAILABLE:
     __all__.append('YahooRapidAPIService')
 if MARKET_OVERVIEW_SERVICE_AVAILABLE:
     __all__.append('MarketOverviewService')
+
+# New lightweight services used in tests
+try:
+    from services.sentiment import SentimentService
+    SENTIMENT_SERVICE_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: SentimentService not available - {e}")
+    SentimentService = None  # type: ignore
+    SENTIMENT_SERVICE_AVAILABLE = False
+
+try:
+    from services.prediction import PredictionService
+    PREDICTION_SERVICE_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: PredictionService not available - {e}")
+    PredictionService = None  # type: ignore
+    PREDICTION_SERVICE_AVAILABLE = False
+
+try:
+    from services.ai_summary import AISummaryService
+    AI_SUMMARY_SERVICE_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: AISummaryService not available - {e}")
+    AISummaryService = None  # type: ignore
+    AI_SUMMARY_SERVICE_AVAILABLE = False
+
+if SENTIMENT_SERVICE_AVAILABLE:
+    __all__.append('SentimentService')
+if PREDICTION_SERVICE_AVAILABLE:
+    __all__.append('PredictionService')
+if AI_SUMMARY_SERVICE_AVAILABLE:
+    __all__.append('AISummaryService')
