@@ -1,4 +1,3 @@
-import os
 from services.yahoo_rapidapi_service import YahooRapidAPIService
 
 
@@ -29,3 +28,15 @@ def test_success(monkeypatch):
     monkeypatch.setattr("requests.get", fake_get)
     result = YahooRapidAPIService.get_timeseries("IBM")
     assert result == {"ok": True}
+
+
+def test_request_failure(monkeypatch):
+    """Service should return None when the request raises an error."""
+    monkeypatch.setenv("RAPIDAPI_KEY", "test")
+
+    def boom(*args, **kwargs):
+        raise Exception("network down")
+
+    monkeypatch.setattr("requests.get", boom)
+    result = YahooRapidAPIService.get_timeseries("IBM")
+    assert result is None
