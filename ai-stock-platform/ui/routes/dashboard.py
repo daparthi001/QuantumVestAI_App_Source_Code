@@ -110,8 +110,14 @@ async def dashboard_page(request: Request):
 async def portfolio_page(request: Request):
     """Portfolio overview page"""
     try:
-        # Demo portfolio data removed
-        portfolio_data = {}
+        # Provide default portfolio structure so template logic works
+        portfolio_data = {
+            "total_value": 0.0,
+            "daily_change": 0.0,
+            "total_gain_loss": 0.0,
+            "total_gain_loss_pct": 0.0,
+            "positions": [],
+        }
 
         return get_templates(request).TemplateResponse(
             "dashboard/portfolio.html",

@@ -45,15 +45,23 @@ _NEWS_CACHE: Dict[str, Dict[str, Any]] = {}
 
 
 async def fetch_news(category: str, page: int = 1, ttl: int = 600) -> Dict[str, Any]:
-    """Fetch news articles from the external API with basic caching."""
+    """Fetch news articles from the external API with basic caching.
+
+    Falls back to demo news when the external API isn't configured so that the
+    `/news` page can still render without errors.
+    """
     cache_key = f"{category}_{page}"
     cached = _NEWS_CACHE.get(cache_key)
     now = datetime.utcnow()
     if cached and cached["expires"] > now:
         return cached["data"]
 
+    # If the real news API isn't configured, serve demo news instead
     if not NEWS_API_KEY:
-        raise HTTPException(status_code=503, detail="News API key not configured")
+        demo_articles = await get_demo_news()
+        data = {"articles": demo_articles, "totalResults": len(demo_articles)}
+        _NEWS_CACHE[cache_key] = {"data": data, "expires": now + timedelta(seconds=ttl)}
+        return data
 
     params = {"apiKey": NEWS_API_KEY, "page": page, "pageSize": 10}
     if category != "market":
@@ -78,18 +86,25 @@ async def news_page(
     try:
         data = await fetch_news(category, page)
 
-        articles = [
-            {
-                "id": idx,
-                "title": art.get("title"),
-                "summary": art.get("description"),
-                "source": art.get("source", {}).get("name"),
-                "published_at": art.get("publishedAt"),
-                "category": category,
-                "sentiment": "neutral",
-            }
-            for idx, art in enumerate(data.get("articles", []))
-        ]
+        articles = []
+        for idx, art in enumerate(data.get("articles", [])):
+            source = art.get("source")
+            if isinstance(source, dict):
+                source = source.get("name")
+            summary = art.get("description") or art.get("summary")
+            published = art.get("publishedAt") or art.get("timestamp")
+
+            articles.append(
+                {
+                    "id": idx,
+                    "title": art.get("title"),
+                    "summary": summary,
+                    "source": source,
+                    "published_at": published,
+                    "category": category,
+                    "sentiment": "neutral",
+                }
+            )
 
         news_data = {
             "articles": articles,
