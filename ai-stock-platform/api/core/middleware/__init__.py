@@ -5,12 +5,15 @@ Author: daparthi001
 """
 from fastapi import FastAPI
 
-from .logging_middleware import LoggingMiddleware
+try:  # pragma: no cover - optional logging dependency
+    from .logging_middleware import LoggingMiddleware
+except Exception:  # pragma: no cover - fallback when logger not available
+    LoggingMiddleware = None  # type: ignore
 
 
 def setup_middleware(app: FastAPI) -> None:
     """Configure middleware for the application"""
-    # Add logging middleware
-    app.add_middleware(LoggingMiddleware)
+    if LoggingMiddleware is not None:
+        app.add_middleware(LoggingMiddleware)
 
-__all__ = ['setup_middleware']
+__all__ = ["setup_middleware", "LoggingMiddleware"]
