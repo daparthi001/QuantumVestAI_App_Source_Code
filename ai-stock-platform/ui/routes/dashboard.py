@@ -116,6 +116,7 @@ async def portfolio_page(request: Request):
             "daily_change": 0,
             "total_gain_loss": 0,
             "total_gain_loss_pct": 0,
+
             "positions": [],
         }
 
