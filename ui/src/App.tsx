@@ -1,6 +1,9 @@
-import { Button } from '@/components/ui/button'
+import { Suspense, lazy } from 'react'
 import { useAppStore } from '@/store/useAppStore'
 import { usePing } from '@/api/hooks/usePing'
+
+// Lazy load non-critical UI components
+const Button = lazy(() => import('@/components/ui/button'))
 
 function App() {
   const count = useAppStore((s) => s.count)
@@ -12,7 +15,9 @@ function App() {
       <h1 className="text-2xl font-bold">QuantumVest AI UI</h1>
       <p>{data?.message ?? 'Loading...'}</p>
       <div>Count: {count}</div>
-      <Button onClick={increment}>Increment</Button>
+      <Suspense fallback={<div>Loading button...</div>}>
+        <Button onClick={increment}>Increment</Button>
+      </Suspense>
     </div>
   )
 }

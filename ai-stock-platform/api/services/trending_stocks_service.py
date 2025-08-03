@@ -15,6 +15,15 @@ import json
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
+# Optional Redis cache support
+try:  # pragma: no cover - cache is optional in tests
+    from api.core.cache import cache as redis_cache  # type: ignore
+except Exception:  # pragma: no cover - Redis or package not available
+    try:
+        from core.cache import cache as redis_cache  # type: ignore
+    except Exception:  # pragma: no cover - final fallback
+        redis_cache = None
+
 # Explicitly import the settings instance to avoid ambiguity with the
 # `core.config` package which also contains a `settings` submodule.
 # Import settings directly from the API package to avoid the compatibility
@@ -134,7 +143,18 @@ class TrendingStocksService:
             Dict containing stocks data and pagination info
         """
         try:
-            # Check cache first
+            cache_key = "trending_stocks"
+            # Prefer Redis cache if available
+            if redis_cache:
+                cached = redis_cache.get(cache_key)
+                if cached:
+                    logger.info("Returning trending stocks from Redis cache")
+                    cached_data = json.loads(cached)
+                    return self._get_paginated_data(
+                        cached_data.get("stocks", []), page, limit
+                    )
+
+            # Fallback to in-memory cache
             if self._is_cache_valid():
                 logger.info("Returning trending stocks from cache")
                 return self._get_paginated_data(self._cache["stocks"], page, limit)
@@ -160,8 +180,18 @@ class TrendingStocksService:
 
             stocks_data = await self._fetch_trending_stocks()
 
-            # Update cache
-            self._update_cache(stocks_data)
+            # Update caches
+            if redis_cache:
+                try:
+                    redis_cache.set(
+                        cache_key,
+                        json.dumps({"stocks": stocks_data}),
+                        ttl_seconds=self.cache_ttl,
+                    )
+                except Exception as exc:  # pragma: no cover - logging only
+                    logger.warning(f"Failed to set Redis cache: {exc}")
+            else:
+                self._update_cache(stocks_data)
 
             return self._get_paginated_data(stocks_data, page, limit)
 
