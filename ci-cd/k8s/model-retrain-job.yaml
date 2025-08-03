@@ -36,6 +36,8 @@ spec:
                 cpu: "2000m"
                 memory: "8Gi"
             env:
+              - name: PYTHONPATH
+                value: "/app/core:/app/ai-stock-platform:/app/ai-stock-platform/api:/app/api:/app/ui:/app"
               # Database credentials from Terraform-created secret
               - name: DB_HOST
                 valueFrom:
