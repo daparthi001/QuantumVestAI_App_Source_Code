@@ -33,13 +33,16 @@ async def websocket_endpoint(
     try:
         origin = websocket.headers.get("origin")
         if not is_origin_allowed(origin):
-            # Allow public market-data stream without an Origin header to
-            # simplify CLI usage and automated scripts in non-browser
-            # environments. Other clients must still provide a valid Origin.
-            if client_id == "market-data" and origin is None:
-                logger.info(
-                    "Allowing market-data WebSocket connection without Origin header"
-                )
+            if client_id == "market-data":
+                if origin is None:
+                    logger.info(
+                        "Allowing market-data WebSocket connection without Origin header"
+                    )
+                else:
+                    logger.info(
+                        "Allowing market-data WebSocket connection with disallowed Origin: %s",
+                        origin,
+                    )
             else:
                 logger.warning(
                     f"Rejected WebSocket connection from origin: {origin}"
