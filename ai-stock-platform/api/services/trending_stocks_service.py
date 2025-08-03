@@ -78,8 +78,8 @@ class TrendingStocksService:
         self.warning_cooldown = int(os.getenv("TRENDING_WARNING_COOLDOWN", "60"))
         self._last_failure_warning: Optional[datetime] = None
 
-        # Log dependency status
-        if not AIOHTTP_AVAILABLE:
+        # Log dependency status. Only require aiohttp when real data is enabled
+        if not self.use_mock and not AIOHTTP_AVAILABLE:
             raise RuntimeError("aiohttp is required for real-time data access")
 
         # Placeholder list used until live data is fetched. When ``ENABLE_REAL_DATA``
