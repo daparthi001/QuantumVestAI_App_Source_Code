@@ -183,19 +183,28 @@ class Settings:
             return self.ADVANCED_FEATURES[feature_name]["enabled"]
         return False
 
-# Create settings instance
-settings = Settings()
-
-# Add the missing get_settings function for forecast routes
 @lru_cache()
 def get_settings() -> Settings:
+    """Return a cached settings instance.
+
+    Some hosting environments define a ``DATABASE`` variable which Pydantic
+    interprets as a JSON representation of our nested ``database`` model.  The
+    UI service only expects individual ``DB_*`` variables, so this unexpected
+    variable results in ``JSONDecodeError`` when instantiating :class:`Settings`.
+    Temporarily removing ``DATABASE`` avoids the parsing error while preserving
+    the original environment for any callers that rely on it.
     """
-    Returns the settings instance with caching.
-    
-    This function is required by several modules including forecast routes.
-    Using lru_cache decorator ensures we don't create multiple instances.
-    """
-    return settings
+
+    removed = os.environ.pop("DATABASE", None)
+    try:
+        return Settings()
+    finally:
+        if removed is not None:
+            os.environ["DATABASE"] = removed
+
+
+# Instantiate settings for modules that import ``settings`` directly
+settings = get_settings()
 
 # DEPRECATED: All config is now in core/config/settings.py
 # This file is no longer used and can be deleted.
