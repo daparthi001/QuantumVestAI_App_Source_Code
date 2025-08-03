@@ -10,7 +10,18 @@ import sys
 # effects during test collection.
 from api.core import database as api_database
 from api.core import exceptions as api_exceptions
-from api.core import logger
+try:  # pragma: no cover - optional logger
+    from api.core import logger as api_logger
+except Exception:  # pragma: no cover - fallback stub
+    import logging
+    import types
+
+    def setup_logger(name: str = "app", level: str | None = None) -> logging.Logger:
+        return logging.getLogger(name)
+
+    api_logger = types.ModuleType("logger")
+    api_logger.logger = logging.getLogger("app")
+    api_logger.setup_logger = setup_logger
 from api.core import models as api_models
 from api.core import responses as api_responses
 from api.core import security as api_security
@@ -32,7 +43,7 @@ from ui.core import http_client as ui_http_client
 from . import http_client
 
 sys.modules.setdefault(__name__ + ".config", config_pkg)
-sys.modules.setdefault(__name__ + ".logger", logger)
+sys.modules.setdefault(__name__ + ".logger", api_logger)
 sys.modules.setdefault(__name__ + ".exceptions", api_exceptions)
 sys.modules.setdefault(__name__ + ".responses", api_responses)
 sys.modules.setdefault(__name__ + ".validation", api_validation)
