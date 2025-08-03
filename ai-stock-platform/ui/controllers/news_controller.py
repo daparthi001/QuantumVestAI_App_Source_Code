@@ -52,8 +52,13 @@ async def fetch_news(category: str, page: int = 1, ttl: int = 600) -> Dict[str, 
     if cached and cached["expires"] > now:
         return cached["data"]
 
+    # If no external API key is configured, return demo news instead of failing
     if not NEWS_API_KEY:
-        raise HTTPException(status_code=503, detail="News API key not configured")
+        logger.warning("NEWS_API_KEY not configured - using demo news data")
+        demo_articles = await get_demo_news()
+        data = {"articles": demo_articles, "totalResults": len(demo_articles)}
+        _NEWS_CACHE[cache_key] = {"data": data, "expires": now + timedelta(seconds=ttl)}
+        return data
 
     params = {"apiKey": NEWS_API_KEY, "page": page, "pageSize": 10}
     if category != "market":
