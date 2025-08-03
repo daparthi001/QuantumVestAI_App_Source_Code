@@ -26,7 +26,7 @@ spec:
           - name: model-trainer
             image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:api-dev-latest
             imagePullPolicy: Always
-            command: ["python", "-m", "app.ml.train_models"]
+            command: ["python", "-m", "api.ml.train_models"]
             args: ["--full-retrain", "--all-models"]
             resources:
               requests:
