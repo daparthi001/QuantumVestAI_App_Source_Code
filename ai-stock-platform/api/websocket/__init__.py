@@ -5,12 +5,14 @@ Author: daparthi001
 """
 """Simplified exports for the local WebSocket utilities."""
 
-# Only the connection manager exists in this module hierarchy. The
-# previous implementation attempted to expose several classes that are not
-# actually present in the repository which caused import errors when the
-# package was initialised.
+# Only the connection manager existed initially in this module hierarchy.
+# A small market data broadcaster is also exposed to support tests that need
+# to push mock prices to connected clients.
 
 from .manager import ConnectionManager
+from .market import MarketWebSocketService
 
 __all__ = [
-    "ConnectionManager",]
+    "ConnectionManager",
+    "MarketWebSocketService",
+]
