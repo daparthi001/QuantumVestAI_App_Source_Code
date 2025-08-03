@@ -32,6 +32,7 @@ from . import http_client
 logger_module = importlib.import_module("api.core.logger")
 sys.modules.setdefault(__name__ + ".config", config_pkg)
 sys.modules.setdefault(__name__ + ".logger", logger_module)
+
 sys.modules.setdefault(__name__ + ".exceptions", api_exceptions)
 sys.modules.setdefault(__name__ + ".responses", api_responses)
 sys.modules.setdefault(__name__ + ".validation", api_validation)
