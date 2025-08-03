@@ -27,3 +27,4 @@ sentry-sdk
 prometheus_client
 torch==2.3.0
 transformers==4.30.0
+requests==2.31.0
