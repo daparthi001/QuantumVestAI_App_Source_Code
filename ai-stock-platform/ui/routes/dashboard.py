@@ -110,16 +110,26 @@ async def dashboard_page(request: Request):
 async def portfolio_page(request: Request):
     """Portfolio overview page"""
     try:
-        # Provide default portfolio structure so template logic works
+        # Provide default empty portfolio structure to avoid template errors
         portfolio_data = {
-            "total_value": 0.0,
-            "daily_change": 0.0,
-            "total_gain_loss": 0.0,
-            "total_gain_loss_pct": 0.0,
+            "total_value": 0,
+            "daily_change": 0,
+            "total_gain_loss": 0,
+            "total_gain_loss_pct": 0,
+
             "positions": [],
         }
 
-        return get_templates(request).TemplateResponse(
+        templates_obj = get_templates(request)
+        # Ensure template filters are registered so function calls don't fail
+        try:  # pragma: no cover - defensive
+            from ui.utils import template_filters
+
+            template_filters.register_filters(request.app)
+        except Exception:  # pragma: no cover
+            pass
+
+        return templates_obj.TemplateResponse(
             "dashboard/portfolio.html",
             {
                 "request": request,
