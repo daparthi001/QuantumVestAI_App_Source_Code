@@ -1,0 +1,39 @@
+#!/bin/bash
+# QuantumVestAI UI Startup Wrapper
+# Created: 2025-08-04
+# Author: gayatri
+
+set -e
+
+echo "=== QuantumVestAI UI Startup Wrapper ==="
+echo "Starting UI service at $(date)"
+
+# Apply fixes first
+if [ "${FIX_IMPORT_PATHS:-true}" = "true" ]; then
+  echo "Applying import path fixes..."
+  if [ -f /fix-imports.sh ]; then
+    bash /fix-imports.sh
+  else
+    echo "⚠ fix-imports.sh not found, skipping import path fixes"
+  fi
+fi
+
+# Install missing dependencies
+if [ "${INSTALL_MISSING_DEPS:-true}" = "true" ]; then
+  echo "Checking for missing dependencies..."
+  if [ -f /install-dependencies.sh ]; then
+    bash /install-dependencies.sh
+  else
+    echo "⚠ install-dependencies.sh not found, installing critical dependencies directly"
+    pip install --no-cache-dir fastapi uvicorn aiohttp requests jinja2
+  fi
+fi
+
+# Start the application using the original start script
+echo "Starting UI application..."
+if [ -f /scripts/start.sh ]; then
+  exec /scripts/start.sh
+else
+  echo "⚠ start.sh not found, using default startup command"
+  exec uvicorn main:app --host ${HOST:-0.0.0.0} --port ${PORT:-3000}
+fi
