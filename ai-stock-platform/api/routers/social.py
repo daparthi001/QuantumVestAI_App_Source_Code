@@ -150,8 +150,8 @@ class SocialAPI:
         # Delay creation of TrendingStocksService to avoid missing configuration
         self.trending_service: Optional[TrendingStocksService] = None
     
-    async def get_twitter_sentiment(self, symbol: str, days: int = 7, max_tweets: int = 500):
-        """Get Twitter sentiment analysis for a stock symbol"""
+    async def get_twitter_sentiment(self, symbol: str, days: int = 3, max_tweets: int = 100):
+        """Get Twitter sentiment analysis for a stock symbol using limited data"""
         try:
             # Validate symbol
             symbol = symbol.upper().strip()
@@ -281,8 +281,8 @@ router = APIRouter(prefix="/api/social", tags=["Social Media"])
 @router.get("/twitter/sentiment/{symbol}")
 async def twitter_sentiment_endpoint(
     symbol: str,
-    days: int = Query(7, ge=1, le=30),
-    max_tweets: int = Query(500, ge=10, le=1000),
+    days: int = Query(3, ge=1, le=7),  # Limited to max 7 days with 3 days default
+    max_tweets: int = Query(100, ge=10, le=100),  # Limited to max 100 tweets
 ):
     """Endpoint wrapper for Twitter sentiment analysis."""
     result = await social_api.get_twitter_sentiment(symbol, days, max_tweets)

@@ -38,14 +38,14 @@ class TwitterConfig:
         return os.getenv('TWITTER_ACCESS_SECRET') or os.getenv('TWITTER_ACCESS_SECRET')
     
     def has_credentials(self) -> bool:
-        """Check if any Twitter credentials are configured"""
-        return any([
-            self.TWITTER_BEARER_TOKEN,
-            self.TWITTER_API_KEY,
-            self.TWITTER_API_SECRET,
-            self.TWITTER_ACCESS_TOKEN,
-            self.TWITTER_ACCESS_SECRET,
-        ])
+        """Check if required Twitter credentials are configured
+        
+        Requires at minimum a bearer token OR both API key and secret
+        """
+        has_bearer = bool(self.TWITTER_BEARER_TOKEN)
+        has_api_keys = bool(self.TWITTER_API_KEY and self.TWITTER_API_SECRET)
+        
+        return has_bearer or has_api_keys
 
 # Create global instance
 twitter_config = TwitterConfig()

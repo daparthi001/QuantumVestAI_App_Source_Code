@@ -47,8 +47,8 @@ class TwitterSentimentAnalyzer:
         self, 
         symbol: str,
         company_name: Optional[str] = None,
-        days: int = 7,
-        max_tweets: int = 500
+        days: int = 3,  # Reduced from 7 to 3 days to limit tweet volume
+        max_tweets: int = 100  # Reduced from 500 to 100 to limit API usage
     ) -> Dict[str, Any]:
         """Analyze Twitter sentiment for a stock symbol"""
         
@@ -74,10 +74,15 @@ class TwitterSentimentAnalyzer:
         query = " OR ".join(search_terms)
         
         # Add stock market related words to filter out irrelevant tweets
-        query += " (stock OR market OR invest OR trading OR shares OR price)"
+        query += " (stock OR market OR invest OR trading OR shares OR price OR earnings)"
         
-        # Add filters to improve quality
-        query += " -is:retweet lang:en"
+        # Add filters to improve quality and limit search scope
+        query += " -is:retweet lang:en -is:reply"
+        
+        # Add important filters to restrict tweet volume
+        query += " is:verified"  # Only include verified accounts
+        query += " min_faves:10"  # Minimum likes
+        query += " has:hashtags"  # Must include hashtags
         
         # Calculate start time
         start_time = datetime.now() - timedelta(days=days)
@@ -207,13 +212,19 @@ class TwitterSentimentAnalyzer:
             # Search parameters
             tweet_fields = ["created_at", "public_metrics", "context_annotations"]
             
+            # Limit max results to avoid excessive API usage
+            max_results = min(max_results, 100)  # Hard limit of 100 tweets
+            
             # Paginate through results
             pagination_token = None
             remaining_results = max_results
+            request_count = 0  # Track number of API requests
+            max_requests = 2   # Limit to maximum 2 requests per call
             
-            while remaining_results > 0:
+            while remaining_results > 0 and request_count < max_requests:
+                request_count += 1
                 # Determine batch size (max 100 per request)
-                batch_size = min(remaining_results, 100)
+                batch_size = min(remaining_results, 50)  # Reduced from 100 to 50
                 
                 try:
                     # Make API request
