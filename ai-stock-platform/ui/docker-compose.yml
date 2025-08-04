@@ -7,9 +7,9 @@ services:
       dockerfile: Dockerfile
     image: quantumvestai-ui:latest
     ports:
-      - "3000:3000"
+      - "80:80"
     environment:
-      - PORT=3000
+      - PORT=80
       - DEBUG=true
       - API_BASE_URL=http://quantumvestai-dev-api.dev.svc.cluster.local:8000
       - ENVIRONMENT=development

@@ -32,7 +32,7 @@ fi
 
 # Set default values with proper validation
 if [ -z "$PORT" ]; then
-    export PORT=3000
+    export PORT=80
 fi
 
 if [ -z "$HOST" ]; then
