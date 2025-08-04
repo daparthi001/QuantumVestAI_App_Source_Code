@@ -11,6 +11,7 @@ sys.path.append(os.path.join(ROOT, "api"))
 
 from api.main import app, ws_manager  # type: ignore
 from api.websocket.market_ws import MarketWebSocket  # type: ignore
+from core.security import create_access_token
 
 
 def test_market_ws_broadcasts_full_payload():
@@ -27,7 +28,8 @@ def test_market_ws_broadcasts_full_payload():
 
     service = MarketWebSocket(ws_manager, client=fake_client)
 
-    with client.websocket_connect("/ws/market-data") as ws:
+    token = create_access_token({"sub": "test"})
+    with client.websocket_connect(f"/ws/market-data?token={token}") as ws:
         ws.send_json({"type": "subscribe", "data": {"symbol": "AAPL"}})
         resp = ws.receive_json()
         assert resp["type"] == "subscribed"
@@ -43,3 +45,4 @@ def test_market_ws_broadcasts_full_payload():
         assert payload["price"] == 123.0
         assert payload["forecast"] == 125.0
         assert payload["sentiment"] == "bullish"
+

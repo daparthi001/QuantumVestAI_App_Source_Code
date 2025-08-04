@@ -7,7 +7,7 @@ import logging
 from datetime import datetime
 from typing import Optional
 
-from core.security import get_current_user
+from core.security import get_current_user, validate_token
 from core.middleware.cors import is_origin_allowed
 from db.models.user import User
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
@@ -23,6 +23,14 @@ logger = logging.getLogger("api")
 router = APIRouter()
 
 manager = ConnectionManager()
+
+
+@router.websocket("/ws/market-data")
+async def market_data_ws(websocket: WebSocket, token: str = Query(...)):
+    if not validate_token(token):
+        await websocket.close(code=1008)
+        return
+    await websocket_endpoint(websocket, "market-data", token)
 
 
 @router.websocket("/ws/{client_id}")
