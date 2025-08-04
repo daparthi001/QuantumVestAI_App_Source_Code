@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import Optional
 
 from core.security import get_current_user, validate_token
+from core.security.websocket_permissions import check_websocket_permissions
 from core.middleware.cors import is_origin_allowed
 from core.config import settings
 from db.models.user import User
@@ -29,7 +30,7 @@ manager = ConnectionManager()
 
 
 @router.websocket("/ws/market-data")
-async def market_data_ws(websocket: WebSocket, token: Optional[str] = Query(None)):
+async def market_data_ws(websocket: WebSocket, token: Optional[str] = Query(None), premium: Optional[str] = Query(None)):
     """WebSocket endpoint for market data with /ws/ prefix."""
     # For market-data endpoint, we'll allow connections even without a token
     # This ensures backward compatibility with clients that don't send tokens
@@ -150,7 +151,7 @@ async def market_data_ws(websocket: WebSocket, token: Optional[str] = Query(None
     
 # Additional direct endpoint for /market-data (without /ws/ prefix)
 @router.websocket("/market-data")
-async def direct_market_data_ws(websocket: WebSocket, token: Optional[str] = Query(None)):
+async def direct_market_data_ws(websocket: WebSocket, token: Optional[str] = Query(None), premium: Optional[str] = Query(None)):
     """Direct market data WebSocket endpoint to handle connections without the /ws/ prefix."""
     logger.info("Connection to /market-data endpoint (without /ws/ prefix)")
     
@@ -195,7 +196,13 @@ async def direct_market_data_ws(websocket: WebSocket, token: Optional[str] = Que
     # Log token status but don't close connection regardless of validation result
     if token:
         try:
+            # First, validate the token structure
             valid = validate_token(token)
+            
+            # Even if token is valid, extract premium parameter
+            # Premium parameter can override role-based access control
+            query_params = dict(websocket.query_params)
+            premium_param = premium or query_params.get("premium")
             logger.info(f"Direct market-data token validation: {valid}")
             user_id = "anonymous"
             
@@ -211,6 +218,23 @@ async def direct_market_data_ws(websocket: WebSocket, token: Optional[str] = Que
                 user_id = payload.get("sub", "anonymous")
             except Exception:
                 pass
+                
+            # Check permissions using the new permissions system
+            from jose import jwt
+            from core.config import settings
+            
+            # Extract token payload
+            payload = jwt.decode(
+                token,
+                settings.JWT_SECRET.get_secret_value(),
+                algorithms=[settings.JWT_ALGORITHM]
+            )
+            
+            # Check if user has permission to access this endpoint
+            if not check_websocket_permissions(payload, "/market-data", premium):
+                logger.warning(f"WebSocket permission denied for user: {user_id}")
+                await websocket.close(code=4003, reason="Permission denied")
+                return
                 
             # Connect to WebSocket manager
             await manager.connect(websocket, f"market-data:{user_id}")
