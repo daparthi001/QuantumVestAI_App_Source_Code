@@ -38,3 +38,14 @@ def test_websocket_broadcasts_updates():
         event = ws.receive_json()
         assert event["type"] == "top_movers"
         assert event["data"][0]["symbol"] == "AAPL"
+
+
+def test_websocket_accepts_token_from_cookie():
+    client = TestClient(app)
+    token = create_access_token({"sub": "cookietester"})
+    client.cookies.set("access_token", f"Bearer {token}")
+    with client.websocket_connect("/ws/test-client") as ws:
+        ws.send_json({"type": "subscribe", "data": {"symbol": "AAPL"}})
+        resp = ws.receive_json()
+        assert resp["type"] == "subscribed"
+        assert resp["topic"] == "AAPL"

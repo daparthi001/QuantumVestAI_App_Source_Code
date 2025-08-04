@@ -58,6 +58,18 @@ async def websocket_endpoint(
                 await websocket.close(code=1008)
                 return
 
+        # Gather token from query params, cookies, or headers
+        cookie_token = websocket.cookies.get("access_token")
+        auth_header = websocket.headers.get("authorization")
+
+        if not token:
+            token = cookie_token
+        if not token and auth_header:
+            if auth_header.lower().startswith("bearer "):
+                token = auth_header.split(" ", 1)[1]
+        if token and token.startswith("Bearer "):
+            token = token.split(" ", 1)[1]
+
         # Require and verify token, except for public market data stream
         user = None
         # --- Begin: Extract token from cookie if not present in query param ---
@@ -82,7 +94,7 @@ async def websocket_endpoint(
                 return
         if token:
             try:
-                user = await get_current_user(token)
+                user = await get_current_user(token=token)
             except Exception:
                 await websocket.close(code=4001, reason="Invalid token")
                 return
