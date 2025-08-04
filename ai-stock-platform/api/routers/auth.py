@@ -216,6 +216,10 @@ async def register(
 async def get_me(current_user: User = Depends(get_current_active_user)):
     """Get current user"""
     try:
+        # Ensure 'role' field is present in current_user data
+        if 'role' not in current_user.__dict__:
+            current_user.__dict__['role'] = 'free'  # Default role
+
         user_data = UserBase(**current_user.__dict__)
     except ValidationError as e:
         logger.error(f"Validation error for current_user: {e}")

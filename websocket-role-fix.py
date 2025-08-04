@@ -110,6 +110,11 @@ def check_websocket_permissions(
     Returns:
         bool: True if access is allowed, False otherwise
     """
+    # Ensure 'role' field is present in token payload
+    if 'role' not in token_payload:
+        token_payload['role'] = 'free'  # Default role
+        logger.info("Role field missing in token payload. Defaulting to 'free'.")
+
     # Always allow access to free tier endpoints regardless of role
     if any(endpoint.endswith(free_endpoint) for free_endpoint in FREE_TIER_ENDPOINTS):
         return True

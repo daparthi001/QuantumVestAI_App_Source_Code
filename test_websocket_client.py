@@ -17,6 +17,7 @@ import jwt
 import time
 import argparse
 from datetime import datetime, timedelta
+import pytest
 
 # Configure logging
 logging.basicConfig(
@@ -26,7 +27,7 @@ logging.basicConfig(
 logger = logging.getLogger("websocket-test")
 
 # Default values
-DEFAULT_API_URL = "wss://api-dev.quantumvestai.com"
+DEFAULT_API_URL = "ws://localhost:8000"
 SECRET_KEY = "testing_secret_key_replace_in_production"  # For creating test tokens
 
 def create_test_token(user_id, role, expiry_minutes=60):
@@ -90,6 +91,35 @@ async def test_websocket_endpoint(endpoint, token=None, premium=False, expected_
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
         return False
+
+@pytest.mark.asyncio
+async def test_websocket_endpoint():
+    """Test WebSocket connection to /ws/market-data."""
+    endpoint = f"{DEFAULT_API_URL}/ws/market-data"
+    token = create_test_token("test_user", "free")
+
+    # Build URL with token
+    url = f"{endpoint}?token={token}"
+    logger.info(f"Testing connection to: {url}")
+
+    try:
+        async with websockets.connect(url, ping_interval=None) as websocket:
+            logger.info("Connected successfully to WebSocket endpoint")
+
+            # Send a test message
+            test_message = {"type": "ping", "timestamp": datetime.utcnow().isoformat()}
+            await websocket.send(json.dumps(test_message))
+            logger.info(f"Sent test message: {test_message}")
+
+            # Wait for a response
+            response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
+            logger.info(f"Received response: {response}")
+
+            assert response, "No response received from WebSocket endpoint"
+
+    except Exception as e:
+        logger.error(f"WebSocket test failed: {str(e)}")
+        pytest.fail(f"WebSocket test failed: {str(e)}")
 
 async def run_all_tests(base_url):
     """Run all WebSocket permission tests."""

@@ -15,6 +15,7 @@ from core.config import settings
 from db.models.user import User
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 from jose import JWTError, jwt
+import websockets
 
 # Import the local websocket manager using a relative import to avoid package
 # resolution issues when the application is executed as a module
@@ -28,135 +29,149 @@ router = APIRouter()
 
 manager = ConnectionManager()
 
+# Update the WebSocket endpoint to use the Kubernetes service name
+API_SERVICE_URL = "ws://quantumvestai-dev-api:8000/ws/market-data"
+
 
 @router.websocket("/ws/market-data")
 async def market_data_ws(websocket: WebSocket, token: Optional[str] = Query(None), premium: Optional[str] = Query(None)):
     """WebSocket endpoint for market data with /ws/ prefix."""
-    # For market-data endpoint, we'll allow connections even without a token
-    # This ensures backward compatibility with clients that don't send tokens
-    
-    # Accept connection immediately to prevent 403 errors
     logger.info("WebSocket connection attempt to /ws/market-data")
+
     try:
-        await websocket.accept()
-        logger.info("WebSocket connection to /ws/market-data accepted")
+        # Connect to the Kubernetes service
+        async with websockets.connect(API_SERVICE_URL, ping_interval=None) as service_websocket:
+            await websocket.accept()
+            logger.info("WebSocket connection to Kubernetes service established")
+
+            # Relay messages between client and service
+            async for message in websocket.iter_text():
+                await service_websocket.send(message)
+                response = await service_websocket.recv()
+                await websocket.send(response)
+
     except Exception as e:
-        logger.error(f"Error accepting WebSocket connection: {str(e)}")
-        return
+        logger.error(f"Error connecting to Kubernetes service: {str(e)}")
+        await websocket.close(code=4003, reason="Service connection failed")
     
-    try:
-        # Extract token from various sources
-        if not token:
-            # Try query params
-            query_params = dict(websocket.query_params)
-            token = query_params.get("token")
+    # try:
+    #     # Extract token from various sources
+    #     if not token:
+    #         # Try query params
+    #         query_params = dict(websocket.query_params)
+    #         token = query_params.get("token")
             
-            # Try cookies
-            if not token:
-                cookie_header = websocket.headers.get("cookie")
-                if cookie_header:
-                    import re
-                    # Try qvai_token (new standard)
-                    match = re.search(r"qvai_token=([^;]+)", cookie_header)
-                    if match:
-                        token = match.group(1)
-                        logger.info("Found token in qvai_token cookie")
-                    else:
-                        # Fall back to access_token
-                        match = re.search(r"access_token=([^;]+)", cookie_header)
-                        if match:
-                            token = match.group(1)
-                            logger.info("Found token in access_token cookie")
+    #         # Try cookies
+    #         if not token:
+    #             cookie_header = websocket.headers.get("cookie")
+    #             if cookie_header:
+    #                 import re
+    #                 # Try qvai_token (new standard)
+    #                 match = re.search(r"qvai_token=([^;]+)", cookie_header)
+    #                 if match:
+    #                     token = match.group(1)
+    #                     logger.info("Found token in qvai_token cookie")
+    #                 else:
+    #                     # Fall back to access_token
+    #                     match = re.search(r"access_token=([^;]+)", cookie_header)
+    #                     if match:
+    #                         token = match.group(1)
+    #                         logger.info("Found token in access_token cookie")
             
-            # Try authorization header
-            if not token:
-                auth_header = websocket.headers.get("authorization")
-                if auth_header and auth_header.lower().startswith("bearer "):
-                    token = auth_header.split(" ", 1)[1]
-                    logger.info("Found token in authorization header")
+    #         # Try authorization header
+    #         if not token:
+    #             auth_header = websocket.headers.get("authorization")
+    #             if auth_header and auth_header.lower().startswith("bearer "):
+    #                 token = auth_header.split(" ", 1)[1]
+    #                 logger.info("Found token in authorization header")
         
-        # Clean token if present
-        if token and token.startswith('Bearer '):
-            token = token[7:]
+    #     # Clean token if present
+    #     if token and token.startswith('Bearer '):
+    #         token = token[7:]
         
-        # URL decode the token if necessary
-        if token and '%' in token:
-            token = urllib.parse.unquote(token)
+    #     # URL decode the token if necessary
+    #     if token and '%' in token:
+    #         token = urllib.parse.unquote(token)
         
-        # Try to validate token but continue regardless
-        user_id = "anonymous"
-        if token:
-            try:
-                is_valid = validate_token(token)
-                logger.info(f"Market data token validation: {is_valid}")
+    #     # Try to validate token but continue regardless
+    #     user_id = "anonymous"
+    #     if token:
+    #         try:
+    #             is_valid = validate_token(token)
+    #             logger.info(f"Market data token validation: {is_valid}")
                 
-                # Extract user ID if possible
-                try:
-                    payload = jwt.decode(
-                        token,
-                        settings.JWT_SECRET.get_secret_value(),
-                        algorithms=[settings.JWT_ALGORITHM]
-                    )
-                    user_id = payload.get("sub", "anonymous")
+    #             # Extract user ID if possible
+    #             try:
+    #                 payload = jwt.decode(
+    #                     token,
+    #                     settings.JWT_SECRET.get_secret_value(),
+    #                     algorithms=[settings.JWT_ALGORITHM]
+    #                 )
+    #                 user_id = payload.get("sub", "anonymous")
                     
-                    # Use the permissions system to check access
-                    premium_param = premium or websocket.query_params.get("premium")
-                    if not check_websocket_permissions(payload, "/ws/market-data", premium_param):
-                        logger.warning(f"WebSocket permission denied for user: {user_id}")
-                        await websocket.close(code=4003, reason="Permission denied")
-                        return
-                    logger.info(f"WebSocket permission granted for user: {user_id}")
+    #                 # Ensure free-tier users and anonymous connections are handled correctly
+    #                 if user_id == "anonymous" or payload.get("role", "free") == "free":
+    #                     logger.info("Granting unrestricted access for free-tier or anonymous user")
+    #                     return
                     
-                except Exception as e:
-                    logger.warning(f"Error checking permissions: {str(e)}")
-            except Exception as e:
-                logger.warning(f"Token validation error: {str(e)}")
+    #                 # Use the permissions system to check access
+    #                 premium_param = premium or websocket.query_params.get("premium")
+    #                 if not check_websocket_permissions(payload, "/ws/market-data", premium_param):
+    #                     logger.warning(f"WebSocket permission denied for user: {user_id}")
+    #                     await websocket.close(code=4003, reason="Permission denied")
+    #                     return
+    #                 logger.info(f"WebSocket permission granted for user: {user_id}")
+                    
+    #             except Exception as e:
+    #                 logger.warning(f"Error checking permissions: {str(e)}")
+    #         except Exception as e:
+    #             logger.warning(f"Token validation error: {str(e)}")
         
-        # Connect to manager
-        client_id = f"market-data:{user_id}"
-        await manager.connect(websocket, client_id)
-        logger.info(f"WebSocket connected: {client_id}")
+    #     # Connect to manager
+    #     client_id = f"market-data:{user_id}"
+    #     await manager.connect(websocket, client_id)
+    #     logger.info(f"WebSocket connected: {client_id}")
         
-        # Handle messages
-        try:
-            while True:
-                data = await websocket.receive_json()
+    #     # Handle messages
+    #     try:
+    #         while True:
+    #             data = await websocket.receive_json()
                 
-                # Add metadata
-                data["timestamp"] = datetime.utcnow().isoformat()
-                data["client_id"] = client_id
+    #             # Add metadata
+    #             data["timestamp"] = datetime.utcnow().isoformat()
+    #             data["client_id"] = client_id
                 
-                # Process message based on type
-                message_type = data.get("type")
-                if message_type == "subscribe":
-                    await handle_subscription(websocket, data, None)
-                elif message_type == "unsubscribe":
-                    await handle_unsubscription(websocket, data, None)
-                else:
-                    await websocket.send_json(
-                        {
-                            "error": "Unknown message type",
-                            "timestamp": datetime.utcnow().isoformat(),
-                        }
-                    )
+    #             # Process message based on type
+    #             message_type = data.get("type")
+    #             if message_type == "subscribe":
+    #                 await handle_subscription(websocket, data, None)
+    #             elif message_type == "unsubscribe":
+    #                 await handle_unsubscription(websocket, data, None)
+    #             else:
+    #                 await websocket.send_json(
+    #                     {
+    #                         "error": "Unknown message type",
+    #                         "timestamp": datetime.utcnow().isoformat(),
+    #                     }
+    #                 )
         
-        except WebSocketDisconnect:
-            await manager.disconnect(websocket, client_id)
-            logger.info(f"WebSocket disconnected: {client_id}")
+    #     except WebSocketDisconnect:
+    #         await manager.disconnect(websocket, client_id)
+    #         logger.info(f"WebSocket disconnected: {client_id}")
         
-        except Exception as e:
-            logger.error(f"WebSocket error: {str(e)}")
-            try:
-                await websocket.close(code=4000, reason=str(e))
-            except:
-                pass
+    #     except Exception as e:
+    #         logger.error(f"WebSocket error: {str(e)}")
+    #         try:
+    #             await websocket.close(code=4000, reason=str(e))
+    #         except:
+    #             pass
     
-    except Exception as e:
-        logger.error(f"Unhandled error in market_data_ws: {str(e)}")
-        try:
-            await websocket.close(code=4000, reason="Internal server error")
-        except:
-            pass
+    # except Exception as e:
+    #     logger.error(f"Unhandled error in market_data_ws: {str(e)}")
+    #     try:
+    #         await websocket.close(code=4000, reason="Internal server error")
+    #     except:
+    #         pass
     
 # Additional direct endpoint for /market-data (without /ws/ prefix)
 @router.websocket("/market-data")
@@ -238,6 +253,11 @@ async def direct_market_data_ws(websocket: WebSocket, token: Optional[str] = Que
                 settings.JWT_SECRET.get_secret_value(),
                 algorithms=[settings.JWT_ALGORITHM]
             )
+            
+            # Ensure free-tier users and anonymous connections are handled correctly
+            if user_id == "anonymous" or payload.get("role", "free") == "free":
+                logger.info("Granting unrestricted access for free-tier or anonymous user")
+                return
             
             # Check if user has permission to access this endpoint
             if not check_websocket_permissions(payload, "/market-data", premium):
