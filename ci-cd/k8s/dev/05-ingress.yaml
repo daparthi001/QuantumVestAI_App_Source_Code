@@ -11,7 +11,6 @@ metadata:
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
     alb.ingress.kubernetes.io/ssl-redirect: "443"
     alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:921930869047:certificate/94eec8e0-cf9a-4184-8e27-2c3c845c390a
-    # FIXED ALB health check settings
     alb.ingress.kubernetes.io/healthcheck-path: "/api/v1/health"
     alb.ingress.kubernetes.io/healthcheck-port: "8000"
     alb.ingress.kubernetes.io/healthcheck-protocol: "HTTP"
@@ -20,58 +19,50 @@ metadata:
     alb.ingress.kubernetes.io/healthy-threshold-count: "2"
     alb.ingress.kubernetes.io/unhealthy-threshold-count: "2"
     alb.ingress.kubernetes.io/success-codes: "200-399"
-    created-by: daparthi001
-    created-date: "2025-06-15"
-    updated-by: daparthi001
-    updated-date: "2025-06-19"
 spec:
   rules:
-  - host: dev.quantumvestai.com
-    http:
-      paths:
-      # All API routes consolidated under /api/v1 prefix
-      - path: /api/v1
-        pathType: Prefix
-        backend:
-          service:
-            name: quantumvestai-dev-api
-            port:
-              number: 8000
-      # Extra health endpoint for direct access
-      - path: /health
-        pathType: Exact
-        backend:
-          service:
-            name: quantumvestai-dev-api
-            port:
-              number: 8000
-      # Documentation
-      - path: /docs
-        pathType: Exact
-        backend:
-          service:
-            name: quantumvestai-dev-api
-            port:
-              number: 8000
-      - path: /redoc
-        pathType: Exact
-        backend:
-          service:
-            name: quantumvestai-dev-api
-            port:
-              number: 8000
-      - path: /openapi.json
-        pathType: Exact
-        backend:
-          service:
-            name: quantumvestai-dev-api
-            port:
-              number: 8000
-      # UI as catch-all
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: ui-service
-            port:
-              number: 80
+    - host: dev.quantumvestai.com
+      http:
+        paths:
+          - path: /api/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: quantumvestai-dev-api
+                port:
+                  number: 8000
+          - path: /health
+            pathType: Exact
+            backend:
+              service:
+                name: quantumvestai-dev-api
+                port:
+                  number: 8000
+          - path: /docs
+            pathType: Exact
+            backend:
+              service:
+                name: quantumvestai-dev-api
+                port:
+                  number: 8000
+          - path: /redoc
+            pathType: Exact
+            backend:
+              service:
+                name: quantumvestai-dev-api
+                port:
+                  number: 8000
+          - path: /openapi.json
+            pathType: Exact
+            backend:
+              service:
+                name: quantumvestai-dev-api
+                port:
+                  number: 8000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ui-service
+                port:
+                  number: 80
