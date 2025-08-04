@@ -1,23 +1,21 @@
-import { Suspense, lazy } from 'react'
-import { useAppStore } from '@/store/useAppStore'
-import { usePing } from '@/api/hooks/usePing'
-
-// Lazy load non-critical UI components
-const Button = lazy(() => import('@/components/ui/button'))
+import { useEffect } from 'react'
+import Navbar from '@/components/Navbar'
+import LoginForm from '@/components/LoginForm'
+import Home from '@/components/Home'
+import { useAuthStore } from '@/store/useAuthStore'
 
 function App() {
-  const count = useAppStore((s) => s.count)
-  const increment = useAppStore((s) => s.increment)
-  const { data } = usePing()
+  const user = useAuthStore((s) => s.user)
+  const refresh = useAuthStore((s) => s.refresh)
+
+  useEffect(() => {
+    refresh()
+  }, [refresh])
 
   return (
-    <div className="p-4 space-y-4">
-      <h1 className="text-2xl font-bold">QuantumVest AI UI</h1>
-      <p>{data?.message ?? 'Loading...'}</p>
-      <div>Count: {count}</div>
-      <Suspense fallback={<div>Loading button...</div>}>
-        <Button onClick={increment}>Increment</Button>
-      </Suspense>
+    <div>
+      <Navbar />
+      {user ? <Home /> : <LoginForm />}
     </div>
   )
 }
