@@ -84,8 +84,8 @@ class Settings(BaseSettings):
 
     # Cache settings
     CACHE_TTL_TRENDING_STOCKS: int = Field(default=300, env='CACHE_TTL_TRENDING_STOCKS')
-    # Default to False so real API calls are only made when explicitly enabled
-    ENABLE_REAL_DATA: bool = Field(default=False, env='ENABLE_REAL_DATA')
+    # Always use real data by default
+    ENABLE_REAL_DATA: bool = Field(default=True, env='ENABLE_REAL_DATA')
 
     # Logging
     LOG_LEVEL: str = Field(default="INFO", env='LOG_LEVEL')

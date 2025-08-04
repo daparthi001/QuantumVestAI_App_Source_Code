@@ -783,7 +783,7 @@ class QuantumAI {
             return await response.json();
         } catch (error) {
             console.error(`Failed to fetch market data for ${symbol}:`, error);
-            return this.getMockMarketData(symbol);
+            throw error; // No fallback to mock data - will properly show errors to users
         }
     }
 
@@ -794,7 +794,7 @@ class QuantumAI {
             return await response.json();
         } catch (error) {
             console.error(`Failed to fetch technical data for ${symbol}:`, error);
-            return this.getMockTechnicalData(symbol);
+            throw error; // No fallback to mock data - will properly show errors to users
         }
     }
 
@@ -805,7 +805,7 @@ class QuantumAI {
             return await response.json();
         } catch (error) {
             console.error(`Failed to fetch sentiment data for ${symbol}:`, error);
-            return { score: (Math.random() - 0.5) * 2 }; // Random sentiment between -1 and 1
+            throw error; // No fallback to mock data - will properly show errors to users
         }
     }
 
@@ -816,27 +816,20 @@ class QuantumAI {
             return await response.json();
         } catch (error) {
             console.error(`Failed to fetch news data for ${symbol}:`, error);
-            return this.getMockNewsData(symbol);
+            throw error; // No fallback to mock data - will properly show errors to users
         }
     }
 
-    // Mock Data Methods (for demo purposes)
+    // These methods have been disabled to ensure only live data is used
+    // Kept as comments for reference only
+    /* 
     getMockMarketData(symbol) {
-        const basePrice = 100 + Math.random() * 200;
-        const prices = [];
-        const volume = [];
-        
-        for (let i = 0; i < 30; i++) {
-            const price = basePrice + (Math.random() - 0.5) * 20;
-            const vol = Math.floor(Math.random() * 1000000) + 100000;
-            
-            prices.push(price);
-            volume.push(vol);
-        }
-        
-        return { symbol, prices, volume };
+        // Mock data generation removed - only live data should be used
+        throw new Error('Mock data is disabled - only live data should be used');
     }
+    */
 
+    /* 
     getMockTechnicalData(symbol) {
         return {
             symbol,
@@ -845,7 +838,9 @@ class QuantumAI {
             sma: Array(20).fill(0).map(() => 100 + Math.random() * 50)
         };
     }
+    */
 
+    /* 
     getMockNewsData(symbol) {
         const headlines = [
             `${symbol} reports strong quarterly earnings`,
@@ -862,6 +857,8 @@ class QuantumAI {
             source: 'QuantumNews'
         }));
     }
+    */
+    // End of disabled mock data methods
 
     // Event Emission
     emitPredictionUpdate(symbol, prediction) {

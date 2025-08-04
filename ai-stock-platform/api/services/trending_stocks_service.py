@@ -51,7 +51,7 @@ except Exception:  # pragma: no cover - handle missing package gracefully
 
         settings = SimpleNamespace(
             ALPHA_VANTAGE_API_KEY=os.getenv("ALPHA_VANTAGE_API_KEY"),
-            ENABLE_REAL_DATA=os.getenv("ENABLE_REAL_DATA", "false").lower() == "true",
+            ENABLE_REAL_DATA=True,  # Always use real data
         )
 
 # Try to import aiohttp, fallback to None if not available
@@ -71,7 +71,7 @@ class TrendingStocksService:
 
     def __init__(self):
         # Determine whether to fetch real data or use mocked values
-        self.use_mock = not getattr(settings, "ENABLE_REAL_DATA", False)
+        self.use_mock = False  # Always use real data
 
         # Use configured API key, falling back to the settings value if provided
         self.api_key = os.getenv("ALPHA_VANTAGE_API_KEY") or getattr(
@@ -100,22 +100,8 @@ class TrendingStocksService:
         # Placeholder list used until live data is fetched. When ``ENABLE_REAL_DATA``
         # is true we start with an empty list so that ``_fetch_yahoo_trending_symbols``
         # is called on the first request to populate this list.
-        self.trending_symbols: List[str]
-        if self.use_mock:
-            self.trending_symbols = [
-                "AAPL",
-                "MSFT",
-                "AMZN",
-                "GOOGL",
-                "NVDA",
-                "TSLA",
-                "META",
-                "NFLX",
-                "CRM",
-                "ADBE",
-            ]
-        else:
-            self.trending_symbols = []
+        # Initialize with empty list to force real-time data fetching
+        self.trending_symbols: List[str] = []
 
     async def _fetch_yahoo_trending_symbols(self, retries: int = 3, delay: float = 2.0) -> List[str]:
         """Fetch trending tickers from Yahoo Finance with retries and improved logging."""
@@ -175,22 +161,11 @@ class TrendingStocksService:
 
             # Fetch fresh data
             logger.info("Fetching fresh trending stocks data")
-            if not self.use_mock and not self.trending_symbols:
+            if not self.trending_symbols:
                 self.trending_symbols = await self._fetch_yahoo_trending_symbols()
                 if not self.trending_symbols:
-                    logger.warning("No trending symbols from Yahoo; using defaults")
-                    self.trending_symbols = [
-                        "AAPL",
-                        "MSFT",
-                        "AMZN",
-                        "GOOGL",
-                        "NVDA",
-                        "TSLA",
-                        "META",
-                        "NFLX",
-                        "CRM",
-                        "ADBE",
-                    ]
+                    logger.error("Failed to fetch trending symbols from Yahoo Finance")
+                    raise RuntimeError("Unable to retrieve trending symbols from live data source")
 
             stocks_data = await self._fetch_trending_stocks()
 
@@ -215,39 +190,29 @@ class TrendingStocksService:
 
     async def _fetch_trending_stocks(self) -> List[Dict[str, Any]]:
         """Fetch trending stocks data from external API."""
-        if self.use_mock or not AIOHTTP_AVAILABLE:
-            # Generate deterministic pseudo-random data for tests
-            stocks_data = []
-            for symbol in self.trending_symbols:
-                random.seed(symbol)
-                stocks_data.append(
-                    {
-                        "symbol": symbol,
-                        "name": f"{symbol} Corp.",
-                        "price": round(random.uniform(100, 500), 2),
-                        "change": round(random.uniform(-5, 5), 2),
-                        "change_percent": round(random.uniform(-5, 5), 2),
-                        "volume": random.randint(1_000_000, 5_000_000),
-                        "last_updated": datetime.now().isoformat(),
-                    }
-                )
-        else:
-            stocks_data = []
-            async with aiohttp.ClientSession() as session:
-                # Fetch each symbol sequentially to respect API rate limits.
-                for idx, symbol in enumerate(self.trending_symbols):
-                    result = await self._fetch_stock_quote(session, symbol)
-                    if result:
-                        stocks_data.append(result)
-                    else:
-                        logger.warning(f"Failed to fetch data for {symbol}")
-                    # Avoid hitting the free tier limit of 5 requests per minute
-                    # by sleeping between calls. Skip the delay after the last request.
-                    if (
-                        idx < len(self.trending_symbols) - 1
-                        and self.request_interval > 0
-                    ):
-                        await asyncio.sleep(self.request_interval)
+        if not AIOHTTP_AVAILABLE:
+            raise RuntimeError("aiohttp is required for real-time data access")
+            
+        stocks_data = []
+        async with aiohttp.ClientSession() as session:
+            # Fetch each symbol sequentially to respect API rate limits.
+            for idx, symbol in enumerate(self.trending_symbols):
+                result = await self._fetch_stock_quote(session, symbol)
+                if result:
+                    stocks_data.append(result)
+                else:
+                    logger.warning(f"Failed to fetch data for {symbol}")
+                # Avoid hitting the free tier limit of 5 requests per minute
+                # by sleeping between calls. Skip the delay after the last request.
+                if (
+                    idx < len(self.trending_symbols) - 1
+                    and self.request_interval > 0
+                ):
+                    await asyncio.sleep(self.request_interval)
+        
+        if not stocks_data:
+            logger.error("Failed to fetch any real stock data")
+            raise RuntimeError("Unable to retrieve any stock data from live data source")
 
             # If all real-data fetches failed, fall back to mock data
             if not stocks_data:
@@ -409,7 +374,7 @@ class TrendingStocksService:
                 if self._cache
                 else datetime.now().isoformat(),
                 "cache_ttl_seconds": self.cache_ttl,
-                "data_source": "real" if not self.use_mock else "mock",
+                "data_source": "real",
             },
         }
 

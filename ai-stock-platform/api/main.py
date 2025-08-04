@@ -484,17 +484,9 @@ async def search_stocks_endpoint(request: Request, query: str, limit: int = 10):
                     })
                     if len(results) >= limit:
                         break
-        else:
-            mock_data = {
-                "AAPL": {"symbol": "AAPL", "name": "Apple Inc.", "price": 198.45, "change": 4.12},
-                "MSFT": {"symbol": "MSFT", "name": "Microsoft Corporation", "price": 425.63, "change": 7.56},
-                "GOOGL": {"symbol": "GOOGL", "name": "Alphabet Inc.", "price": 150.12, "change": 3.45},
-            }
-            for stock in mock_data.values():
-                if query.lower() in stock["symbol"].lower() or query.lower() in stock["name"].lower():
-                    results.append(stock)
-                    if len(results) >= limit:
-                        break
+        # If no results found, return an empty list - no mock data fallback
+        if not results:
+            logger.info(f"No real stock data found for query: {query}")
         return create_success_response(
             data={"results": results},
             message="Stock search results" if results else "No stocks found",

@@ -1,14 +1,16 @@
 """
 QuantumVestAI Market Routes  
-Updated: 2025-07-07 21:54:42
+Updated: 2025-08-04
 Author: hemanth9398
 """
 import logging
+import os
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Optional
 
-from fastapi import APIRouter, Query, Request
+import httpx
+from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from core.config.settings import settings
@@ -24,10 +26,9 @@ def get_templates(request: Request) -> Jinja2Templates:
     """Return app-level templates if available."""
     return getattr(request.app.state, "templates", templates)
 
-# Demo market data removed
-DEMO_MARKET_DATA = {}
-
-DEMO_STOCKS_DB = {}
+# No demo data - only live data should be used
+DEMO_MARKET_DATA = {} 
+DEMO_STOCKS_DB = {} # Empty - this will force API calls for live data
 
 @router.get("/", response_class=HTMLResponse)
 async def market_overview(request: Request):
@@ -82,26 +83,27 @@ async def ticker_details(
         ticker = ticker.upper()
         logger.info(f"Loading ticker details for {ticker}")
         
-        # Get stock data
-        if ticker in DEMO_STOCKS_DB:
-            stock_data = DEMO_STOCKS_DB[ticker]
-        else:
-            # Generate demo data for any ticker
-            stock_data = {
-                "symbol": ticker,
-                "name": f"{ticker} Corporation",
-                "price": 100.00,
-                "change": 1.50,
-                "change_pct": 1.52,
-                "volume": "10.5M",
-                "market_cap": "500.0B",
-                "pe_ratio": 22.5,
-                "eps": 4.44,
-                "dividend_yield": 1.25,
-                "sector": "Technology",
-                "industry": "Software",
-                "description": f"{ticker} is a leading company in its sector."
-            }
+        # Get real stock data from API
+        try:
+            # Get API URL from environment or default
+            api_url = os.getenv("API_URL", "http://quantumvestai-dev-api.dev.svc.cluster.local:8000")
+            
+            # Fetch real stock data from API
+            async with httpx.AsyncClient(timeout=10) as client:
+                response = await client.get(f"{api_url}/api/v1/stocks/{ticker}")
+                response.raise_for_status()
+                stock_data = response.json().get("data", {})
+                
+            # Log successful API fetch
+            logger.info(f"Successfully fetched live data for {ticker} from API")
+            
+        except Exception as e:
+            logger.error(f"Failed to fetch real data for {ticker}: {e}")
+            # Return an error rather than using mock data
+            raise HTTPException(
+                status_code=503, 
+                detail=f"Unable to fetch live data for {ticker}. Please try again later."
+            )
         
         # Generate chart data
         chart_data = []
@@ -158,39 +160,37 @@ async def ticker_search(
     q: str = Query(..., min_length=1),
     limit: int = Query(10, ge=1, le=50)
 ):
-    """Search for ticker symbols"""
+    """Search for ticker symbols using real API data"""
     try:
         query = q.upper()
-        results = []
         
-        # Search in demo database
-        for symbol, data in DEMO_STOCKS_DB.items():
-            if query in symbol or query in data["name"].upper():
-                results.append({
-                    "symbol": symbol,
-                    "name": data["name"],
-                    "price": data["price"],
-                    "change_pct": data["change_pct"],
-                    "sector": data["sector"]
-                })
+        # Get API URL from environment or default
+        api_url = os.getenv("API_URL", "http://quantumvestai-dev-api.dev.svc.cluster.local:8000")
         
-        # Add generic results if not found
-        if not results and len(query) >= 2:
-            for i in range(min(3, limit)):
-                results.append({
-                    "symbol": f"{query}{i+1}",
-                    "name": f"{query} Corporation {i+1}",
-                    "price": 100.00 + i * 10,
-                    "change_pct": (i - 1) * 0.5,
-                    "sector": "Technology"
-                })
-        
-        return JSONResponse({
-            "status": "success",
-            "results": results[:limit],
-            "query": q,
-            "timestamp": datetime.utcnow().isoformat()
-        })
+        try:
+            # Fetch real stock search data from API
+            async with httpx.AsyncClient(timeout=10) as client:
+                response = await client.get(f"{api_url}/api/v1/stocks/search?q={query}&limit={limit}")
+                response.raise_for_status()
+                search_results = response.json().get("data", [])
+                
+            # Log successful API fetch
+            logger.info(f"Successfully fetched live search results for '{query}' from API")
+            
+            return JSONResponse({
+                "status": "success",
+                "results": search_results,
+                "query": q,
+                "timestamp": datetime.utcnow().isoformat()
+            })
+            
+        except Exception as e:
+            logger.error(f"Failed to fetch real search data for '{query}': {e}")
+            # Return an error rather than using mock data
+            raise HTTPException(
+                status_code=503, 
+                detail=f"Unable to fetch live search results. Please try again later."
+            )
         
     except Exception as e:
         logger.error(f"Error in ticker search: {str(e)}")

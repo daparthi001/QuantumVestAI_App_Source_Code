@@ -5,9 +5,12 @@ Author: hemanth9398
 """
 import json
 import logging
+import os
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, Optional
+
+import httpx
 
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -27,9 +30,7 @@ def get_templates(request: Request) -> Jinja2Templates:
     """Return app-level templates if available."""
     return getattr(request.app.state, "templates", templates)
 
-# Demo forecast data removed
-DEMO_PREDICTIONS = {}
-
+# No demo forecast data - always use live data
 MARKET_SENTIMENT = {}
 
 @router.get("/", response_class=HTMLResponse)
@@ -78,21 +79,37 @@ async def stock_forecast(
         symbol = symbol.upper()
         logger.info(f"Loading forecast for {symbol} with timeframe {timeframe}")
         
-        if symbol not in DEMO_PREDICTIONS:
-            demo_data = {}
-        else:
-            demo_data = DEMO_PREDICTIONS[symbol]
+        # Get API URL from environment or default
+        api_url = os.getenv("API_URL", "http://quantumvestai-dev-api.dev.svc.cluster.local:8000")
         
-        # Get prediction for requested timeframe
-        prediction = {}
-        
-        # Generate historical chart data
-        historical_data = []
-        current_price = demo_data.get("current_price", 0)
-        for i in range(30):
-            date = (datetime.now() - timedelta(days=29-i)).strftime("%Y-%m-%d")
-            price = current_price
-            historical_data.append({"date": date, "price": round(price, 2)})
+        try:
+            # Fetch real stock data from API
+            async with httpx.AsyncClient(timeout=10) as client:
+                response = await client.get(f"{api_url}/api/v1/stocks/{symbol}")
+                response.raise_for_status()
+                stock_data = response.json().get("data", {})
+                
+                # Fetch prediction data
+                prediction_response = await client.get(
+                    f"{api_url}/api/v1/forecast/{symbol}?timeframe={timeframe}"
+                )
+                prediction_response.raise_for_status()
+                prediction = prediction_response.json().get("data", {})
+                
+            # Generate historical data from real API
+            historical_response = await client.get(
+                f"{api_url}/api/v1/stocks/{symbol}/historical?days=30"
+            )
+            historical_response.raise_for_status()
+            historical_data = historical_response.json().get("data", [])
+            
+            # Log successful API fetch
+            logger.info(f"Successfully fetched live data for {symbol} forecast from API")
+            
+        except Exception as e:
+            logger.error(f"Failed to fetch real forecast data for {symbol}: {e}")
+            # Return error instead of falling back to mock data
+            raise
         
         return get_templates(request).TemplateResponse(
             "forecast_detail.html",
@@ -100,7 +117,7 @@ async def stock_forecast(
                 "request": request,
                 "symbol": symbol,
                 "timeframe": timeframe,
-                "stock_data": demo_data,
+                "stock_data": stock_data,
                 "prediction": prediction,
                 "historical_data": historical_data,
                 "page_title": f"{symbol} Forecast - QuantumVestAI"
