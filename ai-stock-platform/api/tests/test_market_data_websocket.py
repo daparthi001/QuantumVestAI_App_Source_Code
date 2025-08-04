@@ -13,6 +13,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from api.routers.websocket import router as websocket_router
+from core.security import create_access_token
 
 
 def test_market_data_websocket_allows_disallowed_origin(monkeypatch):
@@ -21,8 +22,10 @@ def test_market_data_websocket_allows_disallowed_origin(monkeypatch):
     app.include_router(websocket_router)
     client = TestClient(app)
     headers = {"origin": "https://evil.com"}
-    with client.websocket_connect("/ws/market-data", headers=headers) as ws:
+    token = create_access_token({"sub": "test"})
+    with client.websocket_connect(f"/ws/market-data?token={token}", headers=headers) as ws:
         ws.send_json({"type": "subscribe", "data": {"symbol": "AAPL"}})
         resp = ws.receive_json()
         assert resp["type"] == "subscribed"
         assert resp["topic"] == "AAPL"
+

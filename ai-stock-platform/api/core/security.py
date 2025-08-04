@@ -43,12 +43,25 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
     to_encode.update({"exp": expire})
     
     encoded_jwt = jwt.encode(
-        to_encode, 
-        settings.JWT_SECRET.get_secret_value(), 
+        to_encode,
+        settings.JWT_SECRET.get_secret_value(),
         algorithm=settings.JWT_ALGORITHM
     )
-    
+
     return encoded_jwt
+
+
+def validate_token(token: str) -> bool:
+    """Return True if the provided JWT is valid."""
+    try:
+        jwt.decode(
+            token,
+            settings.JWT_SECRET.get_secret_value(),
+            algorithms=[settings.JWT_ALGORITHM],
+        )
+        return True
+    except JWTError:
+        return False
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
