@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantumVestAI - Login Test Page</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            line-height: 1.5;
+            color: #333;
+        }
+        h1 {
+            color: #4a6cf7;
+            margin-bottom: 1em;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #4a6cf7;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            cursor: pointer;
+            padding: 10px 15px;
+            font-size: 14px;
+            margin-right: 8px;
+        }
+        input {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            padding: 8px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .logged-in {
+            background-color: #e0f7fa;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #b2ebf2;
+            margin-bottom: 20px;
+        }
+        .logged-out {
+            background-color: #fff3e0;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ffe0b2;
+            margin-bottom: 20px;
+        }
+        pre {
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            padding: 10px;
+            overflow: auto;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>QuantumVestAI - Login Test Page</h1>
+    
+    <div id="auth-status" class="card">
+        <h2>Authentication Status</h2>
+        <div id="status-display"></div>
+    </div>
+    
+    <div class="card">
+        <h2>Login Form</h2>
+        <form id="login-form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password">
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="remember" name="remember"> Remember me
+                </label>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+        <div id="login-status"></div>
+    </div>
+    
+    <div class="card">
+        <h2>Test Actions</h2>
+        <button onclick="simulateLogin()">Simulate Login</button>
+        <button onclick="simulateLogout()">Simulate Logout</button>
+        <button onclick="checkAuthState()">Check Auth State</button>
+        <button onclick="clearAll()">Clear All Auth Data</button>
+    </div>
+    
+    <div class="card">
+        <h2>Storage Info</h2>
+        <h3>LocalStorage</h3>
+        <pre id="local-storage"></pre>
+        <h3>Cookies</h3>
+        <pre id="cookies"></pre>
+    </div>
+    
+    <!-- Include your auth scripts -->
+    <script src="../js/auth.js"></script>
+    <script src="../js/auth-sync.js"></script>
+    
+    <script>
+        // Update the status display
+        function updateStatus() {
+            const statusDisplay = document.getElementById('status-display');
+            const token = localStorage.getItem('qvai_token');
+            
+            if (token) {
+                statusDisplay.className = 'logged-in';
+                statusDisplay.innerHTML = `
+                    <h3>✅ Logged In</h3>
+                    <p><strong>Token:</strong> ${token.substring(0, 15)}...</p>
+                `;
+            } else {
+                statusDisplay.className = 'logged-out';
+                statusDisplay.innerHTML = `
+                    <h3>❌ Logged Out</h3>
+                    <p>No authentication token found.</p>
+                `;
+            }
+            
+            // Update storage display
+            updateStorageDisplay();
+        }
+        
+        // Update the storage display
+        function updateStorageDisplay() {
+            const localStorageDisplay = document.getElementById('local-storage');
+            const cookiesDisplay = document.getElementById('cookies');
+            
+            // LocalStorage
+            let lsContent = '';
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                let value = localStorage.getItem(key);
+                if (value && value.length > 30) {
+                    value = value.substring(0, 30) + '...';
+                }
+                lsContent += `${key}: ${value}\n`;
+            }
+            
+            localStorageDisplay.textContent = lsContent || '(empty)';
+            
+            // Cookies
+            const cookies = document.cookie.split(';').map(c => c.trim());
+            cookiesDisplay.textContent = cookies.join('\n') || '(empty)';
+        }
+        
+        // Simulate login
+        function simulateLogin() {
+            const token = 'test_token_' + Math.random().toString(36).substring(2);
+            localStorage.setItem('qvai_token', token);
+            document.cookie = `qvai_token=${token}; path=/; samesite=lax`;
+            document.cookie = `access_token=Bearer ${token}; path=/; samesite=lax`;
+            
+            // Dispatch auth event
+            const authEvent = new CustomEvent('qvai_auth_event', {
+                detail: { action: 'login', token: token }
+            });
+            window.dispatchEvent(authEvent);
+            
+            const loginStatus = document.getElementById('login-status');
+            loginStatus.className = 'status success';
+            loginStatus.textContent = 'Login simulated successfully!';
+            
+            updateStatus();
+        }
+        
+        // Simulate logout
+        function simulateLogout() {
+            localStorage.removeItem('qvai_token');
+            localStorage.removeItem('access_token');
+            sessionStorage.removeItem('access_token');
+            document.cookie = 'qvai_token=; Max-Age=0; path=/';
+            document.cookie = 'access_token=; Max-Age=0; path=/';
+            document.cookie = 'user_info=; Max-Age=0; path=/';
+            
+            // Dispatch auth event
+            const authEvent = new CustomEvent('qvai_auth_event', {
+                detail: { action: 'logout' }
+            });
+            window.dispatchEvent(authEvent);
+            
+            const loginStatus = document.getElementById('login-status');
+            loginStatus.className = 'status success';
+            loginStatus.textContent = 'Logout simulated successfully!';
+            
+            updateStatus();
+        }
+        
+        // Check auth state
+        function checkAuthState() {
+            // This will trigger our auth-sync.js checkAuthState function
+            if (window.checkAuthSync) {
+                window.checkAuthSync();
+            }
+            
+            updateStatus();
+            
+            const loginStatus = document.getElementById('login-status');
+            loginStatus.className = 'status success';
+            loginStatus.textContent = 'Auth state checked!';
+        }
+        
+        // Clear all auth data
+        function clearAll() {
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // Clear cookies
+            document.cookie.split(";").forEach(function(c) {
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+            });
+            
+            updateStatus();
+            
+            const loginStatus = document.getElementById('login-status');
+            loginStatus.className = 'status success';
+            loginStatus.textContent = 'All auth data cleared!';
+        }
+        
+        // Handle form submission
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const remember = document.getElementById('remember').checked;
+            
+            if (!username || !password) {
+                const loginStatus = document.getElementById('login-status');
+                loginStatus.className = 'status error';
+                loginStatus.textContent = 'Please enter both username and password!';
+                return;
+            }
+            
+            // Simulate API login
+            setTimeout(() => {
+                // For demo, any username/password combo works
+                const token = 'real_token_' + Math.random().toString(36).substring(2);
+                
+                // Use our auth utils
+                if (window.authUtils) {
+                    window.authUtils.setToken(token, remember);
+                } else {
+                    // Fallback if authUtils not available
+                    simulateLogin();
+                }
+                
+                const loginStatus = document.getElementById('login-status');
+                loginStatus.className = 'status success';
+                loginStatus.textContent = 'Login successful!';
+                
+                updateStatus();
+            }, 1000);
+        });
+        
+        // Listen for storage events
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'qvai_token') {
+                console.log('qvai_token changed in another tab', e.newValue);
+                updateStatus();
+            }
+        });
+        
+        // Listen for custom auth events
+        window.addEventListener('qvai_auth_event', function(e) {
+            console.log('Auth event received', e.detail);
+            updateStatus();
+        });
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus();
+        });
+    </script>
+</body>
+</html>

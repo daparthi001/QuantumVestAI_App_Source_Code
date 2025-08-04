@@ -111,7 +111,30 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(data => {
                 // This block will only execute for successful responses that aren't redirects
-                window.location.href = '/login?msg=Registration+successful!+Please+log+in.';
+                
+                // Check if we received a token in the response
+                if (data && data.token) {
+                    // Store token for cross-tab authentication
+                    localStorage.setItem('qvai_token', data.token);
+                    
+                    // Set cookies for server-side auth
+                    document.cookie = `qvai_token=${data.token}; path=/; samesite=lax`;
+                    document.cookie = `access_token=Bearer ${data.token}; path=/; samesite=lax`;
+                    
+                    // Dispatch auth event for cross-tab sync
+                    if (typeof window !== 'undefined' && window.dispatchEvent) {
+                        const authEvent = new CustomEvent('qvai_auth_event', {
+                            detail: { action: 'login', token: data.token }
+                        });
+                        window.dispatchEvent(authEvent);
+                    }
+                    
+                    // Redirect to dashboard
+                    window.location.href = '/dashboard';
+                } else {
+                    // No token, redirect to login
+                    window.location.href = '/login?msg=Registration+successful!+Please+log+in.';
+                }
             })
             .catch(error => {
                 // Reset submit button

@@ -309,6 +309,18 @@ async def test_auth_sync_page(request: Request):
             status_code=500
         )
 
+@router.get("/test-login", response_class=HTMLResponse)
+async def test_login_page(request: Request):
+    """Test page for login functionality"""
+    try:
+        return HTMLResponse(content=open('/Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/ui/static/js/test-login.html').read())
+    except Exception as e:
+        logger.error(f"Error rendering login test page: {str(e)}")
+        return HTMLResponse(
+            content="<h1>Error loading login test page</h1>",
+            status_code=500
+        )
+
 @router.get("/profile", response_class=HTMLResponse)
 async def profile_page(request: Request):
     """User profile page"""
