@@ -57,6 +57,7 @@
     
     <!-- Critical CSS -->
     <link rel="stylesheet" href="{{ get_asset_url('css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ get_asset_url('css/quantum-next-gen.css') }}">
     <link rel="stylesheet" href="{{ get_asset_url('css/quantum-enhancements.css') }}">
     <link rel="stylesheet" href="{{ get_asset_url('css/quantum-dashboard.css') }}">
       <link rel="stylesheet" href="{{ get_asset_url('css/quantum-mobile-enhanced.css') }}">
@@ -116,14 +117,14 @@
     
     {% block head_extra %}{% endblock %}
 </head>
-<body class="{% if dark_mode %}dark-mode{% endif %} quantum-app glow-theme" data-theme="{% if dark_mode %}dark{% else %}light{% endif %}">
+<body class="{% if dark_mode %}dark-mode{% endif %} quantum-app quantum-nextgen glow-theme" data-theme="{% if dark_mode %}dark{% else %}light{% endif %}">
     <!-- PWA Installation Banner -->
-    <div id="pwa-install-banner" class="pwa-banner" style="display: none;">
-        <div class="pwa-banner-content">
-            <span class="pwa-icon">📱</span>
-            <span class="pwa-text">Install QuantumVestAI for better experience</span>
-            <button class="pwa-install-btn quantum-btn quantum-btn-primary">Install</button>
-            <button class="pwa-close-btn" aria-label="Close">&times;</button>
+    <div id="pwa-install-banner" class="pwa-banner nextgen-pwa-banner nextgen-glass" style="display: none;">
+        <div class="pwa-banner-content nextgen-pwa-content">
+            <span class="pwa-icon nextgen-pwa-icon">📱</span>
+            <span class="pwa-text nextgen-pwa-text">Install QuantumVestAI for better experience</span>
+            <button class="pwa-install-btn nextgen-btn nextgen-btn-primary nextgen-btn-glow">Install</button>
+            <button class="pwa-close-btn nextgen-pwa-close-btn" aria-label="Close">&times;</button>
         </div>
     </div>
 
@@ -131,8 +132,8 @@
     <a href="#main-content" class="skip-nav" data-i18n="accessibility.skip_to_content">Skip to main content</a>
     
     <!-- Enhanced Navigation Bar -->
-    <nav class="quantum-nav sticky top-0 z-50" role="navigation" aria-label="Primary navigation">
-        <div class="quantum-nav-container flex items-center">
+    <nav class="quantum-nav nextgen-glass-nav sticky top-0 z-50" role="navigation" aria-label="Primary navigation">
+        <div class="quantum-nav-container nextgen-container flex items-center">
             <a href="/" class="quantum-nav-brand" data-i18n="nav.brand">
                 QuantumVestAI
             </a>
@@ -143,27 +144,27 @@
             <!-- Navigation Menu -->
             <ul class="quantum-nav-menu hidden md:flex">
                 <li class="quantum-nav-item">
-                    <a href="/" class="quantum-nav-link hover:bg-gray-700 active:text-blue-400 {% if request.url.path == '/' %}active{% endif %}" data-i18n="nav.dashboard">
+                    <a href="/" class="quantum-nav-link nextgen-nav-link hover:bg-gray-700 active:text-blue-400 {% if request.url.path == '/' %}active nextgen-active{% endif %}" data-i18n="nav.dashboard">
                         Dashboard
                     </a>
                 </li>
                 <li class="quantum-nav-item">
-                    <a href="/ticker-search" class="quantum-nav-link hover:bg-gray-700 active:text-blue-400 {% if '/forecast' in request.url.path %}active{% endif %}" data-i18n="nav.forecast">
+                    <a href="/ticker-search" class="quantum-nav-link nextgen-nav-link hover:bg-gray-700 active:text-blue-400 {% if '/forecast' in request.url.path %}active nextgen-active{% endif %}" data-i18n="nav.forecast">
                         Forecast
                     </a>
                 </li>
                 <li class="quantum-nav-item">
-                    <a href="/portfolio" class="quantum-nav-link hover:bg-gray-700 active:text-blue-400 {% if '/portfolio' in request.url.path %}active{% endif %}" data-i18n="nav.portfolio">
+                    <a href="/portfolio" class="quantum-nav-link nextgen-nav-link hover:bg-gray-700 active:text-blue-400 {% if '/portfolio' in request.url.path %}active nextgen-active{% endif %}" data-i18n="nav.portfolio">
                         Portfolio
                     </a>
                 </li>
                 <li class="quantum-nav-item">
-                    <a href="/market" class="quantum-nav-link hover:bg-gray-700 active:text-blue-400 {% if '/market' in request.url.path %}active{% endif %}" data-i18n="nav.market">
+                    <a href="/market" class="quantum-nav-link nextgen-nav-link hover:bg-gray-700 active:text-blue-400 {% if '/market' in request.url.path %}active nextgen-active{% endif %}" data-i18n="nav.market">
                         Market
                     </a>
                 </li>
                 <li class="quantum-nav-item">
-                    <a href="/news" class="quantum-nav-link hover:bg-gray-700 active:text-blue-400 {% if '/news' in request.url.path %}active{% endif %}" data-i18n="nav.news">
+                    <a href="/news" class="quantum-nav-link nextgen-nav-link hover:bg-gray-700 active:text-blue-400 {% if '/news' in request.url.path %}active nextgen-active{% endif %}" data-i18n="nav.news">
                         News
                     </a>
                 </li>
@@ -179,7 +180,7 @@
                 {% endif %}
                 <div class="nav-utilities">
                     <div class="nav-item">
-                        <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode" data-tooltip="Toggle Dark Mode">
+                        <button class="theme-toggle nextgen-theme-toggle nextgen-btn-icon-only" id="themeToggle" title="Toggle Dark Mode" data-tooltip="Toggle Dark Mode">
                             <i class="bi bi-moon-fill"></i>
                         </button>
                     </div>
@@ -188,14 +189,14 @@
                             <i class="bi bi-bell"></i>
                             <span class="badge bg-danger notification-badge">3</span>
                         </button>
-                        <div class="notifications-dropdown" id="notificationsDropdown">
+                        <div class="notifications-dropdown nextgen-glass" id="notificationsDropdown">
                         <div class="dropdown-header">
-                            <h6>Notifications</h6>
-                            <button type="button" class="mark-all-read-btn text-sm font-medium text-blue-400 hover:text-blue-200">Mark all as read</button>
+                            <h6 class="nextgen-text-gradient nextgen-text-gradient-primary">Notifications</h6>
+                            <button type="button" class="mark-all-read-btn nextgen-btn-ghost text-sm font-medium">Mark all as read</button>
                         </div>
                         <div class="notifications-list">
-                            <div class="notification-card unread relative">
-                                <div class="notification-icon warning">
+                            <div class="notification-card nextgen-notification-card unread relative">
+                                <div class="notification-icon nextgen-notification-icon warning">
                                     <i class="bi bi-exclamation-triangle"></i>
                                 </div>
                                 <div class="notification-content">
@@ -250,7 +251,7 @@
     
     <div class="app-container">
         <!-- Enhanced Sidebar Navigation -->
-        <aside class="sidebar quantum-glass" id="sidebar" role="navigation" aria-label="Secondary navigation">
+        <aside class="sidebar quantum-glass nextgen-glass" id="sidebar" role="navigation" aria-label="Secondary navigation">
             <div class="sidebar-header">
                 <a href="/" class="sidebar-logo quantum-nav-brand">
                     <img src="{{ get_asset_url('img/logo.svg') }}" alt="QuantumVestAI Logo" class="logo-default">
@@ -262,42 +263,42 @@
                 </button>
             </div>
             <div class="sidebar-content">
-                <nav class="sidebar-nav">
-                    <ul class="nav-list">
-                        <li class="nav-item {% if request.url.path == '/' %}active{% endif %}">
-                            <a href="/" class="nav-link" data-i18n="nav.dashboard">
+                <nav class="sidebar-nav nextgen-sidebar-nav">
+                    <ul class="nav-list nextgen-nav-list">
+                        <li class="nav-item {% if request.url.path == '/' %}active nextgen-nav-active{% endif %}">
+                            <a href="/" class="nav-link nextgen-sidebar-link" data-i18n="nav.dashboard">
                                 <i class="bi bi-house-door"></i>
                                 <span class="nav-text">Dashboard</span>
                             </a>
                         </li>
-                        <li class="nav-item {% if '/forecast' in request.url.path %}active{% endif %}">
-                            <a href="/ticker-search" class="nav-link" data-i18n="nav.forecast">
+                        <li class="nav-item {% if '/forecast' in request.url.path %}active nextgen-nav-active{% endif %}">
+                            <a href="/ticker-search" class="nav-link nextgen-sidebar-link" data-i18n="nav.forecast">
                                 <i class="bi bi-graph-up"></i>
                                 <span class="nav-text">Forecast</span>
                             </a>
                         </li>
-                        <li class="nav-item {% if '/predictability' in request.url.path %}active{% endif %}">
-                            <a href="/predictability" class="nav-link">
+                        <li class="nav-item {% if '/predictability' in request.url.path %}active nextgen-nav-active{% endif %}">
+                            <a href="/predictability" class="nav-link nextgen-sidebar-link">
                                 <i class="bi bi-bar-chart-line"></i>
                                 <span class="nav-text">Predictability</span>
                             </a>
                         </li>
                         {% if user %}
-                        <li class="nav-item {% if '/watchlist' in request.url.path %}active{% endif %}">
-                            <a href="/watchlist" class="nav-link">
+                        <li class="nav-item {% if '/watchlist' in request.url.path %}active nextgen-nav-active{% endif %}">
+                            <a href="/watchlist" class="nav-link nextgen-sidebar-link">
                                 <i class="bi bi-star"></i>
                                 <span class="nav-text">Watchlist</span>
                             </a>
                         </li>
                         {% endif %}
-                        <li class="nav-item {% if '/market' in request.url.path %}active{% endif %}">
-                            <a href="/market" class="nav-link" data-i18n="nav.market">
+                        <li class="nav-item {% if '/market' in request.url.path %}active nextgen-nav-active{% endif %}">
+                            <a href="/market" class="nav-link nextgen-sidebar-link" data-i18n="nav.market">
                                 <i class="bi bi-currency-exchange"></i>
                                 <span class="nav-text">Market</span>
                             </a>
                         </li>
-                        <li class="nav-item {% if '/news' in request.url.path %}active{% endif %}">
-                            <a href="/news" class="nav-link" data-i18n="nav.news">
+                        <li class="nav-item {% if '/news' in request.url.path %}active nextgen-nav-active{% endif %}">
+                            <a href="/news" class="nav-link nextgen-sidebar-link" data-i18n="nav.news">
                                 <i class="bi bi-newspaper"></i>
                                 <span class="nav-text">News</span>
                             </a>
@@ -335,16 +336,15 @@
                     {% endif %}
                 </nav>
 
-                <div class="sidebar-footer">
+                <div class="sidebar-footer nextgen-sidebar-footer">
                     {% if user %}
-                    <div class="user-info">
-                        <div class="user-avatar">
+                    <div class="user-info nextgen-user-info nextgen-glass-light">
+                        <div class="user-avatar nextgen-user-avatar">
                             <img src="{{ get_asset_url('img/avatars/default.png') }}" alt="User">
-
                         </div>
-                        <div class="user-details">
-                            <span class="user-name">{{ user.username }}</span>
-                            <span class="user-role">{{ user.role|capitalize }}</span>
+                        <div class="user-details nextgen-user-details">
+                            <span class="user-name nextgen-user-name">{{ user.username }}</span>
+                            <span class="user-role nextgen-user-role">{{ user.role|capitalize }}</span>
                         </div>
                         <div class="user-actions dropdown">
                             <button class="dropdown-toggle" data-bs-toggle="dropdown">
@@ -370,15 +370,16 @@
 
 
         <!-- Main Content Area -->
-        <main class="main-content" id="main-content" role="main">
+        <main class="main-content nextgen-main-content" id="main-content" role="main">
 
             <!-- Page Content -->
-            <div class="page-content">
+            <div class="page-content nextgen-page-content">
                 {% if messages %}
                     {% for message in messages %}
-                    <div class="alert alert-{{ message.type }} alert-dismissible fade show" role="alert">
+                    <div class="alert nextgen-alert nextgen-alert-{{ message.type }} alert-dismissible fade show" role="alert">
+                        <i class="bi {% if message.type == 'success' %}bi-check-circle{% elif message.type == 'info' %}bi-info-circle{% elif message.type == 'warning' %}bi-exclamation-triangle{% elif message.type == 'danger' %}bi-x-circle{% endif %}"></i>
                         {{ message.text }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <button type="button" class="btn-close nextgen-btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                     {% endfor %}
                 {% endif %}
@@ -387,15 +388,15 @@
             </div>
 
             <!-- Footer -->
-            <footer class="app-footer">
-                <div class="footer-content">
+            <footer class="app-footer nextgen-footer">
+                <div class="footer-content nextgen-footer-content">
                     <div class="copyright">
-                        &copy; {% if now is defined %}{{ now().year }}{% else %}{{ current_year|default('2025') }}{% endif %} QuantumVestAI. All rights reserved.
+                        &copy; {% if now is defined %}{{ now().year }}{% else %}{{ current_year|default('2025') }}{% endif %} <span class="nextgen-text-gradient nextgen-text-gradient-primary">QuantumVestAI</span>. All rights reserved.
                     </div>
-                    <div class="footer-links">
-                        <a href="/terms">Terms</a>
-                        <a href="/privacy">Privacy</a>
-                        <a href="/support">Support</a>
+                    <div class="footer-links nextgen-footer-links">
+                        <a href="/terms" class="nextgen-footer-link">Terms</a>
+                        <a href="/privacy" class="nextgen-footer-link">Privacy</a>
+                        <a href="/support" class="nextgen-footer-link">Support</a>
                     </div>
                 </div>
             </footer>
@@ -408,6 +409,7 @@
 
     
     <!-- Enhanced QuantumVestAI Features -->
+    <script src="{{ get_asset_url('js/quantum-next-gen.js') }}" defer></script>
     <script src="{{ get_asset_url('js/quantum-enhancements.js') }}" defer></script>
     <script src="{{ get_asset_url('js/quantum-i18n.js') }}" defer></script>
     <script src="{{ get_asset_url('js/quantum-search.js') }}" defer></script>
