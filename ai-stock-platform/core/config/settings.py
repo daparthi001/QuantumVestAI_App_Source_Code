@@ -83,18 +83,21 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Return an initialized :class:`Settings` instance.
 
-    The Kubernetes deployment defines an environment variable named ``DATABASE``
-    which conflicts with Pydantic's handling of the nested ``database`` model.
-    Removing this variable before instantiation prevents JSON decoding errors
-    when the settings object is created.
+    The Kubernetes deployment defines environment variables named ``DATABASE``
+    or ``database`` which conflict with Pydantic's handling of the nested
+    ``database`` model. Removing these variables before instantiation prevents
+    JSON decoding errors when the settings object is created.
     """
 
-    removed = os.environ.pop("DATABASE", None)
+    removed_vars = {
+        key: os.environ.pop(key)
+        for key in ("DATABASE", "database")
+        if key in os.environ
+    }
     try:
         return Settings()
     finally:
-        if removed is not None:
-            os.environ["DATABASE"] = removed
+        os.environ.update(removed_vars)
 
 
 settings = get_settings()
