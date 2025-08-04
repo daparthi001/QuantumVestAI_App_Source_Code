@@ -117,22 +117,30 @@ class TrendingStocksService:
         else:
             self.trending_symbols = []
 
-    async def _fetch_yahoo_trending_symbols(self) -> List[str]:
-        """Fetch trending tickers from Yahoo Finance."""
+    async def _fetch_yahoo_trending_symbols(self, retries: int = 3, delay: float = 2.0) -> List[str]:
+        """Fetch trending tickers from Yahoo Finance with retries and improved logging."""
         url = "https://query1.finance.yahoo.com/v1/finance/trending/US"
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, timeout=10) as resp:
-                    if resp.status == 200:
-                        data = await resp.json()
-                        quotes = (
-                            data.get("finance", {})
-                            .get("result", [{}])[0]
-                            .get("quotes", [])
-                        )
-                        return [q.get("symbol") for q in quotes if q.get("symbol")]
-        except Exception as exc:
-            logger.warning(f"Failed to fetch Yahoo trending symbols: {exc}")
+        last_exception = None
+        for attempt in range(1, retries + 1):
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url, timeout=10) as resp:
+                        if resp.status == 200:
+                            data = await resp.json()
+                            quotes = (
+                                data.get("finance", {})
+                                .get("result", [{}])[0]
+                                .get("quotes", [])
+                            )
+                            return [q.get("symbol") for q in quotes if q.get("symbol")]
+                        else:
+                            logger.warning(f"Yahoo trending symbols fetch attempt {attempt} failed: HTTP {resp.status}")
+            except Exception as exc:
+                last_exception = exc
+                logger.warning(f"Yahoo trending symbols fetch attempt {attempt} failed: {exc}")
+            if attempt < retries:
+                await asyncio.sleep(delay)
+        logger.error(f"All attempts to fetch Yahoo trending symbols failed. Last error: {last_exception}")
         return []
 
     async def get_trending_stocks(
