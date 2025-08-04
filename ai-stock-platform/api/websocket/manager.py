@@ -52,6 +52,10 @@ class ConnectionManager:
             logger.info(f"Subscription removed for {symbol}")
             
     async def broadcast_stock_update(self, symbol: str, data: dict):
+        if not data:
+            logger.warning(f"No data provided for stock update: {symbol}")
+            return
+
         if symbol in self.symbol_subscribers:
             message = {
                 "type": "price_update",

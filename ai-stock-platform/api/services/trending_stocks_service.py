@@ -167,7 +167,7 @@ class TrendingStocksService:
         
         logger.error(f"All attempts to fetch Yahoo trending symbols failed. Last error: {last_exception}")
         # Return default trending tech stocks as fallback
-        return ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "TSLA", "NVDA", "AMD", "INTC", "NFLX"]
+        return {"stocks": ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "TSLA", "NVDA", "AMD", "INTC", "NFLX"]}
 
     async def get_trending_stocks(
         self, page: int = 1, limit: int = 10
