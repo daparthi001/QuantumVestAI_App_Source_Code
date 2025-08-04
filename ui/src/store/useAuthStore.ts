@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 import { apiFetch } from '@/api/client'
 
 interface User {
@@ -9,44 +8,34 @@ interface User {
 
 interface AuthState {
   user: User | null
-  token: string | null
   login: (username: string, password: string) => Promise<void>
-  logout: () => void
+  logout: () => Promise<void>
   refresh: () => Promise<void>
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
-      user: null,
-      token: null,
-      async login(username, password) {
-        const res = await apiFetch<{ token: string; user: User }>(
-          '/auth/login',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password }),
-          }
-        )
-        set({ token: res.token, user: res.user })
-      },
-      logout() {
-        set({ user: null, token: null })
-      },
-      async refresh() {
-        const token = get().token
-        if (!token) return
-        try {
-          const user = await apiFetch<User>('/auth/me', {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-          set({ user })
-        } catch {
-          set({ user: null, token: null })
-        }
-      },
-    }),
-    { name: 'auth' }
-  )
-)
+export const useAuthStore = create<AuthState>()((set, get) => ({
+  user: null,
+  async login(username, password) {
+    await apiFetch('/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    })
+    await get().refresh()
+  },
+  async logout() {
+    try {
+      await apiFetch('/auth/logout', { method: 'POST' })
+    } finally {
+      set({ user: null })
+    }
+  },
+  async refresh() {
+    try {
+      const user = await apiFetch<User>('/auth/me')
+      set({ user })
+    } catch {
+      set({ user: null })
+    }
+  },
+}))
