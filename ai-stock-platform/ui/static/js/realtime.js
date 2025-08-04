@@ -17,7 +17,9 @@ class RealtimeService {
     connect() {
         try {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${protocol}//${window.location.host}/ws?token=${encodeURIComponent(this.token)}`;
+            // Clean up the token by removing 'Bearer ' prefix if it exists
+            const cleanToken = this.token ? this.token.replace('Bearer ', '') : this.token;
+            const wsUrl = `${protocol}//${window.location.host}/ws?token=${encodeURIComponent(cleanToken)}`;
             
             this.socket = new WebSocket(wsUrl);
             

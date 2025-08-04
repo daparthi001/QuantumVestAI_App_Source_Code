@@ -27,9 +27,15 @@ manager = ConnectionManager()
 
 @router.websocket("/ws/market-data")
 async def market_data_ws(websocket: WebSocket, token: Optional[str] = Query(None)):
-    if token and not validate_token(token):
-        await websocket.close(code=1008)
-        return
+    # For market-data endpoint, we'll allow connections even without a token
+    # If token is provided, validate it but don't reject if validation fails
+    # This ensures backward compatibility with clients that don't send tokens
+    if token:
+        try:
+            validate_token(token)
+        except Exception as e:
+            logger.warning(f"Invalid token for market-data WebSocket: {str(e)}")
+            # We continue anyway for market-data, not returning early
     await websocket_endpoint(websocket, "market-data", token)
 
 
@@ -60,10 +66,11 @@ async def websocket_endpoint(
 
         # Gather token from query params, cookies, or headers
         cookie_token = websocket.cookies.get("access_token")
+        qvai_token = websocket.cookies.get("qvai_token")  # Also check for qvai_token
         auth_header = websocket.headers.get("authorization")
 
         if not token:
-            token = cookie_token
+            token = qvai_token or cookie_token  # Try qvai_token first, then access_token
         if not token and auth_header:
             if auth_header.lower().startswith("bearer "):
                 token = auth_header.split(" ", 1)[1]

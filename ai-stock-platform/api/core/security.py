@@ -54,13 +54,25 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
 def validate_token(token: str) -> bool:
     """Return True if the provided JWT is valid."""
     try:
+        # Clean the token by removing 'Bearer ' prefix if it exists
+        if token.startswith('Bearer '):
+            token = token[7:]
+        
+        # URL decode the token if it appears to be URL encoded
+        import urllib.parse
+        if '%' in token:
+            token = urllib.parse.unquote(token)
+            
         jwt.decode(
             token,
             settings.JWT_SECRET.get_secret_value(),
             algorithms=[settings.JWT_ALGORITHM],
         )
         return True
-    except JWTError:
+    except JWTError as e:
+        # Log the specific JWT error for debugging
+        import logging
+        logging.getLogger("api").warning(f"Token validation failed: {str(e)}")
         return False
 
 async def get_current_user(
