@@ -25,4 +25,4 @@ data:
     # Start the application
     cd /app
     export PYTHONPATH=/app:$PYTHONPATH
-    python -m uvicorn main:app --host 0.0.0.0 --port 80
+    python -m uvicorn main:app --host 0.0.0.0 --port 3000

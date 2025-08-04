@@ -40,7 +40,7 @@ spec:
         image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:ui-dev-latest
         imagePullPolicy: Always
         ports:
-        - containerPort: 80
+        - containerPort: 3000
         env:
         - name: JWT_SECRET
           valueFrom:
@@ -132,7 +132,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /health
-            port: 80
+            port: 3000
           initialDelaySeconds: 90
           periodSeconds: 30
           timeoutSeconds: 5
@@ -141,7 +141,7 @@ spec:
         readinessProbe:
           httpGet:
             path: /health
-            port: 80
+            port: 3000
           initialDelaySeconds: 60
           periodSeconds: 10
           timeoutSeconds: 2

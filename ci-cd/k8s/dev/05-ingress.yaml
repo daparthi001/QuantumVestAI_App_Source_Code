@@ -65,4 +65,4 @@ spec:
               service:
                 name: ui-service
                 port:
-                  number: 80
+                  number: 3000

@@ -81,7 +81,7 @@ RUN chown -R app:app /app
 USER app
 
 # Set runtime environment variables
-ENV PORT=80 \
+ENV PORT=3000 \
     HOST=0.0.0.0 \
     PYTHONUNBUFFERED=1 \
     TZ=UTC \
@@ -91,7 +91,7 @@ ENV PORT=80 \
     PYTHONPATH=/app/core:/app/ai-stock-platform:/app/ai-stock-platform/ui:/app/ui:/app/api:/app
 
 # Expose port
-EXPOSE 80
+EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \

@@ -25,8 +25,8 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-  - port: 80  # External port
-    targetPort: 80  # Container port
+  - port: 3000  # External port
+    targetPort: 3000  # Container port
     protocol: TCP
     name: http
   selector:
