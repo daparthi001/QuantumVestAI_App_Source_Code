@@ -671,8 +671,21 @@ async def startup_event():
     
     # Initialize services with simplified approach
     try:
-        # Direct import approach - much simpler and clearer
-        from services.trending_stocks_service import TrendingStocksService
+        # Try multiple import paths to handle different module structures
+        try:
+            # Try API module path first
+            from api.services.trending_stocks_service import TrendingStocksService
+            logger.info("Imported TrendingStocksService from api.services")
+        except ImportError:
+            try:
+                # Try direct import
+                from services.trending_stocks_service import TrendingStocksService
+                logger.info("Imported TrendingStocksService from services")
+            except ImportError:
+                # Try relative import as last resort
+                from .services.trending_stocks_service import TrendingStocksService
+                logger.info("Imported TrendingStocksService from relative path")
+                
         trending_stocks_service = TrendingStocksService()
         logger.info("Trending stocks service initialized successfully")
         

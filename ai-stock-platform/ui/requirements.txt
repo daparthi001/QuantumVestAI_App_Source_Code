@@ -66,5 +66,5 @@ sentry-sdk
 prometheus_client
 openai==1.14.3
 
-torch==2.3.0
+torch==2.2.2
 transformers==4.30.0

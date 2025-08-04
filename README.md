@@ -6,6 +6,7 @@ For instructions on integrating ChatGPT into the UI, see [ChatGPT Guide](docs/CH
 For an overview of the React-based UI and layout, see [React UI Overview](docs/REACT_UI_OVERVIEW.md).
 For strategies to gather social sentiment without a paid Twitter plan, see [Sentiment Workarounds](docs/SENTIMENT_WORKAROUNDS.md).
 For practice trading without risking capital, follow the [PaperMoney Setup](docs/PAPERMONEY_TRADING.md).
+For troubleshooting SSL certificate issues with external APIs, see [SSL Certificate Issues](docs/SSL_CERTIFICATE_ISSUES.md).
 
 ---
 
@@ -212,5 +213,24 @@ without internet access this step may fail. The build now logs a warning and
 continues if `npm install` or `npm run build` cannot run. The resulting image
 will still start, but any missing frontend assets will need to be supplied later.
 
+### Troubleshooting Common Issues
 
-\n
+#### SSL Certificate Verification Errors
+If you encounter SSL certificate errors when connecting to external APIs like Alpha Vantage or Yahoo Finance, you may need to disable SSL verification temporarily:
+
+```bash
+export DISABLE_SSL_VERIFY=true
+```
+
+**Warning:** This is only recommended for development/testing environments, not for production.
+
+For more information, see the [SSL Certificate Troubleshooting Guide](docs/SSL_CERTIFICATE_ISSUES.md).
+
+#### API Endpoint Connection Issues
+If API endpoints aren't responding:
+
+1. Check the server is running: `ps aux | grep "main.py"`
+2. Verify the API key is valid: Check environment variables
+3. Run the diagnostic script: `python test_trending_stocks_fixed.py`
+4. Check logs for error messages: `tail -n 100 logs/api.log`
+

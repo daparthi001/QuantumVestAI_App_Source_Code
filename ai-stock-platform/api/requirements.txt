@@ -25,6 +25,6 @@ redis==5.0.1
 # Monitoring & Observability
 sentry-sdk
 prometheus_client
-torch==2.3.0
+torch==2.2.2
 transformers==4.30.0
 requests==2.31.0
