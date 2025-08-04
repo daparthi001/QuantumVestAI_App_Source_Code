@@ -98,8 +98,17 @@ async def market_data_ws(websocket: WebSocket, token: Optional[str] = Query(None
                         algorithms=[settings.JWT_ALGORITHM]
                     )
                     user_id = payload.get("sub", "anonymous")
-                except Exception:
-                    pass
+                    
+                    # Use the permissions system to check access
+                    premium_param = premium or websocket.query_params.get("premium")
+                    if not check_websocket_permissions(payload, "/ws/market-data", premium_param):
+                        logger.warning(f"WebSocket permission denied for user: {user_id}")
+                        await websocket.close(code=4003, reason="Permission denied")
+                        return
+                    logger.info(f"WebSocket permission granted for user: {user_id}")
+                    
+                except Exception as e:
+                    logger.warning(f"Error checking permissions: {str(e)}")
             except Exception as e:
                 logger.warning(f"Token validation error: {str(e)}")
         
