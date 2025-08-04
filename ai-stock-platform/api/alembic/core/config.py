@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     DB_ECHO: bool = False
     
     # CORS
-    CORS_ORIGINS: List[str] = ["http://quantumvestai-dev-api.dev.svc.cluster.local:8000", "http://ui-service:3000"]
+    CORS_ORIGINS: List[str] = ["http://quantumvestai-dev-api.dev.svc.cluster.local:8000", "http://ui-service:80"]
     
     # API Keys for external data sources
     ALPHA_VANTAGE_API_KEY: Optional[str] = None

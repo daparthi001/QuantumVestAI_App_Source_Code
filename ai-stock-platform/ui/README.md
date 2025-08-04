@@ -81,7 +81,7 @@ This is a complete, production-ready web UI for the QuantumVestAI platform featu
    
    Or using uvicorn directly:
    ```bash
-   uvicorn main:app --host 0.0.0.0 --port 3000 --reload
+   uvicorn main:app --host 0.0.0.0 --port 80  --reload
    ```
 
 4. **Access the Application**:

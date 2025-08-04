@@ -44,7 +44,7 @@ class Settings(BaseSettings):
 
     # UI CORS origins for backwards compatibility
     CORS_ORIGINS: list[str] | str | None = Field(
-        default=["http://ui-service:3000", "https://app.quantumvestai.com"],
+        default=["http://ui-service:80", "https://app.quantumvestai.com"],
         env="CORS_ORIGINS",
     )
 
