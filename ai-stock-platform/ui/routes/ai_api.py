@@ -19,23 +19,26 @@ SEARCH_URL = "https://query1.finance.yahoo.com/v1/finance/search"
 CACHE_TTL = 60  # seconds
 _cache: dict[str, tuple[float, dict]] = {}
 
+
 def _cache_key(url: str, params: dict | None) -> str:
     if not params:
         return url
     return f"{url}?{urlencode(params, doseq=True)}"
 
-async def fetch_json(url: str, params: dict | None = None):
-    """Helper to fetch JSON data from a remote endpoint with caching."""
+
+async def fetch_json(url: str, params: dict | None = None, *, use_cache: bool = True):
+    """Helper to fetch JSON data from a remote endpoint with optional caching."""
     key = _cache_key(url, params)
     now = time.time()
-    if key in _cache and now - _cache[key][0] < CACHE_TTL:
+    if use_cache and key in _cache and now - _cache[key][0] < CACHE_TTL:
         return _cache[key][1]
 
     async with httpx.AsyncClient(timeout=10, headers={"User-Agent": "QuantumVestAI/1.0"}) as client:
         r = await client.get(url, params=params)
         r.raise_for_status()
         data = r.json()
-        _cache[key] = (now, data)
+        if use_cache:
+            _cache[key] = (now, data)
         return data
 
 @router.get("/market-data/{symbol}")
@@ -70,7 +73,11 @@ async def get_market_data(symbol: str):
 async def get_technical_data(symbol: str):
     """Return simple technical indicators (SMA and EMA)"""
     try:
-        data = await fetch_json(f"{BASE_CHART_URL}/{symbol}", params={"range": "1mo", "interval": "1d"})
+        data = await fetch_json(
+            f"{BASE_CHART_URL}/{symbol}",
+            params={"range": "1mo", "interval": "1d"},
+            use_cache=False,
+        )
         chart = data.get("chart", {}).get("result")
         if not chart:
             raise HTTPException(status_code=404, detail="Data not found")
