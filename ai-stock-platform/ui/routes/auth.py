@@ -105,21 +105,29 @@ async def login_post(
 
         response = RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
 
-        max_age = 7 * 24 * 60 * 60 if remember else None
+        # Always set max_age for cookies to ensure they persist
+        max_age = 7 * 24 * 60 * 60 if remember else 24 * 60 * 60  # 7 days if remember, 1 day otherwise
+        
+        # Set cookies with appropriate flags for security and access
+        # HttpOnly cookie for secure server-side authentication
         response.set_cookie(
             key="access_token",
             value=f"Bearer {token}",
             httponly=True,
             max_age=max_age,
             samesite="lax",
+            path="/",  # Ensure cookie is available for all paths
             secure=request.url.scheme == "https"
         )
-        # Additional non-HTTP-only cookie so the SPA can sync the token
+        
+        # Additional non-HTTP-only cookie so the SPA can access the token
         response.set_cookie(
             key="qvai_token",
             value=token,
+            httponly=False,  # Allow JavaScript access
             max_age=max_age,
             samesite="lax",
+            path="/",  # Ensure cookie is available for all paths
             secure=request.url.scheme == "https"
         )
 

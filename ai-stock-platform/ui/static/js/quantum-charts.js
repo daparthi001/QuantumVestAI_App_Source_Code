@@ -145,11 +145,33 @@ class QuantumCharts {
         try {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const clientId = this.options.clientId || 'market-data';
-            const token = window.authUtils && window.authUtils.getToken();
+            
+            // Try multiple sources to get the token
+            let token = null;
+            
+            // 1. First try window.authUtils
+            if (window.authUtils && typeof window.authUtils.getToken === 'function') {
+                token = window.authUtils.getToken();
+            }
+            
+            // 2. Try to get token directly from cookies as fallback
+            if (!token) {
+                const qvaiTokenMatch = document.cookie.match(/(?:^|;\s*)qvai_token=([^;]*)/);
+                if (qvaiTokenMatch) token = qvaiTokenMatch[1];
+                
+                if (!token) {
+                    const accessTokenMatch = document.cookie.match(/(?:^|;\s*)access_token=([^;]*)/);
+                    if (accessTokenMatch) {
+                        token = accessTokenMatch[1].replace('Bearer ', '');
+                    }
+                }
+            }
+            
             // Ensure token is properly formatted and URI encoded
             const query = token ? `?token=${encodeURIComponent(token.replace('Bearer ', ''))}` : '';
             const wsUrl = `${protocol}//${window.location.host}/ws/${clientId}${query}`;
-
+            
+            console.log(`QuantumCharts: Connecting to WebSocket at ${wsUrl.split('?')[0]}`);
             this.websocket = new WebSocket(wsUrl);
             
             this.websocket.onopen = () => {

@@ -28,14 +28,29 @@ manager = ConnectionManager()
 @router.websocket("/ws/market-data")
 async def market_data_ws(websocket: WebSocket, token: Optional[str] = Query(None)):
     # For market-data endpoint, we'll allow connections even without a token
-    # If token is provided, validate it but don't reject if validation fails
     # This ensures backward compatibility with clients that don't send tokens
+    
+    # First, try to get token from query params if not provided directly
+    if not token:
+        query_params = dict(websocket.query_params)
+        token = query_params.get("token")
+    
+    # Try to clean the token if present
     if token:
+        # Remove 'Bearer ' prefix if present
+        if token.startswith('Bearer '):
+            token = token[7:]
+            
+        # Try validation but don't reject connection on failure
         try:
             validate_token(token)
+            logger.info(f"Valid token provided for market-data WebSocket")
         except Exception as e:
             logger.warning(f"Invalid token for market-data WebSocket: {str(e)}")
-            # We continue anyway for market-data, not returning early
+            # We continue anyway for market-data
+    else:
+        logger.info("No token provided for market-data WebSocket")
+        
     await websocket_endpoint(websocket, "market-data", token)
 
 
@@ -45,8 +60,13 @@ async def websocket_endpoint(
 ):
     """WebSocket endpoint for real-time updates."""
     try:
+        # Log connection attempt with client ID
+        logger.info(f"WebSocket connection attempt for client_id: {client_id}")
+        
+        # Check origin for CORS security
         origin = websocket.headers.get("origin")
         if not is_origin_allowed(origin):
+            # Special handling for market-data endpoint
             if client_id == "market-data":
                 if origin is None:
                     logger.info(
@@ -76,7 +96,14 @@ async def websocket_endpoint(
                 token = auth_header.split(" ", 1)[1]
         if token and token.startswith("Bearer "):
             token = token.split(" ", 1)[1]
+            logger.info(f"Cleaned Bearer prefix from token for {client_id}")
 
+        # Debug logging for token presence
+        if token:
+            logger.info(f"Token provided for WebSocket connection: {client_id[:10]}...")
+        else:
+            logger.warning(f"No token provided for WebSocket connection: {client_id}")
+            
         # Require and verify token, except for public market data stream
         user = None
         # --- Begin: Extract token from cookie if not present in query param ---
@@ -85,13 +112,25 @@ async def websocket_endpoint(
             if cookie_header:
                 import re
 
-                match = re.search(r"access_token=([^;]+)", cookie_header)
+                # First try to get qvai_token (new standard)
+                match = re.search(r"qvai_token=([^;]+)", cookie_header)
                 if match:
                     cookie_token = match.group(1)
                     # Remove 'Bearer ' prefix if present
                     if cookie_token.startswith("Bearer "):
                         cookie_token = cookie_token[len("Bearer ") :]
                     token = cookie_token
+                    logger.info(f"Found token in qvai_token cookie")
+                else:
+                    # Fall back to access_token
+                    match = re.search(r"access_token=([^;]+)", cookie_header)
+                    if match:
+                        cookie_token = match.group(1)
+                        # Remove 'Bearer ' prefix if present
+                        if cookie_token.startswith("Bearer "):
+                            cookie_token = cookie_token[len("Bearer ") :]
+                        token = cookie_token
+                        logger.info(f"Found token in access_token cookie")
         # --- End: Extract token from cookie ---
         if not token:
             if client_id == "market-data":

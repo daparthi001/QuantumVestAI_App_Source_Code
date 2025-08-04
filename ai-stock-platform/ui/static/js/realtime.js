@@ -12,15 +12,49 @@ class RealtimeService {
         this.maxReconnectAttempts = options.maxReconnectAttempts || 5;
         this.reconnectDelay = options.reconnectDelay || 1000;
         this.debug = options.debug || false;
+        this.options = options;
+        
+        // Set up periodic token refresh if enabled
+        if (options.enableTokenRefresh !== false) {
+            this.tokenRefreshInterval = setInterval(() => {
+                this._refreshToken();
+            }, options.tokenRefreshInterval || 10 * 60 * 1000); // Default: refresh every 10 minutes
+        }
+    }
+    
+    // Add token refresh method
+    _refreshToken() {
+        // Get a fresh token from authUtils if available
+        if (window.authUtils && typeof window.authUtils.getToken === 'function') {
+            const freshToken = window.authUtils.getToken();
+            if (freshToken && freshToken !== this.token) {
+                this._log('Token refreshed, reconnecting WebSocket');
+                this.token = freshToken;
+                
+                // Reconnect with the new token if we have an active connection
+                if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                    this.disconnect();
+                    this.connect();
+                }
+            }
+        }
     }
     
     connect() {
         try {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            // Clean up the token by removing 'Bearer ' prefix if it exists
-            const cleanToken = this.token ? this.token.replace('Bearer ', '') : this.token;
-            const wsUrl = `${protocol}//${window.location.host}/ws?token=${encodeURIComponent(cleanToken)}`;
             
+            // Get a fresh token in case it was updated elsewhere
+            const freshToken = window.authUtils && window.authUtils.getToken() || this.token;
+            
+            // Clean up the token by removing 'Bearer ' prefix if it exists
+            const cleanToken = freshToken ? freshToken.replace('Bearer ', '') : freshToken;
+            
+            // Use the correct WebSocket URL format with client ID
+            const clientId = this.options && this.options.clientId || 'client';
+            const wsUrl = `${protocol}//${window.location.host}/ws/${clientId}?token=${encodeURIComponent(cleanToken)}`;
+            
+            console.log(`Connecting to WebSocket at ${wsUrl.split('?')[0]}`);
             this.socket = new WebSocket(wsUrl);
             
             this.socket.onopen = this._handleOpen.bind(this);
@@ -116,6 +150,13 @@ class RealtimeService {
             this.socket.close();
             this.socket = null;
         }
+        
+        // Clear token refresh interval
+        if (this.tokenRefreshInterval) {
+            clearInterval(this.tokenRefreshInterval);
+            this.tokenRefreshInterval = null;
+        }
+        
         this.listeners = {};
         this.reconnectAttempts = 0;
     }

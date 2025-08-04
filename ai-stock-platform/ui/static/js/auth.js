@@ -4,7 +4,35 @@
  * Author: daparthi001
  */
 
+// Set up automatic token validation and refresh
+function setupTokenRefresh() {
+    // Check token validity every 5 minutes
+    setInterval(() => {
+        if (window.authUtils && window.authUtils.isAuthenticated()) {
+            // Verify token validity 
+            if (!window.authUtils.validateToken()) {
+                console.warn('Auth token validation failed, attempting to refresh session');
+                // Here you could implement a silent refresh logic
+                // For now, we'll just notify about potential issues
+                
+                // If on dashboard or protected page, might want to redirect to login
+                if (window.location.pathname.includes('/dashboard') || 
+                    window.location.pathname.includes('/portfolio')) {
+                    // Instead of immediate redirect, show a warning first
+                    if (!window._tokenWarningShown) {
+                        window._tokenWarningShown = true;
+                        console.warn('Session may be expired. Please refresh the page if you experience any issues.');
+                    }
+                }
+            }
+        }
+    }, 5 * 60 * 1000); // Check every 5 minutes
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Set up token refresh mechanism
+    setupTokenRefresh();
+    
     // Password visibility toggle
     const toggleButtons = document.querySelectorAll('.password-toggle');
     
@@ -96,15 +124,23 @@ document.addEventListener('DOMContentLoaded', function() {
                                 }
                             }
                             
-                            // Store token in localStorage for cross-tab sync
+                            // Store token in localStorage AND sessionStorage for cross-tab sync and session persistence
                             if (token) {
                                 localStorage.setItem('qvai_token', token);
+                                sessionStorage.setItem('qvai_token', token);
+                                
+                                // Also store in a longer expiration cookie as backup
+                                const expiryDate = new Date();
+                                expiryDate.setDate(expiryDate.getDate() + 7); // 7 days expiry
+                                document.cookie = `qvai_token=${token}; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
                                 
                                 // Dispatch event for cross-tab sync
                                 const authEvent = new CustomEvent('qvai_auth_event', {
                                     detail: { action: 'login', token: token }
                                 });
                                 window.dispatchEvent(authEvent);
+                                
+                                console.log('Authentication token stored successfully');
                             }
                             
                             // Navigate to the redirected URL
@@ -221,15 +257,62 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Global auth utilities object
 window.authUtils = {
-    // Get stored authentication token
+    // Get stored authentication token with comprehensive fallback strategy
     getToken: function() {
         // First check for qvai_token (new standard)
-        const token = localStorage.getItem('qvai_token') || 
-                     // Fallback to legacy tokens
-                     localStorage.getItem('access_token') || 
-                     sessionStorage.getItem('access_token') ||
-                     this.getTokenFromCookie();
+        let token = localStorage.getItem('qvai_token') || 
+                    sessionStorage.getItem('qvai_token') ||
+                    // Fallback to legacy tokens
+                    localStorage.getItem('access_token') || 
+                    sessionStorage.getItem('access_token') ||
+                    this.getTokenFromCookie();
+                    
+        // If no token found, try to get it from cookie directly
+        if (!token) {
+            // This is a more direct cookie parsing approach as a last resort
+            const cookies = document.cookie.split(';');
+            for (const cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'qvai_token') {
+                    token = value;
+                    break;
+                } else if (name === 'access_token') {
+                    token = value;
+                    break;
+                }
+            }
+        }
+        
+        // If token exists but has 'Bearer ' prefix, clean it up
+        if (token && token.startsWith('Bearer ')) {
+            token = token.replace('Bearer ', '');
+            
+            // Update all storage locations with clean token for consistency
+            this.setToken(token, true);
+        }
+        
         return token;
+    },
+    
+    // Check if user is authenticated
+    isAuthenticated: function() {
+        return !!this.getToken();
+    },
+    
+    // Verify token is still valid (can be expanded with actual validation)
+    validateToken: function() {
+        const token = this.getToken();
+        if (!token) return false;
+        
+        try {
+            // Simple validation - check if token appears to be a JWT
+            // A more robust solution would verify with the server
+            const parts = token.split('.');
+            return parts.length === 3;
+        } catch (e) {
+            console.error('Token validation error:', e);
+            return false;
+        }
     },
     
     // Get token from cookie
