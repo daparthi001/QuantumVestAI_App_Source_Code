@@ -101,6 +101,16 @@ EOL
     [ -f "/app/core/security/authentication.py" ] || echo "Warning: authentication.py is missing"
     [ -f "/app/core/security/tokens.py" ] || echo "Warning: tokens.py is missing"
     [ -f "/app/core/security/websocket_permissions.py" ] || echo "Warning: websocket_permissions.py is missing"
+    
+    # Fix API_PREFIX issue in authentication.py if present
+    if [ -f "/app/core/security/authentication.py" ]; then
+        echo "Checking for API_PREFIX issue in authentication.py..."
+        if grep -q "settings.API_PREFIX" /app/core/security/authentication.py; then
+            echo "Fixing API_PREFIX issue..."
+            sed -i "s/settings.API_PREFIX/settings.API_V1_STR/g" /app/core/security/authentication.py
+            echo "Fixed API_PREFIX issue in authentication.py"
+        fi
+    fi
 }
 
 # Run database migration to ensure schema is up to date

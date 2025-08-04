@@ -27,11 +27,22 @@ COPY core /app/core
 # Make sure the core/security directory exists
 RUN mkdir -p /app/core/security
 
-# Make sure the websocket_permissions.py file is copied
+# Make sure the websocket_permissions.py file is copied 
+# and ensure API_PREFIX is updated to API_V1_STR
 COPY core/security/websocket_permissions.py /app/core/security/
 COPY core/security/tokens.py /app/core/security/
 COPY core/security/authentication.py /app/core/security/
 COPY core/security/__init__.py /app/core/security/
+
+# Apply API_PREFIX fix
+RUN if [ -f "/app/core/security/authentication.py" ] && grep -q "settings.API_PREFIX" /app/core/security/authentication.py; then \
+        sed -i "s/settings.API_PREFIX/settings.API_V1_STR/g" /app/core/security/authentication.py; \
+    fi
+
+# Apply fix to security.py as well
+RUN if [ -f "/app/core/security.py" ] && grep -q "settings.API_PREFIX" /app/core/security.py; then \
+        sed -i "s/settings.API_PREFIX/settings.API_V1_STR/g" /app/core/security.py; \
+    fi
 
 
 # Set environment variables

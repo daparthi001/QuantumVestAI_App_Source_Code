@@ -21,7 +21,7 @@ from sqlalchemy.orm import Session
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 # OAuth2 scheme for token
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_PREFIX}/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/token")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify password against hash."""
