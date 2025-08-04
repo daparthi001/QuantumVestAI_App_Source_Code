@@ -11,6 +11,9 @@ import sys
 from datetime import datetime, timedelta
 from logging.config import dictConfig
 from pathlib import Path
+from typing import Optional
+
+from fastapi import Form
 
 # Ensure the repository root is first on ``sys.path`` so imports like
 # ``ui.routes`` resolve to the compatibility packages located at the
@@ -430,7 +433,7 @@ async def index(request: Request):
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request, msg: str = None):
-    """Enhanced login page"""
+    """Enhanced login page - redirects to /auth/login for consistency"""
     try:
         request_id = getattr(request.state, 'request_id', 'unknown')
         
@@ -438,19 +441,34 @@ async def login_page(request: Request, msg: str = None):
         if AuthUtils.is_authenticated(request):
             return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
         
-        return get_templates(request).TemplateResponse(
-            "login.html", 
-            {
-                "request": request, 
-                "msg": msg,
-                "api_url": API_URL,
-                "request_id": request_id,
-            }
+        # Redirect to /auth/login for consistency
+        redirect_url = "/auth/login"
+        if msg:
+            redirect_url += f"?msg={msg}"
+            
+        return RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
+    except Exception as e:
+        logger.error(f"Error in login redirect: {str(e)}")
+        return HTMLResponse(
+            content="Login service unavailable. Please try again later.",
+            status_code=500
+        )
+        
+@app.post("/login")
+async def login_post_redirect(request: Request):
+    """Redirect POST requests to /login to /auth/login for consistency"""
+    try:
+        logger.info("Redirecting /login POST request to /auth/login")
+        
+        # Use redirect with 307 to preserve the POST method
+        return RedirectResponse(
+            url="/auth/login", 
+            status_code=status.HTTP_307_TEMPORARY_REDIRECT
         )
     except Exception as e:
-        logger.error(f"Error rendering login page: {str(e)}")
-        return HTMLResponse(
-            content=create_fallback_login_html(msg),
+        logger.error(f"Error in login post redirect: {str(e)}")
+        return JSONResponse(
+            content={"error": "Login service unavailable"},
             status_code=500
         )
 
@@ -724,6 +742,8 @@ async def logout_get(request: Request):
     
     response = RedirectResponse(url="/login?msg=Successfully logged out", status_code=status.HTTP_302_FOUND)
     response.delete_cookie("access_token")
+    response.delete_cookie("user_info")
+    response.delete_cookie("qvai_token")
     return response
 
 @app.get("/health")

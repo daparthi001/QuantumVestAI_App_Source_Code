@@ -291,6 +291,24 @@ async def logout(request: Request):
         logger.error(f"Logout error: {str(e)}")
         return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
 
+@router.get("/test-auth-sync", response_class=HTMLResponse)
+async def test_auth_sync_page(request: Request):
+    """Test page for cross-tab authentication synchronization"""
+    try:
+        return get_templates(request).TemplateResponse(
+            "auth-sync-test.html",
+            {
+                "request": request,
+                "page_title": "Auth Sync Test - QuantumVestAI"
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error rendering auth sync test page: {str(e)}")
+        return HTMLResponse(
+            content="<h1>Error loading auth sync test page</h1>",
+            status_code=500
+        )
+
 @router.get("/profile", response_class=HTMLResponse)
 async def profile_page(request: Request):
     """User profile page"""

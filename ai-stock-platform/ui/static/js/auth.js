@@ -58,8 +58,72 @@ document.addEventListener('DOMContentLoaded', function() {
             LoadingManager.showButtonLoading(submitButton, 'Signing In...');
             
             try {
-                // Just submit the form normally - the server will handle it
-                loginForm.submit();
+                // Submit the form using fetch to handle the token sync
+                const formDataObj = Object.fromEntries(formData.entries());
+                fetch(loginForm.action, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams(formDataObj).toString(),
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Check if we were redirected to dashboard (successful login)
+                        if (response.redirected && response.url.includes('/dashboard')) {
+                            // Success! Parse cookies to extract token
+                            const cookies = document.cookie.split(';');
+                            let token = null;
+                            
+                            // First try to find qvai_token
+                            for (let cookie of cookies) {
+                                cookie = cookie.trim();
+                                if (cookie.startsWith('qvai_token=')) {
+                                    token = cookie.substring('qvai_token='.length);
+                                    break;
+                                }
+                            }
+                            
+                            // If no qvai_token, try access_token
+                            if (!token) {
+                                for (let cookie of cookies) {
+                                    cookie = cookie.trim();
+                                    if (cookie.startsWith('access_token=')) {
+                                        token = cookie.substring('access_token='.length).replace('Bearer ', '');
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            // Store token in localStorage for cross-tab sync
+                            if (token) {
+                                localStorage.setItem('qvai_token', token);
+                                
+                                // Dispatch event for cross-tab sync
+                                const authEvent = new CustomEvent('qvai_auth_event', {
+                                    detail: { action: 'login', token: token }
+                                });
+                                window.dispatchEvent(authEvent);
+                            }
+                            
+                            // Navigate to the redirected URL
+                            window.location.href = response.url;
+                        } else {
+                            // Form submission worked but we got a different page (login with errors)
+                            window.location.href = response.url;
+                        }
+                    } else {
+                        // Handle error response
+                        LoadingManager.hideButtonLoading(submitButton);
+                        UIErrorHandler.showError('Login failed. Please check your credentials and try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Login submission error:', error);
+                    LoadingManager.hideButtonLoading(submitButton);
+                    UIErrorHandler.showError('Login failed. Please try again.');
+                });
             } catch (error) {
                 console.error('Login submission error:', error);
                 LoadingManager.hideButtonLoading(submitButton);
@@ -159,7 +223,10 @@ document.addEventListener('DOMContentLoaded', function() {
 window.authUtils = {
     // Get stored authentication token
     getToken: function() {
-        const token = localStorage.getItem('access_token') || 
+        // First check for qvai_token (new standard)
+        const token = localStorage.getItem('qvai_token') || 
+                     // Fallback to legacy tokens
+                     localStorage.getItem('access_token') || 
                      sessionStorage.getItem('access_token') ||
                      this.getTokenFromCookie();
         return token;
@@ -167,7 +234,17 @@ window.authUtils = {
     
     // Get token from cookie
     getTokenFromCookie: function() {
-        const cookieValue = document.cookie
+        // First try qvai_token cookie
+        let cookieValue = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('qvai_token='));
+        
+        if (cookieValue) {
+            return cookieValue.split('=')[1];
+        }
+        
+        // Fallback to access_token cookie
+        cookieValue = document.cookie
             .split('; ')
             .find(row => row.startsWith('access_token='));
         
@@ -179,19 +256,44 @@ window.authUtils = {
     
     // Store authentication token
     setToken: function(token, remember = false) {
+        // Always store in localStorage for cross-tab sync
+        localStorage.setItem('qvai_token', token);
+        
+        // For backward compatibility
         if (remember) {
             localStorage.setItem('access_token', token);
         } else {
             sessionStorage.setItem('access_token', token);
         }
+        
+        // Set cookies for server-side auth
+        document.cookie = `qvai_token=${token}; path=/; samesite=lax`;
+        document.cookie = `access_token=Bearer ${token}; path=/; samesite=lax`;
+        
+        // Dispatch event for cross-tab sync
+        const authEvent = new CustomEvent('qvai_auth_event', {
+            detail: { action: 'login', token: token }
+        });
+        window.dispatchEvent(authEvent);
     },
     
     // Remove authentication token
     removeToken: function() {
+        // Remove all token storage
+        localStorage.removeItem('qvai_token');
         localStorage.removeItem('access_token');
         sessionStorage.removeItem('access_token');
-        // Also remove from cookie
-        document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        
+        // Remove cookies
+        document.cookie = 'qvai_token=; Max-Age=0; path=/';
+        document.cookie = 'access_token=; Max-Age=0; path=/';
+        document.cookie = 'user_info=; Max-Age=0; path=/';
+        
+        // Dispatch event for cross-tab sync
+        const authEvent = new CustomEvent('qvai_auth_event', {
+            detail: { action: 'logout' }
+        });
+        window.dispatchEvent(authEvent);
     },
     
     // Check if user is authenticated

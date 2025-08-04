@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantumVestAI - Auth Sync Test</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1, h2 {
+            color: #4a6cf7;
+        }
+        .card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        button {
+            background-color: #4a6cf7;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #3551d1;
+        }
+        code {
+            background-color: #f5f5f5;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        #console {
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            height: 300px;
+            overflow: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .instructions {
+            background-color: #fffde7;
+            border-left: 4px solid #ffd600;
+            padding: 10px 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>QuantumVestAI - Cross-Tab Authentication Test</h1>
+    
+    <div class="instructions">
+        <p>This page allows you to test the cross-tab authentication synchronization.</p>
+        <p>Open this page in multiple tabs to verify that login/logout actions sync between tabs.</p>
+    </div>
+    
+    <div class="card">
+        <h2>Authentication Status</h2>
+        <p>Current auth token: <code id="currentToken">None</code></p>
+        <p>Cookie token: <code id="cookieToken">None</code></p>
+        
+        <button onclick="simulateLogin()">Simulate Login</button>
+        <button onclick="simulateLogout()">Simulate Logout</button>
+    </div>
+    
+    <div class="card">
+        <h2>Test Individual Features</h2>
+        <button onclick="testLoginSync()">Test Login Sync</button>
+        <button onclick="testLogoutSync()">Test Logout Sync</button>
+        <button onclick="testRedirectBehavior()">Test Redirect Logic</button>
+        <button onclick="testAll()">Run All Tests</button>
+    </div>
+    
+    <div class="card">
+        <h2>Console Output</h2>
+        <div id="console"></div>
+    </div>
+
+    <!-- Auth Sync Script -->
+    <script src="../static/js/auth-sync.js"></script>
+    
+    <!-- Test Script -->
+    <script src="../static/js/test-auth-sync.js"></script>
+    
+    <script>
+        // Override console.log to capture output
+        const originalConsoleLog = console.log;
+        console.log = function() {
+            const args = Array.from(arguments);
+            originalConsoleLog.apply(console, args);
+            
+            // Add to console div
+            const consoleDiv = document.getElementById('console');
+            const message = args.map(arg => {
+                if (typeof arg === 'object') {
+                    return JSON.stringify(arg);
+                }
+                return arg;
+            }).join(' ');
+            
+            consoleDiv.innerHTML += message + '\n';
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        };
+        
+        // Function to update display
+        function updateDisplay() {
+            const tokenElem = document.getElementById('currentToken');
+            const cookieElem = document.getElementById('cookieToken');
+            
+            const token = localStorage.getItem('qvai_token') || 'None';
+            tokenElem.textContent = token;
+            
+            const cookieToken = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('qvai_token='));
+                
+            cookieElem.textContent = cookieToken ? cookieToken.split('=')[1] : 'None';
+        }
+        
+        // Simulate login
+        function simulateLogin() {
+            const token = 'test_token_' + Math.random().toString(36).substring(2);
+            console.log('Simulating login with token:', token);
+            
+            localStorage.setItem('qvai_token', token);
+            document.cookie = `qvai_token=${token}; path=/; samesite=lax`;
+            document.cookie = `access_token=Bearer ${token}; path=/; samesite=lax`;
+            
+            updateDisplay();
+        }
+        
+        // Simulate logout
+        function simulateLogout() {
+            console.log('Simulating logout');
+            
+            localStorage.removeItem('qvai_token');
+            document.cookie = 'qvai_token=; Max-Age=0; path=/';
+            document.cookie = 'access_token=; Max-Age=0; path=/';
+            
+            updateDisplay();
+        }
+        
+        // Update display on page load
+        document.addEventListener('DOMContentLoaded', updateDisplay);
+        
+        // Update display when storage changes
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'qvai_token') {
+                console.log('Token changed in another tab:', e.newValue);
+                updateDisplay();
+            }
+        });
+        
+        console.log('Auth sync test page loaded. Open multiple tabs to test synchronization.');
+    </script>
+</body>
+</html>

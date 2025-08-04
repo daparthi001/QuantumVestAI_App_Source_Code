@@ -93,7 +93,7 @@ class AuthService {
       if (response.data.status === 'success' && response.data.data.access_token) {
         const token = response.data.data.access_token;
 
-        // Store token in local storage
+        // Store token in local storage - this triggers storage event for cross-tab sync
         localStorage.setItem('qvai_token', token);
 
         // Persist token in cookies so server-rendered pages stay authenticated
@@ -105,6 +105,14 @@ class AuthService {
 
         // Get user information
         await this.fetchCurrentUser();
+        
+        // Trigger auth event for cross-tab synchronization
+        if (typeof window !== 'undefined' && window.dispatchEvent) {
+          const authEvent = new CustomEvent('qvai_auth_event', {
+            detail: { action: 'login', token: token }
+          });
+          window.dispatchEvent(authEvent);
+        }
       }
 
       return response.data;
@@ -180,6 +188,14 @@ class AuthService {
     // Clear current user and token from subjects
     this.currentUserSubject.next(null);
     this.tokenSubject.next(null);
+    
+    // Trigger auth event for cross-tab synchronization
+    if (typeof window !== 'undefined' && window.dispatchEvent) {
+      const authEvent = new CustomEvent('qvai_auth_event', {
+        detail: { action: 'logout' }
+      });
+      window.dispatchEvent(authEvent);
+    }
   }
 
   /**

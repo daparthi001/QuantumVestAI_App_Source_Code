@@ -174,7 +174,7 @@
                 <a href="/profile" class="quantum-nav-link hover:bg-gray-700 active:text-blue-400 {% if '/profile' in request.url.path %}active{% endif %}" data-i18n="nav.profile">Profile</a>
                 <a href="/logout" class="quantum-nav-link hover:bg-gray-700 active:text-blue-400" data-i18n="nav.logout">Logout</a>
                 {% else %}
-                <a href="/login" class="quantum-nav-link hover:bg-gray-700 active:text-blue-400 {% if '/login' in request.url.path %}active{% endif %}" data-i18n="nav.login">Login</a>
+                <a href="/auth/login" class="quantum-nav-link hover:bg-gray-700 active:text-blue-400 {% if '/auth/login' in request.url.path %}active{% endif %}" data-i18n="nav.login">Login</a>
                 <a href="/auth/register" class="quantum-nav-link hover:bg-gray-700 active:text-blue-400 {% if '/auth/register' in request.url.path %}active{% endif %}" data-i18n="nav.register">Register</a>
                 {% endif %}
                 <div class="nav-utilities">
@@ -360,7 +360,7 @@
                     </div>
                     {% else %}
                     <div class="auth-buttons">
-                        <a href="/login" class="btn btn-outline-primary btn-sm" data-i18n="nav.login">Login</a>
+                        <a href="/auth/login" class="btn btn-outline-primary btn-sm" data-i18n="nav.login">Login</a>
                         <a href="/auth/register" class="btn btn-primary btn-sm" data-i18n="nav.register">Register</a>
                     </div>
                     {% endif %}
@@ -536,6 +536,9 @@
             // Optionally send to error tracking service
         });
     </script>
+    
+    <!-- Cross-tab Authentication Synchronization -->
+    <script src="{{ get_asset_url('js/auth-sync.js') }}"></script>
     
     {% block scripts %}{% endblock %}
     

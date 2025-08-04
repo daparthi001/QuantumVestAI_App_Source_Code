@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function addToWatchlist(symbol) {
     // Check if user is authenticated
     if (!window.authUtils || !window.authUtils.isAuthenticated()) {
-        window.location.href = `/login?next=${encodeURIComponent(window.location.pathname)}`;
+        window.location.href = `/auth/login?next=${encodeURIComponent(window.location.pathname)}`;
         return;
     }
 
