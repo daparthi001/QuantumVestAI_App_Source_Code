@@ -187,20 +187,24 @@ class Settings:
 def get_settings() -> Settings:
     """Return a cached settings instance.
 
-    Some hosting environments define a ``DATABASE`` variable which Pydantic
-    interprets as a JSON representation of our nested ``database`` model.  The
-    UI service only expects individual ``DB_*`` variables, so this unexpected
-    variable results in ``JSONDecodeError`` when instantiating :class:`Settings`.
-    Temporarily removing ``DATABASE`` avoids the parsing error while preserving
-    the original environment for any callers that rely on it.
+    Some hosting environments define ``DATABASE`` or ``database`` variables
+    which Pydantic interprets as JSON representations of our nested
+    ``database`` model. The UI service only expects individual ``DB_*``
+    variables, so these unexpected variables result in ``JSONDecodeError`` when
+    instantiating :class:`Settings`. Temporarily removing them avoids the
+    parsing error while preserving the original environment for any callers
+    that rely on it.
     """
 
-    removed = os.environ.pop("DATABASE", None)
+    removed_vars = {
+        key: os.environ.pop(key)
+        for key in ("DATABASE", "database")
+        if key in os.environ
+    }
     try:
         return Settings()
     finally:
-        if removed is not None:
-            os.environ["DATABASE"] = removed
+        os.environ.update(removed_vars)
 
 
 # Instantiate settings for modules that import ``settings`` directly

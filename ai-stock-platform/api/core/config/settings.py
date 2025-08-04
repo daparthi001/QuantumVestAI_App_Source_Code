@@ -111,18 +111,21 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Return an initialized :class:`Settings` instance.
 
-    The hosting environment may define an environment variable named
-    ``DATABASE`` which conflicts with Pydantic's handling of the nested
-    ``database`` model.  Temporarily removing this variable prevents JSON
-    decoding errors during instantiation.
+    The hosting environment may define environment variables named
+    ``DATABASE`` or ``database`` which conflict with Pydantic's handling of the
+    nested ``database`` model. Temporarily removing these variables prevents
+    JSON decoding errors during instantiation.
     """
 
-    removed = os.environ.pop("DATABASE", None)
+    removed_vars = {
+        key: os.environ.pop(key)
+        for key in ("DATABASE", "database")
+        if key in os.environ
+    }
     try:
         return Settings()
     finally:
-        if removed is not None:
-            os.environ["DATABASE"] = removed
+        os.environ.update(removed_vars)
 
 # Global settings instance
 settings = get_settings()
