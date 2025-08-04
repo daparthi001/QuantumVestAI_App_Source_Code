@@ -4,7 +4,7 @@ Token handling functionality.
 from datetime import datetime, timedelta
 from typing import Optional
 
-from jose import jwt
+from jose import jwt, JWTError
 from pydantic import BaseModel
 
 from core.config import get_settings
@@ -42,3 +42,12 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 def decode_token(token: str) -> Optional[BaseModel]:
     """Convenience wrapper to decode a JWT token."""
     return TokenHandler.decode_token(token)
+
+
+def validate_token(token: str) -> bool:
+    """Return ``True`` if the provided JWT is valid, ``False`` otherwise."""
+    try:
+        TokenHandler.decode_token(token)
+        return True
+    except JWTError:
+        return False
