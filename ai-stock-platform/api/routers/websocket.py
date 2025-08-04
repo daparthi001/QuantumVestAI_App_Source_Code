@@ -26,8 +26,8 @@ manager = ConnectionManager()
 
 
 @router.websocket("/ws/market-data")
-async def market_data_ws(websocket: WebSocket, token: str = Query(...)):
-    if not validate_token(token):
+async def market_data_ws(websocket: WebSocket, token: Optional[str] = Query(None)):
+    if token and not validate_token(token):
         await websocket.close(code=1008)
         return
     await websocket_endpoint(websocket, "market-data", token)
