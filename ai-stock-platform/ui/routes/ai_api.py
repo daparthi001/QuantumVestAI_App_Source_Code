@@ -9,6 +9,7 @@ import httpx
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
+# Ensure the router prefix exactly matches what the frontend JS is requesting
 router = APIRouter(prefix="/api/ai", tags=["ai-data"])
 logger = logging.getLogger(__name__)
 

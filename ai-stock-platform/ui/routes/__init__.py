@@ -49,6 +49,11 @@ except ImportError:
     api_proxy_router = None
 
 try:
+    from .ai_api import router as ai_api_router
+except ImportError:
+    ai_api_router = None
+
+try:
     from .utils import router as utils_router
 except ImportError:
     utils_router = None
@@ -65,5 +70,6 @@ all_routers = [
         predictability_router,
         settings_router,
         api_proxy_router,
+        ai_api_router,
         utils_router
     ] if router is not None]

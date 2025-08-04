@@ -987,15 +987,45 @@ logger.info("QuantumVestAI UI application initialized successfully")
 # GZip compression middleware
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
-if __name__ == "__main__":
-    import uvicorn
-    logger.info("Starting QuantumVestAI UI - Complete Production Ready Application")
-    logger.info("Author: hemanth9398")
-    logger.info("Updated: 2025-07-07 21:54:42")
-    uvicorn.run(
-        "main:app", 
-        host="0.0.0.0", 
-        port=int(os.environ.get("PORT", 3000)), 
-        reload=os.environ.get("DEBUG", "false").lower() == "true",
-        log_level=log_level.lower()
-    )
+# Direct market data endpoint (backup for route issues) - Added 2025-08-04
+@app.get("/api/ai/market-data/{symbol}")
+async def direct_market_data(symbol: str, request: Request):
+    """Fallback market data endpoint directly in main.py"""
+    import logging
+    import time
+    from datetime import datetime
+    import httpx
+    
+    logger = logging.getLogger("direct_market_data")
+    BASE_CHART_URL = "https://query1.finance.yahoo.com/v8/finance/chart"
+    
+    try:
+        logger.info(f"Direct market data endpoint accessed for {symbol}")
+        
+        async with httpx.AsyncClient(timeout=10, headers={"User-Agent": "QuantumVestAI/1.0"}) as client:
+            r = await client.get(f"{BASE_CHART_URL}/{symbol}", 
+                              params={"range": "1d", "interval": "1m"})
+            r.raise_for_status()
+            data = r.json()
+            
+        chart = data.get("chart", {}).get("result")
+        if not chart:
+            raise Exception("Data not found")
+        result = chart[0]
+        timestamps = result.get("timestamp", [])
+        prices = result.get("indicators", {}).get("quote", [{}])[0].get("close", [])
+        volume = result.get("indicators", {}).get("quote", [{}])[0].get("volume", [])
+        
+        return {
+            "symbol": symbol.upper(),
+            "timestamps": timestamps,
+            "prices": prices,
+            "volume": volume,
+            "timestamp": datetime.utcnow().isoformat(),
+            "source": "direct_endpoint"
+        }
+    except Exception as e:
+        logger.error(f"Error fetching market data for {symbol}: {e}")
+        return {"error": str(e), "status": "failed", "timestamp": datetime.utcnow().isoformat()}
+
+# Add routes from the `routes` module
