@@ -52,6 +52,20 @@ async def websocket_endpoint(
 
         # Require and verify token, except for public market data stream
         user = None
+        # --- Begin: Extract token from cookie if not present in query param ---
+        if not token:
+            cookie_header = websocket.headers.get("cookie")
+            if cookie_header:
+                import re
+
+                match = re.search(r"access_token=([^;]+)", cookie_header)
+                if match:
+                    cookie_token = match.group(1)
+                    # Remove 'Bearer ' prefix if present
+                    if cookie_token.startswith("Bearer "):
+                        cookie_token = cookie_token[len("Bearer ") :]
+                    token = cookie_token
+        # --- End: Extract token from cookie ---
         if not token:
             if client_id == "market-data":
                 logger.info("Allowing anonymous WebSocket connection for market-data")
