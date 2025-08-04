@@ -16,7 +16,7 @@ from core.security import (get_current_active_user, get_current_user,
 from db.models.user import User
 from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, Field, ValidationError, validator
 from schemas.auth import TokenResponse, UserBase
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -215,10 +215,20 @@ async def register(
 )
 async def get_me(current_user: User = Depends(get_current_active_user)):
     """Get current user"""
+    try:
+        user_data = UserBase(**current_user.__dict__)
+    except ValidationError as e:
+        logger.error(f"Validation error for current_user: {e}")
+        logger.error(f"Invalid user data: {current_user.__dict__}")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Invalid user data",
+        )
+
     return StandardResponse(
         status="success",
         message="User details retrieved",
-        data=UserBase(**current_user.__dict__),
+        data=user_data,
     )
 
 

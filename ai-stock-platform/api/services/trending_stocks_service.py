@@ -166,6 +166,8 @@ class TrendingStocksService:
                 await asyncio.sleep(delay)
         
         logger.error(f"All attempts to fetch Yahoo trending symbols failed. Last error: {last_exception}")
+        if last_exception:
+            logger.error(f"Detailed error: {repr(last_exception)}")
         # Return default trending tech stocks as fallback
         return {"stocks": ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "TSLA", "NVDA", "AMD", "INTC", "NFLX"]}
 
