@@ -42,11 +42,32 @@ else
     exit 1
 fi
 
+# Build Docker image with fix
+echo "Building Docker image with WebSocket fix..."
+cd "${API_DIR}"
+IMAGE_TAG="websocket-fix-$(date +%Y%m%d)"
+DOCKER_REPO="quantumvestai"
+
+docker build -t ${DOCKER_REPO}:${IMAGE_TAG} .
+
+# Push to container registry if available
+if [ -n "${AWS_ACCOUNT_ID}" ] && [ -n "${AWS_REGION}" ]; then
+    echo "Pushing image to ECR..."
+    aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+    docker tag ${DOCKER_REPO}:${IMAGE_TAG} ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${DOCKER_REPO}:${IMAGE_TAG}
+    docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${DOCKER_REPO}:${IMAGE_TAG}
+    FULL_IMAGE="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${DOCKER_REPO}:${IMAGE_TAG}"
+else
+    FULL_IMAGE="${DOCKER_REPO}:${IMAGE_TAG}"
+    echo "AWS credentials not found, image will not be pushed to ECR"
+    echo "Using local image: ${FULL_IMAGE}"
+fi
+
 echo "Creating a backup of the current API deployment..."
 kubectl get deployment quantumvestai-dev-api -o yaml > quantumvestai-dev-api-backup-$(date +%Y%m%d%H%M%S).yaml
 
-echo "Restarting API deployment to apply changes..."
-kubectl rollout restart deployment quantumvestai-dev-api
+echo "Updating API deployment with new image..."
+kubectl set image deployment/quantumvestai-dev-api api=${FULL_IMAGE}
 
 echo "Monitoring rollout status..."
 kubectl rollout status deployment quantumvestai-dev-api

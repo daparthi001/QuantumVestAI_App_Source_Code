@@ -68,6 +68,41 @@ python -c "import api; print(f'API module found and app imported. Routes: {len(a
     exit 1
 }
 
+# Check if the security module is properly installed
+echo "Verifying core.security module..."
+python -c "from core.security import get_current_active_user; print('Security module imported successfully!')" || {
+    echo "Failed to import security module. Creating necessary files..."
+    
+    # Create directory if it doesn't exist
+    mkdir -p /app/core/security
+    
+    # Create __init__.py if missing
+    if [ ! -f "/app/core/security/__init__.py" ]; then
+        echo "Creating /app/core/security/__init__.py"
+        cat > /app/core/security/__init__.py <<EOL
+"""
+Core Security Module Init File
+"""
+# Re-export everything to maintain compatibility
+from core.security.tokens import create_access_token, validate_token
+from core.security.authentication import (
+    get_current_user,
+    get_current_active_user,
+    check_admin_role,
+    verify_password,
+    get_password_hash,
+    pwd_context,
+    oauth2_scheme
+)
+EOL
+    fi
+    
+    # Check if other necessary files exist and create them if needed
+    [ -f "/app/core/security/authentication.py" ] || echo "Warning: authentication.py is missing"
+    [ -f "/app/core/security/tokens.py" ] || echo "Warning: tokens.py is missing"
+    [ -f "/app/core/security/websocket_permissions.py" ] || echo "Warning: websocket_permissions.py is missing"
+}
+
 # Run database migration to ensure schema is up to date
 echo "Running startup database migrations..."
 python /app/scripts/database_migrator.py || {

@@ -11,8 +11,7 @@ from core.config import settings
 from core.database import get_db_session
 from core.models.response import StandardResponse
 from core.security import (get_current_active_user, get_current_user,
-                           get_password_hash, verify_password)
-from core.security.tokens import create_access_token
+                           get_password_hash, verify_password, create_access_token)
 # Use the SQLAlchemy model from the consolidated db.models package
 from db.models.user import User
 from fastapi import APIRouter, Body, Depends, HTTPException, Response, status

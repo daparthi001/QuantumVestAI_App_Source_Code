@@ -24,6 +24,16 @@ COPY . .
 # Copy the shared core package for settings and utilities
 COPY core /app/core
 
+# Make sure the core/security directory exists
+RUN mkdir -p /app/core/security
+
+# Make sure the websocket_permissions.py file is copied
+COPY core/security/websocket_permissions.py /app/core/security/
+COPY core/security/tokens.py /app/core/security/
+COPY core/security/authentication.py /app/core/security/
+COPY core/security/__init__.py /app/core/security/
+
+
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
