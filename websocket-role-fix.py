@@ -138,6 +138,11 @@ def check_websocket_permissions(
     if endpoint.endswith("/market-data"):
         logger.info(f"Allowing access to market data for role: {role}")
         return True
+    
+    # Free-tier users can access all endpoints
+    if role == "free":
+        logger.info(f"Allowing unrestricted access for free-tier user: {role}")
+        return True
         
     # Default deny for unhandled cases
     logger.warning(f"Access denied to {endpoint} for role {role}")
