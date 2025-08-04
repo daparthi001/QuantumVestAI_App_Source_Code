@@ -36,6 +36,61 @@
         if (savedLang) {
             document.documentElement.setAttribute('lang', savedLang);
         }
+        // Add preloader styling to prevent content flash
+        document.write(`
+            <style>
+                #quantum-preloader {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: var(--bg-primary, #121212);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 9999;
+                    transition: opacity 0.3s;
+                }
+                #quantum-preloader.hidden {
+                    opacity: 0;
+                    pointer-events: none;
+                }
+                .quantum-spinner {
+                    width: 50px;
+                    height: 50px;
+                    border: 3px solid rgba(255,255,255,0.1);
+                    border-top-color: #4facfe;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                }
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+                body.auth-redirecting {
+                    visibility: hidden;
+                }
+            </style>
+        `);
+        
+        // Early auth check and redirect
+        (function() {
+            // Check for home page where redirect is needed
+            if (window.location.pathname === '/') {
+                // Check cookies and localStorage for auth token
+                const hasTokenInCookie = document.cookie.includes('qvai_token=') || document.cookie.includes('access_token=');
+                const hasTokenInStorage = localStorage.getItem('qvai_token') || localStorage.getItem('access_token') || 
+                                        sessionStorage.getItem('qvai_token') || sessionStorage.getItem('access_token');
+                
+                // If authenticated, prevent content flash and redirect
+                if (hasTokenInCookie || hasTokenInStorage) {
+                    // Add body class to prevent content flash
+                    document.documentElement.classList.add('auth-redirecting');
+                    window.location.href = '/dashboard';
+                }
+            }
+        })();
+        
         // Sync auth token from cookie to localStorage for SPA compatibility
         (function () {
             const tokenKey = 'qvai_token';
@@ -118,6 +173,10 @@
     {% block head_extra %}{% endblock %}
 </head>
 <body class="{% if dark_mode %}dark-mode{% endif %} quantum-app quantum-nextgen glow-theme" data-theme="{% if dark_mode %}dark{% else %}light{% endif %}">
+    <!-- Preloader for smooth transitions -->
+    <div id="quantum-preloader">
+        <div class="quantum-spinner"></div>
+    </div>
     <!-- PWA Installation Banner -->
     <div id="pwa-install-banner" class="pwa-banner nextgen-pwa-banner nextgen-glass" style="display: none;">
         <div class="pwa-banner-content nextgen-pwa-content">
@@ -639,5 +698,22 @@
             }
         }
     </style>
+    
+    <!-- Preloader handler script -->
+    <script>
+        // Hide preloader after the page has fully loaded
+        window.addEventListener('load', function() {
+            const preloader = document.getElementById('quantum-preloader');
+            if (preloader) {
+                preloader.classList.add('hidden');
+                setTimeout(() => {
+                    preloader.style.display = 'none';
+                }, 300);
+            }
+            
+            // Remove auth-redirecting class if it was added
+            document.documentElement.classList.remove('auth-redirecting');
+        });
+    </script>
 </body>
 </html>

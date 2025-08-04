@@ -33,6 +33,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set up token refresh mechanism
     setupTokenRefresh();
     
+    // Hide preloader after authentication check is complete
+    const preloader = document.getElementById('quantum-preloader');
+    if (preloader) {
+        // Add a slight delay to ensure smooth transition
+        setTimeout(() => {
+            preloader.classList.add('hidden');
+            setTimeout(() => {
+                preloader.style.display = 'none';
+            }, 300);
+        }, 300);
+    }
+    
     // Password visibility toggle
     const toggleButtons = document.querySelectorAll('.password-toggle');
     
@@ -381,7 +393,30 @@ window.authUtils = {
     
     // Check if user is authenticated
     isAuthenticated: function() {
-        return !!this.getToken();
+        const token = this.getToken();
+        const isAuth = !!token;
+        
+        // If we're on the home page and authenticated, redirect to dashboard
+        if (isAuth && window.location.pathname === '/') {
+            console.log('User is authenticated on home page, redirecting to dashboard');
+            
+            // Add auth-redirecting class to prevent flashing content
+            document.documentElement.classList.add('auth-redirecting');
+            
+            // Show preloader
+            const preloader = document.getElementById('quantum-preloader');
+            if (preloader) {
+                preloader.classList.remove('hidden');
+                preloader.style.display = 'flex';
+            }
+            
+            // Redirect with a short delay to allow preloader to show
+            setTimeout(() => {
+                window.location.href = '/dashboard';
+            }, 100);
+        }
+        
+        return isAuth;
     },
     
     // Logout user

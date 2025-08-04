@@ -4,13 +4,16 @@ Created: 2025-05-19 03:43:23
 Author: daparthi001
 """
 import logging
+import urllib.parse
 from datetime import datetime
 from typing import Optional
 
 from core.security import get_current_user, validate_token
 from core.middleware.cors import is_origin_allowed
+from core.config import settings
 from db.models.user import User
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
+from jose import JWTError, jwt
 
 # Import the local websocket manager using a relative import to avoid package
 # resolution issues when the application is executed as a module
@@ -27,31 +30,252 @@ manager = ConnectionManager()
 
 @router.websocket("/ws/market-data")
 async def market_data_ws(websocket: WebSocket, token: Optional[str] = Query(None)):
+    """WebSocket endpoint for market data with /ws/ prefix."""
     # For market-data endpoint, we'll allow connections even without a token
     # This ensures backward compatibility with clients that don't send tokens
     
-    # First, try to get token from query params if not provided directly
+    # Accept connection immediately to prevent 403 errors
+    logger.info("WebSocket connection attempt to /ws/market-data")
+    try:
+        await websocket.accept()
+        logger.info("WebSocket connection to /ws/market-data accepted")
+    except Exception as e:
+        logger.error(f"Error accepting WebSocket connection: {str(e)}")
+        return
+    
+    try:
+        # Extract token from various sources
+        if not token:
+            # Try query params
+            query_params = dict(websocket.query_params)
+            token = query_params.get("token")
+            
+            # Try cookies
+            if not token:
+                cookie_header = websocket.headers.get("cookie")
+                if cookie_header:
+                    import re
+                    # Try qvai_token (new standard)
+                    match = re.search(r"qvai_token=([^;]+)", cookie_header)
+                    if match:
+                        token = match.group(1)
+                        logger.info("Found token in qvai_token cookie")
+                    else:
+                        # Fall back to access_token
+                        match = re.search(r"access_token=([^;]+)", cookie_header)
+                        if match:
+                            token = match.group(1)
+                            logger.info("Found token in access_token cookie")
+            
+            # Try authorization header
+            if not token:
+                auth_header = websocket.headers.get("authorization")
+                if auth_header and auth_header.lower().startswith("bearer "):
+                    token = auth_header.split(" ", 1)[1]
+                    logger.info("Found token in authorization header")
+        
+        # Clean token if present
+        if token and token.startswith('Bearer '):
+            token = token[7:]
+        
+        # URL decode the token if necessary
+        if token and '%' in token:
+            token = urllib.parse.unquote(token)
+        
+        # Try to validate token but continue regardless
+        user_id = "anonymous"
+        if token:
+            try:
+                is_valid = validate_token(token)
+                logger.info(f"Market data token validation: {is_valid}")
+                
+                # Extract user ID if possible
+                try:
+                    payload = jwt.decode(
+                        token,
+                        settings.JWT_SECRET.get_secret_value(),
+                        algorithms=[settings.JWT_ALGORITHM]
+                    )
+                    user_id = payload.get("sub", "anonymous")
+                except Exception:
+                    pass
+            except Exception as e:
+                logger.warning(f"Token validation error: {str(e)}")
+        
+        # Connect to manager
+        client_id = f"market-data:{user_id}"
+        await manager.connect(websocket, client_id)
+        logger.info(f"WebSocket connected: {client_id}")
+        
+        # Handle messages
+        try:
+            while True:
+                data = await websocket.receive_json()
+                
+                # Add metadata
+                data["timestamp"] = datetime.utcnow().isoformat()
+                data["client_id"] = client_id
+                
+                # Process message based on type
+                message_type = data.get("type")
+                if message_type == "subscribe":
+                    await handle_subscription(websocket, data, None)
+                elif message_type == "unsubscribe":
+                    await handle_unsubscription(websocket, data, None)
+                else:
+                    await websocket.send_json(
+                        {
+                            "error": "Unknown message type",
+                            "timestamp": datetime.utcnow().isoformat(),
+                        }
+                    )
+        
+        except WebSocketDisconnect:
+            await manager.disconnect(websocket, client_id)
+            logger.info(f"WebSocket disconnected: {client_id}")
+        
+        except Exception as e:
+            logger.error(f"WebSocket error: {str(e)}")
+            try:
+                await websocket.close(code=4000, reason=str(e))
+            except:
+                pass
+    
+    except Exception as e:
+        logger.error(f"Unhandled error in market_data_ws: {str(e)}")
+        try:
+            await websocket.close(code=4000, reason="Internal server error")
+        except:
+            pass
+    
+# Additional direct endpoint for /market-data (without /ws/ prefix)
+@router.websocket("/market-data")
+async def direct_market_data_ws(websocket: WebSocket, token: Optional[str] = Query(None)):
+    """Direct market data WebSocket endpoint to handle connections without the /ws/ prefix."""
+    logger.info("Connection to /market-data endpoint (without /ws/ prefix)")
+    
+    # Accept all connections to the direct endpoint to fix 403 errors
+    await websocket.accept()
+    logger.info("Direct market-data WebSocket connection accepted immediately")
+    
+    # Extract token from various sources
     if not token:
+        # Try query params
         query_params = dict(websocket.query_params)
         token = query_params.get("token")
-    
-    # Try to clean the token if present
-    if token:
-        # Remove 'Bearer ' prefix if present
-        if token.startswith('Bearer '):
-            token = token[7:]
-            
-        # Try validation but don't reject connection on failure
-        try:
-            validate_token(token)
-            logger.info(f"Valid token provided for market-data WebSocket")
-        except Exception as e:
-            logger.warning(f"Invalid token for market-data WebSocket: {str(e)}")
-            # We continue anyway for market-data
-    else:
-        logger.info("No token provided for market-data WebSocket")
         
-    await websocket_endpoint(websocket, "market-data", token)
+        # Try cookies
+        if not token:
+            cookie_header = websocket.headers.get("cookie")
+            if cookie_header:
+                import re
+                # Try qvai_token (new standard)
+                match = re.search(r"qvai_token=([^;]+)", cookie_header)
+                if match:
+                    token = match.group(1)
+                    logger.info("Found token in qvai_token cookie")
+                else:
+                    # Fall back to access_token
+                    match = re.search(r"access_token=([^;]+)", cookie_header)
+                    if match:
+                        token = match.group(1)
+                        logger.info("Found token in access_token cookie")
+        
+        # Try authorization header
+        if not token:
+            auth_header = websocket.headers.get("authorization")
+            if auth_header and auth_header.lower().startswith("bearer "):
+                token = auth_header.split(" ", 1)[1]
+                logger.info("Found token in authorization header")
+    
+    # Clean token if present
+    if token and token.startswith('Bearer '):
+        token = token[7:]
+    
+    # Log token status but don't close connection regardless of validation result
+    if token:
+        try:
+            valid = validate_token(token)
+            logger.info(f"Direct market-data token validation: {valid}")
+            user_id = "anonymous"
+            
+            # Get user info if possible but don't fail if we can't
+            try:
+                from jose import jwt
+                from core.config import settings
+                payload = jwt.decode(
+                    token,
+                    settings.JWT_SECRET.get_secret_value(),
+                    algorithms=[settings.JWT_ALGORITHM]
+                )
+                user_id = payload.get("sub", "anonymous")
+            except Exception:
+                pass
+                
+            # Connect to WebSocket manager
+            await manager.connect(websocket, f"market-data:{user_id}")
+            
+            # Process messages until client disconnects
+            while True:
+                data = await websocket.receive_json()
+                
+                # Add metadata
+                data["timestamp"] = datetime.utcnow().isoformat()
+                data["client_id"] = f"market-data:{user_id}"
+                
+                # Process message based on type
+                message_type = data.get("type")
+                if message_type == "subscribe":
+                    await handle_subscription(websocket, data, None)
+                elif message_type == "unsubscribe":
+                    await handle_unsubscription(websocket, data, None)
+                else:
+                    await websocket.send_json(
+                        {
+                            "error": "Unknown message type",
+                            "timestamp": datetime.utcnow().isoformat(),
+                        }
+                    )
+                    
+        except Exception as e:
+            logger.warning(f"Error in direct market-data endpoint: {str(e)}")
+    else:
+        logger.info("No token provided for direct market-data endpoint - continuing anonymously")
+        
+        try:
+            # Connect anonymously
+            await manager.connect(websocket, "market-data:anonymous")
+            
+            # Process messages until client disconnects
+            while True:
+                data = await websocket.receive_json()
+                
+                # Add metadata
+                data["timestamp"] = datetime.utcnow().isoformat()
+                data["client_id"] = "market-data:anonymous"
+                
+                # Process message based on type
+                message_type = data.get("type")
+                if message_type == "subscribe":
+                    await handle_subscription(websocket, data, None)
+                elif message_type == "unsubscribe":
+                    await handle_unsubscription(websocket, data, None)
+                else:
+                    await websocket.send_json(
+                        {
+                            "error": "Unknown message type",
+                            "timestamp": datetime.utcnow().isoformat(),
+                        }
+                    )
+        except WebSocketDisconnect:
+            logger.info("Anonymous WebSocket disconnected")
+            await manager.disconnect(websocket, "market-data:anonymous")
+        except Exception as e:
+            logger.error(f"Error in anonymous WebSocket connection: {str(e)}")
+            try:
+                await websocket.close(code=4000)
+            except:
+                pass
 
 
 @router.websocket("/ws/{client_id}")

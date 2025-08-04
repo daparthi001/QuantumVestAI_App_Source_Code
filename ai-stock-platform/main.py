@@ -82,7 +82,26 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
         response.headers["X-Request-ID"] = request_id
         return response
 
+class AuthRedirectMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        """Check if authenticated users accessing public routes should be redirected."""
+        path = request.url.path
+        
+        # Only check for the root path
+        if path == "/":
+            # Check for authentication tokens
+            access_token = request.cookies.get("access_token")
+            qvai_token = request.cookies.get("qvai_token")
+            
+            if access_token or qvai_token:
+                logger.info(f"AuthRedirectMiddleware: Authenticated user accessing {path}, redirecting to dashboard")
+                return RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+        
+        # For all other paths, continue normally
+        return await call_next(request)
+
 app.add_middleware(RequestIDMiddleware)
+app.add_middleware(AuthRedirectMiddleware)  # Add our authentication redirect middleware
 
 # CRITICAL FIX: Define origins before using it
 origins = os.environ.get("CORS_ORIGINS", "*").split(",")
@@ -114,6 +133,36 @@ logger.info("✓ Template global variables configured (now, API_URL, current_yea
 
 # Mount static files
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "ui" / "static")), name="static")
+
+# Add startup event to verify authentication configuration
+@app.on_event("startup")
+async def verify_auth_config():
+    """Verify authentication configuration on startup"""
+    logger.info("Verifying authentication configuration...")
+    
+    try:
+        # Check middleware registration
+        registered_middleware = [m.__class__.__name__ for m in app.middleware]
+        logger.info(f"Registered middleware: {', '.join(registered_middleware)}")
+        
+        # Verify AuthRedirectMiddleware is registered
+        if "AuthRedirectMiddleware" in registered_middleware:
+            logger.info("✅ AuthRedirectMiddleware is properly registered")
+        else:
+            logger.warning("⚠️ AuthRedirectMiddleware is not registered!")
+            
+        # Verify root route is registered
+        root_handlers = [route for route in app.routes if route.path == "/" and route.methods == {"GET"}]
+        if root_handlers:
+            logger.info(f"✅ Root route handler registered: {root_handlers[0]}")
+        else:
+            logger.warning("⚠️ No root route handler registered!")
+            
+        # Log startup success
+        logger.info("✅ Authentication configuration verification complete")
+        
+    except Exception as e:
+        logger.error(f"❌ Error verifying auth configuration: {str(e)}")
 
 # Import controllers - moved after app creation
 try:
@@ -479,8 +528,27 @@ async def index(request: Request):
     try:
         logger.info(f"Rendering landing page. API URL: {API_URL}")
 
-        if request.cookies.get("access_token"):
-            return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
+        # Check all possible token sources for authentication
+        # Try to get token from multiple sources
+        access_token = request.cookies.get("access_token")
+        qvai_token = request.cookies.get("qvai_token")
+        
+        # Add more detailed logging
+        if access_token:
+            logger.info("Found access_token cookie, redirecting to dashboard")
+        if qvai_token:
+            logger.info("Found qvai_token cookie, redirecting to dashboard")
+            
+        # If any token exists, redirect to dashboard
+        if access_token or qvai_token:
+            logger.info("User is authenticated, redirecting to dashboard")
+            # Set a special header to indicate this is an auth redirect (client can use this to show preloader)
+            response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+            response.headers["X-Auth-Redirect"] = "true"
+            return response
+        
+        # Log the missing tokens for debugging
+        logger.info("No authentication token found, showing home page")
 
         return app.state.templates.TemplateResponse(
             "home.html",

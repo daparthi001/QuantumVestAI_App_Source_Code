@@ -131,3 +131,4 @@ ModuleNotFoundError: No module named 'controllers'
 2025-07-08 06:39:14,428 - quantumvestai_ui - ERROR - Could not import news_controller: No module named 'controllers'
 2025-07-08 06:39:14,428 - quantumvestai_ui - ERROR - Could not import feature_controller: No module named 'controllers'
 2025-07-08 06:39:14,434 - quantumvestai_ui - ERROR - Failed to include api_proxy router: 'APIRouter' object has no attribute 'router'
+2025-08-04 03:17:52,799 - quantumvestai_ui - INFO - ✓ Template global variables configured (now, API_URL, current_year)
