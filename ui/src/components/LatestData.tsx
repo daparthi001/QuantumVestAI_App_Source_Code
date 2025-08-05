@@ -16,11 +16,19 @@ export default function LatestData() {
   const twitterTrendingCount = data.twitterTrending?.trending_tickers?.length ?? 0
 
   return (
-    <div className="space-y-2">
-      <h2 className="text-xl font-semibold">Latest Data</h2>
-      <div>Trending Stocks: {trendingStocksCount}</div>
-      <div>Trending Topics: {trendingTopicsCount}</div>
-      <div>Twitter Trending: {twitterTrendingCount}</div>
+    <div className="p-4 bg-white rounded shadow-sm">
+      <h2 className="text-xl font-semibold mb-4">Latest Data</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+        <div className="p-2 border rounded">
+          Trending Stocks: {trendingStocksCount}
+        </div>
+        <div className="p-2 border rounded">
+          Trending Topics: {trendingTopicsCount}
+        </div>
+        <div className="p-2 border rounded">
+          Twitter Trending: {twitterTrendingCount}
+        </div>
+      </div>
     </div>
   )
 }
