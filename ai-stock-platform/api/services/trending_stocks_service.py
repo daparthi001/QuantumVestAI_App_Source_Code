@@ -10,9 +10,8 @@ Author: AI Assistant
 import asyncio
 import logging
 import os
-import random
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 # Optional Redis cache support
@@ -225,13 +224,7 @@ class TrendingStocksService:
                         "DIS", "PYPL", "INTC", "CSCO", "KO"
                     ]
 
-            try:
-                stocks_data = await self._fetch_trending_stocks()
-            except RuntimeError as e:
-                logger.warning(f"Error fetching trending stocks data: {e}")
-                # Generate fallback mock data
-                logger.info("Generating fallback mock data for trending stocks")
-                stocks_data = self._generate_mock_stocks_data()
+            stocks_data = await self._fetch_trending_stocks()
 
             # Update caches
             if redis_cache:
@@ -453,50 +446,3 @@ class TrendingStocksService:
             "last_updated": self._cache_timestamp.isoformat(),
         }
 
-    def _generate_mock_stocks_data(self) -> List[Dict[str, Any]]:
-        """Generate mock stock data as a fallback when real data can't be retrieved."""
-        stocks_data = []
-        company_names = {
-            "AAPL": "Apple Inc.",
-            "MSFT": "Microsoft Corporation",
-            "AMZN": "Amazon.com Inc.",
-            "GOOGL": "Alphabet Inc.",
-            "NVDA": "NVIDIA Corporation",
-            "TSLA": "Tesla Inc.",
-            "META": "Meta Platforms Inc.",
-            "NFLX": "Netflix Inc.",
-            "JPM": "JPMorgan Chase & Co.",
-            "DIS": "The Walt Disney Company",
-            "PYPL": "PayPal Holdings, Inc.",
-            "INTC": "Intel Corporation",
-            "CSCO": "Cisco Systems, Inc.",
-            "AMD": "Advanced Micro Devices, Inc.",
-            "KO": "The Coca-Cola Company"
-        }
-        
-        for symbol in self.trending_symbols:
-            # Use deterministic randomness based on symbol
-            random.seed(hash(symbol + str(datetime.now().date())))
-            
-            # Generate plausible mock data
-            price = round(random.uniform(50, 500), 2)
-            change = round(random.uniform(-15, 15), 2)
-            change_percent = round((change / (price - change)) * 100, 2)
-            volume = random.randint(500_000, 5_000_000)
-            
-            stocks_data.append({
-                "symbol": symbol,
-                "name": company_names.get(symbol, f"{symbol} Corp."),
-                "price": price,
-                "change": change,
-                "change_percent": change_percent,
-                "volume": volume,
-                "last_updated": datetime.now().isoformat(),
-                "is_mock_data": True  # Flag to indicate this is mock data
-            })
-            
-        # Sort by change percentage (descending) for trending effect
-        stocks_data.sort(key=lambda x: x.get("change_percent", 0), reverse=True)
-        
-        logger.info(f"Generated {len(stocks_data)} mock stock entries as fallback")
-        return stocks_data
