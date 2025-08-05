@@ -100,6 +100,9 @@ def get_templates(request: Request):
 async def market_overview(request: Request, response: Response):
     """Market overview page showing indices, trends, and top movers."""
     try:
+        # Get current user first
+        user = await get_optional_current_user(request, response)
+
         # Get API URL from app state or environment
         api_url_base = getattr(request.app.state, "settings", {}).get(
             "API_URL", os.getenv("API_URL", "http://quantumvestai-dev-api.dev.svc.cluster.local:8000")
@@ -112,8 +115,6 @@ async def market_overview(request: Request, response: Response):
 
         if market_data is None:
             try:
-                # Get current user for authentication
-                user = await get_optional_current_user(request, response)
                 auth_token = user.get("token") if user else None
 
                 # Fetch market data from API using centralized HTTP client
@@ -139,23 +140,22 @@ async def market_overview(request: Request, response: Response):
         # Get templates
         templates = get_templates(request)
 
-        # Render template
+        # Render template with user context
         return get_templates(request).TemplateResponse(
             "market/overview.html",
             {
                 "request": request,
-                "user": None,
+                "user": user,
                 "page_title": "Market Overview",
                 "market_data": market_data,
                 "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
-                "is_authenticated": False,
+                "is_authenticated": bool(user),
             },
         )
 
     except Exception as e:
         logger.exception(f"Market overview error: {str(e)}")
 
-        # Get templates
         templates = get_templates(request)
 
         return get_templates(request).TemplateResponse(
@@ -164,7 +164,7 @@ async def market_overview(request: Request, response: Response):
                 "request": request,
                 "message": "An error occurred while loading market data.",
                 "error_code": "MARKET_ERR",
-                "user": None,
+                "user": user if 'user' in locals() else None,
             },
             status_code=500,
         )
@@ -178,6 +178,9 @@ async def stock_details(
 ):
     """Stock details page showing price, charts, news, and fundamentals for a specific stock."""
     try:
+        # Get current user for authentication
+        user = await get_optional_current_user(request, response)
+
         # Get API URL from app state or environment
         api_url_base = getattr(request.app.state, "settings", {}).get(
             "API_URL", os.getenv("API_URL", "http://quantumvestai-dev-api.dev.svc.cluster.local:8000")
@@ -191,8 +194,6 @@ async def stock_details(
 
         if stock_data is None:
             try:
-                # Get current user for authentication
-                user = await get_optional_current_user(request, response)
                 auth_token = user.get("token") if user else None
 
                 # Fetch stock data from API using centralized HTTP client
@@ -242,12 +243,12 @@ async def stock_details(
             "market/stock_details.html",
             {
                 "request": request,
-                "user": None,
+                "user": user,
                 "page_title": f"{stock_data.get('name')} ({stock_data.get('symbol')})",
                 "stock": stock_data,
                 "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
-                "is_authenticated": False,
-                "is_in_watchlist": False,
+                "is_authenticated": bool(user),
+                "is_in_watchlist": is_in_watchlist,
             },
         )
 
@@ -263,7 +264,7 @@ async def stock_details(
                 "request": request,
                 "message": f"An error occurred while loading data for {symbol}.",
                 "error_code": "STOCK_ERR",
-                "user": None,
+                "user": user if 'user' in locals() else None,
             },
             status_code=500,
         )
