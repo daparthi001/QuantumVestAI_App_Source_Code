@@ -15,7 +15,7 @@ from core.config import settings
 from core.exceptions import AuthenticationError
 from db.models.user import User
 from db.session import get_db
-from core.security.tokens import validate_token
+from .tokens import validate_token
 
 # Password context for hashing
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
