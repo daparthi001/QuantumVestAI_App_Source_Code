@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
-"""
-Create admin user for QuantumVestAI application.
-"""
+"""Create admin user for QuantumVestAI application."""
 
-import argparse
 import logging
-import os
 import sys
 from datetime import datetime
+from pathlib import Path
+
+# Ensure project root is on the Python path
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
 
 import psycopg2
 from passlib.context import CryptContext
+from core.config import get_settings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -20,19 +23,21 @@ logger = logging.getLogger('db-init')
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 def create_admin_user():
-    """Create admin user in the database."""
-    # Get credentials from environment variables
-    db_host = os.environ.get('DB_HOST')
-    db_name = os.environ.get('DB_NAME')
-    db_user = os.environ.get('DB_USER')
-    db_password = os.environ.get('DB_PASSWORD')
-    db_port = os.environ.get('DB_PORT')
-    
-    # Get admin user details
-    admin_username = os.environ.get('ADMIN_USERNAME')
-    admin_email = os.environ.get('ADMIN_EMAIL')
-    admin_password = os.environ.get('ADMIN_PASSWORD')
-    admin_fullname = os.environ.get('ADMIN_FULL_NAME', 'System Administrator')
+    """Create admin user in the database using project settings."""
+    settings = get_settings()
+
+    # Database configuration
+    db_host = settings.database.host
+    db_name = settings.database.name
+    db_user = settings.database.user
+    db_password = settings.database.password.get_secret_value() if settings.database.password else None
+    db_port = settings.database.port
+
+    # Admin user details
+    admin_username = settings.ADMIN_USERNAME
+    admin_email = settings.ADMIN_EMAIL
+    admin_password = settings.ADMIN_PASSWORD
+    admin_fullname = settings.ADMIN_FULL_NAME
     
     if not all([admin_username, admin_email, admin_password]):
         logger.warning("Admin credentials incomplete. Skipping admin creation.")
