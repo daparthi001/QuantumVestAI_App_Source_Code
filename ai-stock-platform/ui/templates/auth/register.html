@@ -81,7 +81,16 @@
                     </button>
                 </div>
             </div>
-            
+
+            <div class="form-group">
+                <label for="subscription_type">Subscription Type</label>
+                <select id="subscription_type" name="subscription_type" class="form-control" required>
+                    <option value="free" {% if subscription_type|default('free') == 'free' %}selected{% endif %}>Free</option>
+                    <option value="basic" {% if subscription_type == 'basic' %}selected{% endif %}>Basic</option>
+                    <option value="premium" {% if subscription_type == 'premium' %}selected{% endif %}>Premium</option>
+                </select>
+            </div>
+
             <div class="form-group form-check">
                 <input type="checkbox" class="form-check-input" id="terms" name="terms" required>
                 <label class="form-check-label" for="terms">

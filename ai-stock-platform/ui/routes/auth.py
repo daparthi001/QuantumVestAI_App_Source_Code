@@ -200,6 +200,7 @@ async def register_post(
     password: str = Form(...),
     confirm_password: str = Form(...),
     full_name: str = Form(...),
+    subscription_type: str = Form("free"),
     terms: bool = Form(False)
 ):
     """Handle registration form submission (production)"""
@@ -236,6 +237,7 @@ async def register_post(
                     "password": password,
                     "confirm_password": confirm_password,
                     "full_name": full_name,
+                    "subscription_type": subscription_type,
                     "terms_accepted": terms,
                 },
             )
@@ -262,6 +264,7 @@ async def register_post(
                 "username": username,
                 "email": email,
                 "full_name": full_name,
+                "subscription_type": subscription_type,
                 "terms": terms,
                 "page_title": "Register - QuantumVestAI",
             },
@@ -275,6 +278,7 @@ async def register_post(
                 "request": request,
                 "msg": "Registration failed due to a technical error. Please try again.",
                 "msg_type": "danger",
+                "subscription_type": subscription_type,
                 "terms": terms,
                 "page_title": "Register - QuantumVestAI"
             },

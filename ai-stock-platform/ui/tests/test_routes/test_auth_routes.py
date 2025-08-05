@@ -100,6 +100,7 @@ def test_register_page_get(client):
     assert "Username" in response.text
     assert "Email" in response.text
     assert "Password" in response.text
+    assert "Subscription Type" in response.text
 
 def test_register_post_success(client, monkeypatch):
     monkeypatch.setenv("API_BASE_URL", "http://testserver/api")
@@ -114,6 +115,7 @@ def test_register_post_success(client, monkeypatch):
                 "password": "Password123!",
                 "confirm_password": "Password123!",
                 "full_name": "Test User",
+                "subscription_type": "free",
                 "terms": "on"
             },
             follow_redirects=False
@@ -129,6 +131,7 @@ def test_register_post_success(client, monkeypatch):
                 "password": "Password123!",
                 "confirm_password": "Password123!",
                 "full_name": "Test User",
+                "subscription_type": "free",
                 "terms_accepted": True,
             },
         )
@@ -146,6 +149,7 @@ def test_register_post_username_taken(client, monkeypatch):
                 "password": "Password123!",
                 "confirm_password": "Password123!",
                 "full_name": "Test User",
+                "subscription_type": "free",
                 "terms": "on"
             },
             follow_redirects=False
@@ -161,6 +165,7 @@ def test_register_post_username_taken(client, monkeypatch):
                 "password": "Password123!",
                 "confirm_password": "Password123!",
                 "full_name": "Test User",
+                "subscription_type": "free",
                 "terms_accepted": True,
             },
         )
@@ -175,6 +180,7 @@ def test_register_post_password_mismatch(client, monkeypatch):
             "password": "Password123!",
             "confirm_password": "DifferentPassword123!",
             "full_name": "Test User",
+            "subscription_type": "free",
             "terms": "on"
         },
         follow_redirects=False
