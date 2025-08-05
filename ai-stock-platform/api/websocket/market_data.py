@@ -15,12 +15,12 @@ async def authorize_websocket(token: str) -> bool:
         current_time = int(time.time())
         if payload.get("exp") < current_time:
             logger.error(f"Token has expired. Expiry: {payload.get('exp')}, Current time: {current_time}")
-            raise ExpiredSignatureError("Token has expired")
+            return False
         
         # Check user role
         if payload.get("role") != "free":
             logger.error(f"Unauthorized role: {payload.get('role')}")
-            raise InvalidTokenError("Unauthorized role")
+            return False
         
         logger.info("Token authorization successful")
         return True
@@ -45,6 +45,12 @@ async def websocket_handler(request):
         logger.error("Token authorization failed")
         return web.Response(status=403, text="Forbidden: Invalid token")
     
-    # Proceed with WebSocket connection
+    # Rate limiting logic
+    rate_limit_remaining = request.headers.get("x-ratelimit-remaining")
+    if rate_limit_remaining and int(rate_limit_remaining) <= 0:
+        logger.error("Rate limit exceeded")
+        return web.Response(status=429, text="Too Many Requests: Rate limit exceeded")
+    
     logger.info("WebSocket connection authorized")
+    # Proceed with WebSocket connection
     # ...existing code...
