@@ -9,16 +9,22 @@ export function connectMarketData(token?: string): WebSocket {
   const t = token ?? useAuthStore.getState().token ?? ''
   const ws = new WebSocket(`wss://dev.quantumvestai.com/market-data?token=${t}`)
   const channel = new BroadcastChannel(CHANNEL_NAME)
-  ws.onmessage = (event) => channel.postMessage(event.data)
+  ws.onmessage = (event) => {
+    try {
+      channel.postMessage(JSON.parse(event.data))
+    } catch {
+      channel.postMessage(event.data)
+    }
+  }
   return ws
 }
 
 /**
  * Listen for market data updates broadcast by any tab.
  */
-export function subscribeMarketData(handler: (data: string) => void): () => void {
+export function subscribeMarketData(handler: (data: unknown) => void): () => void {
   const channel = new BroadcastChannel(CHANNEL_NAME)
-  channel.onmessage = (event) => handler(event.data as string)
+  channel.onmessage = (event) => handler(event.data)
   return () => channel.close()
 }
 
