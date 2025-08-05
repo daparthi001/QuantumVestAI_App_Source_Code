@@ -17,8 +17,8 @@ async def authorize_websocket(token: str) -> bool:
             logger.error(f"Token has expired. Expiry: {payload.get('exp')}, Current time: {current_time}")
             return False
         
-        # Check user role
-        if payload.get("role") != "free":
+        # Accept both 'premium' and 'free' roles for WebSocket access
+        if payload.get("role") not in ("premium", "free"):
             logger.error(f"Unauthorized role: {payload.get('role')}")
             return False
         
