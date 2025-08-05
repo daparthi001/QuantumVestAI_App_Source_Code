@@ -10,19 +10,19 @@ import authService, { User } from '../services/auth.service';
 // Define context interface
 interface AuthContextType {
   user: User | null;
-  isLoading: boolean;
+  token: string | null;
+  isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
-  isAuthenticated: boolean;
 }
 
 // Create context with default values
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  isLoading: true,
+  token: null,
+  isAuthenticated: false,
   login: async () => {},
   logout: () => {},
-  isAuthenticated: false,
 });
 
 // Hook to use auth context
@@ -41,55 +41,68 @@ interface AuthProviderProps {
 
 // Auth Provider component
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  
-  const navigate = useNavigate();
-  const location = useLocation();
+  // Storage keys
+  const TOKEN_KEY = 'qvai_token';
+  const USER_KEY = 'qvai_user';
+  const AUTH_EVENT = 'qvai_auth_change';
 
-  // Initial check for authenticated user
+  // Initialize state from localStorage
+  const [token, setToken] = useState<string | null>(() => {
+    return localStorage.getItem(TOKEN_KEY);
+  });
+  
+  const [user, setUser] = useState<User | null>(() => {
+    const savedUser = localStorage.getItem(USER_KEY);
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+
+  // Compute authentication status
+  const isAuthenticated = !!token && !!user;
+
+  // Handle login across tabs
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        if (authService.isAuthenticated()) {
-          try {
-            const userData = await authService.fetchCurrentUser();
-            setUser(userData);
-            setIsAuthenticated(true);
-          } catch (error) {
-            console.error('Error fetching user data:', error);
-            // Token invalid or expired
-            authService.logout();
-            setIsAuthenticated(false);
-          }
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-      } finally {
-        setLoading(false);
+    // Listen for storage events to sync state across tabs
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === TOKEN_KEY) {
+        // Token has changed in another tab
+        const newToken = event.newValue;
+        setToken(newToken);
+      } else if (event.key === USER_KEY) {
+        // User has changed in another tab
+        const newUser = event.newValue ? JSON.parse(event.newValue) : null;
+        setUser(newUser);
       }
     };
 
-    checkAuth();
+    // Add event listeners
+    window.addEventListener('storage', handleStorageChange);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   // Login function
   const login = async (username: string, password: string): Promise<void> => {
-    setLoading(true);
     try {
       await authService.login(username, password);
-      setUser(authService.getCurrentUser());
-      setIsAuthenticated(true);
+      const userData = authService.getCurrentUser();
+      setUser(userData);
       
+      // Update localStorage
+      localStorage.setItem(TOKEN_KEY, authService.getToken()!);
+      localStorage.setItem(USER_KEY, JSON.stringify(userData));
+      
+      // Dispatch event for cross-tab communication
+      window.dispatchEvent(new Event(AUTH_EVENT));
+
       // Redirect to dashboard or intended page
       const from = location.state?.from?.pathname || '/dashboard';
       navigate(from, { replace: true });
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -97,13 +110,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = (): void => {
     authService.logout();
     setUser(null);
-    setIsAuthenticated(false);
+    
+    // Clear localStorage
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    
+    // Dispatch event for cross-tab communication
+    window.dispatchEvent(new Event(AUTH_EVENT));
+
     navigate('/login');
   };
 
   const value: AuthContextType = {
     user,
-    isLoading: loading,
+    token,
     isAuthenticated,
     login,
     logout,
