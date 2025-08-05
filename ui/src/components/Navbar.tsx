@@ -1,5 +1,6 @@
 import { useAuthStore } from '@/store/useAuthStore'
 import { Button } from '@/components/ui/button'
+import ThemeToggle from '@/components/ThemeToggle'
 
 export default function Navbar() {
   const user = useAuthStore((s) => s.user)
@@ -16,14 +17,15 @@ export default function Navbar() {
         </div>
       ) : (
         <div className="flex gap-4">
-          <a className="text-blue-600 hover:underline" href="#login">
+          <a className="text-primary hover:underline" href="#login">
             Login
           </a>
-          <a className="text-blue-600 hover:underline" href="#register">
+          <a className="text-primary hover:underline" href="#register">
             Register
           </a>
         </div>
       )}
+      <ThemeToggle />
     </nav>
   )
 }

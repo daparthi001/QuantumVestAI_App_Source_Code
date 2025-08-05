@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Modal } from '@/components/ui/modal'
 
 interface WatchItem {
   symbol: string
@@ -13,6 +15,7 @@ interface WatchItem {
 export default function Watchlist() {
   const [symbol, setSymbol] = useState('')
   const [items, setItems] = useState<WatchItem[]>([])
+  const [toRemove, setToRemove] = useState<string | null>(null)
 
   // Establish a websocket connection for live price updates
   useEffect(() => {
@@ -45,11 +48,11 @@ export default function Watchlist() {
     <div className="space-y-2">
       <h2 className="text-xl font-semibold">Watchlist</h2>
       <div className="flex space-x-2">
-        <input
+        <Input
           value={symbol}
           onChange={(e) => setSymbol(e.target.value)}
           placeholder="Symbol"
-          className="border px-2 py-1 rounded"
+          className="w-32"
         />
         <Button onClick={addSymbol}>Add</Button>
       </div>
@@ -67,15 +70,36 @@ export default function Watchlist() {
                 </span>
               )}
             </span>
-            <button
-              onClick={() => removeSymbol(item.symbol)}
-              className="text-red-500 text-sm"
+            <Button
+              variant="outline"
+              className="text-red-600 border-red-600 hover:bg-red-50"
+              onClick={() => setToRemove(item.symbol)}
             >
               Remove
-            </button>
+            </Button>
           </li>
         ))}
       </ul>
+      <Modal
+        open={toRemove !== null}
+        onClose={() => setToRemove(null)}
+        title="Remove symbol?"
+      >
+        <p className="mb-4">Remove {toRemove} from watchlist?</p>
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={() => setToRemove(null)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              if (toRemove) removeSymbol(toRemove)
+              setToRemove(null)
+            }}
+          >
+            Remove
+          </Button>
+        </div>
+      </Modal>
     </div>
   )
 }
