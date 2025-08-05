@@ -4,7 +4,7 @@ import { apiFetch } from '@/api/client'
 
 interface User {
   username: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 interface AuthState {
