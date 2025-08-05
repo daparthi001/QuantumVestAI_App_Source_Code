@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuthStore } from '@/store/useAuthStore'
+import { Button } from '@/components/ui/button'
 
 export default function LoginForm() {
   const [username, setUsername] = useState('')
@@ -12,23 +13,23 @@ export default function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-2 p-4 max-w-sm">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-4 max-w-sm">
       <input
-        className="border p-2"
+        className="border p-2 rounded-md"
         placeholder="Username"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
       <input
-        className="border p-2"
+        className="border p-2 rounded-md"
         type="password"
         placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
-      <button type="submit" className="border p-2">
+      <Button type="submit" className="mt-2">
         Login
-      </button>
+      </Button>
     </form>
   )
 }
