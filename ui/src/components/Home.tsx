@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react'
 import { useAppStore } from '@/store/useAppStore'
 import { usePing } from '@/api/hooks/usePing'
+import LatestData from '@/components/LatestData'
 
 const Button = lazy(() => import('@/components/ui/button'))
 
@@ -17,6 +18,7 @@ export default function Home() {
       <Suspense fallback={<div>Loading button...</div>}>
         <Button onClick={increment}>Increment</Button>
       </Suspense>
+      <LatestData />
     </div>
   )
 }
