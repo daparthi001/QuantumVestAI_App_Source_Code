@@ -152,8 +152,7 @@ class User(Base, TimestampMixin):
             if value:
                 parts = value.split(" ", 1)
                 kwargs.setdefault("first_name", parts[0])
-                if len(parts) > 1:
-                    kwargs.setdefault("last_name", parts[1])
+                kwargs.setdefault("last_name", parts[1] if len(parts) > 1 else None)
         super().__init__(**kwargs)
 
     is_active = Column(Boolean, default=True)
@@ -289,14 +288,14 @@ class User(Base, TimestampMixin):
 
     @hybrid_property
     def roles(self) -> List[str]:
-        """Get all role names for the user"""
+        """Get all role names for the user."""
         if hasattr(self, 'user_roles') and self.user_roles:
             return [ur.role.name for ur in self.user_roles if ur.role]
         return []
 
     @hybrid_property
     def primary_role(self) -> str:
-        """Get the user's primary role (first assigned role or 'user' default)"""
+        """Get the user's primary role."""
         if hasattr(self, 'user_roles') and self.user_roles:
             if len(self.user_roles) > 0:
                 primary_user_role = self.user_roles[0]
@@ -306,8 +305,7 @@ class User(Base, TimestampMixin):
 
     @hybrid_property
     def is_admin(self) -> bool:
-        """Check if user has admin role - FIXED to avoid circular reference"""
-        # Direct database lookup instead of calling other properties
+        """Check if user has admin role."""
         if hasattr(self, 'user_roles') and self.user_roles:
             for user_role in self.user_roles:
                 if hasattr(user_role, 'role') and user_role.role and user_role.role.name == "admin":

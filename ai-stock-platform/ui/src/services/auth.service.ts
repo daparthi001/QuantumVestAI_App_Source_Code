@@ -147,29 +147,33 @@ class AuthService {
    */
   async fetchCurrentUser(): Promise<User> {
     try {
-      const token = this.getToken();
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      const response = await axios.get<UserResponse>(
-        `${API_BASE_URL}/api/v1/auth/me`, 
-        {
-          headers: { 
-            Authorization: `Bearer ${token}` 
-          }
+        const token = this.getToken();
+        if (!token) {
+            throw new Error('No authentication token found');
         }
-      );
 
-      if (response.data.status === 'success' && response.data.data) {
-        this.currentUserSubject.next(response.data.data);
-        return response.data.data;
-      } else {
-        throw new Error('Failed to fetch user data');
-      }
+        const response = await axios.get<UserResponse>(
+            `${API_BASE_URL}/api/v1/auth/me`, 
+            {
+                headers: { 
+                    Authorization: `Bearer ${token}` 
+                }
+            }
+        );
+
+        if (response.data.status === 'success' && response.data.data) {
+            const user = response.data.data;
+            if (!user.role) {
+                throw new Error('User role is missing');
+            }
+            this.currentUserSubject.next(user);
+            return user;
+        } else {
+            throw new Error('Failed to fetch user data');
+        }
     } catch (error) {
-      console.error('Error fetching user data:', error);
-      throw error;
+        console.error('Error fetching user data:', error);
+        throw error;
     }
   }
 

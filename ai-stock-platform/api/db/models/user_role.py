@@ -24,7 +24,6 @@ class UserRole(Base):
     # Relationships
     user = relationship("User", back_populates="user_roles", foreign_keys=[user_id])
     role = relationship("Role", back_populates="user_roles")
-    assigner = relationship("User", foreign_keys=[assigned_by])
 
     def __repr__(self):
         return f"<UserRole(user_id={self.user_id}, role_id={self.role_id})>"

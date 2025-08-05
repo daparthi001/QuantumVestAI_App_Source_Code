@@ -49,15 +49,15 @@ def check_websocket_permissions(
     # Admin role can access everything
     if role == "admin":
         return True
-        
+    
     # Premium users can access premium endpoints
     if role == "premium" and endpoint.startswith("/premium"):
         return True
-        
+    
     # Basic users can access basic endpoints
     if role in ["basic", "premium"] and endpoint.startswith("/basic"):
         return True
-        
+    
     # By default, allow access to market data endpoints for all authenticated users
     if endpoint.endswith("/market-data"):
         logger.info(f"Allowing access to market data for role: {role}")
