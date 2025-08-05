@@ -86,7 +86,9 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
         flexShrink: 0,
         '& .MuiDrawer-paper': {
           width: collapsed ? collapsedWidth : drawerWidth,
-          boxSizing: 'border-box'
+          boxSizing: 'border-box',
+          top: isMobile ? 0 : 64,
+          height: isMobile ? '100%' : 'calc(100% - 64px)'
         }
       }}
     >

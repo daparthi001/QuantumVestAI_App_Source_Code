@@ -6,7 +6,7 @@ export default function Navbar() {
   const logout = useAuthStore((s) => s.logout)
 
   return (
-    <nav className="flex items-center justify-between p-4 border-b mb-4 bg-gray-50">
+    <nav className="flex items-center justify-between p-4 border-b bg-gray-50 shadow-sm sticky top-0 z-50 w-full">
       {user ? (
         <div className="flex items-center gap-4">
           <span>Welcome, {user.username}</span>
