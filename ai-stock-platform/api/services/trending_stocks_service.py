@@ -169,7 +169,18 @@ class TrendingStocksService:
         if last_exception:
             logger.error(f"Detailed error: {repr(last_exception)}")
         # Return default trending tech stocks as fallback
-        return {"stocks": ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "TSLA", "NVDA", "AMD", "INTC", "NFLX"]}
+        return [
+            "AAPL",
+            "MSFT",
+            "GOOGL",
+            "AMZN",
+            "META",
+            "TSLA",
+            "NVDA",
+            "AMD",
+            "INTC",
+            "NFLX",
+        ]
 
     async def get_trending_stocks(
         self, page: int = 1, limit: int = 10
