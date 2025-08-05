@@ -282,6 +282,8 @@ class TrendingStocksService:
             logger.error("Failed to fetch any real stock data")
             raise RuntimeError("Unable to retrieve any stock data from live data source")
 
+        return stocks_data
+
     async def _fetch_stock_quote(
         self, session, symbol: str
     ) -> Optional[Dict[str, Any]]:
