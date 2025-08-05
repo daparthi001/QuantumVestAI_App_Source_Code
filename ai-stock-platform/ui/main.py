@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import Form
+import jwt
 
 # Ensure the repository root is first on ``sys.path`` so imports like
 # ``ui.routes`` resolve to the compatibility packages located at the
@@ -399,7 +400,26 @@ class AuthUtils:
                     "is_authenticated": True,
                 }
 
-        # Fallback to demo user if cookie format unexpected
+        # Fallback: decode access_token cookie if available
+        token_cookie = request.cookies.get("access_token")
+        if token_cookie:
+            token = token_cookie.replace("Bearer ", "")
+            secret = os.getenv("JWT_SECRET") or os.getenv("SECRET_KEY", "your-secret-key")
+            try:
+                payload = jwt.decode(token, secret, algorithms=["HS256"])
+                username = payload.get("sub", "")
+                role = payload.get("role", "user")
+                full_name = payload.get("name", username)
+                return {
+                    "username": username,
+                    "full_name": full_name,
+                    "role": role,
+                    "is_authenticated": True,
+                }
+            except Exception:
+                return {"is_authenticated": True}
+
+        # No authentication information found
         return {"is_authenticated": False}
 
 # Enhanced route handlers

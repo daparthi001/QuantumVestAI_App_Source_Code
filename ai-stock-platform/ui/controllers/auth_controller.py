@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import requests
+import jwt
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -171,6 +172,25 @@ async def login_post(
             samesite="lax",
             secure=request.url.scheme == "https",
         )
+
+        # Store basic user info for UI convenience
+        secret = os.getenv("JWT_SECRET") or os.getenv("SECRET_KEY", "your-secret-key")
+        try:
+            payload = jwt.decode(access_token, secret, algorithms=["HS256"])
+            uname = payload.get("sub", username)
+            role = payload.get("role", "user")
+            full_name = payload.get("name", uname)
+            response.set_cookie(
+                key="user_info",
+                value=f"{uname}|{role}|{full_name}",
+                httponly=False,
+                max_age=max_age,
+                samesite="lax",
+                secure=request.url.scheme == "https",
+            )
+        except Exception:
+            # If decoding fails, continue without user_info cookie
+            pass
 
         logger.info(f"User {username} successfully logged in")
         return response
