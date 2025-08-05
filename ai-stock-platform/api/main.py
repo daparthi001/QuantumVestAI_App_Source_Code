@@ -35,6 +35,7 @@ from routers.websocket import router as websocket_router
 from routers.social import router as social_router
 from routers.docs import router as docs_router
 from routers.analytics import public_router as analytics_public_router
+from routes.market_data import router as market_data_router
 import sentry_sdk
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from fastapi import Response as FastAPIResponse
@@ -124,6 +125,7 @@ app.include_router(auth_router, prefix="/api/v1/auth")
 app.include_router(social_router)
 app.include_router(docs_router)
 app.include_router(analytics_public_router, prefix="/api/v1")
+app.include_router(market_data_router, prefix="/market-data")
 
 # Request logging middleware
 @app.middleware("http")
@@ -623,7 +625,7 @@ async def pre_market_prediction(request: Request, symbol: str) -> Response:
         return create_error_response(
             message="Failed to generate pre-market prediction",
             error_code="INTERNAL_SERVER_ERROR",
-            request_id=getattr(request.state, 'request_id', None),
+            request_id=getattr(request.state, 'request_id', None)
         )
 
 
