@@ -13,6 +13,7 @@ import os
 import json
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+import requests
 
 # Optional Redis cache support
 try:  # pragma: no cover - cache is optional in tests
@@ -108,78 +109,35 @@ class TrendingStocksService:
         # Initialize with empty list to force real-time data fetching
         self.trending_symbols: List[str] = []
 
-    async def _fetch_yahoo_trending_symbols(self, retries: int = 3, delay: float = 2.0) -> List[str]:
-        """Fetch trending tickers from Yahoo Finance with retries and improved logging."""
-        url = "https://query1.finance.yahoo.com/v1/finance/trending/US"
-        last_exception = None
-        
-        # Add headers to make the request more like a browser
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36",
-            "Accept": "application/json, text/plain, */*",
-            "Accept-Language": "en-US,en;q=0.9",
-            "Origin": "https://finance.yahoo.com",
-            "Referer": "https://finance.yahoo.com/"
-        }
-        
-        # Check if SSL verification should be disabled
-        ssl_verify = os.getenv("DISABLE_SSL_VERIFY", "false").lower() != "true"
-        ssl_context = None
-        if not ssl_verify:
-            import ssl
-            ssl_context = ssl.create_default_context()
-            ssl_context.check_hostname = False
-            ssl_context.verify_mode = ssl.CERT_NONE
-            logger.warning("SSL certificate verification disabled - not recommended for production")
-        
-        for attempt in range(1, retries + 1):
-            try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(url, headers=headers, timeout=15, ssl=ssl_context) as resp:
-                        if resp.status == 200:
-                            data = await resp.json()
-                            quotes = (
-                                data.get("finance", {})
-                                .get("result", [{}])[0]
-                                .get("quotes", [])
-                            )
-                            symbols = [q.get("symbol") for q in quotes if q.get("symbol")]
-                            
-                            if symbols:
-                                logger.info(f"Successfully fetched {len(symbols)} trending symbols from Yahoo Finance")
-                                return symbols
-                            else:
-                                logger.warning("Yahoo Finance returned empty trending symbols list")
-                        else:
-                            logger.warning(f"Yahoo trending symbols fetch attempt {attempt} failed: HTTP {resp.status}")
-                            if resp.status == 429:
-                                logger.warning("Rate limit exceeded, waiting longer before retry")
-                                await asyncio.sleep(delay * 2)  # Wait longer for rate limits
-            except asyncio.TimeoutError:
-                logger.warning(f"Timeout on attempt {attempt} when fetching Yahoo trending symbols")
-            except Exception as exc:
-                last_exception = exc
-                logger.warning(f"Yahoo trending symbols fetch attempt {attempt} failed: {exc}")
-            
-            if attempt < retries:
-                await asyncio.sleep(delay)
-        
-        logger.error(f"All attempts to fetch Yahoo trending symbols failed. Last error: {last_exception}")
-        if last_exception:
-            logger.error(f"Detailed error: {repr(last_exception)}")
-        # Return default trending tech stocks as fallback
-        return [
-            "AAPL",
-            "MSFT",
-            "GOOGL",
-            "AMZN",
-            "META",
-            "TSLA",
-            "NVDA",
-            "AMD",
-            "INTC",
-            "NFLX",
-        ]
+    def fetch_trending_symbols(self):
+        """Fetch trending symbols using Alpha Vantage."""
+        try:
+            logger.info("Fetching trending symbols from Alpha Vantage...")
+            params = {
+                "function": "TIME_SERIES_INTRADAY",
+                "symbol": "AAPL",  # Example symbol, replace with dynamic logic if needed
+                "interval": "1min",
+                "apikey": self.api_key,
+            }
+            response = requests.get(self.base_url, params=params)
+            response.raise_for_status()
+            data = response.json()
+
+            # Extract relevant data (example logic, adjust based on Alpha Vantage response structure)
+            trending_symbols = []
+            for symbol, details in data.get("Meta Data", {}).items():
+                trending_symbols.append({
+                    "symbol": symbol,
+                    "name": details.get("2. Symbol"),
+                    "price": details.get("4. Last Refreshed"),
+                })
+
+            logger.info(f"Fetched {len(trending_symbols)} trending symbols from Alpha Vantage.")
+            return trending_symbols
+
+        except Exception as e:
+            logger.error(f"Failed to fetch trending symbols from Alpha Vantage: {e}")
+            return []
 
     async def get_trending_stocks(
         self, page: int = 1, limit: int = 10

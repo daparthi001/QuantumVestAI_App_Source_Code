@@ -370,7 +370,7 @@ async def get_current_user(request: Request, token: str = Depends(oauth2_scheme)
 
 @app.get("/api/v1/stocks/trending")
 async def trending_stocks(request: Request, page: int = 1, limit: int = 10):
-    """Get trending stocks with real-time data and caching"""
+    """Get trending stocks using Alpha Vantage."""
     logger.info("Trending stocks endpoint accessed")
     
     try:
@@ -383,24 +383,29 @@ async def trending_stocks(request: Request, page: int = 1, limit: int = 10):
                 request_id=getattr(request.state, 'request_id', None)
             )
         
-        # Validate pagination parameters
-        pagination = validate_pagination_params(page, limit)
+        # Fetch trending symbols using Alpha Vantage
+        trending_symbols = trending_stocks_service.fetch_trending_symbols()
+        if not trending_symbols:
+            logger.warning("No trending symbols found from Alpha Vantage")
+            return create_success_response(
+                data={"stocks": []},
+                message="No trending stocks found",
+                request_id=getattr(request.state, 'request_id', None)
+            )
         
-        # Use the trending stocks service to get data
-        result = await trending_stocks_service.get_trending_stocks(
-            page=pagination["page"], 
-            limit=pagination["limit"]
-        )
+        # Paginate results
+        start = (page - 1) * limit
+        end = start + limit
+        paginated_symbols = trending_symbols[start:end]
         
         return create_success_response(
-            data=result,
+            data={"stocks": paginated_symbols},
             message="Trending stocks retrieved successfully",
             request_id=getattr(request.state, 'request_id', None)
         )
         
     except Exception as e:
         logger.error(f"Error in trending stocks endpoint: {e}")
-        # Return error response
         return create_error_response(
             message="Failed to fetch trending stocks",
             error_code="INTERNAL_SERVER_ERROR",
