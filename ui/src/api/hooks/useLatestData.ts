@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '../client'
+import { fetchTrendingStocks, TrendingStock } from '../trending'
 
 interface LatestData {
-  trendingStocks: any
+  trendingStocks: TrendingStock[]
   trendingTopics: any
   twitterTrending: any
 }
@@ -12,7 +13,7 @@ export function useLatestData() {
     queryKey: ['latest-data'],
     queryFn: async () => {
       const [trendingStocks, trendingTopics, twitterTrending] = await Promise.all([
-        apiFetch('/v1/stocks/trending'),
+        fetchTrendingStocks(),
         apiFetch('/v1/sentiment/trending/topics'),
         apiFetch('/social/twitter/trending'),
       ])
