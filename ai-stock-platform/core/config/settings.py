@@ -20,11 +20,19 @@ class DatabaseSettings(BaseModel):
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = Field(default="QuantumVestAI", env="PROJECT_NAME")
-    VERSION: str = Field(default="0.1.0", env="APP_VERSION")
+    VERSION: str = Field(default="1.0.0", env="APP_VERSION")
+    CREATED_BY: str = Field(default="daparthi001", env="CREATED_BY")
+    CREATED_DATE: str = Field(default="2025-05-20 04:27:13", env="CREATED_DATE")
     API_V1_STR: str = "/api/v1"
     DEBUG: bool = Field(default=True, env="DEBUG")
     database: DatabaseSettings = DatabaseSettings()
     ENVIRONMENT: str = Field(default="development", env="ENVIRONMENT")
+
+    # Admin user defaults
+    ADMIN_EMAIL: Optional[str] = Field(default=None, env="ADMIN_EMAIL")
+    ADMIN_USERNAME: Optional[str] = Field(default=None, env="ADMIN_USERNAME")
+    ADMIN_PASSWORD: Optional[str] = Field(default=None, env="ADMIN_PASSWORD")
+    ADMIN_FULL_NAME: str = Field(default="System Administrator", env="ADMIN_FULL_NAME")
 
     # Allow arbitrary extra fields for backwards compatibility
     model_config = SettingsConfigDict(extra="ignore")
