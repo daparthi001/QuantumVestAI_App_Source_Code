@@ -16,7 +16,7 @@ export default function LatestData() {
   const twitterTrendingCount = data.twitterTrending?.trending_tickers?.length ?? 0
 
   return (
-    <div className="p-4 bg-white rounded shadow-sm">
+    <div className="p-4 bg-white dark:bg-gray-800 rounded shadow-sm">
       <h2 className="text-xl font-semibold mb-4">Latest Data</h2>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
         <div className="p-2 border rounded">

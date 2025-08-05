@@ -26,7 +26,7 @@ export default function TradePanel() {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="p-4 bg-white dark:bg-gray-800 rounded shadow-sm space-y-2">
       <h2 className="text-xl font-semibold">Trade</h2>
       <div className="flex space-x-2">
         <Input
@@ -45,7 +45,7 @@ export default function TradePanel() {
         <Button onClick={() => handleTrade('buy')}>Buy</Button>
         <Button onClick={() => handleTrade('sell')}>Sell</Button>
       </div>
-      <ul className="space-y-1">
+      <ul className="space-y-1 max-h-64 overflow-y-auto">
         {log.map((t, idx) => (
           <li key={idx} className="text-sm">
             {t.side.toUpperCase()} {t.quantity} {t.symbol}
