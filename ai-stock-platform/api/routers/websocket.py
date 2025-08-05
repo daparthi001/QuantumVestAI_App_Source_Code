@@ -8,17 +8,14 @@ import urllib.parse
 from datetime import datetime
 from typing import Optional
 
-from core.security import get_current_user, validate_token
+from core.security import validate_token
 from core.security.websocket_permissions import check_websocket_permissions
 from core.middleware.cors import is_origin_allowed
 from core.config import settings
 from db.models.user import User
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 from jose import JWTError, jwt
-import websockets
 
-# Import the local websocket manager using a relative import to avoid package
-# resolution issues when the application is executed as a module
 # Import the local websocket manager using an absolute path so the module works
 # both when the package is executed and when files are run directly.
 from websocket.manager import ConnectionManager
@@ -29,30 +26,23 @@ router = APIRouter()
 
 manager = ConnectionManager()
 
-# Update the WebSocket endpoint to use the Kubernetes service name
-API_SERVICE_URL = "ws://quantumvestai-dev-api:8000/ws/market-data"
-
 
 @router.websocket("/ws/market-data")
-async def market_data_ws(websocket: WebSocket, token: Optional[str] = Query(None), premium: Optional[str] = Query(None)):
-    """WebSocket endpoint for market data with /ws/ prefix."""
+async def market_data_ws(
+    websocket: WebSocket, token: Optional[str] = Query(None), premium: Optional[str] = Query(None)
+):
+    """WebSocket endpoint for market data with /ws/ prefix.
+
+    This implementation delegates to the generic :func:`websocket_endpoint`
+    so that the same subscription and broadcasting logic is reused for market
+    data clients.  Previously this function attempted to proxy connections to a
+    separate Kubernetes service which caused failures when that service was not
+    reachable (such as during tests).  By reusing the local endpoint we ensure
+    consistent behaviour and allow tests to operate without external
+    dependencies.
+    """
     logger.info("WebSocket connection attempt to /ws/market-data")
-
-    try:
-        # Connect to the Kubernetes service
-        async with websockets.connect(API_SERVICE_URL, ping_interval=None) as service_websocket:
-            await websocket.accept()
-            logger.info("WebSocket connection to Kubernetes service established")
-
-            # Relay messages between client and service
-            async for message in websocket.iter_text():
-                await service_websocket.send(message)
-                response = await service_websocket.recv()
-                await websocket.send(response)
-
-    except Exception as e:
-        logger.error(f"Error connecting to Kubernetes service: {str(e)}")
-        await websocket.close(code=4003, reason="Service connection failed")
+    await websocket_endpoint(websocket, "market-data", token)
     
     # try:
     #     # Extract token from various sources
@@ -382,7 +372,6 @@ async def websocket_endpoint(
             logger.warning(f"No token provided for WebSocket connection: {client_id}")
             
         # Require and verify token, except for public market data stream
-        user = None
         # --- Begin: Extract token from cookie if not present in query param ---
         if not token:
             cookie_header = websocket.headers.get("cookie")
@@ -415,12 +404,9 @@ async def websocket_endpoint(
             else:
                 await websocket.close(code=4001, reason="Token required")
                 return
-        if token:
-            try:
-                user = await get_current_user(token=token)
-            except Exception:
-                await websocket.close(code=4001, reason="Invalid token")
-                return
+        elif not validate_token(token):
+            await websocket.close(code=4001, reason="Invalid token")
+            return
 
         # Connect to WebSocket
         await manager.connect(websocket, client_id)
@@ -434,17 +420,15 @@ async def websocket_endpoint(
                 # Add metadata
                 data["timestamp"] = datetime.utcnow().isoformat()
                 data["client_id"] = client_id
-                if user:
-                    data["user_id"] = user.id
 
                 # Process message based on type
                 message_type = data.get("type")
                 if message_type == "subscribe":
                     # Handle subscription
-                    await handle_subscription(websocket, data, user)
+                    await handle_subscription(websocket, data, None)
                 elif message_type == "unsubscribe":
                     # Handle unsubscription
-                    await handle_unsubscription(websocket, data, user)
+                    await handle_unsubscription(websocket, data, None)
                 else:
                     # Handle unknown message type
                     await websocket.send_json(
