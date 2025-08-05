@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: db-update
+  namespace: dev
+  labels:
+    app: quantumvestai
+    component: db-update
+spec:
+  schedule: "0 */6 * * *" # Runs every 6 hours
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: quantumvestai
+            component: db-update
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: db-update
+              image: quantumvestai-api:latest # Replace with your Docker image
+              command: ["python", "/app/api/scripts/update_market_data.py"]
+              envFrom:
+                - secretRef:
+                    name: quantumvestai-cluster-rds-credentials

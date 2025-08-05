@@ -23,6 +23,11 @@ async def update_all_stocks() -> None:
     with SessionLocal() as db:
         service = StockService(db)
         try:
+            # Ensure the stocks table exists
+            if not db.execute("SELECT to_regclass('public.stocks')").scalar():
+                logger.error("Stocks table does not exist in the database.")
+                return
+
             stocks: List[Stock] = db.query(Stock).all()
             if not stocks:
                 logger.info("No stocks found in database; nothing to update")

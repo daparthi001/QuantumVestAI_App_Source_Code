@@ -829,6 +829,50 @@ spec:
                   END IF;
               END $migration$;
               
+              -- Migration: Create Stocks Table
+              DO $stocks_migration$
+              BEGIN
+                  -- Check if this migration has been applied
+                  IF NOT EXISTS (SELECT 1 FROM schema_migrations WHERE version = '20250805_create_stocks_table') THEN
+                      RAISE NOTICE 'Applying migration: 20250805_create_stocks_table';
+                      
+                      -- Create stocks table if it doesn't exist
+                      CREATE TABLE IF NOT EXISTS stocks (
+                          id SERIAL PRIMARY KEY,
+                          ticker VARCHAR(10) UNIQUE NOT NULL,
+                          name VARCHAR(100) NOT NULL,
+                          exchange VARCHAR(50),
+                          sector VARCHAR(50),
+                          industry VARCHAR(50),
+                          country VARCHAR(50),
+                          last_price DECIMAL(20, 8),
+                          last_updated TIMESTAMP WITH TIME ZONE,
+                          is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                          predictability_score DECIMAL(5, 2),
+                          volatility_score DECIMAL(5, 2),
+                          trend_score DECIMAL(5, 2),
+                          volume_score DECIMAL(5, 2),
+                          created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                          updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+                      );
+                      
+                      -- Create indexes for better performance
+                      CREATE INDEX IF NOT EXISTS idx_stocks_ticker ON stocks(ticker);
+                      CREATE INDEX IF NOT EXISTS idx_stocks_sector ON stocks(sector);
+                      CREATE INDEX IF NOT EXISTS idx_stocks_industry ON stocks(industry);
+                      CREATE INDEX IF NOT EXISTS idx_stocks_is_active ON stocks(is_active);
+                      
+                      -- Record that this migration has been applied
+                      INSERT INTO schema_migrations (version, description, checksum)
+                      VALUES ('20250805_create_stocks_table', 'Create stocks table for market data',
+                              encode(digest('20250805_create_stocks_table', 'sha256'), 'hex'));
+                      
+                      RAISE NOTICE 'Migration 20250805_create_stocks_table completed successfully';
+                  ELSE
+                      RAISE NOTICE 'Migration 20250805_create_stocks_table already applied, skipping';
+                  END IF;
+              END $stocks_migration$;
+              
               -- Create helpful views for common queries
               CREATE OR REPLACE VIEW user_portfolio_summary AS
               SELECT 
@@ -883,14 +927,14 @@ spec:
               \echo '========================================='
               EOF
               
-              # Execute migration script with enhanced error handling
-              echo "Running database migrations..."
+              # Enhanced error handling for database migrations
+              echo "Running database migrations with enhanced error handling..."
               
-              # Run with verbose output and error checking
+              # Run migration script with verbose output and error checking
               if psql -v ON_ERROR_STOP=1 -f /tmp/migration.sql; then
                 echo ""
                 echo "✅ Database migrations completed successfully!"
-                echo "📊 Checking final database state..."
+                echo "📊 Verifying final database state..."
                 
                 # Verify migration status
                 psql -c "SELECT COUNT(*) as total_migrations FROM schema_migrations;" 2>/dev/null || echo "⚠️  Could not verify migration count"
@@ -905,7 +949,7 @@ spec:
                 echo "❌ Database migrations failed!"
                 echo "📋 Migration error details:"
                 
-                # Try to get more details about what failed
+                # Attempt to retrieve migration status for debugging
                 psql -c "SELECT version, description, applied_at FROM schema_migrations ORDER BY applied_at DESC LIMIT 5;" 2>/dev/null || echo "Could not retrieve migration status"
                 
                 exit 1
