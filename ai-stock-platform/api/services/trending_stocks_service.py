@@ -11,6 +11,7 @@ import asyncio
 import logging
 import os
 import json
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 import requests
@@ -64,6 +65,19 @@ except ImportError:
     AIOHTTP_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class TrendingStock:
+    """Typed representation of a single trending stock."""
+
+    symbol: str
+    name: str
+    price: float
+    change: float
+    change_percent: float
+    volume: int
+    last_updated: str
 
 
 class TrendingStocksService:
@@ -218,14 +232,21 @@ class TrendingStocksService:
             ssl_context.verify_mode = ssl.CERT_NONE
             logger.warning("SSL certificate verification disabled - not recommended for production")
             
-        stocks_data = []
+        stocks_data: List[Dict[str, Any]] = []
         connector = aiohttp.TCPConnector(ssl=ssl_context) if not ssl_verify else None
         async with aiohttp.ClientSession(connector=connector) as session:
             # Fetch each symbol sequentially to respect API rate limits.
             for idx, symbol in enumerate(self.trending_symbols):
                 result = await self._fetch_stock_quote(session, symbol)
                 if result:
-                    stocks_data.append(result)
+                    # ``_fetch_stock_quote`` now returns a ``TrendingStock`` dataclass;
+                    # convert to a plain dict for JSON serialization.  Tests may
+                    # monkeypatch the method to return dictionaries directly, so
+                    # handle both cases.
+                    if isinstance(result, TrendingStock):
+                        stocks_data.append(asdict(result))
+                    else:
+                        stocks_data.append(result)
                 else:
                     logger.warning(f"Failed to fetch data for {symbol}")
                 # Avoid hitting the free tier limit of 5 requests per minute
@@ -244,7 +265,7 @@ class TrendingStocksService:
 
     async def _fetch_stock_quote(
         self, session, symbol: str
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[TrendingStock]:
         """Fetch a single stock quote from Alpha Vantage."""
         if not AIOHTTP_AVAILABLE:
             # This should not be called if aiohttp is not available, but provide a safeguard
@@ -295,7 +316,7 @@ class TrendingStocksService:
 
     def _parse_alpha_vantage_response(
         self, symbol: str, data: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[TrendingStock]:
         """Parse Alpha Vantage API response into our format."""
         try:
             if "Note" in data:
@@ -330,15 +351,15 @@ class TrendingStocksService:
                 "ADBE": "Adobe Inc.",
             }
 
-            return {
-                "symbol": symbol,
-                "name": company_names.get(symbol, f"{symbol} Corp."),
-                "price": round(price, 2),
-                "change": round(change, 2),
-                "change_percent": round(change_percent, 2),
-                "volume": volume,
-                "last_updated": datetime.now().isoformat(),
-            }
+            return TrendingStock(
+                symbol=symbol,
+                name=company_names.get(symbol, f"{symbol} Corp."),
+                price=round(price, 2),
+                change=round(change, 2),
+                change_percent=round(change_percent, 2),
+                volume=volume,
+                last_updated=datetime.now().isoformat(),
+            )
 
         except (ValueError, KeyError) as e:
             logger.error(f"Error parsing data for {symbol}: {e}")
