@@ -27,6 +27,16 @@ router = APIRouter()
 manager = ConnectionManager()
 
 
+def _clean_token(token: Optional[str]) -> Optional[str]:
+    """Normalize a JWT by URL decoding and stripping any Bearer prefix."""
+    if not token:
+        return None
+    token = urllib.parse.unquote(token)
+    if token.startswith("Bearer "):
+        token = token.split(" ", 1)[1]
+    return token
+
+
 @router.websocket("/ws/market-data")
 async def market_data_ws(
     websocket: WebSocket, token: Optional[str] = Query(None), premium: Optional[str] = Query(None)
@@ -178,7 +188,7 @@ async def direct_market_data_ws(websocket: WebSocket, token: Optional[str] = Que
         # Try query params
         query_params = dict(websocket.query_params)
         token = query_params.get("token")
-        
+
         # Try cookies
         if not token:
             cookie_header = websocket.headers.get("cookie")
@@ -195,17 +205,15 @@ async def direct_market_data_ws(websocket: WebSocket, token: Optional[str] = Que
                     if match:
                         token = match.group(1)
                         logger.info("Found token in access_token cookie")
-        
+
         # Try authorization header
         if not token:
             auth_header = websocket.headers.get("authorization")
             if auth_header and auth_header.lower().startswith("bearer "):
                 token = auth_header.split(" ", 1)[1]
                 logger.info("Found token in authorization header")
-    
-    # Clean token if present
-    if token and token.startswith('Bearer '):
-        token = token[7:]
+
+    token = _clean_token(token)
     
     # Log token status but don't close connection regardless of validation result
     if token:
@@ -358,19 +366,11 @@ async def websocket_endpoint(
 
         if not token:
             token = qvai_token or cookie_token  # Try qvai_token first, then access_token
-        if not token and auth_header:
-            if auth_header.lower().startswith("bearer "):
-                token = auth_header.split(" ", 1)[1]
-        if token and token.startswith("Bearer "):
-            token = token.split(" ", 1)[1]
-            logger.info(f"Cleaned Bearer prefix from token for {client_id}")
+        if not token and auth_header and auth_header.lower().startswith("bearer "):
+            token = auth_header.split(" ", 1)[1]
 
-        # Debug logging for token presence
-        if token:
-            logger.info(f"Token provided for WebSocket connection: {client_id[:10]}...")
-        else:
-            logger.warning(f"No token provided for WebSocket connection: {client_id}")
-            
+        token = _clean_token(token)
+
         # Require and verify token, except for public market data stream
         # --- Begin: Extract token from cookie if not present in query param ---
         if not token:
@@ -381,23 +381,21 @@ async def websocket_endpoint(
                 # First try to get qvai_token (new standard)
                 match = re.search(r"qvai_token=([^;]+)", cookie_header)
                 if match:
-                    cookie_token = match.group(1)
-                    # Remove 'Bearer ' prefix if present
-                    if cookie_token.startswith("Bearer "):
-                        cookie_token = cookie_token[len("Bearer ") :]
-                    token = cookie_token
+                    token = _clean_token(match.group(1))
                     logger.info(f"Found token in qvai_token cookie")
                 else:
                     # Fall back to access_token
                     match = re.search(r"access_token=([^;]+)", cookie_header)
                     if match:
-                        cookie_token = match.group(1)
-                        # Remove 'Bearer ' prefix if present
-                        if cookie_token.startswith("Bearer "):
-                            cookie_token = cookie_token[len("Bearer ") :]
-                        token = cookie_token
+                        token = _clean_token(match.group(1))
                         logger.info(f"Found token in access_token cookie")
         # --- End: Extract token from cookie ---
+
+        # Debug logging for token presence after all extraction attempts
+        if token:
+            logger.info(f"Token provided for WebSocket connection: {client_id[:10]}...")
+        else:
+            logger.warning(f"No token provided for WebSocket connection: {client_id}")
         if not token:
             if client_id == "market-data":
                 logger.info("Allowing anonymous WebSocket connection for market-data")

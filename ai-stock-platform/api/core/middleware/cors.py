@@ -34,6 +34,7 @@ def get_cors_origins() -> List[str]:
         "http://quantumvestai-dev-api.dev.svc.cluster.local:8000",
         "http://localhost:80",
         "http://localhost:8000",
+        "http://localhost:3000",
         "http://127.0.0.1:80",
         "http://127.0.0.1:8000",
         # Development and production domains
@@ -67,8 +68,8 @@ def is_origin_allowed(origin: str | None, allowed: List[str] | None = None) -> b
     if "*" in allowed:
         return True
 
-    # Permit connections without an Origin header during development
-    if origin is None:
+    # Permit connections without an Origin header (or "null") during development
+    if origin in (None, "null"):
         if os.environ.get("ENVIRONMENT", "development").lower() == "development":
             return True
         return False
