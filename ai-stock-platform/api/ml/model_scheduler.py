@@ -20,6 +20,8 @@ def train_models_job() -> None:
         logger.info("Model training completed")
     except Exception as exc:
         logger.exception("Model training failed: %s", exc)
+        # Notify admin or log additional details
+        logger.error("Admin notification: Model training encountered an error.")
 
 
 def start_model_training_scheduler() -> BackgroundScheduler:

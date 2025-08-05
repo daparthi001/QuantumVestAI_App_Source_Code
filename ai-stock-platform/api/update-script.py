@@ -149,34 +149,29 @@ __all__ = ["User", "Stock"]
             self.logger.info(f"Updated model file: {filename}")
 
     def fix_imports_in_file(self, file_path: Path):
-        """Fix imports in a single file"""
         try:
             if not file_path.suffix == '.py':
                 return
-            
+
             content = file_path.read_text()
             original_content = content
-            
-            # Fix Base import
+
             base_import_pattern = r'from [\.\w]+db\.session import (?:[\w, ]+,\s*)?Base(?:\s*,\s*[\w, ]+)?'
             if re.search(base_import_pattern, content):
                 self.backup_file(file_path)
-                
-                # Calculate relative path to base.py
+
                 rel_path = len(file_path.relative_to(self.api_root).parts) - 1
                 dots = '.' * rel_path
-                
-                # Replace Base import
+
                 content = re.sub(
                     base_import_pattern,
                     lambda m: m.group().replace('db.session import', f'db.base import').replace('session import Base', 'base import Base'),
                     content
                 )
-                
+
                 if content != original_content:
                     file_path.write_text(content)
                     self.logger.info(f"Fixed Base import in {file_path}")
-        
         except Exception as e:
             self.logger.error(f"Error processing {file_path}: {str(e)}")
 

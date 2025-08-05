@@ -382,21 +382,21 @@ Author: AI Assistant for QuantumVestAI
     .dropdown-menu {
         display: none !important;
     }
-    
+
     body {
         background: white !important;
         color: black !important;
     }
-    
+
     .card {
         border: 1px solid #000 !important;
         box-shadow: none !important;
     }
-    
+
     .table {
         border-collapse: collapse !important;
     }
-    
+
     .table th,
     .table td {
         border: 1px solid #000 !important;
