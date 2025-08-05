@@ -262,6 +262,77 @@ class AuthService {
       throw error;
     }
   }
+
+  /**
+   * Refresh the authentication token
+   * @returns Promise with new token
+   */
+  async refreshToken(): Promise<string> {
+    try {
+      const response = await axios.post<AuthResponse>(
+        `${API_BASE_URL}/api/v1/auth/refresh-token`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${this.getToken()}`,
+          },
+        }
+      );
+
+      if (response.data.status === 'success' && response.data.data.access_token) {
+        const newToken = response.data.data.access_token;
+
+        // Update token in localStorage and cookies
+        localStorage.setItem('qvai_token', newToken);
+        document.cookie = `qvai_token=${newToken}; path=/; samesite=lax`;
+        document.cookie = `access_token=Bearer ${newToken}; path=/; samesite=lax`;
+
+        // Update token subject
+        this.tokenSubject.next(newToken);
+
+        return newToken;
+      } else {
+        throw new Error('Failed to refresh token');
+      }
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Intercept API calls to refresh token if expired
+   * @param request Original request
+   * @returns Modified request with refreshed token
+   */
+  async interceptRequest(request: any): Promise<any> {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const isTokenExpired = this.checkTokenExpiration(token); // Implement this method
+      if (isTokenExpired) {
+        const newToken = await this.refreshToken();
+        request.headers.Authorization = `Bearer ${newToken}`;
+      } else {
+        request.headers.Authorization = `Bearer ${token}`;
+      }
+
+      return request;
+    } catch (error) {
+      console.error('Request interception failed:', error);
+      throw error;
+    }
+  }
+
+  private checkTokenExpiration(token: string): boolean {
+    // Decode JWT and check expiration (implement decoding logic)
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const currentTime = Math.floor(Date.now() / 1000);
+    return payload.exp < currentTime;
+  }
 }
 
 // Create singleton instance
