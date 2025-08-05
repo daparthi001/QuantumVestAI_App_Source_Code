@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 interface Trade {
   symbol: string
@@ -28,18 +29,18 @@ export default function TradePanel() {
     <div className="space-y-2">
       <h2 className="text-xl font-semibold">Trade</h2>
       <div className="flex space-x-2">
-        <input
+        <Input
           value={symbol}
           onChange={(e) => setSymbol(e.target.value)}
           placeholder="Symbol"
-          className="border px-2 py-1 rounded"
+          className="w-32"
         />
-        <input
+        <Input
           type="number"
           value={quantity}
           onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
           placeholder="Qty"
-          className="border px-2 py-1 rounded w-24"
+          className="w-24"
         />
         <Button onClick={() => handleTrade('buy')}>Buy</Button>
         <Button onClick={() => handleTrade('sell')}>Sell</Button>

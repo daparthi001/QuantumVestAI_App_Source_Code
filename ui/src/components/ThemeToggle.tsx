@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Button } from '@/components/ui/button'
 
 // Simple light/dark mode toggle that persists the choice in localStorage
 export function ThemeToggle() {
@@ -24,12 +25,9 @@ export function ThemeToggle() {
   }
 
   return (
-    <button
-      onClick={toggleTheme}
-      className="px-4 py-2 rounded-md border"
-    >
-      {theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-    </button>
+    <Button onClick={toggleTheme} variant="outline">
+      {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+    </Button>
   )
 }
 

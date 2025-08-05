@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuthStore } from '@/store/useAuthStore'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 export default function LoginForm() {
   const [username, setUsername] = useState('')
@@ -14,14 +15,12 @@ export default function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-4 max-w-sm">
-      <input
-        className="border p-2 rounded-md"
+      <Input
         placeholder="Username"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
-      <input
-        className="border p-2 rounded-md"
+      <Input
         type="password"
         placeholder="Password"
         value={password}

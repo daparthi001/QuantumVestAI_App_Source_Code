@@ -2,6 +2,8 @@ import { Suspense, lazy } from 'react'
 import { useAppStore } from '@/store/useAppStore'
 import { usePing } from '@/api/hooks/usePing'
 import LatestData from '@/components/LatestData'
+import Watchlist from '@/components/Watchlist'
+import TradePanel from '@/components/TradePanel'
 
 const Button = lazy(() => import('@/components/ui/button'))
 
@@ -19,6 +21,10 @@ export default function Home() {
         <Button onClick={increment}>Increment</Button>
       </Suspense>
       <LatestData />
+      <div className="grid gap-4 md:grid-cols-2">
+        <Watchlist />
+        <TradePanel />
+      </div>
     </div>
   )
 }
