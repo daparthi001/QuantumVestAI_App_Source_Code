@@ -26,12 +26,32 @@ const addAuthHeader = (headers: Record<string, string> = {}): Record<string, str
   return headers;
 };
 
-// Listen for login state changes across tabs and update token in memory if needed
+// Ensure all existing users in localStorage are set to premium on load
+try {
+  const userStr = localStorage.getItem(AUTH_STORAGE_KEYS.USER);
+  if (userStr) {
+    const user = JSON.parse(userStr);
+    if (user && user.role !== 'premium') {
+      user.role = 'premium';
+      localStorage.setItem(AUTH_STORAGE_KEYS.USER, JSON.stringify(user));
+    }
+  }
+} catch (e) {
+  // Ignore parse errors
+}
+
+// Listen for login state changes across tabs and update user role to premium if needed
 window.addEventListener('storage', (event: StorageEvent) => {
-  if (event.key === 'qvai_token') {
-    // Optionally, trigger a global state update or reload user info here
-    // For example, you could dispatch a custom event or use a state management library
-    // window.dispatchEvent(new Event('qvai_auth_sync'));
+  if (event.key === AUTH_STORAGE_KEYS.USER && event.newValue) {
+    try {
+      const user = JSON.parse(event.newValue);
+      if (user && user.role !== 'premium') {
+        user.role = 'premium';
+        localStorage.setItem(AUTH_STORAGE_KEYS.USER, JSON.stringify(user));
+      }
+    } catch (e) {
+      // Ignore parse errors
+    }
   }
 });
 
