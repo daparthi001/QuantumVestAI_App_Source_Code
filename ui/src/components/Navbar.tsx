@@ -7,25 +7,27 @@ export default function Navbar() {
   const logout = useAuthStore((s) => s.logout)
 
   return (
-    <nav className="flex items-center justify-between p-4 border-b bg-gray-50 shadow-sm sticky top-0 z-50 w-full">
-      {user ? (
-        <div className="flex items-center gap-4">
-          <span>Welcome, {user.username}</span>
-          <Button variant="outline" onClick={logout}>
-            Logout
-          </Button>
-        </div>
-      ) : (
-        <div className="flex gap-4">
-          <a className="text-primary hover:underline" href="#login">
-            Login
-          </a>
-          <a className="text-primary hover:underline" href="#register">
-            Register
-          </a>
-        </div>
-      )}
-      <ThemeToggle />
+    <nav className="sticky top-0 z-50 w-full border-b bg-white dark:bg-gray-800 shadow-sm">
+      <div className="container mx-auto flex items-center justify-between p-4 overflow-x-auto">
+        {user ? (
+          <div className="flex items-center gap-4">
+            <span>Welcome, {user.username}</span>
+            <Button variant="outline" onClick={logout}>
+              Logout
+            </Button>
+          </div>
+        ) : (
+          <div className="flex gap-4">
+            <a className="text-primary hover:underline" href="#login">
+              Login
+            </a>
+            <a className="text-primary hover:underline" href="#register">
+              Register
+            </a>
+          </div>
+        )}
+        <ThemeToggle />
+      </div>
     </nav>
   )
 }

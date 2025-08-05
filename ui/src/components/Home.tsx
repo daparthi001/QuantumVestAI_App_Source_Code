@@ -13,7 +13,7 @@ export default function Home() {
   const { data } = usePing()
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="container mx-auto p-4 space-y-4">
       <h1 className="text-2xl font-bold">QuantumVest AI UI</h1>
       <p>{data?.message ?? 'Loading...'}</p>
       <div>Count: {count}</div>

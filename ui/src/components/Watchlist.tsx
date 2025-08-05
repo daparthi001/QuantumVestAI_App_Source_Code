@@ -45,7 +45,7 @@ export default function Watchlist() {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="p-4 bg-white dark:bg-gray-800 rounded shadow-sm space-y-2">
       <h2 className="text-xl font-semibold">Watchlist</h2>
       <div className="flex space-x-2">
         <Input
@@ -56,7 +56,7 @@ export default function Watchlist() {
         />
         <Button onClick={addSymbol}>Add</Button>
       </div>
-      <ul className="space-y-1">
+      <ul className="space-y-1 max-h-64 overflow-y-auto">
         {items.map((item) => (
           <li
             key={item.symbol}
