@@ -27,6 +27,19 @@ if [ "${INSTALL_MISSING_DEPS:-true}" = "true" ]; then
     echo "⚠ install-dependencies.sh not found, installing critical dependencies directly"
     pip install --no-cache-dir fastapi uvicorn aiohttp requests jinja2
   fi
+
+  # Install project specific dependencies if manifests are present. This ensures
+  # containers started in ephemeral environments (like CI or ephemeral pods)
+  # have all requirements prior to launching the application.
+  if [ -f requirements.txt ]; then
+    echo "Installing Python requirements..."
+    pip install --no-cache-dir -r requirements.txt
+  fi
+
+  if command -v npm >/dev/null 2>&1 && [ -f package.json ]; then
+    echo "Installing Node.js packages..."
+    npm ci --omit=dev || npm install --production
+  fi
 fi
 
 # Start the application using the original start script

@@ -234,3 +234,25 @@ If API endpoints aren't responding:
 3. Run the diagnostic script: `python test_trending_stocks_fixed.py`
 4. Check logs for error messages: `tail -n 100 logs/api.log`
 
+## Kubernetes Deployment Notes
+
+When deploying with Helm, ensure that database migrations and seeding run in the
+correct order. Annotate the jobs with pre/post hooks so migrations finish before
+the seeding job starts:
+
+```yaml
+# db-init job
+metadata:
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+
+# db-seed job
+metadata:
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+```
+
+These hooks guarantee the schema is created before `seed_db.py` attempts to
+insert data.
+
