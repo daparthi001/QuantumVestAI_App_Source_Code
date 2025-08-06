@@ -48,6 +48,7 @@ This document summarizes the restrictions and rate limiting measures implemented
 - Updated API endpoints to reflect the new limits:
   - Changed Twitter sentiment endpoint to limit days to max 7 (default 3)
   - Set hard limit of 100 tweets for Twitter sentiment analysis
+  - Exempted `/api/v1/auth/verify` from rate limiting to allow frequent token checks
 
 ## Best Practices
 
