@@ -108,7 +108,7 @@ Activate it with `source venv/bin/activate`.
 After activating, add the API package to your `PYTHONPATH` so tools like
 Alembic can locate the `api` module when run from outside the repository root:
 ```bash
-export PYTHONPATH="$(pwd)/ai-stock-platform:$PYTHONPATH"
+export PYTHONPATH="/app/core:/app/ai-stock-platform:/app/ai-stock-platform/api:/app/api:/app/ui:/app:"
 ```
 
 > **Important**: Ensure that the top-level `ai-stock-platform` directory is
@@ -118,7 +118,7 @@ export PYTHONPATH="$(pwd)/ai-stock-platform:$PYTHONPATH"
 > `api/core/config` module which does not expose `get_settings` and results in
 > the `ImportError: cannot import name 'get_settings'` error. A safe ordering is:
 > ```bash
-> export PYTHONPATH="$(pwd)/ai-stock-platform:$(pwd)/app/core:$PYTHONPATH"
+> export PYTHONPATH="/app/core:/app/ai-stock-platform:/app/ai-stock-platform/api:/app/api:/app/ui:/app:"
 > ```
 > This guarantees that the shared `core` package is used for configuration.
 

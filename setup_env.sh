@@ -1,4 +1,6 @@
 #!/bin/bash
+
+export PYTHONPATH="${STANDARD_PYTHONPATH}"
 # Simple environment setup script for QuantumVestAI
 set -e
 

@@ -489,7 +489,7 @@ async def login_post_redirect(request: Request):
     try:
         logger.info("Redirecting /login POST request to /auth/login")
         
-        # Use redirect with 307 to preserve the POST method
+        # Use redirect with 307 to preserve the POST method and data
         return RedirectResponse(
             url="/auth/login", 
             status_code=status.HTTP_307_TEMPORARY_REDIRECT
@@ -498,76 +498,6 @@ async def login_post_redirect(request: Request):
         logger.error(f"Error in login post redirect: {str(e)}")
         return JSONResponse(
             content={"error": "Login service unavailable"},
-            status_code=500
-        )
-
-@app.post("/login")
-async def enhanced_login_post(
-    request: Request,
-    username: str = Form(...),
-    password: str = Form(...),
-    remember: bool = Form(False),
-):
-    """Enhanced login handler with demo authentication"""
-    request_id = getattr(request.state, 'request_id', 'unknown')
-    logger.info(f"[{request_id}] Login attempt for: {username}")
-    
-    try:
-        # Validate input
-        if not username or len(username.strip()) < 3:
-            raise ValueError("Username must be at least 3 characters long")
-        
-        if not password or len(password) < 3:
-            raise ValueError("Password must be at least 3 characters long")
-        
-        api = APIClient()
-        api_resp = api.post_form(
-            "/auth/login",
-            data={"username": username, "password": password}
-        )
-        token = api_resp.get("data", {}).get("access_token")
-        if not token:
-            raise ValueError(api_resp.get("message", "Login failed"))
-
-        redirect_response = RedirectResponse(url="/settings", status_code=status.HTTP_302_FOUND)
-        max_age = 30 * 24 * 60 * 60 if remember else None
-        redirect_response.set_cookie(
-            key="access_token",
-            value=f"Bearer {token}",
-            httponly=True,
-            max_age=max_age,
-            samesite="lax",
-            secure=request.url.scheme == "https"
-        )
-        return redirect_response
-    
-    except ValueError as e:
-        logger.warning(f"[{request_id}] Login validation failed: {str(e)}")
-        return get_templates(request).TemplateResponse(
-            "login.html",
-            {
-                "request": request,
-                "msg": str(e),
-                "msg_type": "danger",
-                "username": username,
-                "api_url": API_URL,
-                "request_id": request_id,
-            },
-            status_code=400
-        )
-    
-    except Exception as e:
-        logger.error(f"[{request_id}] Login error: {str(e)}")
-        return get_templates(request).TemplateResponse(
-            "login.html",
-            {
-                "request": request,
-                "msg": "Login failed due to a technical error. Please try again.",
-                "msg_type": "danger",
-                "username": username,
-                "api_url": API_URL,
-                "request_id": request_id,
-            },
             status_code=500
         )
 

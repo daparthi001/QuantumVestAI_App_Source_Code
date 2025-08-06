@@ -13,7 +13,7 @@ services:
       - DEBUG=true
       - API_BASE_URL=http://quantumvestai-dev-api.dev.svc.cluster.local:8000
       - ENVIRONMENT=development
-      - PYTHONPATH=/app/ai-stock-platform:/app/ai-stock-platform/ui
+      - PYTHONPATH=/app/core:/app/ai-stock-platform:/app/ai-stock-platform/api:/app/api:/app/ui:/app
     volumes:
       - ./ui:/app/ui
       - ./templates:/app/templates
@@ -35,7 +35,7 @@ services:
       - DB_NAME=${RDS_DBNAME}
       - DB_USER=${RDS_USERNAME}
       - DB_PASSWORD=${RDS_PASSWORD}
-      - PYTHONPATH=/app/ai-stock-platform:/app/core
+      - PYTHONPATH=/app/core:/app/ai-stock-platform:/app/ai-stock-platform/api:/app/api:/app/ui:/app
     depends_on:
       - db
       

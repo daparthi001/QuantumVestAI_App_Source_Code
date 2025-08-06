@@ -325,11 +325,19 @@ async def test_auth_sync_page(request: Request):
 async def test_login_page(request: Request):
     """Test page for login functionality"""
     try:
-        return HTMLResponse(content=open('/Users/gayatri/QuantumVestAI_App_Source_Code/ai-stock-platform/ui/static/js/test-login.html').read())
+        # Use relative path instead of hardcoded absolute path
+        test_file_path = BASE_DIR / "static" / "js" / "test-login.html"
+        if test_file_path.exists():
+            return HTMLResponse(content=test_file_path.read_text())
+        else:
+            return HTMLResponse(
+                content="<h1>Test login page not found</h1><p><a href='/auth/login'>Go to Login</a></p>",
+                status_code=404
+            )
     except Exception as e:
         logger.error(f"Error rendering login test page: {str(e)}")
         return HTMLResponse(
-            content="<h1>Error loading login test page</h1>",
+            content="<h1>Error loading login test page</h1><p><a href='/auth/login'>Go to Login</a></p>",
             status_code=500
         )
 

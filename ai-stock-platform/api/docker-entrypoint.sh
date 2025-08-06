@@ -1,4 +1,6 @@
 #!/bin/bash
+
+export PYTHONPATH="${STANDARD_PYTHONPATH}"
 # Docker Entrypoint Script for QuantumVestAI API
 # Created: 2025-06-19 06:26:46
 # Author: daparthi001
@@ -36,7 +38,6 @@ fi
 mkdir -p /app/api /app/logs
 
 # Set Python path to include both /app/ai-stock-platform and /app/app/core for robust import resolution
-export PYTHONPATH=/app/ai-stock-platform:/app/app/core:$PYTHONPATH
 echo "PYTHONPATH: $PYTHONPATH"
 
 # Check for __init__.py and create if missing

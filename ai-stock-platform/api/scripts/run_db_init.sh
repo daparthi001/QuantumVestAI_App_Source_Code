@@ -1,3 +1,4 @@
+export PYTHONPATH="/app/core:/app/ai-stock-platform:/app/ai-stock-platform/api:/app/api:/app/ui:/app:"
 #!/bin/sh
 set -e
 
@@ -20,7 +21,6 @@ done
 echo "Database is available"
 
 # Set environment variables for Alembic
-export PYTHONPATH=/db-init
 
 # Step 1: Run database migrations
 echo "Running database migrations..."

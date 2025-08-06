@@ -215,18 +215,15 @@ async def direct_market_data_ws(websocket: WebSocket, token: Optional[str] = Que
 
     token = _clean_token(token)
     
+    # CRITICAL FIX: Allow free tier and anonymous users to access market data endpoints
+    user_id = "anonymous"
+    
     # Log token status but don't close connection regardless of validation result
     if token:
         try:
             # First, validate the token structure
             valid = validate_token(token)
-            
-            # Even if token is valid, extract premium parameter
-            # Premium parameter can override role-based access control
-            query_params = dict(websocket.query_params)
-            premium_param = premium or query_params.get("premium")
             logger.info(f"Direct market-data token validation: {valid}")
-            user_id = "anonymous"
             
             # Get user info if possible but don't fail if we can't
             try:
@@ -238,33 +235,26 @@ async def direct_market_data_ws(websocket: WebSocket, token: Optional[str] = Que
                     algorithms=[settings.JWT_ALGORITHM]
                 )
                 user_id = payload.get("sub", "anonymous")
-            except Exception:
-                pass
+                user_role = payload.get("role", "free")
                 
-            # Check permissions using the new permissions system
-            from jose import jwt
-            from core.config import settings
-            
-            # Extract token payload
-            payload = jwt.decode(
-                token,
-                settings.JWT_SECRET.get_secret_value(),
-                algorithms=[settings.JWT_ALGORITHM]
-            )
-            
-            # Ensure free-tier users and anonymous connections are handled correctly
-            if user_id == "anonymous" or payload.get("role", "free") == "free":
-                logger.info("Granting unrestricted access for free-tier or anonymous user")
-                return
-            
-            # Check if user has permission to access this endpoint
-            if not check_websocket_permissions(payload, "/market-data", premium):
-                logger.warning(f"WebSocket permission denied for user: {user_id}")
-                await websocket.close(code=4003, reason="Permission denied")
-                return
+                # CRITICAL FIX: Allow all authenticated users access to market data
+                # Market data endpoints should be freely accessible
+                logger.info(f"Authenticated user {user_id} with role {user_role} accessing market data")
                 
-            # Connect to WebSocket manager
+            except Exception as decode_error:
+                logger.warning(f"Token decode failed: {decode_error}, continuing as anonymous")
+                user_id = "anonymous"
+                
+        except Exception as validation_error:
+            logger.warning(f"Token validation failed: {validation_error}, continuing as anonymous")
+            user_id = "anonymous"
+    else:
+        logger.info("No token provided for direct market-data endpoint - continuing anonymously")
+        
+        try:
+            # Connect to WebSocket manager - always allow connection for market data
             await manager.connect(websocket, f"market-data:{user_id}")
+            logger.info(f"WebSocket connected: market-data:{user_id}")
             
             # Process messages until client disconnects
             while True:
@@ -288,16 +278,15 @@ async def direct_market_data_ws(websocket: WebSocket, token: Optional[str] = Que
                         }
                     )
                     
+        except WebSocketDisconnect:
+            await manager.disconnect(websocket, f"market-data:{user_id}")
+            logger.info(f"WebSocket disconnected: market-data:{user_id}")
         except Exception as e:
-            logger.warning(f"Error in direct market-data endpoint: {str(e)}")
-    else:
-        logger.info("No token provided for direct market-data endpoint - continuing anonymously")
-        
-        try:
-            # Connect anonymously
-            await manager.connect(websocket, "market-data:anonymous")
-            
-            # Process messages until client disconnects
+            logger.error(f"Error in WebSocket connection: {str(e)}")
+            try:
+                await websocket.close(code=4000, reason=str(e))
+            except:
+                pass
             while True:
                 data = await websocket.receive_json()
                 
