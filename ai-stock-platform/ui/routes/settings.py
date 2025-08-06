@@ -12,6 +12,7 @@ from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from core.config.settings import settings
+from utils.template_context import create_safe_template_context
 
 # Setup router
 router = APIRouter(prefix="/settings", tags=["settings"])
@@ -43,22 +44,20 @@ async def settings_page(request: Request):
         logger.info("Loading settings page for %s", user.get("username"))
 
         templates = get_templates(request)
-        return templates.TemplateResponse(
+        context = create_safe_template_context(
+            request,
+            templates,
             "settings.html",
-            {
-                "request": request,
-                # The settings template expects a ``data`` object for
-                # backward compatibility with earlier implementations.
-                # Provide the demo settings under this key so the template
-                # renders without raising ``UndefinedError`` when it tries to
-                # access ``data``.
-                "data": DEMO_USER_SETTINGS,
-                "page_title": "Settings - QuantumVestAI",
-                # Expose the asset helper so base templates can resolve static
-                # asset URLs even if the filter isn't registered globally.
-                "get_asset_url": templates.env.filters.get("get_asset_url"),
-            },
+            # The settings template expects a ``data`` object. Provide
+            # a default structure so Jinja doesn't raise ``UndefinedError``
+            # when rendering the page.
+            data=DEMO_USER_SETTINGS,
+            page_title="Settings - QuantumVestAI",
+            # Expose the asset helper so base templates can resolve static
+            # asset URLs even if the filter isn't registered globally.
+            get_asset_url=templates.env.filters.get("get_asset_url"),
         )
+        return templates.TemplateResponse("settings.html", context)
         
     except Exception as e:
         logger.error(f"Error loading settings: {str(e)}")

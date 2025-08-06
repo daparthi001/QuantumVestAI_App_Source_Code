@@ -121,6 +121,10 @@ async def settings_page(request: Request):
             {
                 "request": request,
                 "user": user,
+                # The template historically expects a ``data`` object. Include
+                # the user settings under this key to maintain compatibility
+                # and avoid ``UndefinedError`` exceptions during rendering.
+                "data": user_settings,
                 "settings": user_settings,
                 "options": available_options,
                 "page_title": "User Settings",
@@ -137,6 +141,10 @@ async def settings_page(request: Request):
             {
                 "request": request,
                 "user": None,
+                # Provide empty ``data`` and ``settings`` structures so the
+                # template renders without undefined variable errors even when
+                # an exception occurs.
+                "data": {},
                 "settings": {},
                 "options": {"themes": [], "languages": [], "timezones": [], "currencies": []},
                 "error": error_message,
