@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Modal } from '@/components/ui/modal'
+import { Card } from '@/components/ui/card'
 
 interface WatchItem {
   symbol: string
@@ -45,8 +46,7 @@ export default function Watchlist() {
   }
 
   return (
-    <div className="p-4 bg-white dark:bg-gray-800 rounded shadow-sm space-y-2">
-      <h2 className="text-xl font-semibold">Watchlist</h2>
+    <Card title="Watchlist" className="space-y-2">
       <div className="flex space-x-2">
         <Input
           value={symbol}
@@ -100,7 +100,7 @@ export default function Watchlist() {
           </Button>
         </div>
       </Modal>
-    </div>
+    </Card>
   )
 }
 

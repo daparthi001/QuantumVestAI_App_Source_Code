@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Card } from '@/components/ui/card'
 
 interface Trade {
   symbol: string
@@ -26,8 +27,7 @@ export default function TradePanel() {
   }
 
   return (
-    <div className="p-4 bg-white dark:bg-gray-800 rounded shadow-sm space-y-2">
-      <h2 className="text-xl font-semibold">Trade</h2>
+    <Card title="Trade" className="space-y-2">
       <div className="flex space-x-2">
         <Input
           value={symbol}
@@ -52,7 +52,7 @@ export default function TradePanel() {
           </li>
         ))}
       </ul>
-    </div>
+    </Card>
   )
 }
 
