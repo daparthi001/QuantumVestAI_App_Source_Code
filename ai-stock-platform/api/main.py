@@ -165,11 +165,17 @@ async def log_requests(request: Request, call_next):
         response.headers["Referrer-Policy"] = "no-referrer-when-downgrade"
         response.headers["Cache-Control"] = "public, max-age=60"
         response.headers["Content-Encoding"] = "gzip"
-        
+
         REQUEST_COUNT.labels(method=method, endpoint=path, http_status=response.status_code).inc()
-        
+
+        # Explicitly log failed requests for easier debugging
+        if response.status_code >= 400:
+            logger.error(
+                f"[{request_id}] Failed request: {method} {path} - Status: {response.status_code}"
+            )
+
         return response
-        
+
     except Exception as e:
         duration = (datetime.now() - start_time).total_seconds()
         REQUEST_COUNT.labels(method=method, endpoint=path, http_status=500).inc()
@@ -203,6 +209,12 @@ async def root(request: Request):
         message="Welcome to QuantumVestAI API",
         request_id=getattr(request.state, 'request_id', None)
     )
+
+
+@app.get("/api/settings")
+async def settings_health():
+    """Simple health endpoint for routing tests"""
+    return {"status": "ok"}
 
 
 @app.get("/health")
