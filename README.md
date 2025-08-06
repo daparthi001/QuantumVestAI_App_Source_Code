@@ -236,6 +236,8 @@ If API endpoints aren't responding:
 
 ## Kubernetes Deployment Notes
 
+### Helm Hooks for Database Jobs
+
 When deploying with Helm, ensure that database migrations and seeding run in the
 correct order. Annotate the jobs with pre/post hooks so migrations finish before
 the seeding job starts:

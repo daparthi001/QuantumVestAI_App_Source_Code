@@ -119,6 +119,15 @@ app.add_middleware(
 templates = Jinja2Templates(directory=str(BASE_DIR / "ui" / "templates"))
 app.state.templates = templates  # Store templates in app.state
 
+
+def get_templates(request: Request) -> Jinja2Templates:
+    """Return the application's Jinja2 templates instance."""
+    return getattr(request.app.state, "templates", templates)
+
+
+# Expose helper for templates needing access
+templates.env.globals["get_templates"] = get_templates
+
 # Get API URL from environment or use default for local development
 API_URL = os.environ.get("API_URL", "http://api:8000")
 API_V1_URL = f"{API_URL}/api/v1"
