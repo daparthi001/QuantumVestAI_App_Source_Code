@@ -92,6 +92,12 @@ if SENTRY_DSN:
 
 from fastapi.middleware.gzip import GZipMiddleware
 
+# Authentication middleware ensures protected routes require valid tokens
+try:  # pragma: no cover - prefer direct import but allow fallback
+    from ui.middleware.auth_middleware import AuthMiddleware
+except Exception:  # pragma: no cover - fallback path for compatibility
+    from middleware.auth_middleware import AuthMiddleware
+
 # Define BASE_DIR first
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -169,6 +175,9 @@ app.add_middleware(
     expose_headers=["X-Request-ID", "X-Process-Time"],
     max_age=86400,
 )
+
+# Apply authentication middleware to protect routes like /settings
+app.add_middleware(AuthMiddleware)
 
 # Setup templates and store in app.state
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
