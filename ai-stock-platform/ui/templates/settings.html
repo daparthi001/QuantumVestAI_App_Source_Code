@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - QuantumVestAI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h1>Settings</h1>
+  {% if data %}
+    <pre id="settings-data">{{ data | tojson(indent=2) }}</pre>
+  {% else %}
+    <p>No settings available.</p>
+  {% endif %}
+</div>
+{% endblock %}

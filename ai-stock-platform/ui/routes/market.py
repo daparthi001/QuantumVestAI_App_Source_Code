@@ -39,21 +39,35 @@ async def market_overview(request: Request):
         # Market news removed
         market_news = []
         
-        data = {}
+        # The template expects a ``data`` object with several keys such as
+        # ``timestamp`` and various market sections.  When live market data is
+        # unavailable we still need to provide a placeholder structure so Jinja
+        # doesn't raise ``UndefinedError`` when accessing these fields.
+        data = {
+            "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "overview": None,
+            "sectors": None,
+            "movers": None,
+            "sentiment": None,
+            "user": None,
+        }
 
-        return get_templates(request).TemplateResponse(
+        templates = get_templates(request)
+        return templates.TemplateResponse(
             "market/overview.html",
             {
                 "request": request,
                 "data": data,
                 "market_news": market_news,
-                "page_title": "Market Overview - QuantumVestAI"
+                "page_title": "Market Overview - QuantumVestAI",
+                "get_asset_url": templates.env.filters.get("get_asset_url"),
             }
         )
         
     except Exception as e:
         logger.error(f"Error loading market overview: {str(e)}")
-        return get_templates(request).TemplateResponse(
+        templates = get_templates(request)
+        return templates.TemplateResponse(
             "market/overview.html",
             {
                 "request": request,
@@ -68,6 +82,7 @@ async def market_overview(request: Request):
                 "market_news": [],
                 "error": "Failed to load market data",
                 "page_title": "Market Overview Error",
+                "get_asset_url": templates.env.filters.get("get_asset_url"),
             },
             status_code=500
         )
