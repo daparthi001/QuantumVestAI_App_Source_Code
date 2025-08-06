@@ -73,6 +73,8 @@ async def verify_token(token: str) -> Dict[str, Any]:
             f"{api_url}/api/v1/auth/verify",
             f"{api_url}/api/auth/verify",
         ]
+        # Try each verification URL in order
+        last_error = None
         for verify_url in verify_urls:
             try:
                 resp = await safe_post_json(verify_url, json_data={"token": token})
@@ -80,10 +82,18 @@ async def verify_token(token: str) -> Dict[str, Any]:
                     user = resp.get("data", {}).get("user", {})
                     username = user.get("username") or user.get("id")
                     if username:
+                        logger.info(f"Token verification successful via {verify_url}")
                         return {"username": username}
+                else:
+                    # Log the response for debugging
+                    logger.warning(f"Token verification failed at {verify_url}: {resp}")
             except Exception as api_error:
-                logger.error(f"Failed request: POST {verify_url} - Status: {getattr(api_error, 'status_code', 'unknown')}")
+                last_error = api_error
+                status_code = getattr(api_error, 'status_code', 'unknown')
+                logger.error(f"Failed request: POST {verify_url} - Status: {status_code}")
 
+        # If we reach here, all verification attempts failed
+        logger.error(f"All token verification attempts failed. Last error: {last_error}")
         raise HTTPException(status_code=401, detail="Invalid authentication token")
 
 
