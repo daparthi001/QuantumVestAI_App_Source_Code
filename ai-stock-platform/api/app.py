@@ -17,7 +17,16 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from jinja2 import Environment
-from routers import alerts, analytics, auth, social, stocks, users, watchlists
+from routers import (
+    alerts,
+    analytics,
+    auth,
+    settings,
+    social,
+    stocks,
+    users,
+    watchlists,
+)
 from sqlalchemy import text
 
 # Create API application
@@ -53,6 +62,7 @@ app.include_router(watchlists.router, prefix="/watchlists", tags=["Watchlists"])
 app.include_router(analytics.router, prefix="/analytics", tags=["Analytics"])
 app.include_router(analytics.public_router, tags=["Analytics Public"])
 app.include_router(social.router, prefix="/api/v1", tags=["Social Media"])
+app.include_router(settings.router, prefix="/api", tags=["Settings"])
 
 @app.get("/")
 async def api_root():

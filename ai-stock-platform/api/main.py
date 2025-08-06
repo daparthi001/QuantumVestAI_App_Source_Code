@@ -35,6 +35,7 @@ from routers.websocket import router as websocket_router
 from routers.social import router as social_router
 from routers.docs import router as docs_router
 from routers.analytics import public_router as analytics_public_router
+from routers.settings import router as settings_router
 from routes.market_data import router as market_data_router
 import sentry_sdk
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
@@ -126,6 +127,7 @@ app.include_router(social_router)
 app.include_router(docs_router)
 app.include_router(analytics_public_router, prefix="/api/v1")
 app.include_router(market_data_router, prefix="/market-data")
+app.include_router(settings_router, prefix="/api")
 
 # Request logging middleware
 @app.middleware("http")
