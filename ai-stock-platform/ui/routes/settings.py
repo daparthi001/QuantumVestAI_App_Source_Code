@@ -12,7 +12,16 @@ from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from core.config.settings import settings
-from utils.template_context import create_safe_template_context
+try:
+    from utils.template_context import create_safe_template_context
+except ImportError:
+    # Fallback if template context utility is not available
+    def create_safe_template_context(request, templates, template_name, **context_vars):
+        return {
+            "request": request,
+            "template_name": template_name,
+            **context_vars
+        }
 
 # Setup router
 router = APIRouter(prefix="/settings", tags=["settings"])
@@ -27,8 +36,28 @@ def get_templates(request: Request) -> Jinja2Templates:
     """Return app-level templates if available."""
     return getattr(request.app.state, "templates", templates)
 
-# Demo settings data removed
-DEMO_USER_SETTINGS = {}
+# Demo settings data - provide meaningful defaults for template rendering
+DEMO_USER_SETTINGS = {
+    "notifications": {
+        "email": True,
+        "push": False,
+        "sms": False
+    },
+    "display": {
+        "theme": "light",
+        "language": "en",
+        "timezone": "UTC"
+    },
+    "trading": {
+        "risk_level": "moderate",
+        "auto_invest": False,
+        "alerts": True
+    },
+    "privacy": {
+        "profile_public": False,
+        "data_sharing": False
+    }
+}
 
 @router.get("/", response_class=HTMLResponse)
 async def settings_page(request: Request):

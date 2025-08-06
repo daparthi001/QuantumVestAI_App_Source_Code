@@ -52,11 +52,23 @@ async def verify_token(token: str) -> Dict[str, Any]:
         username = payload.get("sub")
         if not username:
             raise ValueError("Invalid token payload")
+        
+        # Check if token is close to expiration and log a warning
+        exp = payload.get("exp")
+        if exp:
+            from datetime import datetime, timezone
+            exp_time = datetime.fromtimestamp(exp, tz=timezone.utc)
+            now = datetime.now(tz=timezone.utc)
+            time_until_exp = exp_time - now
+            
+            if time_until_exp.total_seconds() < 300:  # Less than 5 minutes
+                logger.warning(f"Token for user {username} expires in {time_until_exp.total_seconds():.0f} seconds")
+                
         return {"username": username}
     except (JWTError, ValueError) as decode_error:
-        logger.warning(f"Local token validation failed: {decode_error}; attempting API verification")
+        logger.warning(f"Token verification failed: {decode_error}")
 
-        api_url = os.getenv("API_URL", settings.API_BASE_URL).rstrip("/")
+        api_url = os.getenv("API_URL", getattr(settings, "API_BASE_URL", "http://quantumvestai-dev-api.dev.svc.cluster.local:8000")).rstrip("/")
         verify_urls = [
             f"{api_url}/api/v1/auth/verify",
             f"{api_url}/api/auth/verify",
@@ -70,7 +82,7 @@ async def verify_token(token: str) -> Dict[str, Any]:
                     if username:
                         return {"username": username}
             except Exception as api_error:
-                logger.error(f"API token verification error: {api_error}")
+                logger.error(f"Failed request: POST {verify_url} - Status: {getattr(api_error, 'status_code', 'unknown')}")
 
         raise HTTPException(status_code=401, detail="Invalid authentication token")
 

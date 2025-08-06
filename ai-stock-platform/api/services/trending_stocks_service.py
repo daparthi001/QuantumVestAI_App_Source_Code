@@ -214,6 +214,12 @@ class TrendingStocksService:
                             symbols = [q.get("symbol") for q in quotes if q.get("symbol")]
                             if symbols:
                                 return symbols
+                        elif resp.status == 429:
+                            logger.warning(
+                                "Yahoo Finance API returned status 429 - rate limited"
+                            )
+                            # For rate limiting, increase delay for subsequent retries
+                            delay = delay * 2 if attempt > 0 else delay
                         else:
                             logger.warning(
                                 "Yahoo Finance API returned status %s", resp.status
