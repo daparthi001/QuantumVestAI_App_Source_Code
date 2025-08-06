@@ -1014,6 +1014,114 @@ for name, controller in controllers.items():
     except Exception as e:
         logger.error(f"Failed to include {name} router: {str(e)}")
 
+# Add fallback settings route if no settings controller was loaded
+settings_router_loaded = False
+for name in controllers.keys():
+    if 'settings' in name.lower():
+        settings_router_loaded = True
+        break
+
+if not settings_router_loaded:
+    logger.warning("No settings router loaded, adding fallback settings route")
+    
+    @app.get("/settings", response_class=HTMLResponse)
+    async def fallback_settings(request: Request):
+        """Fallback settings page when settings router fails"""
+        try:
+            # Check authentication
+            auth_cookie = request.cookies.get("access_token") or request.cookies.get("qvai_token")
+            if not auth_cookie:
+                return RedirectResponse(url="/auth/login?msg=Please log in to access settings", status_code=status.HTTP_302_FOUND)
+            
+            # Get user info from cookie if available
+            user_cookie = request.cookies.get("user_info", "")
+            if user_cookie:
+                parts = user_cookie.split("|")
+                if len(parts) >= 3:
+                    username, role, full_name = parts[0], parts[1], parts[2]
+                else:
+                    username, role, full_name = "user", "user", "User"
+            else:
+                username, role, full_name = "demo", "user", "Demo User"
+            
+            context = {
+                "request": request,
+                "user": {
+                    "username": username,
+                    "role": role,
+                    "full_name": full_name,
+                    "is_authenticated": True
+                },
+                "page_title": "Settings - QuantumVestAI",
+                "get_asset_url": app.state.templates.env.filters.get(
+                    "get_asset_url",
+                    lambda path, version=None: f"/static/{path}?v={version or os.environ.get('APP_VERSION', 'v1.5.2')}"
+                )
+            }
+            
+            try:
+                return app.state.templates.TemplateResponse("settings.html", context)
+            except Exception as template_error:
+                logger.error(f"Settings template error: {template_error}")
+                # Create a simple settings page
+                return HTMLResponse(
+                    content=f"""
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Settings - QuantumVestAI</title>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                    </head>
+                    <body>
+                        <div class="container mt-5">
+                            <div class="row justify-content-center">
+                                <div class="col-md-8">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h2 class="card-title">Settings</h2>
+                                            <div class="alert alert-success" role="alert">
+                                                <h4 class="alert-heading">Welcome, {full_name}!</h4>
+                                                <p>You are successfully logged in to QuantumVestAI.</p>
+                                                <hr>
+                                                <p class="mb-0">
+                                                    <strong>Username:</strong> {username}<br>
+                                                    <strong>Role:</strong> {role}<br>
+                                                    <strong>Status:</strong> Active
+                                                </p>
+                                            </div>
+                                            <div class="d-grid gap-2">
+                                                <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
+                                                <a href="/auth/logout" class="btn btn-outline-secondary">Logout</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                    """,
+                    status_code=200
+                )
+                
+        except Exception as e:
+            logger.error(f"Fallback settings error: {str(e)}")
+            return HTMLResponse(
+                content=f"""
+                <html>
+                    <head><title>Settings Error - QuantumVestAI</title></head>
+                    <body>
+                        <h1>Settings Unavailable</h1>
+                        <p>Settings page is temporarily unavailable: {str(e)}</p>
+                        <p><a href="/dashboard">Go to Dashboard</a> | <a href="/auth/logout">Logout</a></p>
+                    </body>
+                </html>
+                """,
+                status_code=500
+            )
+
 # Add route to serve dashboard placeholder (will be overridden by dashboard_controller if implemented)
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request):
