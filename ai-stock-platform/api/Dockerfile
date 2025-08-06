@@ -49,7 +49,7 @@ RUN if [ -f "/app/core/security.py" ] && grep -q "settings.API_PREFIX" /app/core
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PORT=8000 \
-    PYTHONPATH=/app/core:/app/ai-stock-platform:/app/core:/app \
+    PYTHONPATH=/app/core:/app/ai-stock-platform:/app/ai-stock-platform/api:/app/api:/app/ui:/app
     TZ=UTC \
     API_ENV="development" \
     PROJECT_NAME="QuantumVestAI API" \

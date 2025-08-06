@@ -107,8 +107,12 @@ def format_date(value, format_string="%b %d, %Y"):
         return ""
     
     if isinstance(value, str):
-                    # Return original string if parsing fails
-                    return value
+        try:
+            # Try to parse ISO format
+            value = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        except ValueError:
+            # Return original string if parsing fails
+            return value
     
     return value.strftime(format_string)
 
@@ -122,7 +126,12 @@ def relative_time(value):
         return ""
     
     if isinstance(value, str):
-                return value
+        try:
+            # Try to parse ISO format
+            value = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        except ValueError:
+            # Return original string if parsing fails
+            return value
     
     now = datetime.utcnow()
     diff = now - value
@@ -254,6 +263,9 @@ def file_size_format(size_bytes):
     if size_bytes is None:
         return "0 B"
     
+    try:
+        size_bytes = int(size_bytes)
+    except (ValueError, TypeError):
         return "0 B"
     
     units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
@@ -297,7 +309,10 @@ def stringify(value):
     
     elif hasattr(value, 'items'):
         # Handle object with .items() method like dict
-            pass
+        formatted_items = []
+        for k, v in value.items():
+            formatted_items.append(f"{k}: {stringify(v)}")
+        return ", ".join(formatted_items)
     
     # Default: convert to string
     return str(value)

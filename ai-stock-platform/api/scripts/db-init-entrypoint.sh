@@ -1,4 +1,6 @@
 #!/bin/bash
+
+export PYTHONPATH="${STANDARD_PYTHONPATH}"
 # DB Init Entrypoint Script
 # Created: 2025-05-20 06:19:05
 # Author: daparthi001
@@ -12,7 +14,6 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 API_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 PROJECT_ROOT="$(dirname "$API_DIR")"
 
-export PYTHONPATH="${PROJECT_ROOT}:${API_DIR}:$PYTHONPATH"
 echo "PYTHONPATH set to: $PYTHONPATH"
 
 echo "[$(date -u '+%Y-%m-%d %H:%M:%S')] Starting database initialization..."

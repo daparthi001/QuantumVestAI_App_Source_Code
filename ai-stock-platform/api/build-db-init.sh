@@ -1,4 +1,6 @@
 #!/bin/bash
+
+export PYTHONPATH="${STANDARD_PYTHONPATH}"
 # DB Initialization Docker Image Build Script
 # Created: 2025-05-15 20:23:18
 # Author: daparthi001
@@ -19,7 +21,6 @@ if [ ! -f "Dockerfile.db-init" ]; then
 fi
 
 # Set Python path for Alembic and all migration commands
-export PYTHONPATH="$(pwd)/ai-stock-platform:$(pwd):/app/core:$PYTHONPATH"
 echo "PYTHONPATH set to: $PYTHONPATH"
 
 # Show current directory contents
