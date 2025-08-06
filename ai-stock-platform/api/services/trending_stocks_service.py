@@ -117,11 +117,21 @@ class TrendingStocksService:
         if not self.use_mock and not AIOHTTP_AVAILABLE:
             raise RuntimeError("aiohttp is required for real-time data access")
 
-        # Placeholder list used until live data is fetched. When ``ENABLE_REAL_DATA``
-        # is true we start with an empty list so that ``_fetch_yahoo_trending_symbols``
-        # is called on the first request to populate this list.
-        # Initialize with empty list to force real-time data fetching
-        self.trending_symbols: List[str] = []
+        # Placeholder list used until live data is fetched.  Older versions of
+        # the service populated this with a static list of symbols which tests
+        # (and parts of the UI) still expect to be present immediately after
+        # initialization.  To remain compatible we seed the service with a
+        # sensible default list and then attempt to replace it with real
+        # symbols on the first request.
+        self.trending_symbols: List[str] = [
+            "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA",
+            "META", "NVDA", "AMD", "NFLX", "JPM",
+            "DIS", "PYPL", "INTC", "CSCO", "KO",
+        ]
+        # Track whether we've attempted to fetch live symbols from Yahoo
+        # Finance.  ``get_trending_stocks`` will call
+        # ``_fetch_yahoo_trending_symbols`` once when this flag is ``False``.
+        self._fetched_symbols = False
 
     def fetch_trending_symbols(self):
         """Fetch trending symbols using Alpha Vantage."""
@@ -152,6 +162,77 @@ class TrendingStocksService:
         except Exception as e:
             logger.error(f"Failed to fetch trending symbols from Alpha Vantage: {e}")
             return []
+
+    async def _fetch_yahoo_trending_symbols(self, retries: int = 3, delay: float = 2.0) -> List[str]:
+        """Fetch trending symbols from Yahoo Finance's public API.
+
+        The Yahoo endpoint occasionally fails or rate limits, so this helper
+        performs a few retries before falling back to the default list defined
+        in ``__init__``.  The method is ``async`` to integrate with the rest of
+        the service which uses ``aiohttp`` for network access.
+
+        Args:
+            retries: Number of retry attempts before giving up.
+            delay: Seconds to wait between retries.
+
+        Returns:
+            A list of ticker symbols.  Falls back to ``self.trending_symbols``
+            if no symbols could be fetched.
+        """
+        url = "https://query1.finance.yahoo.com/v1/finance/trending/US"
+        params = {"count": 20}
+
+        # Skip network calls entirely if aiohttp is not available
+        if not AIOHTTP_AVAILABLE:
+            logger.warning(
+                "aiohttp not available; cannot fetch Yahoo trending symbols"
+            )
+            return self.trending_symbols
+
+        ssl_verify = os.getenv("DISABLE_SSL_VERIFY", "false").lower() != "true"
+        ssl_context = None
+        if not ssl_verify:
+            import ssl
+
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+
+        connector = aiohttp.TCPConnector(ssl=ssl_context) if not ssl_verify else None
+
+        for attempt in range(retries + 1):
+            try:
+                async with aiohttp.ClientSession(connector=connector) as session:
+                    async with session.get(url, params=params, timeout=10) as resp:
+                        if resp.status == 200:
+                            payload = await resp.json()
+                            quotes = (
+                                payload.get("finance", {})
+                                .get("result", [])[0]
+                                .get("quotes", [])
+                            )
+                            symbols = [q.get("symbol") for q in quotes if q.get("symbol")]
+                            if symbols:
+                                return symbols
+                        else:
+                            logger.warning(
+                                "Yahoo Finance API returned status %s", resp.status
+                            )
+            except Exception as exc:  # pragma: no cover - network errors
+                logger.warning(
+                    "Error fetching Yahoo trending symbols (attempt %s/%s): %s",
+                    attempt + 1,
+                    retries + 1,
+                    exc,
+                )
+            if attempt < retries:
+                await asyncio.sleep(delay)
+
+        # All attempts failed; return current (fallback) symbols
+        logger.warning(
+            "Falling back to default trending symbols after failed Yahoo fetch"
+        )
+        return self.trending_symbols
 
     async def get_trending_stocks(
         self, page: int = 1, limit: int = 10
@@ -185,16 +266,15 @@ class TrendingStocksService:
 
             # Fetch fresh data
             logger.info("Fetching fresh trending stocks data")
-            if not self.trending_symbols:
-                self.trending_symbols = await self._fetch_yahoo_trending_symbols()
-                if not self.trending_symbols:
-                    logger.warning("Failed to fetch trending symbols from Yahoo Finance, using fallback symbols")
-                    # Fallback to common stock symbols
-                    self.trending_symbols = [
-                        "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", 
-                        "META", "NVDA", "AMD", "NFLX", "JPM",
-                        "DIS", "PYPL", "INTC", "CSCO", "KO"
-                    ]
+            if not self._fetched_symbols:
+                fetched = await self._fetch_yahoo_trending_symbols()
+                if fetched:
+                    self.trending_symbols = fetched
+                else:
+                    logger.warning(
+                        "Failed to fetch trending symbols from Yahoo Finance, using fallback symbols"
+                    )
+                self._fetched_symbols = True
 
             stocks_data = await self._fetch_trending_stocks()
 
