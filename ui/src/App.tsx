@@ -1,23 +1,20 @@
-import { useEffect } from 'react'
-import Navbar from '@/components/Navbar'
-import LoginForm from '@/components/LoginForm'
-import Home from '@/components/Home'
-import { useAuthStore } from '@/store/useAuthStore'
+import React from 'react'
+import Navbar from '@/components/Layout/Navbar'
+import Sidebar from '@/components/Layout/Sidebar'
+import Footer from '@/components/Layout/Footer'
+import Dashboard from '@/pages/Dashboard'
 
-function App() {
-  const user = useAuthStore((s) => s.user)
-  const refresh = useAuthStore((s) => s.refresh)
-
-  useEffect(() => {
-    refresh()
-  }, [refresh])
-
+export default function App() {
   return (
-    <div>
+    <div className="flex min-h-screen flex-col">
       <Navbar />
-      {user ? <Home /> : <LoginForm />}
+      <div className="flex flex-1">
+        <Sidebar />
+        <main className="flex-1">
+          <Dashboard />
+        </main>
+      </div>
+      <Footer />
     </div>
   )
 }
-
-export default App
