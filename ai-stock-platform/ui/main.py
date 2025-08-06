@@ -431,6 +431,35 @@ class AuthUtils:
         # No authentication information found
         return {"is_authenticated": False}
 
+def create_default_spa_data(request: Request) -> dict:
+    """Create default data context for SPA fallback to prevent template errors"""
+    user_info = AuthUtils.get_user_info(request)
+    
+    # Create default user data
+    if user_info.get("is_authenticated"):
+        user_data = {
+            "username": user_info.get("username", "User"),
+            "display_name": user_info.get("full_name", user_info.get("username", "User")),
+            "role": user_info.get("role", "user"),
+        }
+    else:
+        user_data = {
+            "username": "Guest",
+            "display_name": "Guest User",
+            "role": "guest",
+        }
+    
+    # Create default data structure matching template expectations
+    return {
+        "user": user_data,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "market": {"status": "unavailable"},
+        "portfolio": {"status": "unavailable"},
+        "recommendations": {"status": "unavailable"},
+        "watchlist": {"status": "unavailable"},
+        "news": {"status": "unavailable"},
+    }
+
 # Enhanced route handlers
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
@@ -1026,4 +1055,10 @@ async def spa_fallback(request: Request, full_path: str):
     if request.url.path.startswith("/api/"):
         raise HTTPException(status_code=404)
 
-    return get_templates(request).TemplateResponse("index.html", {"request": request})
+    # Create default data context to prevent template errors
+    data = create_default_spa_data(request)
+    
+    return get_templates(request).TemplateResponse("index.html", {
+        "request": request,
+        "data": data
+    })
