@@ -38,6 +38,11 @@ async def authorize_websocket(token: str) -> bool:
 async def websocket_handler(request):
     token = request.query.get("token")
     if not token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.lower().startswith("bearer "):
+            token = auth_header.split(" ", 1)[1]
+
+    if not token:
         logger.error("No token provided in WebSocket request")
         return web.Response(status=403, text="Forbidden: No token provided")
     

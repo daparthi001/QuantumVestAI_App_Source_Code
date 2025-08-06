@@ -103,6 +103,12 @@ async def health_check():
     # Return health status
     return health_data
 
+
+@app.get("/api/health")
+async def api_health_check():
+    """Health check endpoint under /api prefix for ALB"""
+    return await health_check()
+
 # Add startup event to verify database connection
 @app.on_event("startup")
 async def startup_event():

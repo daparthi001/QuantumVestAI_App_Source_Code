@@ -13,6 +13,7 @@ from pydantic import BaseModel, EmailStr, Field, validator
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
+    refresh_token: Optional[str] = None
 
 class UserBase(BaseModel):
     username: str

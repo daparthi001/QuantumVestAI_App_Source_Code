@@ -13,6 +13,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import { useAuth } from '../contexts/AuthContext';
 
 interface HeaderProps {
   /** Called when the sidebar menu icon is clicked */
@@ -21,6 +22,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const { user, isAuthenticated, logout } = useAuth();
 
   const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -88,7 +90,11 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           </Badge>
         </IconButton>
         <IconButton color="inherit" onClick={handleProfileClick} sx={{ ml: 2 }} aria-label="account options">
-          <Avatar sx={{ width: 32, height: 32 }}>U</Avatar>
+          <Avatar sx={{ width: 32, height: 32 }}>
+            {isAuthenticated && user?.full_name
+              ? user.full_name.charAt(0).toUpperCase()
+              : 'U'}
+          </Avatar>
         </IconButton>
         <Menu
           anchorEl={anchorEl}
@@ -97,8 +103,17 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
           transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         >
-          <MenuItem onClick={handleClose}>Profile</MenuItem>
-          <MenuItem onClick={handleClose}>Logout</MenuItem>
+          {isAuthenticated && (
+            <MenuItem onClick={handleClose}>{user?.username}</MenuItem>
+          )}
+          <MenuItem
+            onClick={() => {
+              handleClose();
+              logout();
+            }}
+          >
+            Logout
+          </MenuItem>
         </Menu>
       </Toolbar>
     </AppBar>

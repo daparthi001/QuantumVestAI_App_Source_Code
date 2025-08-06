@@ -21,6 +21,7 @@ export interface AuthResponse {
   message: string;
   data: {
     access_token: string;
+    refresh_token?: string;
     token_type: string;
   };
 }
@@ -53,6 +54,7 @@ class AuthService {
   private tokenSubject = new BehaviorSubject<string | null>(
     localStorage.getItem('qvai_token')
   );
+  private refreshTokenKey = 'qvai_refresh_token';
 
   public currentUser = this.currentUserSubject.asObservable();
   public token = this.tokenSubject.asObservable();
@@ -65,6 +67,33 @@ class AuthService {
         this.logout();
       });
     }
+
+    // Setup axios interceptors for auth
+    axios.interceptors.request.use(async (config) => {
+      const token = this.getToken();
+      if (token) {
+        config.headers = config.headers || {};
+        config.headers['Authorization'] = `Bearer ${token}`;
+      }
+      return config;
+    });
+
+    axios.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        if (error.response && error.response.status === 401) {
+          try {
+            const newToken = await this.refreshToken();
+            error.config.headers['Authorization'] = `Bearer ${newToken}`;
+            return axios(error.config);
+          } catch (refreshError) {
+            this.logout();
+            return Promise.reject(refreshError);
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
   }
 
   /**
@@ -92,9 +121,13 @@ class AuthService {
 
       if (response.data.status === 'success' && response.data.data.access_token) {
         const token = response.data.data.access_token;
+        const refreshToken = response.data.data.refresh_token;
 
         // Store token in local storage - this triggers storage event for cross-tab sync
         localStorage.setItem('qvai_token', token);
+        if (refreshToken) {
+          localStorage.setItem(this.refreshTokenKey, refreshToken);
+        }
 
         // Persist token in cookies so server-rendered pages stay authenticated
         document.cookie = `qvai_token=${token}; path=/; samesite=lax`;
@@ -183,6 +216,7 @@ class AuthService {
   logout(): void {
     // Clear token from storage
     localStorage.removeItem('qvai_token');
+    localStorage.removeItem(this.refreshTokenKey);
 
     // Remove authentication cookies
     document.cookie = 'qvai_token=; Max-Age=0; path=/';
@@ -208,6 +242,10 @@ class AuthService {
    */
   getToken(): string | null {
     return localStorage.getItem('qvai_token');
+  }
+
+  getRefreshToken(): string | null {
+    return localStorage.getItem(this.refreshTokenKey);
   }
 
   /**
@@ -269,14 +307,13 @@ class AuthService {
    */
   async refreshToken(): Promise<string> {
     try {
+      const refreshToken = this.getRefreshToken();
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
       const response = await axios.post<AuthResponse>(
-        `${API_BASE_URL}/api/v1/auth/refresh-token`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${this.getToken()}`,
-          },
-        }
+        `${API_BASE_URL}/api/v1/auth/refresh`,
+        { refresh_token: refreshToken }
       );
 
       if (response.data.status === 'success' && response.data.data.access_token) {

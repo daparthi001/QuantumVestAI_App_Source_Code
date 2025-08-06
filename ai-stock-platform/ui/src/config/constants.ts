@@ -13,6 +13,7 @@ export const API_BASE_URL =
 
 // Authentication
 export const ACCESS_TOKEN_KEY = 'qvai_token';
+export const REFRESH_TOKEN_KEY = 'qvai_refresh_token';
 
 // API Endpoints
 export const API_ENDPOINTS = {
@@ -24,6 +25,7 @@ export const API_ENDPOINTS = {
     CURRENT_USER: '/api/v1/auth/me',
     FORGOT_PASSWORD: '/api/v1/auth/password-reset/request',
     RESET_PASSWORD: '/api/v1/auth/password-reset/confirm',
+    REFRESH: '/api/v1/auth/refresh',
   },
   // Stock endpoints
   STOCKS: {
