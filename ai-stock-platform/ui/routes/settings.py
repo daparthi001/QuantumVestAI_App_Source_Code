@@ -42,23 +42,34 @@ async def settings_page(request: Request):
 
         logger.info("Loading settings page for %s", user.get("username"))
 
-        return get_templates(request).TemplateResponse(
+        templates = get_templates(request)
+        return templates.TemplateResponse(
             "settings.html",
             {
                 "request": request,
-                "settings": DEMO_USER_SETTINGS,
+                # The settings template expects a ``data`` object for
+                # backward compatibility with earlier implementations.
+                # Provide the demo settings under this key so the template
+                # renders without raising ``UndefinedError`` when it tries to
+                # access ``data``.
+                "data": DEMO_USER_SETTINGS,
                 "page_title": "Settings - QuantumVestAI",
+                # Expose the asset helper so base templates can resolve static
+                # asset URLs even if the filter isn't registered globally.
+                "get_asset_url": templates.env.filters.get("get_asset_url"),
             },
         )
         
     except Exception as e:
         logger.error(f"Error loading settings: {str(e)}")
-        return get_templates(request).TemplateResponse(
+        templates = get_templates(request)
+        return templates.TemplateResponse(
             "error.html",
             {
                 "request": request,
                 "error": "Unable to load settings",
-                "page_title": "Settings Error"
+                "page_title": "Settings Error",
+                "get_asset_url": templates.env.filters.get("get_asset_url"),
             },
             status_code=500
         )
