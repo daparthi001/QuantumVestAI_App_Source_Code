@@ -35,9 +35,9 @@ def test_login_post_success(client, test_user, monkeypatch):
                 data={"username": "testuser", "password": "password123"},
                 follow_redirects=False
             )
-            # Check redirect to dashboard
+            # Check redirect to settings
             assert response.status_code == status.HTTP_302_FOUND
-            assert response.headers["location"] == "/dashboard"
+            assert response.headers["location"] == "/settings"
             # Check authentication was called correctly
             mock_post_form.assert_called_once_with(
                 "/auth/login", data={"username": "testuser", "password": "password123"}

@@ -46,9 +46,9 @@ async def direct_login_post(
             # Login successful
             token_data = api_response.json()
             logger.info(f"Login successful for {username}")
-            
-            # Redirect to dashboard
-            redirect_response = RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
+
+            # Redirect to settings
+            redirect_response = RedirectResponse(url="/settings", status_code=status.HTTP_302_FOUND)
             
             # Set the token in a secure cookie
             max_age = 30 * 24 * 60 * 60 if remember else None  # 30 days in seconds or session cookie
@@ -73,8 +73,8 @@ async def direct_login_post(
             expires = datetime.utcnow() + timedelta(hours=24)
             token = f"emergency_{username}_{expires.timestamp()}"
             
-            # Redirect to dashboard
-            response = RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
+            # Redirect to settings
+            response = RedirectResponse(url="/settings", status_code=status.HTTP_302_FOUND)
             response.set_cookie(
                 key="access_token",
                 value=f"Bearer {token}",
@@ -94,8 +94,8 @@ async def direct_login_post(
         expires = datetime.utcnow() + timedelta(hours=24)
         token = f"emergency_{username}_{expires.timestamp()}"
         
-        # Redirect to dashboard
-        response = RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
+        # Redirect to settings
+        response = RedirectResponse(url="/settings", status_code=status.HTTP_302_FOUND)
         response.set_cookie(
             key="access_token",
             value=f"Bearer {token}",

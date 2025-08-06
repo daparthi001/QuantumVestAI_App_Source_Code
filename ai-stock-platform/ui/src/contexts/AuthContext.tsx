@@ -97,9 +97,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Dispatch event for cross-tab communication
       window.dispatchEvent(new Event(AUTH_EVENT));
 
-      // Redirect to dashboard or intended page
-      const from = location.state?.from?.pathname || '/dashboard';
-      navigate(from, { replace: true });
+      // Redirect to settings after successful login
+      navigate('/settings', { replace: true });
     } catch (error) {
       console.error('Login failed:', error);
       throw error;

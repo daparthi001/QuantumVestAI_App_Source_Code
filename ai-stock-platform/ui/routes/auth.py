@@ -36,7 +36,7 @@ async def login_page(request: Request, msg: str = None, next: str = None):
         # Check if already authenticated
         auth_cookie = request.cookies.get("access_token")
         if auth_cookie:
-            return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
+            return RedirectResponse(url="/settings", status_code=status.HTTP_302_FOUND)
         
         return get_templates(request).TemplateResponse(
             "auth/login.html",
@@ -101,7 +101,7 @@ async def login_post(
             logger.warning("Failed to fetch user info after login")
 
         # Determine redirect URL
-        redirect_url = next if next and next.startswith('/') else "/dashboard"
+        redirect_url = next if next and next.startswith('/') else "/settings"
 
         response = RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
 

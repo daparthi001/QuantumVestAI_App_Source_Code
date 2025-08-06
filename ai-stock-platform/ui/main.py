@@ -437,8 +437,8 @@ async def index(request: Request):
         if not user.get("is_authenticated"):
             return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
 
-        # If authenticated, redirect to dashboard
-        return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
+        # If authenticated, redirect to settings
+        return RedirectResponse(url="/settings", status_code=status.HTTP_302_FOUND)
         # This route previously rendered a demo dashboard. It now simply
         # redirects authenticated users to the main dashboard and unauthenticated
         # users to the login page.
@@ -459,7 +459,7 @@ async def login_page(request: Request, msg: str = None):
         
         # Check if already authenticated
         if AuthUtils.is_authenticated(request):
-            return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
+            return RedirectResponse(url="/settings", status_code=status.HTTP_302_FOUND)
         
         # Redirect to /auth/login for consistency
         redirect_url = "/auth/login"
@@ -520,7 +520,7 @@ async def enhanced_login_post(
         if not token:
             raise ValueError(api_resp.get("message", "Login failed"))
 
-        redirect_response = RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
+        redirect_response = RedirectResponse(url="/settings", status_code=status.HTTP_302_FOUND)
         max_age = 30 * 24 * 60 * 60 if remember else None
         redirect_response.set_cookie(
             key="access_token",
@@ -570,7 +570,7 @@ async def register_page(request: Request, msg: str = None):
         
         # Check if already authenticated
         if AuthUtils.is_authenticated(request):
-            return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
+            return RedirectResponse(url="/settings", status_code=status.HTTP_302_FOUND)
         
         return get_templates(request).TemplateResponse(
             "register.html", 

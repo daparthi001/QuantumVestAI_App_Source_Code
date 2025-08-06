@@ -94,8 +94,8 @@ class AuthRedirectMiddleware(BaseHTTPMiddleware):
             qvai_token = request.cookies.get("qvai_token")
             
             if access_token or qvai_token:
-                logger.info(f"AuthRedirectMiddleware: Authenticated user accessing {path}, redirecting to dashboard")
-                return RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+                logger.info(f"AuthRedirectMiddleware: Authenticated user accessing {path}, redirecting to settings")
+                return RedirectResponse(url="/settings", status_code=status.HTTP_303_SEE_OTHER)
         
         # For all other paths, continue normally
         return await call_next(request)
@@ -405,8 +405,8 @@ async def direct_login_post(
             token_data = response.json()
             logger.info(f"Login successful for {username}")
             
-            # Redirect to dashboard
-            redirect_response = RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
+            # Redirect to settings
+            redirect_response = RedirectResponse(url="/settings", status_code=status.HTTP_302_FOUND)
             
             # Set the token in a secure cookie
             max_age = 30 * 24 * 60 * 60 if remember else None  # 30 days in seconds or session cookie
@@ -432,8 +432,8 @@ async def direct_login_post(
             expires = datetime.utcnow() + timedelta(hours=24)
             token = f"emergency_{username}_{expires.timestamp()}"
             
-            # Redirect to dashboard
-            response = RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
+            # Redirect to settings
+            response = RedirectResponse(url="/settings", status_code=status.HTTP_302_FOUND)
             response.set_cookie(
                 key="access_token",
                 value=f"Bearer {token}",
@@ -453,8 +453,8 @@ async def direct_login_post(
         expires = datetime.utcnow() + timedelta(hours=24)
         token = f"emergency_{username}_{expires.timestamp()}"
         
-        # Redirect to dashboard
-        response = RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
+        # Redirect to settings
+        response = RedirectResponse(url="/settings", status_code=status.HTTP_302_FOUND)
         response.set_cookie(
             key="access_token",
             value=f"Bearer {token}",
@@ -498,7 +498,7 @@ async def direct_emergency_login(request: Request):
                 "success": True,
                 "access_token": token,
                 "token_type": "bearer",
-                "redirect_url": "/dashboard"
+                "redirect_url": "/settings"
             },
             headers={
                 "Access-Control-Allow-Origin": "*",
@@ -546,13 +546,13 @@ async def index(request: Request):
         if access_token:
             logger.info("Found access_token cookie, redirecting to dashboard")
         if qvai_token:
-            logger.info("Found qvai_token cookie, redirecting to dashboard")
-            
-        # If any token exists, redirect to dashboard
+            logger.info("Found qvai_token cookie, redirecting to settings")
+
+        # If any token exists, redirect to settings
         if access_token or qvai_token:
-            logger.info("User is authenticated, redirecting to dashboard")
+            logger.info("User is authenticated, redirecting to settings")
             # Set a special header to indicate this is an auth redirect (client can use this to show preloader)
-            response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+            response = RedirectResponse(url="/settings", status_code=status.HTTP_303_SEE_OTHER)
             response.headers["X-Auth-Redirect"] = "true"
             return response
         

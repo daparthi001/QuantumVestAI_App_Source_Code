@@ -33,8 +33,8 @@ const Login: React.FC = () => {
       const response = await authService.login(username, password);
       console.log('Login successful:', response);
       
-      // Redirect to dashboard after successful login
-      navigate(ROUTES.DASHBOARD);
+      // Redirect to settings after successful login
+      navigate(ROUTES.SETTINGS);
     } catch (err: any) {
       console.error('Login error:', err);
       
@@ -59,7 +59,7 @@ const Login: React.FC = () => {
     setLoading(true);
     try {
       await authService.login('demo', 'password');
-      navigate(ROUTES.DASHBOARD);
+      navigate(ROUTES.SETTINGS);
     } catch (err: any) {
       console.error('Demo login error:', err);
       setError('Demo login failed. Please try again later.');

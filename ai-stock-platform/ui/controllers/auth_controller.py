@@ -73,7 +73,7 @@ def format_error_message(error_data):
 
 
 @router.get("/auth/login", response_class=HTMLResponse)
-async def login_page(request: Request, next: str = "/dashboard", msg: str = None):
+async def login_page(request: Request, next: str = "/settings", msg: str = None):
     """Render login page"""
     templates = get_templates(request)
     return get_templates(request).TemplateResponse(
@@ -126,7 +126,7 @@ async def login_post(
                 emergency_token = f"emergency_{username}_{timestamp}"
 
                 # Create redirect response
-                redirect_url = request.query_params.get("next", "/dashboard")
+                redirect_url = request.query_params.get("next", "/settings")
                 response = RedirectResponse(
                     url=redirect_url, status_code=status.HTTP_302_FOUND
                 )
@@ -158,7 +158,7 @@ async def login_post(
             )
 
         # Create redirect response
-        redirect_url = request.query_params.get("next", "/dashboard")
+        redirect_url = request.query_params.get("next", "/settings")
         response = RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
 
         # Set cookie with token
@@ -218,7 +218,7 @@ async def login_post(
             emergency_token = f"emergency_{username}_{timestamp}"
 
             # Create redirect response
-            redirect_url = request.query_params.get("next", "/dashboard")
+            redirect_url = request.query_params.get("next", "/settings")
             response = RedirectResponse(
                 url=redirect_url, status_code=status.HTTP_302_FOUND
             )
