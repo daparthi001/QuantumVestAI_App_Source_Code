@@ -12,6 +12,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
 }
@@ -21,6 +22,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   token: null,
   isAuthenticated: false,
+  isLoading: true,
   login: async () => {},
   logout: () => {},
 });
@@ -58,6 +60,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Compute authentication status
   const isAuthenticated = !!token && !!user;
+  const [isLoading, setIsLoading] = useState(true);
 
   // Handle login across tabs
   useEffect(() => {
@@ -81,6 +84,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
+  }, []);
+
+  // Rehydrate auth state on mount
+  useEffect(() => {
+    if (token && !user) {
+      authService
+        .fetchCurrentUser()
+        .then((u) => {
+          setUser(u);
+          localStorage.setItem(USER_KEY, JSON.stringify(u));
+        })
+        .catch(() => {
+          authService.logout();
+          setToken(null);
+        })
+        .finally(() => setIsLoading(false));
+    } else {
+      setIsLoading(false);
+    }
   }, []);
 
   // Login function
@@ -124,6 +146,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     token,
     isAuthenticated,
+    isLoading,
     login,
     logout,
   };

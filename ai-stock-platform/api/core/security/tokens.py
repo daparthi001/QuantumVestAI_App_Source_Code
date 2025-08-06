@@ -29,6 +29,7 @@ class TokenHandler:
     SECRET_KEY = config.JWT_SECRET.get_secret_value() if hasattr(config, "JWT_SECRET") else config.SECRET_KEY
     ALGORITHM = config.ALGORITHM
     ACCESS_TOKEN_EXPIRE_MINUTES = config.ACCESS_TOKEN_EXPIRE_MINUTES
+    REFRESH_TOKEN_EXPIRE_MINUTES = getattr(config, "REFRESH_TOKEN_EXPIRE_MINUTES", 60 * 24 * 7)
 
     @classmethod
     def create_access_token(cls, data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -43,6 +44,21 @@ class TokenHandler:
         return encoded_jwt
 
     @classmethod
+    def create_refresh_token(
+        cls, data: dict, expires_delta: Optional[timedelta] = None
+    ) -> str:
+        """Create a refresh token with a longer expiration."""
+        to_encode = data.copy()
+        if expires_delta:
+            expire = datetime.utcnow() + expires_delta
+        else:
+            expire = datetime.utcnow() + timedelta(
+                minutes=cls.REFRESH_TOKEN_EXPIRE_MINUTES
+            )
+        to_encode.update({"exp": expire, "type": "refresh"})
+        return jwt.encode(to_encode, cls.SECRET_KEY, algorithm=cls.ALGORITHM)
+
+    @classmethod
     def decode_token(cls, token: str) -> Optional[BaseModel]:
         return jwt.decode(token, cls.SECRET_KEY, algorithms=[cls.ALGORITHM])
 
@@ -50,6 +66,13 @@ class TokenHandler:
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """Convenience wrapper to create an access token using :class:`TokenHandler`."""
     return TokenHandler.create_access_token(data, expires_delta)
+
+
+def create_refresh_token(
+    data: dict, expires_delta: Optional[timedelta] = None
+) -> str:
+    """Convenience wrapper to create a refresh token using :class:`TokenHandler`."""
+    return TokenHandler.create_refresh_token(data, expires_delta)
 
 
 def decode_token(token: str) -> Optional[BaseModel]:

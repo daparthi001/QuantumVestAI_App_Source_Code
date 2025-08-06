@@ -1,0 +1,43 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-seed
+  namespace: dev
+  labels:
+    environment: development
+    app: quantumvestai
+    component: db-seed
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  ttlSecondsAfterFinished: 100
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        environment: development
+        app: quantumvestai
+        component: db-seed
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: db-seed
+          image: 921930869047.dkr.ecr.us-east-1.amazonaws.com/quantumvestai:db-init-dev-latest
+          command: ['python', 'scripts/seed_db.py']
+          envFrom:
+            - configMapRef:
+                name: quantumvestai-config
+            - secretRef:
+                name: quantumvestai-cluster-rds-credentials
+          volumeMounts:
+            - name: seed-data
+              mountPath: /app/seed_data.json
+              subPath: seed-data.json
+      volumes:
+        - name: seed-data
+          configMap:
+            name: db-init-config
+            items:
+              - key: seed-data.json
+                path: seed-data.json

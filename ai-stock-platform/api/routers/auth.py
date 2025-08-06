@@ -16,6 +16,7 @@ from core.security import (
     get_password_hash,
     verify_password,
     create_access_token,
+    create_refresh_token,
     decode_token,
 )
 # Use the SQLAlchemy model from the consolidated db.models package
@@ -90,6 +91,10 @@ class TokenVerifyData(BaseModel):
     user: TokenVerifyUser
 
 
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+
 @router.post(
     "/login",
     response_model=StandardResponse,
@@ -128,19 +133,24 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Create access token
+    # Create access and refresh tokens
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.username, "role": user.role},
         expires_delta=access_token_expires,
     )
+    refresh_token = create_refresh_token({"sub": user.username, "role": user.role})
 
     logger.info(f"Successful login for user: {form_data.username}")
 
     return StandardResponse(
         status="success",
         message="Login successful",
-        data=TokenResponse(access_token=access_token, token_type="bearer"),
+        data=TokenResponse(
+            access_token=access_token,
+            token_type="bearer",
+            refresh_token=refresh_token,
+        ),
     )
 
 
@@ -197,6 +207,35 @@ async def verify_token_endpoint(token_data: TokenVerifyRequest):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
+        )
+
+
+@router.post(
+    "/refresh",
+    response_model=StandardResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Refresh Access Token",
+    description="Refresh an access token using a valid refresh token",
+)
+async def refresh_access_token(token_data: RefreshTokenRequest):
+    """Generate a new access token from a refresh token."""
+    try:
+        payload = decode_token(token_data.refresh_token)
+        if payload.get("type") != "refresh":
+            raise ValueError("Invalid token type")
+        username = payload.get("sub")
+        role = payload.get("role")
+        new_token = create_access_token({"sub": username, "role": role})
+        return StandardResponse(
+            status="success",
+            message="Token refreshed",
+            data=TokenResponse(access_token=new_token, token_type="bearer"),
+        )
+    except Exception as exc:  # pragma: no cover - runtime validation
+        logger.warning(f"Token refresh failed: {exc}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token",
         )
 
 

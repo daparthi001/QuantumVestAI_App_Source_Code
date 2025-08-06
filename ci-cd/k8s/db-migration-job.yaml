@@ -12,6 +12,9 @@ metadata:
     environment: development
     app: quantumvestai
     component: db-migration
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
   ttlSecondsAfterFinished: 100
   backoffLimit: 3
