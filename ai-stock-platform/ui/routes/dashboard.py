@@ -30,10 +30,7 @@ def get_templates(request: Request) -> Jinja2Templates:
     return getattr(request.app.state, "templates", templates)
 
 
-# Demo placeholder data
-DEMO_MARKET_DATA = {}
-DEMO_STOCKS = []
-DEMO_NEWS = []
+# No demo/mock data - only live data from Alpha Vantage and RapidAPI
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -47,31 +44,31 @@ async def dashboard_page(request: Request):
         watchlist_items: List[str] = []
         portfolio_data: dict = {}
 
-        market_summary = DEMO_MARKET_DATA
-        popular_stocks = DEMO_STOCKS
-        news = DEMO_NEWS
+        # Always use live data from Alpha Vantage and RapidAPI
+        market_summary = YahooFinanceService.get_market_summary()
+        popular_stocks = []
+        news = []
 
-        if subscribed:
-            market_summary = YahooFinanceService.get_market_summary()
-            try:
-                trending = await TrendingStocksService().get_trending_stocks(limit=5)
-                popular_stocks = trending.get("stocks", [])
-                for stock in popular_stocks:
-                    try:
-                        symbol = stock.get("symbol") or stock.get("ticker")
-                        if symbol and api:
-                            pred = api.get(f"/predictions/{symbol}")
-                            price = (
-                                pred.get("data", {})
-                                .get("predictions", [{}])[0]
-                                .get("predicted_price")
-                            )
-                            if price is not None:
-                                stock["prediction"] = price
-                    except Exception as exc:  # pragma: no cover
-                        logger.warning(f"Prediction fetch failed for {symbol}: {exc}")
-            except Exception as ex:  # pragma: no cover - network errors
-                logger.warning(f"Trending stocks fetch failed: {ex}")
+        try:
+            trending = await TrendingStocksService().get_trending_stocks(limit=5)
+            popular_stocks = trending.get("stocks", [])
+            for stock in popular_stocks:
+                try:
+                    symbol = stock.get("symbol") or stock.get("ticker")
+                    if symbol and api:
+                        pred = api.get(f"/predictions/{symbol}")
+                        price = (
+                            pred.get("data", {})
+                            .get("predictions", [{}])[0]
+                            .get("predicted_price")
+                        )
+                        if price is not None:
+                            stock["prediction"] = price
+                except Exception as exc:  # pragma: no cover
+                    logger.warning(f"Prediction fetch failed for {symbol}: {exc}")
+        except Exception as ex:  # pragma: no cover - network errors
+            logger.warning(f"Trending stocks fetch failed: {ex}")
+            # Don't fallback to demo data, just log the error
 
         return get_templates(request).TemplateResponse(
             "dashboard/index.html",

@@ -29,8 +29,7 @@ def get_templates(request: Request) -> Jinja2Templates:
     """Return app-level templates if available."""
     return getattr(request.app.state, "templates", templates)
 
-# Demo predictability data removed
-DEMO_PREDICTABILITY_SCORES = {}
+# No demo/mock data - predictability should be calculated from live API data
 
 SECTOR_PREDICTABILITY = {}
 
@@ -46,22 +45,15 @@ async def predictability_page(
         ticker = ticker.upper()
         logger.info(f"Loading predictability analysis for {ticker}")
         
-        # Get stock data
-        if ticker in DEMO_PREDICTABILITY_SCORES:
-            stock_data = DEMO_PREDICTABILITY_SCORES[ticker]
-        else:
-            stock_data = {}
+        # TODO: Fetch stock predictability data from live API
+        stock_data = {}  # Should fetch from live API
         
-        # Generate historical predictability scores
+        # Generate empty historical predictability scores 
         historical_scores = []
-        base_score = stock_data.get("predictability_score", 0)
-        for i in range(30):
-            date = (datetime.now() - timedelta(days=29-i)).strftime("%Y-%m-%d")
-            score = base_score
-            historical_scores.append({"date": date, "score": score})
+        # TODO: Calculate actual predictability scores from live market data
         
         # Top ranked stocks for comparison
-        top_stocks = []
+        top_stocks = []  # Should fetch from live API
         
         return get_templates(request).TemplateResponse(
             "predictability.html",
@@ -113,19 +105,9 @@ async def predictability_ranking_page(
     try:
         logger.info(f"Loading predictability ranking (sector: {sector}, limit: {limit})")
         
-        # Get all stocks and sort by predictability score
-        all_stocks = list(DEMO_PREDICTABILITY_SCORES.values())
-        
-        # Filter by sector if specified
-        if sector:
-            all_stocks = [stock for stock in all_stocks if stock["sector"] == sector]
-        
-        # Sort by predictability score
-        ranked_stocks = sorted(all_stocks, key=lambda x: x["predictability_score"], reverse=True)[:limit]
-        
-        # Add ranking
-        for i, stock in enumerate(ranked_stocks):
-            stock["rank"] = i + 1
+        # TODO: Get all stocks from live API and sort by predictability score
+        all_stocks = []  # Should fetch from live API
+        ranked_stocks = []  # Should calculate from live data
         
         return get_templates(request).TemplateResponse(
             "predictability_ranking.html",
@@ -165,25 +147,22 @@ async def predictability_comparison_page(
         
         comparison_data = []
         for ticker in ticker_list[:5]:  # Limit to 5 stocks
-            if ticker in DEMO_PREDICTABILITY_SCORES:
-                stock_data = DEMO_PREDICTABILITY_SCORES[ticker]
-            else:
-                # Generate demo data
-                stock_data = {
-                    "symbol": ticker,
-                    "name": f"{ticker} Corporation",
-                    "predictability_score": 65.0 + (len(ticker) * 2),
-                    "volatility": 0.25 + (len(ticker) * 0.02),
-                    "trend_strength": 0.60 + (len(ticker) * 0.03),
-                    "pattern_recognition": 0.65 + (len(ticker) * 0.02),
-                    "market_correlation": 0.55 + (len(ticker) * 0.03),
-                    "volume_predictability": 0.60 + (len(ticker) * 0.02),
-                    "risk_level": "Medium",
-                    "confidence": 0.70 + (len(ticker) * 0.02)
-                }
+            # TODO: Fetch predictability data from live API
+            stock_data = {
+                "symbol": ticker,
+                "name": f"{ticker} Corporation",  # Should fetch from live API
+                "predictability_score": 0.0,     # Should calculate from live data
+                "volatility": 0.0,               # Should calculate from live data
+                "trend_strength": 0.0,           # Should calculate from live data
+                "pattern_recognition": 0.0,      # Should calculate from live data
+                "market_correlation": 0.0,       # Should calculate from live data
+                "volume_predictability": 0.0,    # Should calculate from live data
+                "risk_level": "Unknown",          # Should determine from live data
+                "confidence": 0.0                # Should calculate from live data
+            }
             comparison_data.append(stock_data)
         
-        # Calculate relative rankings
+        # Calculate relative rankings from live data
         comparison_data.sort(key=lambda x: x["predictability_score"], reverse=True)
         for i, stock in enumerate(comparison_data):
             stock["comparison_rank"] = i + 1

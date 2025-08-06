@@ -42,15 +42,11 @@ class MarketOverviewService:
     def _fetch_info(symbol: str) -> Dict[str, Any]:
         """Fetch basic quote info for a symbol."""
         if yf is None:
-            # Return mock values if yfinance is unavailable
-            return {
-                "symbol": symbol,
-                "price": 0.0,
-                "change": 0.0,
-                "change_percent": 0.0,
-                "volume": 0,
-                "name": symbol,
-            }
+            # Don't return mock data - raise error if yfinance is unavailable
+            raise RuntimeError(
+                "yfinance library is required for live market data. "
+                "Please install yfinance or use Alpha Vantage API instead."
+            )
         try:
             ticker = yf.Ticker(symbol)
             info = ticker.info
@@ -63,15 +59,8 @@ class MarketOverviewService:
                 "name": info.get("shortName", symbol),
             }
         except Exception as exc:  # pragma: no cover - network errors
-            logger.warning("Failed to fetch info for %s: %s", symbol, exc)
-            return {
-                "symbol": symbol,
-                "price": 0.0,
-                "change": 0.0,
-                "change_percent": 0.0,
-                "volume": 0,
-                "name": symbol,
-            }
+            logger.error("Failed to fetch live data for %s: %s", symbol, exc)
+            raise RuntimeError(f"Unable to fetch live market data for {symbol}") from exc
 
     @classmethod
     def get_market_overview(cls) -> Dict[str, Any]:

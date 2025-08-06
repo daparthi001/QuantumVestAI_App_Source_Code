@@ -37,9 +37,7 @@ def get_templates(request: Request) -> Jinja2Templates:
     """Return app-level templates if available."""
     return getattr(request.app.state, "templates", templates)
 
-# No demo data - only live data should be used
-DEMO_MARKET_DATA = {} 
-DEMO_STOCKS_DB = {} # Empty - this will force API calls for live data
+# No demo/mock data - only live data from Alpha Vantage and RapidAPI is used
 
 @router.get("/", response_class=HTMLResponse)
 async def market_overview(request: Request):

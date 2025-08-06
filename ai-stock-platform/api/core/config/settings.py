@@ -77,10 +77,15 @@ class Settings(BaseSettings):
     TWITTER_ACCESS_SECRET: Optional[str] = Field(default=None, env='TWITTER_ACCESS_SECRET')
     SLACK_WEBHOOK_URL: Optional[str] = Field(default=None, env='SLACK_WEBHOOK_URL')
 
-    # Stock Market Data
+    # Stock Market Data APIs
     # Read the Alpha Vantage API key from the environment. No demo default is
     # provided so missing configuration results in a clear error.
     ALPHA_VANTAGE_API_KEY: Optional[str] = Field(default=None, env='ALPHA_VANTAGE_API_KEY')
+    ALPHA_VANTAGE_REQUEST_INTERVAL: float = Field(default=12.0, env='ALPHA_VANTAGE_REQUEST_INTERVAL')
+    
+    # RapidAPI for Yahoo Finance data
+    RAPIDAPI_KEY: Optional[str] = Field(default=None, env='RAPIDAPI_KEY')
+    RAPIDAPI_HOST: str = Field(default="apidojo-yahoo-finance-v1.p.rapidapi.com", env='RAPIDAPI_HOST')
 
     # Cache settings
     CACHE_TTL_TRENDING_STOCKS: int = Field(default=300, env='CACHE_TTL_TRENDING_STOCKS')

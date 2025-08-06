@@ -36,10 +36,10 @@ def get_templates(request: Request) -> Jinja2Templates:
     """Return app-level templates if available."""
     return getattr(request.app.state, "templates", templates)
 
-# Demo settings data - provide meaningful defaults for template rendering
-DEMO_USER_SETTINGS = {
+# Default user settings structure - should be fetched from live API in production
+DEFAULT_USER_SETTINGS = {
     "notifications": {
-        "email": True,
+        "email": False,
         "push": False,
         "sms": False
     },
@@ -77,10 +77,11 @@ async def settings_page(request: Request):
             request,
             templates,
             "settings.html",
+            # TODO: Fetch user settings from live API instead of using defaults
             # The settings template expects a ``data`` object. Provide
             # a default structure so Jinja doesn't raise ``UndefinedError``
             # when rendering the page.
-            data=DEMO_USER_SETTINGS,
+            data=DEFAULT_USER_SETTINGS,
             page_title="Settings - QuantumVestAI",
             # Expose the asset helper so base templates can resolve static
             # asset URLs even if the filter isn't registered globally.
@@ -137,10 +138,11 @@ async def get_current_settings(request: Request):
                 status_code=401,
             )
 
+        # TODO: Fetch settings from live API instead of returning defaults
         return JSONResponse(
             {
                 "status": "success",
-                "settings": DEMO_USER_SETTINGS,
+                "settings": DEFAULT_USER_SETTINGS,
                 "timestamp": datetime.utcnow().isoformat(),
             }
         )

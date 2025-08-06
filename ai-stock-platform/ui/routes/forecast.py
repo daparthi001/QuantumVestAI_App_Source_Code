@@ -30,8 +30,7 @@ def get_templates(request: Request) -> Jinja2Templates:
     """Return app-level templates if available."""
     return getattr(request.app.state, "templates", templates)
 
-# No demo forecast data - always use live data
-MARKET_SENTIMENT = {}
+# No demo/mock forecast data - only live data from Alpha Vantage and RapidAPI
 
 @router.get("/", response_class=HTMLResponse)
 async def forecast_home(request: Request):
@@ -39,15 +38,16 @@ async def forecast_home(request: Request):
     try:
         logger.info("Loading forecast dashboard")
         
-        # Demo predictions removed
-        top_predictions = []
+        # TODO: Fetch live prediction data from Alpha Vantage and RapidAPI
+        top_predictions = []     # Should fetch from live API
+        market_sentiment = {}    # Should fetch from live API
         
         return get_templates(request).TemplateResponse(
             "forecast.html",
             {
                 "request": request,
                 "predictions": top_predictions,
-                "market_sentiment": MARKET_SENTIMENT,
+                "market_sentiment": market_sentiment,
                 "featured_stocks": [],
                 "page_title": "AI Forecast - QuantumVestAI"
             }
