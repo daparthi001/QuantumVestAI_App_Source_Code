@@ -15,6 +15,17 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from core.config.settings import settings
 
+try:
+    from utils.template_context import create_safe_template_context
+except ImportError:
+    # Fallback if template context utility is not available
+    def create_safe_template_context(request, templates, template_name, **context_vars):
+        return {
+            "request": request,
+            "template_name": template_name,
+            **context_vars
+        }
+
 # Setup router and templates
 router = APIRouter(prefix="/market", tags=["market"])
 logger = logging.getLogger(__name__)

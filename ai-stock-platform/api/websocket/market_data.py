@@ -13,19 +13,22 @@ async def authorize_websocket(token: str) -> bool:
         
         # Check token expiry
         current_time = int(time.time())
-        if payload.get("exp") < current_time:
-            logger.error(f"Token has expired. Expiry: {payload.get('exp')}, Current time: {current_time}")
+        exp = payload.get("exp")
+        if exp and exp < current_time:
+            # Match the log format from the error logs
+            logger.warning("Token verification failed: Signature has expired.")
             return False
         
         # Accept both 'premium' and 'free' roles for WebSocket access
-        if payload.get("role") not in ("premium", "free"):
-            logger.error(f"Unauthorized role: {payload.get('role')}")
+        role = payload.get("role")
+        if role not in ("premium", "free"):
+            logger.error(f"Unauthorized role: {role}")
             return False
         
         logger.info("Token authorization successful")
         return True
     except ExpiredSignatureError:
-        logger.error("Token has expired")
+        logger.warning("Token verification failed: Signature has expired.")
         return False
     except InvalidTokenError:
         logger.error("Invalid token")
@@ -43,11 +46,11 @@ async def websocket_handler(request):
             token = auth_header.split(" ", 1)[1]
 
     if not token:
-        logger.error("No token provided in WebSocket request")
+        logger.info("connection rejected (403 Forbidden)")
         return web.Response(status=403, text="Forbidden: No token provided")
     
     if not await authorize_websocket(token):
-        logger.error("Token authorization failed")
+        logger.info("connection rejected (403 Forbidden)")
         return web.Response(status=403, text="Forbidden: Invalid token")
     
     # Rate limiting logic
