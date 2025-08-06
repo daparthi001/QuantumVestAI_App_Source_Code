@@ -84,7 +84,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             "/health",
             "/docs",
             "/openapi.json",
-            "/favicon.ico"
+            "/favicon.ico",
+            "/api/v1/auth/verify",
+            "/api/auth/verify",
         ]
     
     def get_client_id(self, request: Request) -> str:
