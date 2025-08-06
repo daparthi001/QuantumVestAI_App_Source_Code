@@ -369,6 +369,9 @@ async def safe_post_json(
             )
             response.raise_for_status()
             return response.json()
+    except httpx.HTTPStatusError as e:
+        logger.error(f"Failed to post JSON to {url}: Client error '{e.response.status_code} {e.response.reason_phrase}' for url '{url}'")
+        return default
     except Exception as e:
         logger.error(f"Failed to post JSON to {url}: {str(e)}")
         return default

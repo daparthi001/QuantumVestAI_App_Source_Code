@@ -124,6 +124,8 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 # Include WebSocket and authentication routes
 app.include_router(websocket_router)
 app.include_router(auth_router, prefix="/api/v1/auth")
+# Add compatibility auth router for /api/auth/* endpoints (without v1)
+app.include_router(auth_router, prefix="/api/auth")
 app.include_router(social_router)
 app.include_router(docs_router)
 app.include_router(analytics_public_router, prefix="/api/v1")
