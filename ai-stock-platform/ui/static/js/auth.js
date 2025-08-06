@@ -16,7 +16,8 @@ function setupTokenRefresh() {
                 // For now, we'll just notify about potential issues
                 
                 // If on dashboard or protected page, might want to redirect to login
-                if (window.location.pathname.includes('/dashboard') || 
+                if (window.location.pathname.includes('/settings') ||
+                    window.location.pathname.includes('/dashboard') ||
                     window.location.pathname.includes('/portfolio')) {
                     // Instead of immediate redirect, show a warning first
                     if (!window._tokenWarningShown) {
@@ -110,8 +111,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .then(response => {
                     if (response.ok) {
-                        // Check if we were redirected to dashboard (successful login)
-                        if (response.redirected && response.url.includes('/dashboard')) {
+                        // Check if we were redirected to settings (successful login)
+                        if (response.redirected && response.url.includes('/settings')) {
                             // Success! Parse cookies to extract token
                             const cookies = document.cookie.split(';');
                             let token = null;
@@ -396,9 +397,9 @@ window.authUtils = {
         const token = this.getToken();
         const isAuth = !!token;
         
-        // If we're on the home page and authenticated, redirect to dashboard
+        // If we're on the home page and authenticated, redirect to settings
         if (isAuth && window.location.pathname === '/') {
-            console.log('User is authenticated on home page, redirecting to dashboard');
+            console.log('User is authenticated on home page, redirecting to settings');
             
             // Add auth-redirecting class to prevent flashing content
             document.documentElement.classList.add('auth-redirecting');
@@ -412,7 +413,7 @@ window.authUtils = {
             
             // Redirect with a short delay to allow preloader to show
             setTimeout(() => {
-                window.location.href = '/dashboard';
+                window.location.href = '/settings';
             }, 100);
         }
         

@@ -57,8 +57,8 @@ class Login {
       // Attempt login
       await authService.login(username, password);
       
-      // Redirect to dashboard on success
-      window.location.href = '/dashboard';
+      // Redirect to settings on success
+      window.location.href = '/settings';
     } catch (error) {
       console.error('Login failed', error);
       

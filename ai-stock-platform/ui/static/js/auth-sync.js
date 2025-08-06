@@ -86,10 +86,10 @@
                 document.cookie = `access_token=Bearer ${token}; path=/; samesite=lax`;
             }
             
-            // If we're on the login or register page, redirect to dashboard
+            // If we're on the login or register page, redirect to settings
             if (isLoginPage(currentPath) || isRegisterPage(currentPath)) {
-                console.log('On login/register page while logged in, redirecting to dashboard');
-                window.location.href = '/dashboard';
+                console.log('On login/register page while logged in, redirecting to settings');
+                window.location.href = '/settings';
             }
         }
     }
