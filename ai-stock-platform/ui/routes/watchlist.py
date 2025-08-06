@@ -26,11 +26,7 @@ def get_templates(request: Request) -> Jinja2Templates:
     """Return app-level templates if available."""
     return getattr(request.app.state, "templates", templates)
 
-# Demo watchlist data removed
-DEMO_WATCHLIST = []
-
-# Demo portfolio data removed
-DEMO_PORTFOLIO = {}
+# No demo/mock data - watchlist and portfolio should be fetched from live API
 
 @router.get("/", response_class=HTMLResponse)
 async def watchlist_page(request: Request, view: str = "grid"):
@@ -38,21 +34,25 @@ async def watchlist_page(request: Request, view: str = "grid"):
     try:
         logger.info("Loading watchlist page")
         
-        # Calculate watchlist summary
+        # TODO: Fetch watchlist and portfolio from live API
+        watchlist_items = []  # Should fetch from live API
+        portfolio_data = {}   # Should fetch from live API
+        
+        # Calculate watchlist summary based on live data
         watchlist_summary = {
-            "total_stocks": len(DEMO_WATCHLIST),
-            "total_value": sum([item["price"] * 10 for item in DEMO_WATCHLIST]),  # Assume 10 shares each
-            "gainers": len([item for item in DEMO_WATCHLIST if item["change_pct"] > 0]),
-            "losers": len([item for item in DEMO_WATCHLIST if item["change_pct"] < 0]),
-            "alerts_triggered": 2
+            "total_stocks": len(watchlist_items),
+            "total_value": 0,  # Should calculate from live data
+            "gainers": 0,      # Should calculate from live data  
+            "losers": 0,       # Should calculate from live data
+            "alerts_triggered": 0
         }
         
         return get_templates(request).TemplateResponse(
             "watchlist.html",
             {
                 "request": request,
-                "watchlist": DEMO_WATCHLIST,
-                "portfolio": DEMO_PORTFOLIO,
+                "watchlist": watchlist_items,
+                "portfolio": portfolio_data,
                 "summary": watchlist_summary,
                 "view": view,
                 "page_title": "Watchlist - QuantumVestAI"
@@ -88,32 +88,11 @@ async def add_to_watchlist(
         ticker = ticker.upper()
         logger.info(f"Adding {ticker} to watchlist")
         
-        # Check if already in watchlist
-        existing = next((item for item in DEMO_WATCHLIST if item["symbol"] == ticker), None)
-        if existing:
-            return JSONResponse({
-                "status": "error",
-                "message": f"{ticker} is already in your watchlist"
-            }, status_code=400)
-        
-        # Create new watchlist item
-        new_item = {
-            "id": max([item["id"] for item in DEMO_WATCHLIST], default=0) + 1,
-            "symbol": ticker,
-            "name": f"{ticker} Corporation",  # Would normally fetch from API
-            "price": 100.00,  # Demo price
-            "change": 1.50,
-            "change_pct": 1.52,
-            "volume": "10.5M",
-            "market_cap": "500.0B",
-            "added_date": datetime.now().strftime("%Y-%m-%d"),
-            "notes": notes or "",
-            "alert_price": alert_price,
-            "alert_type": alert_type
-        }
-        
-        # Add to demo watchlist (in production, this would save to database)
-        DEMO_WATCHLIST.append(new_item)
+        # TODO: Implement live API integration for watchlist management
+        return JSONResponse({
+            "status": "error",
+            "message": "Watchlist management requires live API integration. Please configure API endpoints."
+        }, status_code=501)  # Not Implemented
         
         return JSONResponse({
             "status": "success",
@@ -138,21 +117,11 @@ async def remove_from_watchlist(
         ticker = ticker.upper()
         logger.info(f"Removing {ticker} from watchlist")
         
-        # Find and remove item
-        original_length = len(DEMO_WATCHLIST)
-        
-        # Filter out the item to remove
-        updated_watchlist = [item for item in DEMO_WATCHLIST if item["symbol"] != ticker]
-        
-        if len(updated_watchlist) == original_length:
-            return JSONResponse({
-                "status": "error",
-                "message": f"{ticker} not found in watchlist"
-            }, status_code=404)
-        
-        # Update the global list
-        DEMO_WATCHLIST.clear()
-        DEMO_WATCHLIST.extend(updated_watchlist)
+        # TODO: Implement live API integration for watchlist management
+        return JSONResponse({
+            "status": "error",
+            "message": "Watchlist management requires live API integration. Please configure API endpoints."
+        }, status_code=501)  # Not Implemented
         
         return JSONResponse({
             "status": "success",
@@ -178,17 +147,11 @@ async def set_price_alert(
         ticker = ticker.upper()
         logger.info(f"Setting alert for {ticker} at ${alert_price} ({alert_type})")
         
-        # Find and update item
-        item = next((item for item in DEMO_WATCHLIST if item["symbol"] == ticker), None)
-        if not item:
-            return JSONResponse({
-                "status": "error",
-                "message": f"{ticker} not found in watchlist"
-            }, status_code=404)
-        
-        # Update alert settings
-        item["alert_price"] = alert_price
-        item["alert_type"] = alert_type
+        # TODO: Implement live API integration for watchlist alerts
+        return JSONResponse({
+            "status": "error",
+            "message": "Watchlist alert management requires live API integration. Please configure API endpoints."
+        }, status_code=501)  # Not Implemented
         
         return JSONResponse({
             "status": "success",
@@ -213,16 +176,11 @@ async def update_notes(
         ticker = ticker.upper()
         logger.info(f"Updating notes for {ticker}")
         
-        # Find and update item
-        item = next((item for item in DEMO_WATCHLIST if item["symbol"] == ticker), None)
-        if not item:
-            return JSONResponse({
-                "status": "error",
-                "message": f"{ticker} not found in watchlist"
-            }, status_code=404)
-        
-        # Update notes
-        item["notes"] = notes
+        # TODO: Implement live API integration for watchlist notes
+        return JSONResponse({
+            "status": "error",
+            "message": "Watchlist notes management requires live API integration. Please configure API endpoints."
+        }, status_code=501)  # Not Implemented
         
         return JSONResponse({
             "status": "success",
@@ -240,10 +198,11 @@ async def update_notes(
 async def get_watchlist_data(request: Request):
     """Get watchlist data."""
     try:
+        # TODO: Fetch watchlist and portfolio data from live API
         return JSONResponse({
             "status": "success",
-            "watchlist": DEMO_WATCHLIST,
-            "portfolio": DEMO_PORTFOLIO,
+            "watchlist": [],  # Should fetch from live API
+            "portfolio": {},  # Should fetch from live API
             "timestamp": datetime.utcnow().isoformat()
         })
         
@@ -277,25 +236,22 @@ async def reorder_watchlist(request: Request):
 async def portfolio_page(request: Request):
     """Portfolio management page"""
     try:
-        # Calculate portfolio metrics
+        # TODO: Fetch portfolio data from live API
+        portfolio_data = {}  # Should fetch from live API
+        
+        # Default portfolio metrics structure
         portfolio_metrics = {
-            "total_return": (DEMO_PORTFOLIO["total_gain_loss"] / (DEMO_PORTFOLIO["total_value"] - DEMO_PORTFOLIO["total_gain_loss"])) * 100,
-            "best_performer": max(DEMO_PORTFOLIO["positions"], key=lambda x: x["gain_loss_pct"]),
-            "worst_performer": min(DEMO_PORTFOLIO["positions"], key=lambda x: x["gain_loss_pct"]),
-            "sector_allocation": {
-                "Technology": 60.2,
-                "Healthcare": 15.8,
-                "Finance": 12.5,
-                "Energy": 8.1,
-                "Other": 3.4
-            }
+            "total_return": 0.0,
+            "best_performer": None,
+            "worst_performer": None,
+            "sector_allocation": {}
         }
         
         return get_templates(request).TemplateResponse(
             "portfolio.html",
             {
                 "request": request,
-                "portfolio": DEMO_PORTFOLIO,
+                "portfolio": portfolio_data,
                 "metrics": portfolio_metrics,
                 "page_title": "Portfolio - QuantumVestAI"
             }

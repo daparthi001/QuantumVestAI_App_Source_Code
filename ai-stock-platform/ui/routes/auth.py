@@ -68,8 +68,7 @@ def get_templates(request: Request) -> Jinja2Templates:
     """Return app-level templates if available."""
     return getattr(request.app.state, "templates", templates)
 
-# Demo user database removed
-DEMO_USERS = {}
+# No demo/mock user data - authentication must use live API
 
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request, msg: str = None, next: str = None):
@@ -398,12 +397,12 @@ async def profile_page(request: Request):
             parts = user_cookie.split("|")
             if len(parts) >= 3:
                 username, role, full_name = parts[0], parts[1], parts[2]
-                user_data = DEMO_USERS.get(username, {})
-                user_data.update({
+                # Get user data from live API instead of demo data
+                user_data = {
                     "username": username,
                     "role": role,
                     "full_name": full_name
-                })
+                }
             else:
                 user_data = {"username": "demo", "role": "user", "full_name": "Demo User"}
         else:
@@ -496,15 +495,15 @@ async def get_current_user_api(request: Request):
             parts = user_cookie.split("|")
             if len(parts) >= 3:
                 username, role, full_name = parts[0], parts[1], parts[2]
-                user_data = DEMO_USERS.get(username, {})
+                # Return user data from cookie without demo database lookup
                 return JSONResponse({
                     "status": "success",
                     "user": {
                         "username": username,
                         "role": role,
                         "full_name": full_name,
-                        "email": user_data.get("email", ""),
-                        "features": user_data.get("features", []),
+                        "email": "",  # Should be fetched from live API if needed
+                        "features": [],  # Should be fetched from live API if needed
                         "is_authenticated": True
                     }
                 })
