@@ -54,6 +54,27 @@ fi
 
 # Run seed script if specified
 if [ "${RUN_SEED:-false}" = "true" ]; then
+    echo "Verifying database schema before seeding..."
+    python <<'PY'
+import os, sys, psycopg2
+dsn = os.getenv("DATABASE_URL") or "postgresql://{user}:{password}@{host}:{port}/{db}".format(
+    user=os.getenv("POSTGRES_USER", "postgres"),
+    password=os.getenv("POSTGRES_PASSWORD", "postgres"),
+    host=os.getenv("POSTGRES_HOST", "db"),
+    port=os.getenv("POSTGRES_PORT", "5432"),
+    db=os.getenv("POSTGRES_DB", "postgres"),
+)
+conn = psycopg2.connect(dsn)
+cur = conn.cursor()
+cur.execute("SELECT to_regclass('public.users')")
+exists = cur.fetchone()[0] is not None
+conn.close()
+sys.exit(0 if exists else 1)
+PY
+    if [ $? -ne 0 ]; then
+        echo "Database schema not found; aborting seed." >&2
+        exit 1
+    fi
     echo "Running database seed..."
     python /app/scripts/seed_db.py
 fi
