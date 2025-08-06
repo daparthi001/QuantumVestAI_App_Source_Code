@@ -1078,3 +1078,22 @@ async def direct_market_data(symbol: str, request: Request):
         return {"error": str(e), "status": "failed", "timestamp": datetime.utcnow().isoformat()}
 
 # Add routes from the `routes` module
+
+# ---------------------------------------------------------------------------
+# SPA Fallback Route
+# ---------------------------------------------------------------------------
+# When running behind an ALB or other infrastructure that serves the UI as a
+# single page application, direct navigation to client-side routes like
+# "/settings" or "/news" can result in a 404 at the edge.  To support these
+# routes we provide a catch-all handler that serves the main ``index.html``
+# template for any path that wasn't matched by earlier routes.  The React
+# application then takes over routing on the client side.
+@app.get("/{full_path:path}", response_class=HTMLResponse)
+async def spa_fallback(request: Request, full_path: str):
+    """Serve the SPA entrypoint for unmatched paths."""
+    # Preserve API 404 behaviour to avoid returning HTML for missing API
+    # endpoints.
+    if request.url.path.startswith("/api/"):
+        raise HTTPException(status_code=404)
+
+    return get_templates(request).TemplateResponse("index.html", {"request": request})
