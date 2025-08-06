@@ -33,20 +33,22 @@ DEMO_USER_SETTINGS = {}
 async def settings_page(request: Request):
     """Main settings page"""
     try:
-        # Check authentication
-        auth_cookie = request.cookies.get("access_token")
-        if not auth_cookie:
-            return RedirectResponse(url="/auth/login?msg=Please log in to access settings", status_code=302)
+        # AuthMiddleware attaches validated user info to request.state
+        user = getattr(request.state, "user", None)
+        if not user:
+            return RedirectResponse(
+                url="/auth/login?msg=Please log in to access settings", status_code=302
+            )
 
-        logger.info("Loading settings page")
+        logger.info("Loading settings page for %s", user.get("username"))
 
         return get_templates(request).TemplateResponse(
             "settings.html",
             {
                 "request": request,
                 "settings": DEMO_USER_SETTINGS,
-                "page_title": "Settings - QuantumVestAI"
-            }
+                "page_title": "Settings - QuantumVestAI",
+            },
         )
         
     except Exception as e:
@@ -66,19 +68,17 @@ async def update_settings(request: Request):
     """Update user settings."""
     try:
         logger.info("Updating settings")
-        
-        # Check authentication
-        auth_cookie = request.cookies.get("access_token")
-        if not auth_cookie:
-            return JSONResponse({
-                "status": "error",
-                "message": "Authentication required"
-            }, status_code=401)
-        
-        return JSONResponse({
-            "status": "success",
-            "message": "Settings updated successfully"
-        })
+
+        user = getattr(request.state, "user", None)
+        if not user:
+            return JSONResponse(
+                {"status": "error", "message": "Authentication required"},
+                status_code=401,
+            )
+
+        return JSONResponse(
+            {"status": "success", "message": "Settings updated successfully"}
+        )
         
     except Exception as e:
         logger.error(f"Error updating settings: {str(e)}")
@@ -91,24 +91,28 @@ async def update_settings(request: Request):
 async def get_current_settings(request: Request):
     """Get current user settings via API"""
     try:
-        # Check authentication
-        auth_cookie = request.cookies.get("access_token")
-        if not auth_cookie:
-            return JSONResponse({
-                "status": "error",
-                "message": "Authentication required"
-            }, status_code=401)
-        
-        return JSONResponse({
-            "status": "success",
-            "settings": DEMO_USER_SETTINGS,
-            "timestamp": datetime.utcnow().isoformat()
-        })
-        
+        user = getattr(request.state, "user", None)
+        if not user:
+            return JSONResponse(
+                {"status": "error", "message": "Authentication required"},
+                status_code=401,
+            )
+
+        return JSONResponse(
+            {
+                "status": "success",
+                "settings": DEMO_USER_SETTINGS,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        )
+
     except Exception as e:
         logger.error(f"Error getting current settings: {str(e)}")
-        return JSONResponse({
-            "status": "error",
-            "message": str(e),
-            "timestamp": datetime.utcnow().isoformat()
-        }, status_code=500)
+        return JSONResponse(
+            {
+                "status": "error",
+                "message": str(e),
+                "timestamp": datetime.utcnow().isoformat(),
+            },
+            status_code=500,
+        )
