@@ -5,7 +5,7 @@ Author: gayatri
 """
 from typing import Optional
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -21,7 +21,25 @@ from .tokens import validate_token
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 # OAuth2 scheme for token
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl=f"{settings.API_V1_STR}/auth/token", auto_error=False
+)
+
+
+def _strip_token(token: str) -> str:
+    """Remove Bearer prefix and surrounding quotes from a token."""
+    token = token.strip().strip('"')
+    if token.startswith("Bearer "):
+        token = token[7:]
+    return token
+
+
+async def get_token(request: Request, token: Optional[str] = Depends(oauth2_scheme)) -> str:
+    """Retrieve access token from Authorization header or cookies."""
+    token = token or request.cookies.get("access_token")
+    if not token:
+        raise AuthenticationError("Not authenticated")
+    return _strip_token(token)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify password against hash."""
@@ -32,7 +50,7 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 async def get_current_user(
-    token: str = Depends(oauth2_scheme),
+    token: str = Depends(get_token),
     db: Session = Depends(get_db)
 ):
     """Get current user from token."""
