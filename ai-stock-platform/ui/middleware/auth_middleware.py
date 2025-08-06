@@ -71,7 +71,6 @@ async def verify_token(token: str) -> Dict[str, Any]:
         api_url = os.getenv("API_URL", getattr(settings, "API_BASE_URL", "http://quantumvestai-dev-api.dev.svc.cluster.local:8000")).rstrip("/")
         verify_urls = [
             f"{api_url}/api/v1/auth/verify",
-            f"{api_url}/api/auth/verify",
         ]
         # Try each verification URL in order
         last_error = None
