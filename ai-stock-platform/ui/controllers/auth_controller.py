@@ -140,6 +140,7 @@ async def login_post(
                     max_age=max_age,
                     samesite="lax",
                     secure=request.url.scheme == "https",
+                    path="/",
                 )
 
                 logger.info(f"Emergency login successful for {username}")
@@ -171,6 +172,7 @@ async def login_post(
             max_age=max_age,
             samesite="lax",
             secure=request.url.scheme == "https",
+            path="/",
         )
 
         # Store basic user info for UI convenience
@@ -187,6 +189,7 @@ async def login_post(
                 max_age=max_age,
                 samesite="lax",
                 secure=request.url.scheme == "https",
+                path="/",
             )
         except Exception:
             # If decoding fails, continue without user_info cookie
@@ -229,6 +232,7 @@ async def login_post(
                 max_age=max_age,
                 samesite="lax",
                 secure=request.url.scheme == "https",
+                path="/",
             )
 
             logger.info(f"Emergency login successful for {username}")
