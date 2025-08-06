@@ -9,21 +9,18 @@ interface Trade {
   side: 'buy' | 'sell'
 }
 
-/**
- * Simple panel that simulates trade actions. Trades are stored locally
- * and displayed in a list.
- */
 export default function TradePanel() {
   const [symbol, setSymbol] = useState('')
-  const [quantity, setQuantity] = useState(0)
+  const [quantity, setQuantity] = useState<number | ''>('')
   const [log, setLog] = useState<Trade[]>([])
 
   const handleTrade = (side: 'buy' | 'sell') => {
     const s = symbol.trim().toUpperCase()
-    if (!s || quantity <= 0) return
-    setLog((prev) => [...prev, { symbol: s, quantity, side }])
+    const qty = typeof quantity === 'string' ? parseInt(quantity) : quantity
+    if (!s || !qty || !Number.isFinite(qty) || qty <= 0) return
+    setLog((prev) => [...prev, { symbol: s, quantity: qty, side }])
     setSymbol('')
-    setQuantity(0)
+    setQuantity('')
   }
 
   return (
@@ -38,9 +35,18 @@ export default function TradePanel() {
         <Input
           type="number"
           value={quantity}
-          onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
+          onChange={(e) => {
+            const val = e.target.value
+            if (val === '') {
+              setQuantity('')
+            } else {
+              const parsed = parseInt(val)
+              setQuantity(Number.isFinite(parsed) && parsed > 0 ? parsed : '')
+            }
+          }}
           placeholder="Qty"
           className="w-24"
+          min={1}
         />
         <Button onClick={() => handleTrade('buy')}>Buy</Button>
         <Button onClick={() => handleTrade('sell')}>Sell</Button>
