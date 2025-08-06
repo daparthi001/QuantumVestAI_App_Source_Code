@@ -6,7 +6,7 @@ Author: gayatri
 
 # Re-export key security helpers using relative imports to avoid dependency on
 # the external compatibility wrapper.
-from .tokens import create_access_token, validate_token
+from .tokens import create_access_token, validate_token, decode_token
 from .authentication import (
     get_current_user,
     get_current_active_user,
@@ -15,4 +15,19 @@ from .authentication import (
     get_password_hash,
     pwd_context,
     oauth2_scheme,
+    get_token,
 )
+
+__all__ = [
+    "create_access_token",
+    "validate_token",
+    "decode_token",
+    "get_current_user",
+    "get_current_active_user",
+    "check_admin_role",
+    "verify_password",
+    "get_password_hash",
+    "pwd_context",
+    "oauth2_scheme",
+    "get_token",
+]

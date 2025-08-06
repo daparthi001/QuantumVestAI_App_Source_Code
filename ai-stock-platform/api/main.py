@@ -26,7 +26,8 @@ from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm
+from core.security import get_token
 from core.middleware.error_handler import ErrorHandlerMiddleware
 from core.middleware.rate_limit import RateLimitMiddleware
 from routers.auth import router as auth_router
@@ -302,8 +303,6 @@ async def api_health_check(request: Request):
 
 # --- ENHANCED AUTHENTICATION ENDPOINTS ---
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
-
 
 @app.post("/api/v1/auth/login")
 async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
@@ -361,7 +360,9 @@ async def login_get(request: Request):
 
 
 @app.get("/api/v1/auth/me")
-async def get_current_user(request: Request, token: str = Depends(oauth2_scheme)):
+
+
+async def get_current_user(request: Request, token: str = Depends(get_token)):
     """Get current user endpoint with enhanced response"""
     logger.info("Current user endpoint accessed")
     
