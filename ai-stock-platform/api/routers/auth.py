@@ -4,14 +4,20 @@ Updated: 2025-06-19 18:00:37
 Author: daparthi001
 """
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Annotated, Optional
 
 from core.config import settings
 from core.database import get_db_session
 from core.models.response import StandardResponse
-from core.security import (get_current_active_user, get_current_user,
-                           get_password_hash, verify_password, create_access_token)
+from core.security import (
+    get_current_active_user,
+    get_current_user,
+    get_password_hash,
+    verify_password,
+    create_access_token,
+    decode_token,
+)
 # Use the SQLAlchemy model from the consolidated db.models package
 from db.models.user import User
 from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
@@ -67,6 +73,21 @@ class PasswordResetRequest(BaseModel):
 class PasswordResetConfirm(BaseModel):
     token: str
     new_password: str = Field(..., min_length=8)
+
+
+# Token verification models
+class TokenVerifyRequest(BaseModel):
+    token: str
+
+
+class TokenVerifyUser(BaseModel):
+    username: str
+
+
+class TokenVerifyData(BaseModel):
+    valid: bool
+    expires_at: Optional[datetime] = None
+    user: TokenVerifyUser
 
 
 @router.post(
@@ -141,6 +162,42 @@ async def login_get():
 async def login_options():
     """Handle CORS preflight requests for login endpoint"""
     return Response(status_code=200)
+
+
+@router.post(
+    "/verify",
+    response_model=StandardResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Verify JWT Token",
+    description="Verify the validity of a JWT token",
+)
+async def verify_token_endpoint(token_data: TokenVerifyRequest):
+    """Verify a JWT token and return token details."""
+    logger.info("Token verification requested")
+
+    try:
+        payload = decode_token(token_data.token)
+        username = payload.get("sub") or payload.get("username")
+        if not username:
+            raise ValueError("Invalid token payload")
+
+        exp_ts = payload.get("exp")
+        expires_at = (
+            datetime.utcfromtimestamp(exp_ts) if isinstance(exp_ts, (int, float)) else None
+        )
+
+        user = TokenVerifyUser(username=username)
+        data = TokenVerifyData(valid=True, expires_at=expires_at, user=user)
+
+        return StandardResponse(
+            status="success", message="Token is valid", data=data
+        )
+    except Exception as exc:  # pragma: no cover - runtime validation
+        logger.warning(f"Token verification failed: {exc}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+        )
 
 
 @router.post(
