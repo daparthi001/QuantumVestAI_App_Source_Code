@@ -57,16 +57,20 @@ async def verify_token(token: str) -> Dict[str, Any]:
         logger.warning(f"Local token validation failed: {decode_error}; attempting API verification")
 
         api_url = os.getenv("API_URL", settings.API_BASE_URL).rstrip("/")
-        verify_url = f"{api_url}/api/v1/auth/verify"
-        try:
-            resp = await safe_post_json(verify_url, json_data={"token": token})
-            if resp and resp.get("status") == "success":
-                user = resp.get("data", {}).get("user", {})
-                username = user.get("username") or user.get("id")
-                if username:
-                    return {"username": username}
-        except Exception as api_error:
-            logger.error(f"API token verification error: {api_error}")
+        verify_urls = [
+            f"{api_url}/api/v1/auth/verify",
+            f"{api_url}/api/auth/verify",
+        ]
+        for verify_url in verify_urls:
+            try:
+                resp = await safe_post_json(verify_url, json_data={"token": token})
+                if resp and resp.get("status") == "success":
+                    user = resp.get("data", {}).get("user", {})
+                    username = user.get("username") or user.get("id")
+                    if username:
+                        return {"username": username}
+            except Exception as api_error:
+                logger.error(f"API token verification error: {api_error}")
 
         raise HTTPException(status_code=401, detail="Invalid authentication token")
 

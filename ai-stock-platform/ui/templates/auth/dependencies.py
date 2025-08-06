@@ -62,14 +62,20 @@ async def decode_token(token: str) -> Dict[str, Any]:
         # First try to verify with API server using improved HTTPX client
         from core.http_client import safe_post_json
         
-        response_data = await safe_post_json(
-            url=f"{API_URL}/api/auth/verify",
-            json_data={"token": token},
-            auth_token=token
-        )
-        
-        if response_data is not None:
-            return response_data
+        verify_urls = [
+            f"{API_URL}/api/v1/auth/verify",
+            f"{API_URL}/api/auth/verify",
+        ]
+
+        for verify_url in verify_urls:
+            response_data = await safe_post_json(
+                url=verify_url,
+                json_data={"token": token},
+                auth_token=token
+            )
+
+            if response_data is not None:
+                return response_data
             
     except Exception as e:
         logger.error(f"API token verification failed: {str(e)}")
