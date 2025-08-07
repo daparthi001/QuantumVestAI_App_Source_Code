@@ -91,15 +91,25 @@ async def verify_token(token: str) -> Dict[str, Any]:
                 last_error = api_error
                 status_code = api_error.response.status_code
                 reason = api_error.response.reason_phrase
-                logger.error(f"HTTP {status_code} error during token verification at {verify_url}: {reason}")
+                if status_code == 401:
+                    # 401 from API means the token is invalid, this is expected for invalid tokens
+                    logger.debug(f"Token rejected by API at {verify_url}: {reason}")
+                else:
+                    # Other HTTP errors might be temporary (5xx) so log as error
+                    logger.error(f"HTTP {status_code} error during token verification at {verify_url}: {reason}")
             except Exception as api_error:
                 last_error = api_error
                 logger.error(f"Failed request: POST {verify_url} - Error: {str(api_error)}")
 
         # If we reach here, all verification attempts failed
         if last_error:
-            error_detail = f"Token verification failed - {str(last_error)}"
-            logger.error(f"All token verification attempts failed. Last error: {error_detail}")
+            if isinstance(last_error, httpx.HTTPStatusError) and last_error.response.status_code == 401:
+                # 401 errors are expected for invalid tokens, don't log as error
+                logger.debug(f"Token verification failed - API returned 401 Unauthorized")
+                error_detail = "Invalid authentication token"
+            else:
+                error_detail = f"Token verification failed - {str(last_error)}"
+                logger.error(f"All token verification attempts failed. Last error: {error_detail}")
         else:
             error_detail = "Token verification failed - invalid response format"
             logger.error(f"All token verification attempts failed. Last error: {error_detail}")
@@ -127,6 +137,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "/redoc",
             "/openapi.json",
             "/health",
+            "/sw.js",  # Service worker should not require authentication
+            "/favicon.ico",  # Favicon requests should not require authentication
+            "/robots.txt",  # Robots.txt should not require authentication
         ]
         logger.info("Auth middleware initialized")
 
