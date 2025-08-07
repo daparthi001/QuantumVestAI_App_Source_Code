@@ -32,7 +32,8 @@ PROTECTED_ROUTES = {
 # Public routes that don't require authentication
 PUBLIC_ROUTES = {
     "/", "/login", "/auth/login", "/register", "/auth/register", 
-    "/auth/forgot-password", "/health", "/static", "/api/health"
+    "/auth/forgot-password", "/health", "/static", "/api/health",
+    "/sw.js", "/favicon.ico", "/robots.txt"  # Static assets that should always be public
 }
 
 
