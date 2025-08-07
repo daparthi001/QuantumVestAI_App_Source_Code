@@ -270,9 +270,9 @@ def create_persistent_auth_cookies(response: Response, token: str, remember: boo
     # Set user info cookie if provided
     if user_info:
         user_info_value = "|".join([
-            user_info.get("username", ""),
-            user_info.get("role", "user"),
-            user_info.get("full_name", "")
+            user_info.get("username") or "",
+            user_info.get("role") or "user",
+            user_info.get("full_name") or ""
         ])
         response.set_cookie(
             key="user_info",

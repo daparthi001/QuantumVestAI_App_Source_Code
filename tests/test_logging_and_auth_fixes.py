@@ -105,6 +105,76 @@ class TestAuthenticationPersistence(unittest.TestCase):
         for name in expected_names:
             self.assertIn(name, cookie_names)
     
+    def test_cookie_creation_with_none_values(self):
+        """Test that cookie creation handles None values properly"""
+        from ai_stock_platform.ui.middleware.improved_auth_middleware import create_persistent_auth_cookies
+        
+        # Mock response object
+        mock_response = Mock()
+        mock_response.set_cookie = Mock()
+        
+        token = "test_token_123"
+        # Test with None values that could cause the "sequence item 2: expected str instance, NoneType found" error
+        user_info = {"username": "testuser", "role": "user", "full_name": None}
+        
+        # This should not raise a TypeError
+        try:
+            create_persistent_auth_cookies(
+                response=mock_response,
+                token=token,
+                remember=True,
+                user_info=user_info,
+                secure=False
+            )
+            
+            # Verify set_cookie was called for user_info cookie with proper string value
+            call_args_list = mock_response.set_cookie.call_args_list
+            user_info_call = next((call for call in call_args_list if call[1]["key"] == "user_info"), None)
+            self.assertIsNotNone(user_info_call)
+            
+            # Verify the value is a proper string (not containing None)
+            user_info_value = user_info_call[1]["value"]
+            self.assertIsInstance(user_info_value, str)
+            self.assertNotIn("None", user_info_value)
+            self.assertEqual(user_info_value, "testuser|user|")  # Should be "username|role|" with empty full_name
+            
+        except TypeError as e:
+            self.fail(f"Cookie creation failed with None values: {e}")
+    
+    def test_cookie_creation_edge_cases(self):
+        """Test cookie creation with various edge cases"""
+        from ai_stock_platform.ui.middleware.improved_auth_middleware import create_persistent_auth_cookies
+        
+        mock_response = Mock()
+        mock_response.set_cookie = Mock()
+        
+        token = "test_token_123"
+        
+        # Test cases that should all work without errors
+        test_cases = [
+            {"username": None, "role": None, "full_name": None},  # All None
+            {"username": "user", "role": "", "full_name": None},  # Mixed None and empty
+            {"username": "user"},  # Missing keys
+            {},  # Empty dict
+        ]
+        
+        for i, user_info in enumerate(test_cases):
+            mock_response.reset_mock()
+            try:
+                create_persistent_auth_cookies(
+                    response=mock_response,
+                    token=token,
+                    remember=False,
+                    user_info=user_info,
+                    secure=False
+                )
+                
+                # Verify no errors occurred
+                self.assertTrue(mock_response.set_cookie.called, f"Case {i}: set_cookie should have been called")
+                
+            except Exception as e:
+                self.fail(f"Case {i} failed with user_info {user_info}: {e}")
+    
     def test_cookie_clearing(self):
         """Test that auth cookies are cleared properly"""
         from ai_stock_platform.ui.middleware.improved_auth_middleware import clear_auth_cookies
