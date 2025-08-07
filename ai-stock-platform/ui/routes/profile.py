@@ -10,6 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+import httpx
 # Import settings from the shared core config
 from core.config.settings import settings
 from fastapi import (APIRouter, Depends, File, Form, HTTPException, Request,
@@ -295,12 +296,34 @@ async def change_password(
                 status_code=400
             )
         
-        # simulate password change validation
-        # In real implementation, verify current_password against stored password
-        demo_stored_password = "demo_password"  # This would be hashed in real implementation
-        
-        if current_password != demo_stored_password and current_password != "password":
-            raise HTTPException(status_code=400, detail="Current password is incorrect")
+        # Validate current password through API
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(
+                    f"{API_URL}/api/v1/users/change-password",
+                    json={
+                        "user_id": current_user["id"],
+                        "current_password": current_password,
+                        "new_password": new_password
+                    }
+                )
+                response.raise_for_status()
+                
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 400:
+                raise HTTPException(status_code=400, detail="Current password is incorrect")
+            else:
+                logger.error(f"API returned error status {e.response.status_code}: {e}")
+                raise HTTPException(
+                    status_code=502,
+                    detail="Password change service returned an error - please try again later"
+                )
+        except httpx.RequestError as e:
+            logger.error(f"Failed to change password via API: {e}")
+            raise HTTPException(
+                status_code=503,
+                detail="Password change service temporarily unavailable - please check API connectivity"
+            )
         
         # simulate successful password change
         logger.info(f"Password changed for user {current_user['id']}")

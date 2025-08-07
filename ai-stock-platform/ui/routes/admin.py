@@ -4,9 +4,11 @@ Last Updated: 2025-07-07 21:40:52
 Author: hemanth9398
 """
 import logging
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import httpx
 # Import settings from the shared core config to avoid missing-module errors
 from core.config.settings import settings
 from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
@@ -17,6 +19,9 @@ from services.api_client import APIClient
 # Initialize logger and templates
 logger = logging.getLogger(__name__)
 templates = Jinja2Templates(directory=str(Path("templates")))
+
+# Get API URL from environment
+API_URL = os.environ.get("API_URL", "http://quantumvestai-dev-api.dev.svc.cluster.local:8000")
 
 
 def get_templates(request: Request) -> Jinja2Templates:
@@ -100,49 +105,32 @@ async def user_management(
 ):
     """User management page"""
     try:
-        # Demo user data
-        demo_users = [
-            {
-                "id": "user_001",
-                "email": "john.doe@example.com",
-                "username": "johndoe",
-                "role": "user",
-                "status": "active",
-                "created_at": "2025-01-15",
-                "last_login": "2025-07-07",
-                "advanced_features": True
-            },
-            {
-                "id": "user_002", 
-                "email": "jane.smith@example.com",
-                "username": "janesmith",
-                "role": "premium",
-                "status": "active",
-                "created_at": "2025-02-20",
-                "last_login": "2025-07-06",
-                "advanced_features": True
-            },
-            {
-                "id": "user_003",
-                "email": "mike.wilson@example.com", 
-                "username": "mikewilson",
-                "role": "user",
-                "status": "inactive",
-                "created_at": "2025-03-10",
-                "last_login": "2025-06-15",
-                "advanced_features": False
-            }
-        ]
-        
-        # Filter users based on search
-        if search:
-            demo_users = [u for u in demo_users if search.lower() in u["email"].lower() or search.lower() in u["username"].lower()]
-        
-        # Pagination logic
-        total_users = len(demo_users)
-        start_idx = (page - 1) * size
-        end_idx = start_idx + size
-        paginated_users = demo_users[start_idx:end_idx]
+        # Fetch live user data from API
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                params = {"page": page, "size": size}
+                if search:
+                    params["search"] = search
+                
+                response = await client.get(f"{API_URL}/api/v1/admin/users", params=params)
+                response.raise_for_status()
+                users_data = response.json()
+                
+                paginated_users = users_data.get("users", [])
+                total_users = users_data.get("total", 0)
+                
+        except httpx.RequestError as e:
+            logger.error(f"Failed to fetch users from API: {e}")
+            raise HTTPException(
+                status_code=503,
+                detail="User management service temporarily unavailable - please check API connectivity"
+            )
+        except httpx.HTTPStatusError as e:
+            logger.error(f"API returned error status {e.response.status_code}: {e}")
+            raise HTTPException(
+                status_code=502,
+                detail="User management service returned an error - please try again later"
+            )
         total_pages = (total_users + size - 1) // size
         
         pagination = {

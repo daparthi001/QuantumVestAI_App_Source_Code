@@ -619,43 +619,54 @@ async def enhanced_dashboard(request: Request):
         
         user = AuthUtils.get_user_info(request)
         
-        # Demo portfolio data for dashboard page
-        demo_portfolio = {
-            "total_value": 125750.45,
-            "daily_change": 1234.56,
-            "daily_change_pct": 0.99,
-            "total_gain": 8750.45,
-            "total_gain_percent": 7.48,
-            "status": "available"
-        }
+        # Fetch live portfolio data from API
+        try:
+            import httpx
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                portfolio_response = await client.get(f"{API_URL}/api/v1/portfolio", headers={"Authorization": f"Bearer {request.cookies.get('auth_token', '')}"})
+                if portfolio_response.status_code == 200:
+                    portfolio_data = portfolio_response.json()
+                else:
+                    # Default empty portfolio if API fails or user not authenticated
+                    portfolio_data = {
+                        "total_value": 0.0,
+                        "daily_change": 0.0,
+                        "daily_change_pct": 0.0,
+                        "total_gain": 0.0,
+                        "total_gain_percent": 0.0,
+                        "status": "unavailable"
+                    }
+        except Exception as e:
+            logger.warning(f"Failed to fetch portfolio data: {e}")
+            portfolio_data = {
+                "total_value": 0.0,
+                "daily_change": 0.0,
+                "daily_change_pct": 0.0,
+                "total_gain": 0.0,
+                "total_gain_percent": 0.0,
+                "status": "unavailable"
+            }
         
-        # Demo data for dashboard
-        # The dashboard template expects each index entry to provide ``price``
-        # and ``change_percent`` fields.  Older demo data used ``value`` and
-        # ``change_pct`` which caused Jinja to fail with ``'dict object' has no
-        # attribute 'price'`` when rendering. Align the keys with
-        # the real service output to avoid template errors.
-        market_summary = {
-            "indices": {
-                "S&P 500": {
-                    "price": 4567.89,
-                    "change": 23.45,
-                    "change_percent": 0.52,
-                },
-                "NASDAQ": {
-                    "price": 14234.56,
-                    "change": -45.67,
-                    "change_percent": -0.32,
-                },
-                "DOW": {
-                    "price": 34567.12,
-                    "change": 156.78,
-                    "change_percent": 0.46,
-                },
-            },
-            "sectors": {},
-            "top_movers": {},
-        }
+        # Fetch live market summary from API
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                market_response = await client.get(f"{API_URL}/api/v1/market/summary")
+                if market_response.status_code == 200:
+                    market_summary = market_response.json()
+                else:
+                    # Fallback empty market data if API fails
+                    market_summary = {
+                        "indices": {},
+                        "sectors": {},
+                        "top_movers": {},
+                    }
+        except Exception as e:
+            logger.warning(f"Failed to fetch market summary: {e}")
+            market_summary = {
+                "indices": {},
+                "sectors": {},
+                "top_movers": {},
+            }
         
         return get_templates(request).TemplateResponse(
             "dashboard/index.html",
@@ -664,7 +675,7 @@ async def enhanced_dashboard(request: Request):
                 "user": user,
                 "api_url": API_URL,
                 "request_id": request_id,
-                "portfolio": demo_portfolio,
+                "portfolio": portfolio_data,
                 "market_summary": market_summary,
                 "popular_stocks": [],
                 "news": [],

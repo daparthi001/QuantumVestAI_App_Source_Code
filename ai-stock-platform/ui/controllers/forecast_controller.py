@@ -10,6 +10,7 @@ from typing import Any, Dict, Optional
 from core.config.settings import settings
 
 import requests
+import httpx
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -35,64 +36,41 @@ async def forecast_home(request: Request):
     try:
         logger.info("Loading forecast dashboard")
         
-        # Use demo forecast data
-        forecast_data = {
-            "status": "success",
-            "predictions": [
-                {
-                    "symbol": "AAPL", 
-                    "prediction": "bullish", 
-                    "confidence": 0.85, 
-                    "target_price": 195.25,
-                    "current_price": 185.50,
-                    "change_percent": 5.26,
-                    "timeframe": "30d"
-                },
-                {
-                    "symbol": "MSFT", 
-                    "prediction": "bullish", 
-                    "confidence": 0.78, 
-                    "target_price": 375.50,
-                    "current_price": 365.25,
-                    "change_percent": 2.81,
-                    "timeframe": "30d"
-                },
-                {
-                    "symbol": "GOOGL", 
-                    "prediction": "neutral", 
-                    "confidence": 0.65, 
-                    "target_price": 142.75,
-                    "current_price": 141.80,
-                    "change_percent": 0.67,
-                    "timeframe": "30d"
-                },
-                {
-                    "symbol": "TSLA", 
-                    "prediction": "bearish", 
-                    "confidence": 0.72, 
-                    "target_price": 195.00,
-                    "current_price": 215.30,
-                    "change_percent": -9.43,
-                    "timeframe": "30d"
-                }
-            ],
-            "market_sentiment": "positive",
-            "ai_accuracy": 0.82,
-            "last_updated": "2025-07-07T21:39:48Z",
-            "total_predictions": 4,
-            "bullish_count": 2,
-            "bearish_count": 1,
-            "neutral_count": 1
-        }
+        # Fetch live forecast data from API
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(f"{API_V1_URL}/predictions")
+                response.raise_for_status()
+                forecast_data = response.json()
+        except httpx.RequestError as e:
+            logger.error(f"Failed to fetch forecast data from API: {e}")
+            raise HTTPException(
+                status_code=503, 
+                detail="Forecast service temporarily unavailable - please check API connectivity"
+            )
+        except httpx.HTTPStatusError as e:
+            logger.error(f"API returned error status {e.response.status_code}: {e}")
+            raise HTTPException(
+                status_code=502,
+                detail="Forecast service returned an error - please try again later"
+            )
         
-        # Additional market overview data
-        market_overview = {
-            "sp500_trend": "bullish",
-            "nasdaq_trend": "neutral", 
-            "dow_trend": "bullish",
-            "vix_level": "low",
-            "fear_greed_index": 68
-        }
+        # Additional market overview data from API
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(f"{API_V1_URL}/market/overview")
+                response.raise_for_status()
+                market_overview = response.json()
+        except httpx.RequestError as e:
+            logger.warning(f"Failed to fetch market overview: {e}")
+            # Use minimal fallback data if API fails
+            market_overview = {
+                "sp500_trend": "unknown",
+                "nasdaq_trend": "unknown", 
+                "dow_trend": "unknown",
+                "vix_level": "unknown",
+                "fear_greed_index": None
+            }
         
         # Render the forecast dashboard
         return get_templates(request).TemplateResponse(
@@ -140,36 +118,24 @@ async def stock_forecast(
         symbol = symbol.upper()
         logger.info(f"Loading forecast for {symbol} with timeframe {timeframe}")
         
-        # Demo forecast data for individual stock
-        stock_forecast_data = {
-            "symbol": symbol,
-            "company_name": f"{symbol} Corporation",  # In real app, fetch from API
-            "current_price": 185.50,
-            "prediction": "bullish",
-            "confidence": 0.85,
-            "target_price": 195.25,
-            "timeframe": timeframe,
-            "price_history": [
-                {"date": "2025-07-01", "price": 180.25},
-                {"date": "2025-07-02", "price": 182.50},
-                {"date": "2025-07-03", "price": 181.75},
-                {"date": "2025-07-04", "price": 184.30},
-                {"date": "2025-07-05", "price": 185.50}
-            ],
-            "technical_indicators": {
-                "rsi": 65.2,
-                "macd": "bullish",
-                "moving_avg_20": 183.45,
-                "moving_avg_50": 179.20,
-                "support_level": 175.00,
-                "resistance_level": 190.00
-            },
-            "ai_insights": [
-                "Strong momentum indicators suggest continued upward movement",
-                "Earnings expectations are positive for next quarter",
-                "Technical analysis shows bullish pattern formation"
-            ]
-        }
+        # Fetch live forecast data for individual stock from API
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(f"{API_V1_URL}/predictions/{symbol}")
+                response.raise_for_status()
+                stock_forecast_data = response.json()
+        except httpx.RequestError as e:
+            logger.error(f"Failed to fetch forecast data for {symbol}: {e}")
+            raise HTTPException(
+                status_code=503,
+                detail=f"Forecast service temporarily unavailable for {symbol} - please check API connectivity"
+            )
+        except httpx.HTTPStatusError as e:
+            logger.error(f"API returned error status {e.response.status_code} for {symbol}: {e}")
+            raise HTTPException(
+                status_code=502,
+                detail=f"Forecast service returned an error for {symbol} - please try again later"
+            )
         
         return get_templates(request).TemplateResponse(
             "forecast/stock_detail.html",
@@ -206,30 +172,30 @@ async def get_predictions_api(
     """API endpoint for getting forecast predictions"""
     
     try:
-        # Parse symbols
-        if symbols:
-            symbol_list = [s.strip().upper() for s in symbols.split(",")]
-        else:
-            symbol_list = ["AAPL", "MSFT", "GOOGL", "TSLA"]
-        
-        # Demo API response
-        predictions = []
-        for symbol in symbol_list:
-            predictions.append({
-                "symbol": symbol,
-                "prediction": "bullish" if symbol in ["AAPL", "MSFT"] else "neutral",
-                "confidence": 0.75 + (hash(symbol) % 20) / 100,  # Mock confidence
-                "target_price": 150 + (hash(symbol) % 100),  # Mock target price
-                "timeframe": timeframe,
-                "timestamp": "2025-07-07T21:39:48Z"
-            })
-        
-        return {
-            "status": "success",
-            "predictions": predictions,
-            "timeframe": timeframe,
-            "total_count": len(predictions)
-        }
+        # Fetch live predictions from API
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                params = {}
+                if symbols:
+                    params['symbols'] = symbols
+                params['timeframe'] = timeframe
+                
+                response = await client.get(f"{API_V1_URL}/predictions", params=params)
+                response.raise_for_status()
+                return response.json()
+                
+        except httpx.RequestError as e:
+            logger.error(f"Failed to fetch predictions from API: {e}")
+            raise HTTPException(
+                status_code=503,
+                detail="Predictions service temporarily unavailable - please check API connectivity"
+            )
+        except httpx.HTTPStatusError as e:
+            logger.error(f"API returned error status {e.response.status_code}: {e}")
+            raise HTTPException(
+                status_code=502,
+                detail="Predictions service returned an error - please try again later"
+            )
         
     except Exception as e:
         logger.error(f"Error in predictions API: {str(e)}")
@@ -241,31 +207,25 @@ async def get_market_sentiment_api(request: Request):
     """API endpoint for current market sentiment"""
     
     try:
-        # Demo market sentiment data
-        sentiment_data = {
-            "overall_sentiment": "positive",
-            "sentiment_score": 0.68,
-            "fear_greed_index": 68,
-            "volatility_index": 18.5,
-            "market_trends": {
-                "sp500": {"trend": "bullish", "confidence": 0.75},
-                "nasdaq": {"trend": "neutral", "confidence": 0.65},
-                "dow": {"trend": "bullish", "confidence": 0.80}
-            },
-            "sector_sentiment": {
-                "technology": "bullish",
-                "healthcare": "neutral",
-                "finance": "bullish",
-                "energy": "bearish",
-                "consumer": "neutral"
-            },
-            "timestamp": "2025-07-07T21:39:48Z"
-        }
-        
-        return {
-            "status": "success",
-            "data": sentiment_data
-        }
+        # Fetch live market sentiment from API
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(f"{API_V1_URL}/market/sentiment")
+                response.raise_for_status()
+                return response.json()
+                
+        except httpx.RequestError as e:
+            logger.error(f"Failed to fetch market sentiment from API: {e}")
+            raise HTTPException(
+                status_code=503,
+                detail="Market sentiment service temporarily unavailable - please check API connectivity"
+            )
+        except httpx.HTTPStatusError as e:
+            logger.error(f"API returned error status {e.response.status_code}: {e}")
+            raise HTTPException(
+                status_code=502,
+                detail="Market sentiment service returned an error - please try again later"
+            )
         
     except Exception as e:
         logger.error(f"Error in market sentiment API: {str(e)}")

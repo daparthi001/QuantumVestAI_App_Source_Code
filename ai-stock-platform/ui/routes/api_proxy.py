@@ -23,31 +23,31 @@ API_V1_URL = f"{API_URL}/api/v1"
 async def ticker_search_proxy(request: Request):
     """Direct proxy for ticker search API endpoint"""
     try:
-        # Demo ticker search
-        query = request.query_params.get("q", "")
-        demo_results = []
-        
-        if query:
-            demo_tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "NVDA", "META", "NFLX"]
-            demo_results = [
-                {
-                    "symbol": ticker,
-                    "name": f"{ticker} Corporation",
-                    "exchange": "NASDAQ"
-                }
-                for ticker in demo_tickers if query.upper() in ticker
-            ]
-        
-        return JSONResponse({
-            "status": "success",
-            "results": demo_results,
-            "query": query
-        })
-        
+        # Forward request to live API
+        import httpx
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(f"{API_V1_URL}/ticker-search", params=request.query_params)
+            response.raise_for_status()
+            return response.json()
+            
+    except httpx.RequestError as e:
+        logger.error(f"Failed to forward ticker search to API: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Ticker search service temporarily unavailable - please check API connectivity"
+        )
+    except httpx.HTTPStatusError as e:
+        logger.error(f"API returned error status {e.response.status_code}: {e}")
+        raise HTTPException(
+            status_code=502,
+            detail="Ticker search service returned an error - please try again later"
+        )
     except Exception as e:
         logger.error(f"Error in ticker search proxy: {str(e)}")
         return JSONResponse(
             content={"error": "Failed to search tickers", "detail": str(e)},
+            status_code=500
+        )
             status_code=500
         )
 
