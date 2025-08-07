@@ -108,19 +108,34 @@ async def verify_token_with_api_improved(token: str) -> Dict[str, Any]:
         # Create HTTPX service with authentication
         service = create_httpx_service(base_url=API_URL, auth_token=token)
         
-        # Make request to verify token
+        # Make request to verify token - use full API path
         response = await service.post(
-            "/auth/verify",
+            "/api/v1/auth/verify",
             json_data={"token": token},
             timeout=10.0
         )
         
         if response.status_code != 200:
-            logger.error(f"Token verification failed: {response.status_code}")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token"
-            )
+            logger.error(f"Token verification failed: status={response.status_code}, url=/api/v1/auth/verify")
+            # Try fallback endpoint if primary fails
+            try:
+                response = await service.post(
+                    "/api/auth/verify",
+                    json_data={"token": token},
+                    timeout=10.0
+                )
+                if response.status_code != 200:
+                    logger.error(f"Fallback token verification also failed: status={response.status_code}, url=/api/auth/verify")
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Invalid token"
+                    )
+            except Exception as fallback_error:
+                logger.error(f"Fallback verification failed: {str(fallback_error)}")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token"
+                )
         
         return response.json()
         
