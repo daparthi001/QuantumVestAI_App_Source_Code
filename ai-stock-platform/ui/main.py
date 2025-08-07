@@ -94,56 +94,25 @@ from fastapi.middleware.gzip import GZipMiddleware
 
 # Authentication middleware ensures protected routes require valid tokens
 try:  # pragma: no cover - prefer direct import but allow fallback
-    from ui.middleware.auth_middleware import AuthMiddleware
+    from middleware.improved_auth_middleware import ImprovedAuthMiddleware
+    logger.info("Using improved authentication middleware")
 except Exception:  # pragma: no cover - fallback path for compatibility
-    from middleware.auth_middleware import AuthMiddleware
+    try:
+        from ui.middleware.auth_middleware import AuthMiddleware as ImprovedAuthMiddleware
+        logger.warning("Falling back to original authentication middleware")
+    except Exception:
+        from middleware.auth_middleware import AuthMiddleware as ImprovedAuthMiddleware
+        logger.warning("Using fallback authentication middleware")
 
 # Define BASE_DIR first
 BASE_DIR = Path(__file__).resolve().parent
 
-# Configure enhanced logging
-log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
-log_config = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "standard": {
-            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        },
-        "detailed": {
-            "format": "%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s"
-        }
-    },
-    "handlers": {
-        "default": {
-            "level": log_level,
-            "formatter": "standard",
-            "class": "logging.StreamHandler",
-            "stream": sys.stdout,
-        },
-        "file": {
-            "level": log_level,
-            "formatter": "detailed", 
-            "class": "logging.FileHandler",
-            "filename": str(BASE_DIR / "logs" / "app.log"),
-            "mode": "a",
-        },
-    },
-    "loggers": {
-        "quantumvestai_ui": {
-            "handlers": ["default", "file"],
-            "level": log_level,
-            "propagate": True
-        },
-    }
-}
+# Configure independent logging (fixed circular dependency with settings)
+from core.logging_config import setup_independent_logging, get_logger
 
-# Ensure logs directory exists
-logs_dir = BASE_DIR / "logs"
-logs_dir.mkdir(exist_ok=True)
-
-dictConfig(log_config)
-logger = logging.getLogger("quantumvestai_ui")
+# Setup logging independently of settings module to avoid circular dependencies
+setup_independent_logging(base_dir=BASE_DIR)
+logger = get_logger("ui.main")
 
 # Create FastAPI application
 app = FastAPI(
@@ -176,8 +145,8 @@ app.add_middleware(
     max_age=86400,
 )
 
-# Apply authentication middleware to protect routes like /settings
-app.add_middleware(AuthMiddleware)
+# Apply improved authentication middleware to protect routes like /settings
+app.add_middleware(ImprovedAuthMiddleware)
 
 # Setup templates and store in app.state
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
