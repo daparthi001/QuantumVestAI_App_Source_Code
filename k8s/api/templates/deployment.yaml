@@ -17,3 +17,94 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           ports:
             - containerPort: 8000
+          env:
+            # JWT and admin secrets from app-secrets
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_SECRET
+            - name: ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: ADMIN_USERNAME
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: ADMIN_PASSWORD
+            - name: ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: ADMIN_EMAIL
+            # Alpha Vantage API key from app-secrets
+            - name: ALPHA_VANTAGE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: ALPHA_VANTAGE_API_KEY
+            # RapidAPI key for Yahoo Finance from app-secrets
+            - name: RAPIDAPI_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: RAPIDAPI_KEY
+            # Twitter API credentials from twitter-secrets
+            - name: TWITTER_CONSUMER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: twitter-secrets
+                  key: TWITTER_CONSUMER_KEY
+            - name: TWITTER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: twitter-secrets
+                  key: TWITTER_CONSUMER_KEY
+            - name: TWITTER_CONSUMER_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: twitter-secrets
+                  key: TWITTER_CONSUMER_SECRET
+            - name: TWITTER_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: twitter-secrets
+                  key: TWITTER_CONSUMER_SECRET
+            - name: TWITTER_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: twitter-secrets
+                  key: TWITTER_ACCESS_TOKEN
+            - name: TWITTER_ACCESS_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: twitter-secrets
+                  key: TWITTER_ACCESS_SECRET
+            # Database credentials from quantumvestai-cluster-rds-credentials
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: quantumvestai-cluster-rds-credentials
+                  key: host
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: quantumvestai-cluster-rds-credentials
+                  key: port
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: quantumvestai-cluster-rds-credentials
+                  key: dbname
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: quantumvestai-cluster-rds-credentials
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: quantumvestai-cluster-rds-credentials
+                  key: password
