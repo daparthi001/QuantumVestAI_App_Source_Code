@@ -17,3 +17,60 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           ports:
             - containerPort: 80
+          env:
+            # JWT secret from ui-secrets
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ui-secrets
+                  key: JWT_SECRET
+            # Yahoo Finance API key from ui-secrets (currently empty but ready for future use)
+            - name: YAHOO_FINANCE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ui-secrets
+                  key: YAHOO_FINANCE_API_KEY
+                  optional: true
+            # Twitter API credentials from ui-secrets
+            - name: TWITTER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ui-secrets
+                  key: TWITTER_API_KEY
+            - name: TWITTER_CONSUMER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ui-secrets
+                  key: TWITTER_API_KEY
+            - name: TWITTER_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ui-secrets
+                  key: TWITTER_API_SECRET
+            - name: TWITTER_CONSUMER_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ui-secrets
+                  key: TWITTER_API_SECRET
+            - name: TWITTER_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: ui-secrets
+                  key: TWITTER_ACCESS_TOKEN
+            - name: TWITTER_ACCESS_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ui-secrets
+                  key: TWITTER_ACCESS_SECRET
+            # Alpha Vantage API key from ui-secrets
+            - name: ALPHA_VANTAGE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ui-secrets
+                  key: ALPHA_VANTAGE_API_KEY
+            # RapidAPI key for Yahoo Finance from ui-secrets
+            - name: RAPIDAPI_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ui-secrets
+                  key: RAPIDAPI_KEY
