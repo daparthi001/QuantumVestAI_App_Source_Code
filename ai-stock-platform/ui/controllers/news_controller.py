@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Optional, Dict, Any
 
 from core.config import get_settings
-from ui.routes.content_api import get_news as get_demo_news
 
 import httpx
 
@@ -56,14 +55,14 @@ async def fetch_news(category: str, page: int = 1, ttl: int = 600) -> Dict[str, 
     if cached and cached["expires"] > now:
         return cached["data"]
 
-    # If no external API key is configured, return demo news instead of failing
+    # Require NEWS_API_KEY to be configured - no demo fallback
     if not NEWS_API_KEY:
-        logger.warning("NEWS_API_KEY not configured - using demo news data")
-
-        demo_articles = await get_demo_news()
-        data = {"articles": demo_articles, "totalResults": len(demo_articles)}
-        _NEWS_CACHE[cache_key] = {"data": data, "expires": now + timedelta(seconds=ttl)}
-        return data
+        logger.error("NEWS_API_KEY not configured - news service unavailable")
+        raise httpx.HTTPStatusError(
+            "News API key not configured",
+            request=None,
+            response=httpx.Response(503)
+        )
 
     params = {"apiKey": NEWS_API_KEY, "page": page, "pageSize": 10}
     if category != "market":

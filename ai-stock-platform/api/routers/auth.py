@@ -161,7 +161,7 @@ async def login_get():
         status="error",
         message="This endpoint only accepts POST requests with form data.",
         data={
-            "curl": "curl -X POST -d 'username=demo&password=password' http://dev.quantumvestai.com/api/v1/auth/login",
+            "curl": "curl -X POST -d 'username=your_user&password=your_pass' http://dev.quantumvestai.com/api/v1/auth/login",
             "required_fields": ["username", "password"],
             "method": "POST",
         },

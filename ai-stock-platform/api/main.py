@@ -320,23 +320,30 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
         }
         validate_user_login(login_data)
         
-        # Mock authentication - in production, validate against database
-        if form_data.username == "demo" and form_data.password == "password":
-            return create_success_response(
-                data={
-                    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZW1vIiwicm9sZSI6InVzZXIifQ.sample_token",
-                    "token_type": "bearer",
-                    "expires_in": 3600,
-                    "user": {
-                        "username": "demo",
-                        "role": "user"
-                    }
-                },
-                message="Login successful",
-                request_id=request_id
-            )
-        else:
+        # Validate against database - no demo accounts
+        from api.core.auth.user_auth import authenticate_user
+        
+        user = await authenticate_user(form_data.username, form_data.password)
+        if not user:
             raise AuthenticationError("Invalid username or password")
+        
+        # Generate real JWT token
+        from api.core.auth.jwt_handler import create_access_token
+        access_token = create_access_token({"sub": user.username, "role": user.role})
+        
+        return create_success_response(
+            data={
+                "access_token": access_token,
+                "token_type": "bearer",
+                "expires_in": 3600,
+                "user": {
+                    "username": user.username,
+                    "role": user.role
+                }
+            },
+            message="Login successful",
+            request_id=request_id
+        )
             
     except ValidationError as e:
         logger.warning(f"[{request_id}] Login validation failed: {e.detail}")
@@ -355,7 +362,7 @@ async def login_get(request: Request):
         details={
             "required_method": "POST",
             "required_fields": ["username", "password"],
-            "example": "curl -X POST -d 'username=demo&password=password' /api/v1/auth/login"
+            "example": "curl -X POST -d 'username=your_user&password=your_pass' /api/v1/auth/login"
         },
         request_id=getattr(request.state, 'request_id', None)
     )

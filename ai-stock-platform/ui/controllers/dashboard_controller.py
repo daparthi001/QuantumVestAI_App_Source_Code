@@ -366,9 +366,26 @@ async def dashboard_data(
         Dict[str, Any]: Dashboard data in JSON format
     """
     try:
-        # Demo mode - return mock data
+        # Fetch live dashboard data from API
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(f"{API_URL}/api/v1/dashboard/data", params={
+                "period": period,
+                "refresh": refresh
+            })
+            response.raise_for_status()
+            return response.json()
+            
+    except httpx.RequestError as e:
+        logger.error(f"Failed to fetch dashboard data from API: {e}")
         raise HTTPException(
-            status_code=503, detail="Dashboard data endpoint not available"
+            status_code=503,
+            detail="Dashboard service temporarily unavailable - please check API connectivity"
+        )
+    except httpx.HTTPStatusError as e:
+        logger.error(f"API returned error status {e.response.status_code}: {e}")
+        raise HTTPException(
+            status_code=502,
+            detail="Dashboard service returned an error - please try again later"
         )
     except Exception as e:
         logger.exception(f"Dashboard data error: {str(e)}")
@@ -387,8 +404,24 @@ async def dashboard_insights():
         Dict[str, Any]: AI insights in JSON format
     """
     try:
-        # Demo mode - return mock insights
-        raise HTTPException(status_code=503, detail="Insights endpoint not available")
+        # Fetch live AI insights from API
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(f"{API_URL}/api/v1/dashboard/insights")
+            response.raise_for_status()
+            return response.json()
+            
+    except httpx.RequestError as e:
+        logger.error(f"Failed to fetch insights from API: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Insights service temporarily unavailable - please check API connectivity"
+        )
+    except httpx.HTTPStatusError as e:
+        logger.error(f"API returned error status {e.response.status_code}: {e}")
+        raise HTTPException(
+            status_code=502,
+            detail="Insights service returned an error - please try again later"
+        )
     except Exception as e:
         logger.exception(f"Insights error: {str(e)}")
         raise HTTPException(
@@ -409,26 +442,34 @@ async def admin_dashboard(request: Request):
         HTMLResponse: Rendered admin dashboard template
     """
     try:
-        # Demo mode - return mock admin dashboard
+        # Fetch live admin dashboard data from API
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(f"{API_URL}/api/v1/admin/dashboard")
+            response.raise_for_status()
+            admin_data = response.json()
+            
         context = {
             "request": request,
             "title": "Admin Dashboard - QuantumVestAI",
-            "user_stats": {
-                "total_users": 150,
-                "active_users": 45,
-                "new_registrations": 12,
-            },
-            "system_stats": {
-                "uptime": "99.9%",
-                "api_calls": 15420,
-                "avg_response_time": "245ms",
-            },
+            **admin_data  # Spread the live data from API
         }
 
         # Get correct templates object
         templates_obj = getattr(request.app.state, "templates", templates)
         return templates_obj.TemplateResponse("admin/dashboard.html", context)
 
+    except httpx.RequestError as e:
+        logger.error(f"Failed to fetch admin dashboard data from API: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Admin dashboard service temporarily unavailable - please check API connectivity"
+        )
+    except httpx.HTTPStatusError as e:
+        logger.error(f"API returned error status {e.response.status_code}: {e}")
+        raise HTTPException(
+            status_code=502,
+            detail="Admin dashboard service returned an error - please try again later"
+        )
     except HTTPException:
         # Re-raise HTTP exceptions (like 403 from validate_admin_access)
         raise
