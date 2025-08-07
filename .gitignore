@@ -52,3 +52,7 @@ cache/__pycache__/
 
 fallback.db
 test.db
+
+# Test files (temporary)
+test_websocket_fix.py
+test_permissions_simple.py
