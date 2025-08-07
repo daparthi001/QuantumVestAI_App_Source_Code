@@ -92,6 +92,16 @@ if SENTRY_DSN:
 
 from fastapi.middleware.gzip import GZipMiddleware
 
+# Define BASE_DIR first
+BASE_DIR = Path(__file__).resolve().parent
+
+# Configure independent logging (fixed circular dependency with settings)
+from core.logging_config import setup_independent_logging, get_logger
+
+# Setup logging independently of settings module to avoid circular dependencies
+setup_independent_logging(base_dir=BASE_DIR)
+logger = get_logger("ui.main")
+
 # Authentication middleware ensures protected routes require valid tokens
 try:  # pragma: no cover - prefer direct import but allow fallback
     from middleware.improved_auth_middleware import ImprovedAuthMiddleware
@@ -103,16 +113,6 @@ except Exception:  # pragma: no cover - fallback path for compatibility
     except Exception:
         from middleware.auth_middleware import AuthMiddleware as ImprovedAuthMiddleware
         logger.warning("Using fallback authentication middleware")
-
-# Define BASE_DIR first
-BASE_DIR = Path(__file__).resolve().parent
-
-# Configure independent logging (fixed circular dependency with settings)
-from core.logging_config import setup_independent_logging, get_logger
-
-# Setup logging independently of settings module to avoid circular dependencies
-setup_independent_logging(base_dir=BASE_DIR)
-logger = get_logger("ui.main")
 
 # Create FastAPI application
 app = FastAPI(
