@@ -15,6 +15,7 @@ from fastapi import HTTPException, Request
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import JSONResponse, RedirectResponse, Response
 from jose import JWTError, jwt
+import httpx
 
 # Use the shared HTTP client utilities for API verification
 from core.http_client import safe_post_json
@@ -86,13 +87,22 @@ async def verify_token(token: str) -> Dict[str, Any]:
                 else:
                     # Log the response for debugging
                     logger.warning(f"Token verification failed at {verify_url}: {resp}")
+            except httpx.HTTPStatusError as api_error:
+                last_error = api_error
+                status_code = api_error.response.status_code
+                reason = api_error.response.reason_phrase
+                logger.error(f"HTTP {status_code} error during token verification at {verify_url}: {reason}")
             except Exception as api_error:
                 last_error = api_error
-                status_code = getattr(api_error, 'status_code', 'unknown')
-                logger.error(f"Failed request: POST {verify_url} - Status: {status_code}")
+                logger.error(f"Failed request: POST {verify_url} - Error: {str(api_error)}")
 
         # If we reach here, all verification attempts failed
-        logger.error(f"All token verification attempts failed. Last error: {last_error}")
+        if last_error:
+            error_detail = f"Token verification failed - {str(last_error)}"
+            logger.error(f"All token verification attempts failed. Last error: {error_detail}")
+        else:
+            error_detail = "Token verification failed - invalid response format"
+            logger.error(f"All token verification attempts failed. Last error: {error_detail}")
         raise HTTPException(status_code=401, detail="Invalid authentication token")
 
 
