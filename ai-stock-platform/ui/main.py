@@ -104,14 +104,14 @@ logger = get_logger("ui.main")
 
 # Authentication middleware ensures protected routes require valid tokens
 try:  # pragma: no cover - prefer direct import but allow fallback
-    from middleware.improved_auth_middleware import ImprovedAuthMiddleware
+    from .middleware.improved_auth_middleware import ImprovedAuthMiddleware
     logger.info("Using improved authentication middleware")
 except Exception:  # pragma: no cover - fallback path for compatibility
     try:
         from ui.middleware.auth_middleware import AuthMiddleware as ImprovedAuthMiddleware
         logger.warning("Falling back to original authentication middleware")
     except Exception:
-        from middleware.auth_middleware import AuthMiddleware as ImprovedAuthMiddleware
+        from .middleware.auth_middleware import AuthMiddleware as ImprovedAuthMiddleware
         logger.warning("Using fallback authentication middleware")
 
 # Create FastAPI application
