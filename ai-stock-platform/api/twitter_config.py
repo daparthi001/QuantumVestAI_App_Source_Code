@@ -41,7 +41,13 @@ class TwitterConfig:
         """Check if required Twitter credentials are configured
         
         Requires at minimum a bearer token OR both API key and secret
+        Also respects the ENABLE_TWITTER_SENTIMENT setting to allow manual disable
         """
+        # Check if Twitter sentiment is explicitly disabled
+        enable_twitter = os.getenv('ENABLE_TWITTER_SENTIMENT', 'false').lower() == 'true'
+        if not enable_twitter:
+            return False
+            
         has_bearer = bool(self.TWITTER_BEARER_TOKEN)
         has_api_keys = bool(self.TWITTER_API_KEY and self.TWITTER_API_SECRET)
         

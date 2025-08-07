@@ -8,11 +8,23 @@ from apscheduler.triggers.interval import IntervalTrigger
 from .trending_stocks_service import TrendingStocksService
 from social.multi_source_sentiment import MultiSourceSentimentAnalyzer
 
+# Import settings to check configuration
+try:
+    from core.config.settings import settings
+except ImportError:
+    try:  # pragma: no cover - fallback path
+        from api.core.config.settings import settings  # type: ignore
+    except ImportError:
+        # Create a minimal settings object for fallback
+        class MockSettings:
+            ENABLE_TWITTER_SENTIMENT = False
+        settings = MockSettings()
+
 logger = logging.getLogger(__name__)
 
 
 async def fetch_and_analyze() -> None:
-    """Fetch trending stocks and analyze Twitter sentiment."""
+    """Fetch trending stocks and analyze sentiment from available sources."""
     service = TrendingStocksService()
     try:
         trending = await service.get_trending_stocks(page=1, limit=5)
@@ -25,12 +37,20 @@ async def fetch_and_analyze() -> None:
         logger.warning("No symbols returned from trending stocks service")
         return
 
+    # Check if Twitter sentiment is disabled
+    twitter_enabled = getattr(settings, 'ENABLE_TWITTER_SENTIMENT', False)
+    if not twitter_enabled:
+        logger.info("Using premium data sources (Yahoo Finance, Alpha Vantage) - Twitter sentiment disabled")
+
     async with MultiSourceSentimentAnalyzer() as analyzer:
         for symbol in symbols:
             try:
                 sentiment = await analyzer.analyze_comprehensive_sentiment(symbol)
                 logger.info(
-                    "Sentiment for %s: %s", symbol, sentiment.get("sentiment_category")
+                    "Sentiment for %s: %s (sources: %s)", 
+                    symbol, 
+                    sentiment.get("sentiment_category"),
+                    [src["name"] for src in sentiment.get("sources", [])]
                 )
             except Exception as exc:
                 logger.error("Sentiment analysis failed for %s: %s", symbol, exc)

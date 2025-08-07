@@ -91,6 +91,10 @@ class Settings(BaseSettings):
     CACHE_TTL_TRENDING_STOCKS: int = Field(default=300, env='CACHE_TTL_TRENDING_STOCKS')
     # Always use real data by default
     ENABLE_REAL_DATA: bool = Field(default=True, env='ENABLE_REAL_DATA')
+    
+    # Data source preferences - prioritize premium sources over basic authorization
+    ENABLE_TWITTER_SENTIMENT: bool = Field(default=False, env='ENABLE_TWITTER_SENTIMENT')
+    PRIORITIZE_PREMIUM_SOURCES: bool = Field(default=True, env='PRIORITIZE_PREMIUM_SOURCES')
 
     # Logging
     LOG_LEVEL: str = Field(default="INFO", env='LOG_LEVEL')
