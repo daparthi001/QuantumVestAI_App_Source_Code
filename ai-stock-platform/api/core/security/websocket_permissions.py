@@ -34,8 +34,9 @@ def check_websocket_permissions(
     Returns:
         bool: True if access is allowed, False otherwise
     """
-    # Always allow access to free tier endpoints regardless of role
+    # Always allow access to free tier endpoints regardless of role or token status
     if any(endpoint.endswith(free_endpoint) for free_endpoint in FREE_TIER_ENDPOINTS):
+        logger.info(f"Allowing access to free-tier endpoint {endpoint}")
         return True
     
     # If premium parameter is provided and is 'true', allow access
@@ -58,8 +59,9 @@ def check_websocket_permissions(
     if role in ["basic", "premium"] and endpoint.startswith("/basic"):
         return True
     
-    # By default, allow access to market data endpoints for all authenticated users
-    if endpoint.endswith("/market-data"):
+    # CRITICAL FIX: Allow all authenticated users access to market data endpoints
+    # Market data should be publicly accessible for all user roles
+    if endpoint.endswith("/market-data") or "/market-data" in endpoint:
         logger.info(f"Allowing access to market data for role: {role}")
         return True
         

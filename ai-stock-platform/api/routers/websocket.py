@@ -52,7 +52,7 @@ async def market_data_ws(
     dependencies.
     """
     logger.info("WebSocket connection attempt to /ws/market-data")
-    await websocket_endpoint(websocket, "market-data", token)
+    await market_data_websocket_endpoint(websocket, token, premium)
     
     # try:
     #     # Extract token from various sources
@@ -316,6 +316,146 @@ async def direct_market_data_ws(websocket: WebSocket, token: Optional[str] = Que
                 await websocket.close(code=4000)
             except:
                 pass
+
+
+async def market_data_websocket_endpoint(
+    websocket: WebSocket, token: Optional[str] = None, premium: Optional[str] = None
+):
+    """Dedicated WebSocket endpoint for market data with relaxed authentication for free-tier users."""
+    try:
+        # Log connection attempt
+        logger.info("Market data WebSocket connection attempt")
+        
+        # Check origin for CORS security but be permissive for market data
+        origin = websocket.headers.get("origin")
+        if not is_origin_allowed(origin):
+            if origin is None:
+                logger.info("Allowing market-data WebSocket connection without Origin header")
+            else:
+                logger.info(f"Allowing market-data WebSocket connection with origin: {origin}")
+
+        # Extract token from various sources
+        cookie_token = websocket.cookies.get("access_token")
+        qvai_token = websocket.cookies.get("qvai_token")
+        auth_header = websocket.headers.get("authorization")
+
+        if not token:
+            token = qvai_token or cookie_token
+        if not token and auth_header and auth_header.lower().startswith("bearer "):
+            token = auth_header.split(" ", 1)[1]
+
+        # Also try to extract from cookie header if still no token
+        if not token:
+            cookie_header = websocket.headers.get("cookie")
+            if cookie_header:
+                import re
+                # Try qvai_token first
+                match = re.search(r"qvai_token=([^;]+)", cookie_header)
+                if match:
+                    token = match.group(1)
+                    logger.info("Found token in qvai_token cookie")
+                else:
+                    # Fall back to access_token
+                    match = re.search(r"access_token=([^;]+)", cookie_header)
+                    if match:
+                        token = match.group(1)
+                        logger.info("Found token in access_token cookie")
+
+        token = _clean_token(token)
+        
+        # Determine user info and access permissions
+        user_id = "anonymous"
+        user_role = "free"
+        allow_connection = True  # Default to allow for market data
+        
+        if token:
+            try:
+                # Try to validate and extract user info from token
+                from jose import jwt
+                from core.config import settings
+                
+                payload = jwt.decode(
+                    token,
+                    settings.JWT_SECRET.get_secret_value(),
+                    algorithms=[settings.JWT_ALGORITHM]
+                )
+                user_id = payload.get("sub", "anonymous")
+                user_role = payload.get("role", "free")
+                
+                # Check token expiration
+                import time
+                current_time = int(time.time())
+                exp_time = payload.get("exp", 0)
+                
+                if exp_time < current_time:
+                    logger.warning(f"Expired token for user {user_id}, but allowing market data access")
+                else:
+                    logger.info(f"Valid token for user {user_id} with role {user_role}")
+                
+                # CRITICAL FIX: Always allow market data access for free-tier users
+                # Market data should be accessible regardless of token expiration
+                if user_role in ["free", "basic", "premium", "admin"]:
+                    logger.info(f"Allowing market data access for user {user_id} with role {user_role}")
+                    allow_connection = True
+                else:
+                    logger.warning(f"Unknown role {user_role} for user {user_id}, allowing anyway for market data")
+                    allow_connection = True
+                    
+            except Exception as token_error:
+                logger.warning(f"Token validation failed: {token_error}, allowing anonymous market data access")
+                user_id = "anonymous"
+                user_role = "free"
+                allow_connection = True
+        else:
+            logger.info("No token provided, allowing anonymous market data access")
+        
+        if not allow_connection:
+            logger.error("Market data access denied - this should not happen")
+            await websocket.close(code=4003, reason="Access denied")
+            return
+
+        # Connect to WebSocket manager
+        client_id = f"market-data:{user_id}"
+        await manager.connect(websocket, client_id)
+        logger.info(f"Market data WebSocket connected: {client_id}")
+
+        try:
+            while True:
+                # Receive message
+                data = await websocket.receive_json()
+
+                # Add metadata
+                data["timestamp"] = datetime.utcnow().isoformat()
+                data["client_id"] = client_id
+
+                # Process message based on type
+                message_type = data.get("type")
+                if message_type == "subscribe":
+                    await handle_subscription(websocket, data, None)
+                elif message_type == "unsubscribe":
+                    await handle_unsubscription(websocket, data, None)
+                else:
+                    await websocket.send_json(
+                        {
+                            "error": "Unknown message type",
+                            "timestamp": datetime.utcnow().isoformat(),
+                        }
+                    )
+
+        except WebSocketDisconnect:
+            await manager.disconnect(websocket, client_id)
+            logger.info(f"Market data WebSocket disconnected: {client_id}")
+
+        except Exception as e:
+            logger.error(f"Market data WebSocket error for {client_id}: {str(e)}")
+            await websocket.close(code=4000, reason="Internal server error")
+
+    except Exception as e:
+        logger.error(f"Market data WebSocket connection error: {str(e)}")
+        try:
+            await websocket.close(code=4000, reason="Connection error")
+        except:
+            pass
 
 
 @router.websocket("/ws/{client_id}")
