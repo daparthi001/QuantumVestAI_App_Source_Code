@@ -29,18 +29,41 @@ except ModuleNotFoundError:
 
 from .twitter_sentiment import TwitterSentimentAnalyzer
 
+# Import settings to check configuration
+try:
+    from api.core.config.settings import settings
+except ImportError:
+    try:  # pragma: no cover - fallback path
+        from core.config.settings import settings  # type: ignore
+    except ImportError as e:  # pragma: no cover - explicit error path
+        # Create a minimal settings object for fallback
+        class MockSettings:
+            ENABLE_TWITTER_SENTIMENT = False
+            PRIORITIZE_PREMIUM_SOURCES = True
+        settings = MockSettings()
+
 logger = logging.getLogger("api.social.multi_source")
 
 class MultiSourceSentimentAnalyzer:
     """Enhanced sentiment analysis combining multiple data sources"""
 
     def __init__(self):
-        try:
-            self.twitter_analyzer = TwitterSentimentAnalyzer()
-        except Exception as e:
-            logger.warning(
-                "Twitter sentiment unavailable, continuing without it: %s", e
-            )
+        # Check if Twitter sentiment is enabled and has proper credentials
+        self.enable_twitter = getattr(settings, 'ENABLE_TWITTER_SENTIMENT', False)
+        self.prioritize_premium = getattr(settings, 'PRIORITIZE_PREMIUM_SOURCES', True)
+        
+        if self.enable_twitter:
+            try:
+                self.twitter_analyzer = TwitterSentimentAnalyzer()
+                logger.info("Twitter sentiment analyzer initialized")
+            except Exception as e:
+                logger.warning(
+                    "Twitter sentiment disabled due to configuration/credential issues: %s", e
+                )
+                self.twitter_analyzer = None
+                self.enable_twitter = False
+        else:
+            logger.info("Twitter sentiment disabled by configuration")
             self.twitter_analyzer = None
         self.finbert = FinBertSentiment()
         self.session = None
@@ -99,11 +122,12 @@ class MultiSourceSentimentAnalyzer:
         days: int
     ) -> Dict[str, Any]:
         """Get Twitter sentiment using existing analyzer"""
-        if not self.twitter_analyzer:
+        if not self.enable_twitter or not self.twitter_analyzer:
             return {
                 "source": "twitter",
                 "success": False,
-                "error": "Twitter sentiment disabled",
+                "error": "Twitter sentiment disabled due to insufficient authorization",
+                "note": "Using premium data sources (Yahoo Finance, Alpha Vantage) instead"
             }
         try:
             twitter_data = await self.twitter_analyzer.analyze_sentiment(
@@ -358,16 +382,36 @@ class MultiSourceSentimentAnalyzer:
                 "error": "No sources provided successful sentiment analysis"
             }
         
-        # Calculate weighted average sentiment
+        # Calculate weighted average sentiment with prioritization for premium sources
         total_weight = 0
         weighted_sentiment = 0
         total_volume = 0
-        source_weights = {
-            "twitter": 0.4,
-            "news": 0.3,
-            "reddit": 0.2,
-            "fintech": 0.1
-        }
+        
+        # Adjust source weights based on configuration and premium source availability
+        if self.prioritize_premium and not self.enable_twitter:
+            # Prioritize premium sources when Twitter is disabled
+            source_weights = {
+                "twitter": 0.05,  # Minimal weight when disabled
+                "news": 0.50,     # Yahoo Finance news gets higher priority
+                "reddit": 0.30,   # Reddit discussions
+                "fintech": 0.15   # Other financial sources
+            }
+        elif self.enable_twitter:
+            # Standard weights when Twitter is available
+            source_weights = {
+                "twitter": 0.25,  # Reduced from 0.4 to 0.25
+                "news": 0.40,     # Increased from 0.3 to 0.4 (Yahoo Finance)
+                "reddit": 0.25,   # Increased from 0.2 to 0.25
+                "fintech": 0.10   # Same as before
+            }
+        else:
+            # Fallback weights without Twitter
+            source_weights = {
+                "twitter": 0.0,   # No weight when disabled
+                "news": 0.55,     # Primary source
+                "reddit": 0.30,   # Secondary source
+                "fintech": 0.15   # Tertiary source
+            }
         
         for result in successful_results:
             source = result.get("source", "unknown")

@@ -71,6 +71,10 @@ class Settings:
     ENABLE_PORTFOLIO_OPTIMIZATION = True
     ENABLE_MULTI_FACTOR_ANALYSIS = True
     
+    # Data source preferences - prioritize premium sources
+    ENABLE_TWITTER_SENTIMENT = os.environ.get("ENABLE_TWITTER_SENTIMENT", "false").lower() == "true"
+    PRIORITIZE_PREMIUM_SOURCES = os.environ.get("PRIORITIZE_PREMIUM_SOURCES", "true").lower() == "true"
+    
     # Email settings
     SMTP_SERVER = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
     SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
