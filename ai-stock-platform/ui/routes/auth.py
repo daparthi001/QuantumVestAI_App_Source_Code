@@ -142,7 +142,7 @@ async def login_post(
             logger.warning("Failed to fetch user info after login")
 
         # Import improved cookie handling
-        from middleware.improved_auth_middleware import create_persistent_auth_cookies
+        from ..middleware.improved_auth_middleware import create_persistent_auth_cookies
         
         # Determine redirect URL
         redirect_url = next if next and next.startswith('/') else "/settings"
@@ -311,7 +311,7 @@ async def logout(request: Request):
         logger.info("User logout")
         
         # Import improved cookie handling
-        from middleware.improved_auth_middleware import clear_auth_cookies
+        from ..middleware.improved_auth_middleware import clear_auth_cookies
         
         response = RedirectResponse(url="/auth/login?msg=Successfully logged out", status_code=status.HTTP_302_FOUND)
         

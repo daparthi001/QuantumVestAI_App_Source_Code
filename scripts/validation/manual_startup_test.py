@@ -78,7 +78,7 @@ def test_auth_middleware_imports():
             'InvalidTokenError': Exception
         })()
         
-        from middleware.improved_auth_middleware import (
+        from ai_stock_platform.ui.middleware.improved_auth_middleware import (
             create_persistent_auth_cookies, 
             clear_auth_cookies
         )

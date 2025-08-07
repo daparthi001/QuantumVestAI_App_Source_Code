@@ -75,7 +75,7 @@ class TestAuthenticationPersistence(unittest.TestCase):
     
     def test_cookie_creation(self):
         """Test that persistent auth cookies are created properly"""
-        from middleware.improved_auth_middleware import create_persistent_auth_cookies
+        from ai_stock_platform.ui.middleware.improved_auth_middleware import create_persistent_auth_cookies
         
         # Mock response object
         mock_response = Mock()
@@ -107,7 +107,7 @@ class TestAuthenticationPersistence(unittest.TestCase):
     
     def test_cookie_clearing(self):
         """Test that auth cookies are cleared properly"""
-        from middleware.improved_auth_middleware import clear_auth_cookies
+        from ai_stock_platform.ui.middleware.improved_auth_middleware import clear_auth_cookies
         
         # Mock response object
         mock_response = Mock()
@@ -130,7 +130,7 @@ class TestAuthenticationPersistence(unittest.TestCase):
     
     def test_token_extraction(self):
         """Test token extraction from multiple sources"""
-        from middleware.improved_auth_middleware import ImprovedAuthMiddleware
+        from ai_stock_platform.ui.middleware.improved_auth_middleware import ImprovedAuthMiddleware
         
         middleware = ImprovedAuthMiddleware(app=None)
         
@@ -171,7 +171,7 @@ class TestAuthenticationPersistence(unittest.TestCase):
     
     def test_protected_routes(self):
         """Test that protected routes are identified correctly"""
-        from middleware.improved_auth_middleware import ImprovedAuthMiddleware
+        from ai_stock_platform.ui.middleware.improved_auth_middleware import ImprovedAuthMiddleware
         
         middleware = ImprovedAuthMiddleware(app=None)
         
