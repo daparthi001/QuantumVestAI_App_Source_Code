@@ -4,7 +4,8 @@ import sys
 import pandas as pd
 from fastapi.testclient import TestClient
 
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+# Add the api directory to Python path so we can import ai_analysis
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "ai-stock-platform", "api"))
 
 from ai_analysis.prophet_service import ProphetService, ForecastPoint
 from ai_analysis.sentiment_service import SentimentService
