@@ -127,7 +127,7 @@ class TestMainApplicationUpdates(unittest.TestCase):
         source_code = auth_routes_path.read_text()
         
         # Should import improved cookie functions
-        self.assertIn("from middleware.improved_auth_middleware import", source_code)
+        self.assertIn("from ..middleware.improved_auth_middleware import", source_code)
         self.assertIn("create_persistent_auth_cookies", source_code)
         self.assertIn("clear_auth_cookies", source_code)
 
