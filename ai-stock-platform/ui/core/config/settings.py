@@ -148,38 +148,8 @@ class Settings:
         """Check if running in testing environment"""
         return self.ENV == "testing"
         
-    def get_logging_config(self) -> Dict[str, Any]:
-        """Get logging configuration dictionary"""
-        return {
-            "version": 1,
-            "disable_existing_loggers": False,
-            "formatters": {
-                "standard": {
-                    "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-                },
-            },
-            "handlers": {
-                "console": {
-                    "class": "logging.StreamHandler",
-                    "level": self.LOG_LEVEL,
-                    "formatter": "standard",
-                    "stream": "ext://sys.stdout"
-                },
-                "file": {
-                    "class": "logging.handlers.RotatingFileHandler",
-                    "level": self.LOG_LEVEL,
-                    "formatter": "standard",
-                    "filename": "logs/app.log",
-                    "maxBytes": 10485760,  # 10 MB
-                    "backupCount": 5,
-                    "encoding": "utf8"
-                }
-            },
-            "root": {
-                "level": self.LOG_LEVEL,
-                "handlers": ["console", "file"] if not self.is_testing() else ["console"]
-            }
-        }
+    # Logging configuration removed - moved to core.logging_config to prevent circular dependencies
+    # Use core.logging_config.setup_independent_logging() instead
     
     def is_feature_enabled(self, feature_name: str) -> bool:
         """Check if a specific feature is enabled"""

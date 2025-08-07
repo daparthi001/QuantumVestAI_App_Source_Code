@@ -141,45 +141,22 @@ async def login_post(
         except Exception:
             logger.warning("Failed to fetch user info after login")
 
+        # Import improved cookie handling
+        from middleware.improved_auth_middleware import create_persistent_auth_cookies
+        
         # Determine redirect URL
         redirect_url = next if next and next.startswith('/') else "/settings"
 
         response = RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
 
-        # Always set max_age for cookies to ensure they persist
-        max_age = 7 * 24 * 60 * 60 if remember else 24 * 60 * 60  # 7 days if remember, 1 day otherwise
-        
-        # Set cookies with appropriate flags for security and access
-        # HttpOnly cookie for secure server-side authentication
-        response.set_cookie(
-            key="access_token",
-            value=f"Bearer {token}",
-            httponly=True,
-            max_age=max_age,
-            samesite="lax",
-            path="/",  # Ensure cookie is available for all paths
+        # Use improved persistent cookie handling
+        create_persistent_auth_cookies(
+            response=response,
+            token=token,
+            remember=remember,
+            user_info=user_info,
             secure=request.url.scheme == "https"
         )
-        
-        # Additional non-HTTP-only cookie so the SPA can access the token
-        response.set_cookie(
-            key="qvai_token",
-            value=token,
-            httponly=False,  # Allow JavaScript access
-            max_age=max_age,
-            samesite="lax",
-            path="/",  # Ensure cookie is available for all paths
-            secure=request.url.scheme == "https"
-        )
-
-        if user_info:
-            response.set_cookie(
-                key="user_info",
-                value=f"{user_info.get('username', username)}|{user_info.get('role', '')}|{user_info.get('full_name', '')}",
-                max_age=max_age,
-                samesite="lax",
-                secure=request.url.scheme == "https"
-            )
 
         return response
         
@@ -329,14 +306,17 @@ async def register_post(
 @router.post("/logout")
 @router.get("/logout")
 async def logout(request: Request):
-    """Handle user logout"""
+    """Handle user logout with improved cookie clearing"""
     try:
         logger.info("User logout")
         
+        # Import improved cookie handling
+        from middleware.improved_auth_middleware import clear_auth_cookies
+        
         response = RedirectResponse(url="/auth/login?msg=Successfully logged out", status_code=status.HTTP_302_FOUND)
-        response.delete_cookie("access_token")
-        response.delete_cookie("user_info")
-        response.delete_cookie("qvai_token")
+        
+        # Use improved cookie clearing
+        clear_auth_cookies(response)
         
         return response
         

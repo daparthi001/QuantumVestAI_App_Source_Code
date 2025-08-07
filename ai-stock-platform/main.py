@@ -21,44 +21,55 @@ from fastapi.templating import Jinja2Templates
 
 # CRITICAL FIX: Define BASE_DIR before using it
 BASE_DIR = Path(__file__).resolve().parent
-os.makedirs(BASE_DIR / "logs", exist_ok=True)
 
-# Configure logging
-log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
-log_config = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "standard": {
-            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+# Configure independent logging (fixed circular dependency with settings)
+try:
+    from ui.core.logging_config import setup_independent_logging, get_logger
+    setup_independent_logging(base_dir=BASE_DIR)
+    logger = get_logger("main")
+except ImportError:
+    # Fallback logging configuration if the module isn't available
+    import logging
+    import os
+    from logging.config import dictConfig
+    
+    os.makedirs(BASE_DIR / "logs", exist_ok=True)
+    
+    log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
+    log_config = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "standard": {
+                "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            },
         },
-    },
-    "handlers": {
-        "default": {
-            "level": log_level,
-            "formatter": "standard",
-            "class": "logging.StreamHandler",
-            "stream": sys.stdout,
+        "handlers": {
+            "default": {
+                "level": log_level,
+                "formatter": "standard",
+                "class": "logging.StreamHandler",
+                "stream": sys.stdout,
+            },
+            "file": {
+                "level": log_level,
+                "formatter": "standard",
+                "class": "logging.FileHandler",
+                "filename": str(BASE_DIR / "logs" / "app.log"),
+                "mode": "a",
+            },
         },
-        "file": {
-            "level": log_level,
-            "formatter": "standard",
-            "class": "logging.FileHandler",
-            "filename": str(BASE_DIR / "logs" / "app.log"),
-            "mode": "a",
-        },
-    },
-    "loggers": {
-        "quantumvestai_ui": {
-            "handlers": ["default", "file"],
-            "level": log_level,
-            "propagate": True
-        },
+        "loggers": {
+            "quantumvestai_ui": {
+                "handlers": ["default", "file"],
+                "level": log_level,
+                "propagate": True
+            },
+        }
     }
-}
-
-dictConfig(log_config)
-logger = logging.getLogger("quantumvestai_ui")
+    
+    dictConfig(log_config)
+    logger = logging.getLogger("quantumvestai_ui")
 
 # Create FastAPI application for UI
 app = FastAPI(
